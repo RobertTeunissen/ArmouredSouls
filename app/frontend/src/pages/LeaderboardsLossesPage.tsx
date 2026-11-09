@@ -176,24 +176,29 @@ function LeaderboardsLossesPage() {
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">#</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Robot</th>
-                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider">
+                  <th
+                    className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider"
+                    aria-sort={sortBy === 'total' ? 'descending' : 'none'}
+                  >
                     <button
                       type="button"
                       onClick={() => setSortBy('total')}
                       className={sortButtonClass('total')}
-                      aria-sort={sortBy === 'total' ? 'descending' : 'none'}
                       data-testid="sort-total"
                     >
                       Total{sortBy === 'total' ? ' ▾' : ''}
                     </button>
                   </th>
                   {KILL_MODES.map((mode) => (
-                    <th key={mode.key} className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider">
+                    <th
+                      key={mode.key}
+                      className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider"
+                      aria-sort={sortBy === mode.key ? 'descending' : 'none'}
+                    >
                       <button
                         type="button"
                         onClick={() => setSortBy(mode.key)}
                         className={sortButtonClass(mode.key)}
-                        aria-sort={sortBy === mode.key ? 'descending' : 'none'}
                         data-testid={`sort-${mode.key}`}
                       >
                         {mode.label}{sortBy === mode.key ? ' ▾' : ''}

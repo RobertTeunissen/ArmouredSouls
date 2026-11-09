@@ -6,8 +6,6 @@
  */
 
 import prisma from '../../lib/prisma';
-import { BATTLE_LOG_OMIT } from '../battle/battleLogCodec';
-import schedulingService from '../scheduling/schedulingService';
 import type { BattleParticipant, Prisma } from '../../../generated/prisma';
 import { KeyedCache } from '../../lib/keyedCache';
 import { getAllModesBattleCount } from './all-modes-battle-count';
@@ -20,11 +18,6 @@ const userRobotsCache = new KeyedCache<unknown[]>(30_000, 500);
 /** Invalidate the cached robot list for a user (call after mutations). */
 export function invalidateUserRobotsCache(userId: number): void {
   userRobotsCache.invalidate(String(userId));
-}
-
-/** Invalidate all user robot caches (call after battles/cycles). */
-export function invalidateAllUserRobotsCaches(): void {
-  userRobotsCache.invalidateAll();
 }
 
 // ── Shared include fragments ─────────────────────────────────────────
@@ -58,54 +51,6 @@ type BattleWithParticipants = Prisma.BattleGetPayload<{
   };
 }>;
 
-// ── GET /all/robots ──────────────────────────────────────────────────
-
-export async function findAllRobots(page = 1, perPage = 100) {
-  // Clamp inputs to prevent invalid skip/take values
-  const safePage = Math.max(1, Math.floor(page));
-  const safePerPage = Math.min(200, Math.max(1, Math.floor(perPage)));
-
-  // Select only fields used by the public robot list view.
-  // The sanitizer strips 23 attributes + combat state for non-owners anyway,
-  // so fetching them from DB is wasted bandwidth.
-  return prisma.robot.findMany({
-    select: {
-      id: true,
-      userId: true,
-      name: true,
-      frameId: true,
-      paintJob: true,
-      elo: true,
-      fame: true,
-      totalBattles: true,
-      wins: true,
-      draws: true,
-      losses: true,
-      kills: true,
-      damageDealtLifetime: true,
-      damageTakenLifetime: true,
-      currentHP: true,
-      maxHP: true,
-      currentShield: true,
-      maxShield: true,
-      battleReadiness: true,
-      loadoutType: true,
-      stance: true,
-      mainWeaponId: true,
-      offhandWeaponId: true,
-      imageUrl: true,
-      createdAt: true,
-      updatedAt: true,
-      // Include weapons and user for display
-      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' as const } } } },
-      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' as const } } } },
-      user: { select: { username: true } },
-    },
-    orderBy: { elo: 'desc' },
-    skip: (safePage - 1) * safePerPage,
-    take: safePerPage,
-  });
-}
 
 // ── GET / (user's robots) ────────────────────────────────────────────
 
@@ -206,180 +151,9 @@ export async function findRobotById(robotId: number) {
   return { ...robot, allModesBattleCount };
 }
 
-// ── GET /:id/matches (paginated battle history) ──────────────────────
-
-export interface PaginatedMatchesResult {
-  data: Array<{
-    battleId: number;
-    createdAt: Date;
-    leagueType: string | null;
-    result: { won: boolean; isDraw: boolean; duration: number | null };
-    thisRobot: { finalHP: number; damageDealt: number; eloBefore: number; eloAfter: number };
-    opponent: { id: number; name: string; owner: string; finalHP: number; damageDealt: number };
-  }>;
-  pagination: { page: number; pageSize: number; total: number; totalPages: number };
-  robot: { id: number; name: string };
-}
-
-export async function getMatchHistory(
-  robotId: number,
-  robotName: string,
-  page: number,
-  perPage: number,
-): Promise<PaginatedMatchesResult> {
-  const total = await prisma.battle.count({
-    where: { participants: { some: { robotId: robotId } } },
-  });
-
-  const battles = await prisma.battle.findMany({
-    where: { participants: { some: { robotId: robotId } } },
-    omit: BATTLE_LOG_OMIT,
-    include: {
-      participants: {
-        include: { robot: { include: { user: { select: { id: true, username: true } } } } },
-      },
-    },
-    orderBy: { createdAt: 'desc' },
-    skip: (page - 1) * perPage,
-    take: perPage,
-  });
-
-  const data = battles.map(battle => {
-    const thisParticipant = battle.participants.find(p => p.robotId === robotId);
-    // Find opponent: pick the primary participant on the opposing team (active/solo preferred)
-    const myTeam = thisParticipant?.team ?? 1;
-    const opponents = battle.participants.filter(p => p.team !== myTeam);
-    const opponentParticipant = opponents.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? opponents[0];
-    const opponent = opponentParticipant?.robot;
-    const won = battle.winnerId === robotId;
-
-    return {
-      battleId: battle.id,
-      createdAt: battle.createdAt,
-      leagueType: battle.leagueType,
-      result: {
-        won,
-        isDraw: battle.winnerId === null,
-        duration: battle.durationSeconds,
-      },
-      thisRobot: {
-        finalHP: thisParticipant?.finalHP || 0,
-        damageDealt: thisParticipant?.damageDealt || 0,
-        eloBefore: thisParticipant?.eloBefore || 0,
-        eloAfter: thisParticipant?.eloAfter || 0,
-      },
-      opponent: {
-        id: opponent?.id || 0,
-        name: opponent?.name || 'Unknown',
-        owner: opponent?.user?.username || 'Unknown',
-        finalHP: opponentParticipant?.finalHP || 0,
-        damageDealt: opponentParticipant?.damageDealt || 0,
-      },
-    };
-  });
-
-  return {
-    data,
-    pagination: { page, pageSize: perPage, total, totalPages: Math.ceil(total / perPage) },
-    robot: { id: robotId, name: robotName },
-  };
-}
-
-// ── GET /:id/upcoming ────────────────────────────────────────────────
-
-export async function getUpcomingScheduledMatches(robotId: number, robotName: string) {
-  // Single query via unified scheduling service (replaces 4-table fan-out)
-  const upcoming = await schedulingService.getUpcomingForRobot(robotId);
-
-  // Fetch opponent robot details for each match
-  const formattedMatches = [];
-  for (const match of upcoming) {
-    const opponentParticipant = match.participants.find(
-      (p) => p.participantId !== robotId && p.participantType === 'robot'
-    );
-    if (!opponentParticipant) continue;
-
-    const opponent = await prisma.robot.findUnique({
-      where: { id: opponentParticipant.participantId },
-      include: { user: { select: { id: true, username: true } } },
-    });
-    if (!opponent) continue;
-
-    formattedMatches.push({
-      matchId: match.id,
-      scheduledFor: match.scheduledFor,
-      matchType: match.matchType,
-      leagueType: match.leagueType,
-      opponent: {
-        id: opponent.id,
-        name: opponent.name,
-        elo: opponent.elo,
-        owner: opponent.user.username,
-      },
-    });
-  }
-
-  return {
-    matches: formattedMatches,
-    total: formattedMatches.length,
-    robot: { id: robotId, name: robotName },
-  };
-}
 
 
-// ── GET /:id/upcoming-matches ────────────────────────────────────────
 
-export async function getUpcomingMatches(robotId: number, robot: { currentHP: number; maxHP: number; mainWeaponId: number | null }) {
-  // Calculate battle readiness
-  const hpPercentage = (robot.currentHP / robot.maxHP) * 100;
-  const hasWeapons = robot.mainWeaponId !== null;
-  const isReady = hpPercentage >= 50 && hasWeapons;
-  const warnings: string[] = [];
-  if (hpPercentage < 50) warnings.push('HP below 50%');
-  if (!hasWeapons) warnings.push('No weapons equipped');
-
-  // Single unified query via SchedulingService (replaces 4-table fan-out)
-  const upcoming = await schedulingService.getUpcomingForRobot(robotId);
-
-  // Resolve opponent info for each match
-  const formattedMatches = [];
-  for (const match of upcoming) {
-    const opponentParticipant = match.participants.find(
-      (p) => p.participantId !== robotId
-    );
-
-    let opponentName = 'TBD';
-    let opponentPortrait = '/src/assets/robots/robot-1.png';
-
-    if (opponentParticipant && opponentParticipant.participantType === 'robot') {
-      const opponent = await prisma.robot.findUnique({
-        where: { id: opponentParticipant.participantId },
-        select: { id: true, name: true, imageUrl: true },
-      });
-      if (opponent) {
-        opponentName = opponent.name;
-        opponentPortrait = opponent.imageUrl || opponentPortrait;
-      }
-    }
-
-    formattedMatches.push({
-      matchId: match.id,
-      opponentName,
-      opponentPortrait,
-      scheduledTime: match.scheduledFor.toISOString(),
-      battleType: match.matchType,
-      leagueContext: match.leagueType,
-    });
-  }
-
-  // Sort by scheduled time
-  formattedMatches.sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
-
-  return {
-    matches: formattedMatches,
-    battleReadiness: { isReady, warnings },
-  };
-}
 
 
 // ── GET /:id/performance-context ─────────────────────────────────────

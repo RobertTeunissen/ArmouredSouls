@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validated } from '../middleware/schemaValidator';
 import { authenticateToken } from '../middleware/auth';
 import {
   getFameLeaderboard,
@@ -9,7 +9,6 @@ import {
   type LossesSortKey,
   getPrestigeLeaderboard,
 } from '../services/analytics/leaderboardService';
-import { leaderboardService, type LeaderboardCategory } from '../services/leaderboard/leaderboardService';
 
 const router = express.Router();
 
@@ -76,92 +75,67 @@ const prestigeQuerySchema = z.object({
 /**
  * GET /api/leaderboards/fame
  */
-router.get('/fame', validateRequest({ query: fameQuerySchema }), async (req: Request, res: Response) => {
+router.get('/fame', ...validated({ query: fameQuerySchema }, async (req: Request, res: Response, { query }) => {
   // Cache key carries only the surviving parameters (Spec #46 R5.15) — a stale
   // fragment for a removed filter would fragment the cache and could serve a
   // filtered payload to an unfiltered request.
-  const cacheKey = `fame:${req.query.page || 1}:${req.query.limit || 100}`;
+  const cacheKey = `fame:${query.page || 1}:${query.limit || 100}`;
   const cached = getCachedOrNull(cacheKey);
   if (cached) { res.set('Cache-Control', 'private, max-age=300'); res.json(cached); return; }
 
   const result = await getFameLeaderboard({
-    page: parseInt(req.query.page as string) || 1,
-    limit: Math.min(parseInt(req.query.limit as string) || 100, 100),
+    page: query.page || 1,
+    limit: Math.min(query.limit || 100, 100),
   });
 
   const response = { ...result, timestamp: new Date().toISOString() };
   setCache(cacheKey, response);
   res.set('Cache-Control', 'private, max-age=300');
   res.json(response);
-});
+}));
 
 /**
  * GET /api/leaderboards/losses
  */
-router.get('/losses', validateRequest({ query: lossesQuerySchema }), async (req: Request, res: Response) => {
+router.get('/losses', ...validated({ query: lossesQuerySchema }, async (req: Request, res: Response, { query }) => {
   // No league fragment: a stale key for a removed filter would fragment the
   // cache and could serve a filtered payload to an unfiltered request. The sort
   // column does belong in the key — each ordering is a different payload.
-  const cacheKey = `losses:${req.query.page || 1}:${req.query.limit || 100}:${req.query.sortBy || 'total'}`;
+  const cacheKey = `losses:${query.page || 1}:${query.limit || 100}:${query.sortBy || 'total'}`;
   const cached = getCachedOrNull(cacheKey);
   if (cached) { res.set('Cache-Control', 'private, max-age=300'); res.json(cached); return; }
 
   const result = await getLossesLeaderboard({
-    page: parseInt(req.query.page as string) || 1,
-    limit: Math.min(parseInt(req.query.limit as string) || 100, 100),
-    sortBy: req.query.sortBy as LossesSortKey | undefined,
+    page: query.page || 1,
+    limit: Math.min(query.limit || 100, 100),
+    sortBy: query.sortBy as LossesSortKey | undefined,
   });
 
   const response = { ...result, timestamp: new Date().toISOString() };
   setCache(cacheKey, response);
   res.set('Cache-Control', 'private, max-age=300');
   res.json(response);
-});
+}));
 
 /**
  * GET /api/leaderboards/prestige
  */
-router.get('/prestige', validateRequest({ query: prestigeQuerySchema }), async (req: Request, res: Response) => {
-  const cacheKey = `prestige:${req.query.page || 1}:${req.query.limit || 100}`;
+router.get('/prestige', ...validated({ query: prestigeQuerySchema }, async (req: Request, res: Response, { query }) => {
+  const cacheKey = `prestige:${query.page || 1}:${query.limit || 100}`;
   const cached = getCachedOrNull(cacheKey);
   if (cached) { res.set('Cache-Control', 'private, max-age=300'); res.json(cached); return; }
 
   const result = await getPrestigeLeaderboard({
-    page: parseInt(req.query.page as string) || 1,
-    limit: Math.min(parseInt(req.query.limit as string) || 100, 100),
+    page: query.page || 1,
+    limit: Math.min(query.limit || 100, 100),
   });
 
   const response = { ...result, timestamp: new Date().toISOString() };
   setCache(cacheKey, response);
   res.set('Cache-Control', 'private, max-age=300');
   res.json(response);
-});
+}));
 
 // ─── Unified Leaderboard Cache Endpoint (Spec #40) ───────────────────────────
-
-const cacheQuerySchema = z.object({
-  category: z.enum(['fame', 'prestige', 'losses', 'koth_wins', 'koth_zone_score', 'career_wins', 'team_wins']),
-  page: z.coerce.number().int().positive().optional().default(1),
-  limit: z.coerce.number().int().positive().max(200).optional().default(50),
-});
-
-/**
- * GET /api/leaderboards/cache
- * Serves pre-computed leaderboard data from the leaderboard_cache table.
- * Includes `updatedAt` for cache freshness display on the frontend.
- * Uses rank-based pagination (offset = (page-1) * limit).
- */
-router.get('/cache', validateRequest({ query: cacheQuerySchema }), async (req: Request, res: Response) => {
-  const { category, page, limit } = req.query as unknown as { category: LeaderboardCategory; page: number; limit: number };
-
-  const result = await leaderboardService.getLeaderboard(category, page, limit);
-
-  res.set('Cache-Control', 'private, max-age=300');
-  res.json({
-    ...result,
-    category,
-    timestamp: new Date().toISOString(),
-  });
-});
 
 export default router;

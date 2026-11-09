@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validated } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import { sanitizeRobotForPublic } from './robots';
 import { getStableProfile } from '../services/common/stableViewService';
@@ -16,9 +16,8 @@ const stableParamsSchema = z.object({
 router.get(
   '/:userId',
   authenticateToken,
-  validateRequest({ params: stableParamsSchema }),
-  async (req: AuthRequest, res: Response) => {
-    const userId = Number(req.params.userId);
+  ...validated({ params: stableParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+    const userId = params.userId;
 
     const profile = await getStableProfile(userId);
 
@@ -33,7 +32,7 @@ router.get(
       ...profile,
       robots,
     });
-  },
+  }),
 );
 
 export default router;

@@ -29,7 +29,8 @@ describe('Spec 53 Coverage_Manifest baseline', () => {
     expect(validateCoverageManifest()).toEqual([]);
     expect(COVERAGE_MANIFEST.battleModes).toEqual(BATTLE_MODES);
     expect(COVERAGE_MANIFEST.entries.length).toBeGreaterThan(30);
-    expect(COVERAGE_MANIFEST.prestigeSources).toHaveLength(9);
+    // 8 since Nov 2026: the unused BattleStrategy/BattleProcessor framework was deleted.
+    expect(COVERAGE_MANIFEST.prestigeSources).toHaveLength(8);
     expect(COVERAGE_MANIFEST.prestigeWriters).toHaveLength(6);
     expect(COVERAGE_MANIFEST.prestigeWriters.map((writer) => writer.currentSource.symbol)).toEqual([
       'awardPrestigeToUser',

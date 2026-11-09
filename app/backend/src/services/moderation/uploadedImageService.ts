@@ -23,8 +23,6 @@ import type { Prisma } from '../../../generated/prisma';
 import { fileStorageService } from './fileStorageService';
 
 const UPLOAD_URL_PREFIX = '/uploads/user-robots';
-/** `/uploads/user-robots/{userId}/{file}.webp` → userId. */
-const OWNER_PATTERN = /^\/uploads\/user-robots\/(\d+)\/[^/]+\.webp$/;
 
 export interface RecordUploadInput {
   imageUrl: string;
@@ -42,12 +40,6 @@ export interface SyncResult {
 
 function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
-}
-
-/** Owner id from an upload URL, or null when the URL is not a player upload. */
-export function ownerOf(imageUrl: string): number | null {
-  const match = OWNER_PATTERN.exec(imageUrl);
-  return match ? Number(match[1]) : null;
 }
 
 /** Record a confirmed upload with its moderation result. */
@@ -79,15 +71,6 @@ export async function forgetUpload(imageUrl: string): Promise<void> {
     await prisma.uploadedImage.deleteMany({ where: { imageUrl } });
   } catch (error) {
     logger.warn(`[uploaded-images] Could not forget ${imageUrl}: ${message(error)}`);
-  }
-}
-
-/** Forget every upload of a removed account. */
-export async function forgetUploadsOfUser(userId: number): Promise<void> {
-  try {
-    await prisma.uploadedImage.deleteMany({ where: { userId } });
-  } catch (error) {
-    logger.warn(`[uploaded-images] Could not forget the uploads of user ${userId}: ${message(error)}`);
   }
 }
 

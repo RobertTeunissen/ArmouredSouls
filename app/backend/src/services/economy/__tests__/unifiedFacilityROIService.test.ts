@@ -6,7 +6,7 @@
  *
  * Uses Jest mocking for prisma.
  */
-import { UnifiedFacilityROIService } from '../unifiedFacilityROIService';
+import { UnifiedFacilityROIService, type UnifiedFacilityROI } from '../unifiedFacilityROIService';
 import { getFacilityConfig } from '../../../config/facilities';
 
 // Mock prisma
@@ -135,7 +135,25 @@ describe('UnifiedFacilityROIService', () => {
     expect(mockedPrisma.cycleSnapshot.findMany).not.toHaveBeenCalled();
   });
 
-  describe('calculateFacilityROI - snapshot-based calculation', () => {
+  /**
+   * One facility's ROI through the production entry point. The fixtures put the
+   * facility row on `facility.findUnique` (which also serves `roster_expansion`);
+   * `calculateAllEconomicROIs` lists owned economic facilities with
+   * `facility.findMany`, so that list is served from the same row.
+   */
+  async function roiFor(facilityType: string): Promise<UnifiedFacilityROI | null> {
+    const findUnique = mockedPrisma.facility.findUnique as jest.Mock;
+    const row = (await findUnique({ where: { userId_facilityType: { userId: 1, facilityType } } })) as
+      | { level: number }
+      | null
+      | undefined;
+    (mockedPrisma.facility.findMany as jest.Mock).mockResolvedValue(row && row.level > 0 ? [row] : []);
+    findUnique.mockClear();
+    const { facilities } = await service.calculateAllEconomicROIs(1);
+    return facilities.find((f) => f.facilityType === facilityType) ?? null;
+  }
+
+  describe('facility ROI - snapshot-based calculation', () => {
     const setupMocksForFacility = (
       facilityType: string,
       level: number,
@@ -172,7 +190,7 @@ describe('UnifiedFacilityROIService', () => {
         { userId: 1, merchandisingIncome: 15000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 600 },
       ]);
 
-      const result = await service.calculateFacilityROI(1, 'merchandising_hub');
+      const result = await roiFor('merchandising_hub');
 
       expect(result).not.toBeNull();
       expect(result!.facilityType).toBe('merchandising_hub');
@@ -194,7 +212,7 @@ describe('UnifiedFacilityROIService', () => {
         { studioMultiplier: 2, amountSum: 6000 },
       ]);
 
-      const result = await service.calculateFacilityROI(1, 'streaming_studio');
+      const result = await roiFor('streaming_studio');
 
       expect(result).not.toBeNull();
       expect(result!.facilityType).toBe('streaming_studio');
@@ -218,7 +236,7 @@ describe('UnifiedFacilityROIService', () => {
         { discountPercent: 48, chargedSum: 5200 },
       ]);
 
-      const result = await service.calculateFacilityROI(1, 'repair_bay');
+      const result = await roiFor('repair_bay');
 
       expect(result).not.toBeNull();
       expect(result!.facilityType).toBe('repair_bay');
@@ -234,7 +252,7 @@ describe('UnifiedFacilityROIService', () => {
         { userId: 1, merchandisingIncome: 0, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 20000, weaponPurchases: 0, operatingCosts: 750 },
       ]);
 
-      const result = await service.calculateFacilityROI(1, 'training_facility');
+      const result = await roiFor('training_facility');
 
       expect(result).not.toBeNull();
       expect(result!.facilityType).toBe('training_facility');
@@ -256,7 +274,7 @@ describe('UnifiedFacilityROIService', () => {
           ),
       );
 
-      const oneSlot = await service.calculateFacilityROI(1, 'training_facility');
+      const oneSlot = await roiFor('training_facility');
       // 59,500 spent at 40.5% off → saved 59,500 × 40.5 / 59.5 = 40,500
       expect(oneSlot!.totalReturns).toBe(40500);
 
@@ -269,7 +287,7 @@ describe('UnifiedFacilityROIService', () => {
               : { userId: 1, facilityType: 'training_facility', level: 6, maxLevel: 10 },
           ),
       );
-      const sixSlots = await service.calculateFacilityROI(1, 'training_facility');
+      const sixSlots = await roiFor('training_facility');
       // 59,500 × 18 / 82 = 13,060.97… → 13,061 (the old formula credited 60%: 89,250)
       expect(sixSlots!.totalReturns).toBe(13061);
     });
@@ -279,7 +297,7 @@ describe('UnifiedFacilityROIService', () => {
         { userId: 1, merchandisingIncome: 0, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 50000, operatingCosts: 400 },
       ]);
 
-      const result = await service.calculateFacilityROI(1, 'weapons_workshop');
+      const result = await roiFor('weapons_workshop');
 
       expect(result).not.toBeNull();
       expect(result!.facilityType).toBe('weapons_workshop');
@@ -288,7 +306,7 @@ describe('UnifiedFacilityROIService', () => {
     });
   });
 
-  describe('calculateFacilityROI - fallback to formula-based estimates', () => {
+  describe('facility ROI - fallback to formula-based estimates', () => {
     it('should use formula-based estimates when no snapshots exist', async () => {
       (mockedPrisma.facility.findUnique as jest.Mock).mockResolvedValue({
         userId: 1,
@@ -316,7 +334,7 @@ describe('UnifiedFacilityROIService', () => {
         prestige: 5000,
       });
 
-      const result = await service.calculateFacilityROI(1, 'merchandising_hub');
+      const result = await roiFor('merchandising_hub');
 
       expect(result).not.toBeNull();
       expect(result!.dataSource).toBe('estimate');
@@ -348,7 +366,7 @@ describe('UnifiedFacilityROIService', () => {
         { id: 2 },
       ]);
 
-      const result = await service.calculateFacilityROI(1, 'repair_bay');
+      const result = await roiFor('repair_bay');
 
       expect(result).not.toBeNull();
       expect(result!.dataSource).toBe('estimate');
@@ -374,7 +392,7 @@ describe('UnifiedFacilityROIService', () => {
       (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue({ cycleNumber: 21 });
       mockSnapshots([]);
 
-      const result = await service.calculateFacilityROI(1, 'streaming_studio');
+      const result = await roiFor('streaming_studio');
 
       // 500 more per battle per level × 4 levels × 3 battles × 10 cycles (21..30)
       expect(result!.dataSource).toBe('estimate');
@@ -400,7 +418,7 @@ describe('UnifiedFacilityROIService', () => {
       (mockedPrisma.auditLog.findFirst as jest.Mock).mockResolvedValue({ cycleNumber: 21 });
       mockSnapshots([]);
 
-      const result = await service.calculateFacilityROI(1, 'training_facility');
+      const result = await roiFor('training_facility');
 
       // 10,000 upgrade spend per cycle × 45% × 10 cycles (the old capacity-blind
       // estimate used 90%: 90,000)
@@ -443,7 +461,7 @@ describe('UnifiedFacilityROIService', () => {
     });
   });
 
-  describe('calculateFacilityROI - purchase cycle inference', () => {
+  describe('facility ROI - purchase cycle inference', () => {
     it('should use audit event cycle when available', async () => {
       (mockedPrisma.facility.findUnique as jest.Mock).mockResolvedValue({
         userId: 1,
@@ -469,7 +487,7 @@ describe('UnifiedFacilityROIService', () => {
         },
       ]);
 
-      const result = await service.calculateFacilityROI(1, 'merchandising_hub');
+      const result = await roiFor('merchandising_hub');
 
       expect(result).not.toBeNull();
       // cyclesSincePurchase = 50 - 20 + 1 = 31
@@ -505,7 +523,7 @@ describe('UnifiedFacilityROIService', () => {
         },
       ]);
 
-      const result = await service.calculateFacilityROI(1, 'merchandising_hub');
+      const result = await roiFor('merchandising_hub');
 
       expect(result).not.toBeNull();
       // Should use earliest snapshot cycle (15), so cyclesSincePurchase = 50 - 15 + 1 = 36
@@ -537,7 +555,7 @@ describe('UnifiedFacilityROIService', () => {
         prestige: 1000,
       });
 
-      const result = await service.calculateFacilityROI(1, 'merchandising_hub');
+      const result = await roiFor('merchandising_hub');
 
       expect(result).not.toBeNull();
       // Fallback to cycle 1, so cyclesSincePurchase = 50 - 1 + 1 = 50
@@ -545,7 +563,7 @@ describe('UnifiedFacilityROIService', () => {
     });
   });
 
-  describe('calculateFacilityROI - paidOff and projectedPayoffCycles', () => {
+  describe('facility ROI - paidOff and projectedPayoffCycles', () => {
     it('should mark facility as paid off when returns exceed investment + operating costs', async () => {
       (mockedPrisma.facility.findUnique as jest.Mock).mockResolvedValue({
         userId: 1,
@@ -574,7 +592,7 @@ describe('UnifiedFacilityROIService', () => {
 
       mockSnapshots(snapshots);
 
-      const result = await service.calculateFacilityROI(1, 'merchandising_hub');
+      const result = await roiFor('merchandising_hub');
 
       expect(result).not.toBeNull();
       expect(result!.paidOff).toBe(true);
@@ -609,7 +627,7 @@ describe('UnifiedFacilityROIService', () => {
 
       mockSnapshots(snapshots);
 
-      const result = await service.calculateFacilityROI(1, 'merchandising_hub');
+      const result = await roiFor('merchandising_hub');
 
       expect(result).not.toBeNull();
       expect(result!.paidOff).toBe(false);
@@ -617,26 +635,32 @@ describe('UnifiedFacilityROIService', () => {
     });
   });
 
-  describe('calculateFacilityROI - non-economic facility rejection', () => {
-    it('should return null for roster_expansion', async () => {
-      const result = await service.calculateFacilityROI(1, 'roster_expansion');
-      expect(result).toBeNull();
+  describe('facility ROI - non-economic facility rejection', () => {
+    it('only queries the five economic facility types', async () => {
+      (mockedPrisma.facility.findMany as jest.Mock).mockResolvedValue([]);
+      await service.calculateAllEconomicROIs(1);
+      expect(mockedPrisma.facility.findMany).toHaveBeenCalledWith({
+        where: {
+          userId: 1,
+          level: { gt: 0 },
+          facilityType: {
+            in: ['merchandising_hub', 'streaming_studio', 'repair_bay', 'training_facility', 'weapons_workshop'],
+          },
+        },
+      });
     });
 
-    it('should return null for storage_facility', async () => {
-      const result = await service.calculateFacilityROI(1, 'storage_facility');
-      expect(result).toBeNull();
-    });
-
-    it('should return null for combat_training_academy', async () => {
-      const result = await service.calculateFacilityROI(1, 'combat_training_academy');
-      expect(result).toBeNull();
-    });
-
-    it('should return null for tuning_bay', async () => {
-      const result = await service.calculateFacilityROI(1, 'tuning_bay');
-      expect(result).toBeNull();
-    });
+    it.each(['roster_expansion', 'storage_facility', 'combat_training_academy', 'tuning_bay'])(
+      'drops a %s row that reaches the service anyway',
+      async (facilityType) => {
+        (mockedPrisma.facility.findMany as jest.Mock).mockResolvedValue([
+          { userId: 1, facilityType, level: 3, maxLevel: 10 },
+        ]);
+        (mockedPrisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({ id: 1, totalCycles: 10 });
+        const result = await service.calculateAllEconomicROIs(1);
+        expect(result.facilities).toEqual([]);
+      },
+    );
   });
 
   describe('calculateAllEconomicROIs', () => {
@@ -747,41 +771,6 @@ describe('UnifiedFacilityROIService', () => {
     });
   });
 
-  describe('calculateProjectedROI', () => {
-    it('should return correct response shape', async () => {
-      (mockedPrisma.user.findUnique as jest.Mock).mockResolvedValue({
-        id: 1,
-        currency: 5000000,
-        prestige: 5000,
-      });
-
-      (mockedPrisma.facility.findUnique as jest.Mock).mockResolvedValue({
-        userId: 1,
-        facilityType: 'merchandising_hub',
-        level: 1,
-        maxLevel: 10,
-      });
-
-      const result = await service.calculateProjectedROI(1, 'merchandising_hub', 3);
-
-      expect(result).toHaveProperty('currentLevel', 1);
-      expect(result).toHaveProperty('targetLevel', 3);
-      expect(result).toHaveProperty('upgradeCost');
-      expect(result).toHaveProperty('dailyCostIncrease');
-      expect(result).toHaveProperty('dailyBenefitIncrease');
-      expect(result).toHaveProperty('netDailyChange');
-      expect(result).toHaveProperty('breakevenDays');
-      expect(result).toHaveProperty('net30Days');
-      expect(result).toHaveProperty('net90Days');
-      expect(result).toHaveProperty('net180Days');
-      expect(result).toHaveProperty('affordable');
-      expect(result).toHaveProperty('recommendation');
-      expect(result).toHaveProperty('recommendationType');
-      expect(result.affordable).toBe(true);
-      expect(result.upgradeCost).toBeGreaterThan(0);
-    });
-  });
-
   describe('totalInvestment calculation', () => {
     it('should correctly calculate totalInvestment from facility config costs', async () => {
       const facilityType = 'merchandising_hub';
@@ -811,7 +800,7 @@ describe('UnifiedFacilityROIService', () => {
         },
       ]);
 
-      const result = await service.calculateFacilityROI(1, facilityType);
+      const result = await roiFor(facilityType);
 
       const config = getFacilityConfig(facilityType)!;
       const expectedInvestment = config.costs.slice(0, level).reduce((sum, cost) => sum + cost, 0);

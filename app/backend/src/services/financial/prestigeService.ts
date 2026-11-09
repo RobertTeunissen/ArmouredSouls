@@ -274,8 +274,3 @@ export async function applyPrestigeAwardInTransaction(
   assertInput(input);
   return applyInsideTransaction(tx, input);
 }
-
-export const prestigeService = {
-  apply: applyPrestigeAward,
-  applyInTransaction: applyPrestigeAwardInTransaction,
-};

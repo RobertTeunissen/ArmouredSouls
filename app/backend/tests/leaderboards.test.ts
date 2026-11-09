@@ -32,7 +32,7 @@ describe('Leaderboards Routes', () => {
     await prisma.$disconnect();
   });
 
-  it.each(['/api/leaderboards/fame', '/api/leaderboards/losses', '/api/leaderboards/prestige', '/api/leaderboards/cache?category=fame'])(
+  it.each(['/api/leaderboards/fame', '/api/leaderboards/losses', '/api/leaderboards/prestige'])(
     'refuses %s without a login',
     async (path) => {
       const response = await request(app).get(path);

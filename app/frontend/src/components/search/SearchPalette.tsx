@@ -209,6 +209,7 @@ export function SearchPalette({
         onClick={onClose}
       />
 
+      {/* eslint-disable-next-line jsx-a11y-x/no-noninteractive-element-interactions -- the dialog handles Escape and the focus trap for its contents */}
       <section
         ref={dialogRef}
         role="dialog"

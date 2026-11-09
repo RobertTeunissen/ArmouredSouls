@@ -44,7 +44,7 @@ describe('Profile Update Endpoint', () => {
    *
    * The shape is `details.fields`, an array of `{ field, message }`, and `error`
    * carries the joined messages. These assertions used to read `details.stableName`
-   * — a fourth shape nothing produced. See the note in `src/routes/user.ts`.
+   * — a fourth shape nothing produced. See the note in `src/services/auth/profileUpdateService.ts`.
    */
   function fieldErrors(body: {
     details?: { fields?: Array<{ field: string; message: string }> };

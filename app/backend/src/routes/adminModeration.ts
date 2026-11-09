@@ -10,7 +10,7 @@
 import express, { Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { positiveIntParam, safeEnum } from '../utils/securityValidation';
 import { getSecurityOverview, SECURITY_WINDOWS } from '../services/security/securityOverviewService';
 import {
@@ -46,10 +46,10 @@ const removeBodySchema = z.object({
 });
 
 /** Signals per type and bucket, the stables behind them and the sources without an account. */
-router.get('/security/overview', ...admin, validateRequest({ query: securityQuerySchema }), async (req: AuthRequest, res: Response) => {
-  const { window } = req.query as unknown as z.infer<typeof securityQuerySchema>;
+router.get('/security/overview', ...admin, ...validated({ query: securityQuerySchema }, async (req: AuthRequest, res: Response, { query }) => {
+  const { window } = query;
   res.json(await getSecurityOverview(window));
-});
+}));
 
 /** Cards, uploads per week, moderation outcomes and storage. */
 router.get('/images/overview', ...admin, validateRequest({}), async (_req: AuthRequest, res: Response) => {
@@ -67,15 +67,15 @@ router.post('/images/cleanup', ...admin, validateRequest({}), async (req: AuthRe
 });
 
 /** Images on a robot, newest first. */
-router.get('/images', ...admin, validateRequest({ query: imagesQuerySchema }), async (req: AuthRequest, res: Response) => {
-  const { filter, q, page } = req.query as unknown as z.infer<typeof imagesQuerySchema>;
+router.get('/images', ...admin, ...validated({ query: imagesQuerySchema }, async (req: AuthRequest, res: Response, { query }) => {
+  const { filter, q, page } = query;
   res.json(await listImagesInUse(filter, q, page));
-});
+}));
 
 /** One image for the slide-over. */
-router.get('/images/:id', ...admin, validateRequest({ params: imageParamsSchema }), async (req: AuthRequest, res: Response) => {
-  res.json(await getImageDetail(Number(req.params.id)));
-});
+router.get('/images/:id', ...admin, ...validated({ params: imageParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+  res.json(await getImageDetail(params.id));
+}));
 
 /**
  * Remove an image that got past the NSFW filter (robots and archived seasons
@@ -84,11 +84,9 @@ router.get('/images/:id', ...admin, validateRequest({ params: imageParamsSchema 
 router.delete(
   '/images/:id',
   ...admin,
-  validateRequest({ params: imageParamsSchema, body: removeBodySchema }),
-  async (req: AuthRequest, res: Response) => {
-    const body = req.body as z.infer<typeof removeBodySchema>;
-    res.json(await removeImage(req.user!.userId, Number(req.params.id), body.reason));
-  },
+  ...validated({ params: imageParamsSchema, body: removeBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
+    res.json(await removeImage(req.user!.userId, params.id, body.reason));
+  }),
 );
 
 export default router;

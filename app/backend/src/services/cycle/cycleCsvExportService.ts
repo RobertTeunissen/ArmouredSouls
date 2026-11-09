@@ -99,14 +99,3 @@ export async function exportCycleBattlesToCSV(cycleNumber: number): Promise<stri
 
   return header + csvRows;
 }
-
-/**
- * Export cycle battle data to CSV file
- * @param cycleNumber - Cycle number to export
- * @param filePath - Path to save CSV file
- */
-export async function exportCycleBattlesToFile(cycleNumber: number, filePath: string): Promise<void> {
-  const csv = await exportCycleBattlesToCSV(cycleNumber);
-  const fs = await import('fs');
-  fs.writeFileSync(filePath, csv, 'utf-8');
-}

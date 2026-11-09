@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useStableStore } from '../stableStore';
 import type { StableStatistics } from '../../utils/userApi';
-import type { FinancialSummary } from '../../utils/financialApi';
+import type { FinancialSummary } from '@shared/types';
 
 // Mock the API modules
 vi.mock('../../utils/userApi', () => ({

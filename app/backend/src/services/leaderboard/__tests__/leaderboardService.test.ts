@@ -41,7 +41,6 @@ jest.mock('../../migration/featureFlags', () => ({
 import prisma from '../../../lib/prisma';
 import { leaderboardService } from '../leaderboardService';
 import { isEnabled } from '../../migration/featureFlags';
-import { createLeaderboard } from '../../../../tests/factories/leaderboardCacheFactory';
 
 const mockIsEnabled = isEnabled as jest.MockedFunction<typeof isEnabled>;
 
@@ -207,93 +206,4 @@ describe('LeaderboardService', () => {
 
   // ── getLeaderboard ─────────────────────────────────────────────────
 
-  describe('getLeaderboard', () => {
-    it('should return empty result when feature flag is disabled', async () => {
-      mockIsEnabled.mockResolvedValue(false);
-
-      const result = await leaderboardService.getLeaderboard('fame', 1, 20);
-
-      expect(result).toEqual({
-        entries: [],
-        pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
-        updatedAt: null,
-      });
-      expect(prisma.leaderboardCache.findMany).not.toHaveBeenCalled();
-    });
-
-    it('should return empty result with updatedAt null when cache is empty', async () => {
-      mockIsEnabled.mockResolvedValue(true);
-      (prisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({
-        featureFlags: { leaderboard_active_generation: 1 },
-      });
-      (prisma.leaderboardCache.count as jest.Mock).mockResolvedValue(0);
-
-      const result = await leaderboardService.getLeaderboard('fame', 1, 20);
-
-      expect(result).toEqual({
-        entries: [],
-        pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
-        updatedAt: null,
-      });
-      expect(prisma.leaderboardCache.findMany).not.toHaveBeenCalled();
-    });
-
-    it('should return paginated entries ordered by rank', async () => {
-      mockIsEnabled.mockResolvedValue(true);
-      (prisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({
-        featureFlags: { leaderboard_active_generation: 1 },
-      });
-
-      const entries = createLeaderboard('fame', 5, { generation: 1 });
-      (prisma.leaderboardCache.count as jest.Mock).mockResolvedValue(50);
-      (prisma.leaderboardCache.findMany as jest.Mock).mockResolvedValue(entries);
-
-      const result = await leaderboardService.getLeaderboard('fame', 2, 5);
-
-      expect(prisma.leaderboardCache.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { category: 'fame', generation: 1 },
-          orderBy: { rank: 'asc' },
-          skip: 5,
-          take: 5,
-        }),
-      );
-      expect(result.entries).toHaveLength(5);
-      expect(result.pagination).toEqual({ page: 2, pageSize: 5, total: 50, totalPages: 10 });
-    });
-
-    it('should include updatedAt from first matching row', async () => {
-      mockIsEnabled.mockResolvedValue(true);
-      (prisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({
-        featureFlags: { leaderboard_active_generation: 1 },
-      });
-
-      const updatedAt = new Date('2025-07-01T10:00:00Z');
-      const entries = createLeaderboard('prestige', 3, { generation: 1 });
-      entries[0].updatedAt = updatedAt;
-      (prisma.leaderboardCache.count as jest.Mock).mockResolvedValue(3);
-      (prisma.leaderboardCache.findMany as jest.Mock).mockResolvedValue(entries);
-
-      const result = await leaderboardService.getLeaderboard('prestige', 1, 20);
-
-      expect(result.updatedAt).toEqual(updatedAt);
-    });
-
-    it('should calculate totalPages correctly', async () => {
-      mockIsEnabled.mockResolvedValue(true);
-      (prisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({
-        featureFlags: { leaderboard_active_generation: 1 },
-      });
-
-      const entries = createLeaderboard('career_wins', 10, { generation: 1 });
-      (prisma.leaderboardCache.count as jest.Mock).mockResolvedValue(45);
-      (prisma.leaderboardCache.findMany as jest.Mock).mockResolvedValue(entries);
-
-      const result = await leaderboardService.getLeaderboard('career_wins', 1, 10);
-
-      // 45 total / 10 per page = 5 pages (ceil)
-      expect(result.pagination.totalPages).toBe(5);
-      expect(result.pagination.total).toBe(45);
-    });
-  });
 });

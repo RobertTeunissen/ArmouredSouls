@@ -8,6 +8,7 @@ import LoadoutSelector from '../../LoadoutSelector';
 import StanceSelector from '../../StanceSelector';
 import { api } from '../../../utils/api';
 import { ApiError } from '../../../utils/ApiError';
+import { onActivationKey } from '../../../utils/keyboardActivation';
 import {
   fetchMyRobots,
   equipMainWeapon,
@@ -291,7 +292,7 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
 
     {phase==='range'&&<div className="max-w-2xl mx-auto">
       <h3 className="text-lg font-semibold mb-3 text-secondary uppercase tracking-wide">Preferred Range</h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{RANGES.map(r=>(<div key={r.id} onClick={()=>{if(!busy)setRng(r.id);}}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{RANGES.map(r=>(<div key={r.id} role="button" tabIndex={0} aria-pressed={rng===r.id} aria-disabled={busy} onClick={()=>{if(!busy)setRng(r.id);}} onKeyDown={onActivationKey(()=>{if(!busy)setRng(r.id);})}
         className={`border rounded-lg p-3 cursor-pointer transition-all duration-150 hover:-translate-y-0.5 ${rng===r.id?'border-blue-500 bg-blue-900/30 ring-2 ring-blue-500 shadow-lg':'border-gray-600 bg-gradient-to-br from-gray-700 to-gray-750 hover:border-gray-500 hover:shadow-md'}`}>
         <div className="text-center mb-2"><span className="text-4xl">{r.icon}</span></div>
         <h4 className="font-bold text-base text-center mb-1">{r.label}</h4>

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { getStableStatistics, StableStatistics } from '../utils/userApi';
-import { getFinancialSummary, FinancialSummary } from '../utils/financialApi';
+import { getFinancialSummary } from '../utils/financialApi';
+import type { FinancialSummary } from '@shared/types';
 
 export interface StableState {
   currency: number;

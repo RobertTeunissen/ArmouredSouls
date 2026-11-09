@@ -229,11 +229,6 @@ export async function aggregateBattles(
 
 const cache = new Map<StableScope, { expiresAt: number; value: BattleActivity }>();
 
-/** Drop cached results (tests, and an explicit refresh). */
-export function clearBattleActivityCache(): void {
-  cache.clear();
-}
-
 /** Battle activity per mode for the dashboard filter. Cached for 60 s per filter. */
 export async function getBattleActivity(
   filter: StableScope,

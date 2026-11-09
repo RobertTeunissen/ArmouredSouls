@@ -12,7 +12,7 @@
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 // The constants module, not cycleScheduler: a test that mocks the scheduler
 // must not be able to turn this into `z.enum(undefined)`.
@@ -45,14 +45,13 @@ router.get('/scheduler/overview', authenticateToken, requireAdmin, validateReque
   res.json(await getSchedulerOverview());
 });
 
-router.get('/scheduler/runs', authenticateToken, requireAdmin, validateRequest({ query: historyQuerySchema }), async (req: Request, res: Response) => {
-  const query = req.query as unknown as z.infer<typeof historyQuerySchema>;
+router.get('/scheduler/runs', authenticateToken, requireAdmin, ...validated({ query: historyQuerySchema }, async (req: Request, res: Response, { query }) => {
   res.json(await listSchedulerRuns(query));
-});
+}));
 
-router.get('/scheduler/runs/:id', authenticateToken, requireAdmin, validateRequest({ params: runIdParamSchema }), async (req: Request, res: Response) => {
-  res.json(await getSchedulerRun(Number(req.params.id)));
-});
+router.get('/scheduler/runs/:id', authenticateToken, requireAdmin, ...validated({ params: runIdParamSchema }, async (req: Request, res: Response, { params }) => {
+  res.json(await getSchedulerRun(params.id));
+}));
 
 /**
  * Start a job by hand. Returns 202 with the queued run as soon as it is
@@ -60,12 +59,12 @@ router.get('/scheduler/runs/:id', authenticateToken, requireAdmin, validateReque
  * background (a slot can take 20 minutes, the proxy cuts responses at 30 s).
  * 409 when that job is already queued or running.
  */
-router.post('/scheduler/runs', authenticateToken, requireAdmin, validateRequest({ body: startRunBodySchema }), async (req: Request, res: Response) => {
+router.post('/scheduler/runs', authenticateToken, requireAdmin, ...validated({ body: startRunBodySchema }, async (req: Request, res: Response, { body }) => {
   const authReq = req as AuthRequest;
-  const jobName = req.body.jobName as SchedulerJobName;
+  const jobName = body.jobName as SchedulerJobName;
   const run = await startManualRun(jobName, authReq.user!.userId);
   recordAuditAction(authReq.user!.userId, 'scheduler_trigger', 'success', { jobName, runId: run.runId, background: true });
   res.status(202).json({ run: { id: run.runId, jobName: run.jobName, status: 'queued', queuedAt: run.queuedAt.toISOString() } });
-});
+}));
 
 export default router;

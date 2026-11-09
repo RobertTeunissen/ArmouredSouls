@@ -251,11 +251,14 @@ export interface PaginatedResponse<T> {
 }
 
 // API Functions
-export const getUpcomingMatches = async (robotId?: number): Promise<ScheduledMatch[]> => {
-  const params = robotId ? { robotId } : undefined;
+export const getUpcomingMatches = async (robotId?: number, signal?: AbortSignal): Promise<ScheduledMatch[]> => {
+  const config = {
+    ...(robotId ? { params: { robotId } } : {}),
+    ...(signal ? { signal } : {}),
+  };
   const response = await api.get<{ matches: ScheduledMatch[] }>(
     '/api/matches/upcoming',
-    params ? { params } : undefined,
+    Object.keys(config).length > 0 ? config : undefined,
   );
   return response.matches || [];  // Extract matches array from response
 };
@@ -264,10 +267,10 @@ export const getMatchHistory = async (
   page: number = 1,
   pageSize: number = 10,
   battleType?: 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'grand_melee' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3',
-  robotId?: number
+  robotId?: number,
+  signal?: AbortSignal,
 ): Promise<PaginatedResponse<BattleHistory>> => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const params: any = { page, perPage: pageSize };
+  const params: { page: number; perPage: number; battleType?: string; robotId?: number } = { page, perPage: pageSize };
   
   // Add battleType filter if not 'overall'
   if (battleType && battleType !== 'overall') {
@@ -279,7 +282,7 @@ export const getMatchHistory = async (
     params.robotId = robotId;
   }
   
-  return api.get<PaginatedResponse<BattleHistory>>('/api/matches/history', { params });
+  return api.get<PaginatedResponse<BattleHistory>>('/api/matches/history', signal ? { params, signal } : { params });
 };
 
 // Re-export tier helpers from single source of truth
@@ -630,6 +633,7 @@ export interface BattleLogResponse {
   }>;
 }
 
-export const getBattleLog = async (battleId: number): Promise<BattleLogResponse> => {
-  return api.get<BattleLogResponse>(`/api/matches/battles/${battleId}/log`);
+export const getBattleLog = async (battleId: number, signal?: AbortSignal): Promise<BattleLogResponse> => {
+  const url = `/api/matches/battles/${battleId}/log`;
+  return signal ? api.get<BattleLogResponse>(url, { signal }) : api.get<BattleLogResponse>(url);
 };

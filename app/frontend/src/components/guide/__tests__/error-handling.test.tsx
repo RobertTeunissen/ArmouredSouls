@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import GuidePage from '../../../pages/GuidePage';
 import * as guideApi from '../../../utils/guideApi';
+import { ApiError } from '../../../utils/ApiError';
 
 // Mock Navigation
 vi.mock('../../Navigation', () => ({
@@ -51,8 +52,8 @@ describe('GuidePage — Error Handling', () => {
   });
 
   it('should display "Article not found" message on 404 error', async () => {
-    const error = new Error('Not found') as Error & { response?: { status: number } };
-    error.response = { status: 404 };
+    // The API wrapper rejects with an ApiError carrying the HTTP status.
+    const error = new ApiError('Not found', 'NOT_FOUND', 404);
     vi.mocked(guideApi.fetchGuideArticle).mockRejectedValue(error);
 
     renderGuidePage('/guide/combat/nonexistent-article');
@@ -65,8 +66,8 @@ describe('GuidePage — Error Handling', () => {
   });
 
   it('should display "Something went wrong" with retry button on 500 error', async () => {
-    const error = new Error('Server error') as Error & { response?: { status: number } };
-    error.response = { status: 500 };
+    // The API wrapper rejects with an ApiError carrying the HTTP status.
+    const error = new ApiError('Server error', 'INTERNAL_ERROR', 500);
     vi.mocked(guideApi.fetchGuideArticle).mockRejectedValue(error);
 
     renderGuidePage('/guide/combat/battle-flow');
@@ -79,8 +80,8 @@ describe('GuidePage — Error Handling', () => {
   });
 
   it('should retry fetching article when "Try Again" button is clicked', async () => {
-    const error = new Error('Server error') as Error & { response?: { status: number } };
-    error.response = { status: 500 };
+    // The API wrapper rejects with an ApiError carrying the HTTP status.
+    const error = new ApiError('Server error', 'INTERNAL_ERROR', 500);
     vi.mocked(guideApi.fetchGuideArticle).mockRejectedValueOnce(error);
 
     // Second call succeeds

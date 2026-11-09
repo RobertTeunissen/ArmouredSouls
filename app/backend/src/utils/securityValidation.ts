@@ -85,6 +85,21 @@ export const safeImageUrl = z
   .optional();
 
 /**
+ * A robot appearance image path: a bundled preset (`/assets/robots…`,
+ * `/src/assets/robot…`) or the player's own upload
+ * (`/uploads/user-robots/<userId>/<uuid>.webp`). WebP only; no other
+ * directories, no `..`, no query string.
+ */
+export const robotImagePath = z
+  .string()
+  .min(1, 'Invalid imageUrl')
+  .max(200, 'Invalid imageUrl')
+  .regex(
+    /^\/(?:(?:src\/)?assets\/robots?[\w/-]*|uploads\/user-robots\/\d+\/[0-9a-f-]+)\.webp$/,
+    'Invalid image path. Must be a .webp file from presets or uploads.',
+  );
+
+/**
  * ORDER BY column allowlist factory.
  * Maps user input to a predefined set of allowed column names.
  * Falls back to a safe default when the input doesn't match.

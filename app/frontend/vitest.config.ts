@@ -20,9 +20,14 @@ export default defineConfig({
         '**/*.config.{js,ts}',
         '**/dist/**',
       ],
+      // Enforced in CI through `pnpm run test:ci`. Floors sit about two points
+      // under the measured values (9 Nov 2026: statements 74.4%, branches 68.6%,
+      // functions 76.6%, lines 76.0%) so a change that drops coverage fails.
       thresholds: {
-        lines: 40,
-        branches: 35,
+        statements: 72,
+        branches: 66,
+        functions: 74,
+        lines: 74,
       },
     },
   },

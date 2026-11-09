@@ -121,10 +121,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   return (
     <div className="bg-surface rounded-lg mb-6">
       {/* Header - Always visible */}
-      <div className="flex justify-between items-center p-6 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+      {/* The whole header is a larger pointer target; the chevron button is the keyboard control. */}
+      <div role="presentation" className="flex justify-between items-center p-6 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold">Filters</h2>
           <button
+            type="button"
+            aria-expanded={isExpanded}
+            aria-label={isExpanded ? 'Hide filters' : 'Show filters'}
             className="text-secondary hover:text-white transition-colors"
             onClick={(e) => {
               e.stopPropagation();

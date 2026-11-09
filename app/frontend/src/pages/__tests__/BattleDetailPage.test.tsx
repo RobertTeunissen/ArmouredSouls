@@ -70,6 +70,7 @@ vi.mock('../../components/battle-detail', async (importOriginal) => {
 
 import { getBattleLog } from '../../utils/matchmakingApi';
 import type { BattleLogParticipant, BattleLogResponse } from '../../utils/matchmakingApi';
+import { ApiError } from '../../utils/ApiError';
 
 // Since BattleDetailPage has complex internal state, we test the page shell behavior
 // by testing error/loading states directly.
@@ -99,10 +100,7 @@ describe('BattleDetailPage - Team Battle page-level behavior', () => {
   });
 
   it('should show error state when battle not found (404)', async () => {
-    const axiosError = new Error('Not found') as Error & { isAxiosError: boolean; response: { status: number } };
-    axiosError.isAxiosError = true;
-    axiosError.response = { status: 404 };
-    vi.mocked(getBattleLog).mockRejectedValue(axiosError);
+    vi.mocked(getBattleLog).mockRejectedValue(new ApiError('Battle not found', 'NOT_FOUND', 404));
     renderPage();
 
     await waitFor(() => {
@@ -111,10 +109,7 @@ describe('BattleDetailPage - Team Battle page-level behavior', () => {
   });
 
   it('should show error state when access denied (403)', async () => {
-    const axiosError = new Error('Forbidden') as Error & { isAxiosError: boolean; response: { status: number } };
-    axiosError.isAxiosError = true;
-    axiosError.response = { status: 403 };
-    vi.mocked(getBattleLog).mockRejectedValue(axiosError);
+    vi.mocked(getBattleLog).mockRejectedValue(new ApiError('Access denied', 'FORBIDDEN', 403));
     renderPage();
 
     await waitFor(() => {
@@ -134,7 +129,7 @@ describe('BattleDetailPage - Team Battle page-level behavior', () => {
   it('should call getBattleLog with the battle ID from URL params', () => {
     vi.mocked(getBattleLog).mockReturnValue(new Promise(() => {}));
     renderPage('42');
-    expect(getBattleLog).toHaveBeenCalledWith(42);
+    expect(getBattleLog).toHaveBeenCalledWith(42, expect.any(AbortSignal));
   });
 
   it('should render page with min-h-screen class for proper viewport handling', () => {

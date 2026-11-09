@@ -168,8 +168,8 @@ describe('Property 33: Reduced Motion Respect (Property-Based Test)', () => {
               </button>
             ),
             link: (
-              <a 
-                href="#" 
+              <a
+                href="/guide" 
                 className="hover:text-primary transition-colors" 
                 data-testid="interactive-element"
               >

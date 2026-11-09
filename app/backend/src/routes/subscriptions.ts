@@ -10,7 +10,7 @@
 
 import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import {
   robotIdParamSchema,
   subscribeBodySchema,
@@ -49,53 +49,49 @@ async function checkSubscriptionAchievements(userId: number, robotId: number): P
 router.get(
   '/robot/:robotId',
   authenticateToken,
-  validateRequest({ params: robotIdParamSchema }),
-  async (req: AuthRequest, res: Response) => {
-    const robotId = Number(req.params.robotId);
+  ...validated({ params: robotIdParamSchema }, async (req: AuthRequest, res: Response, { params }) => {
+    const robotId = params.robotId;
     const info = await getSubscriptionsForRobot(robotId);
     res.json(info);
-  },
+  }),
 );
 
 // POST /api/subscriptions/robot/:robotId/subscribe — subscribe robot to event
 router.post(
   '/robot/:robotId/subscribe',
   authenticateToken,
-  validateRequest({ params: robotIdParamSchema, body: subscribeBodySchema }),
-  async (req: AuthRequest, res: Response) => {
-    const robotId = Number(req.params.robotId);
-    const { eventType } = req.body;
+  ...validated({ params: robotIdParamSchema, body: subscribeBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
+    const robotId = params.robotId;
+    const { eventType } = body;
     const result = await subscribeRobot(robotId, eventType, req.user!.userId);
     const achievementUnlocks = await checkSubscriptionAchievements(req.user!.userId, robotId);
     res.json({ success: true, message: `Subscribed to ${eventType}.`, ...result, achievementUnlocks });
-  },
+  }),
 );
 
 // POST /api/subscriptions/robot/:robotId/unsubscribe — unsubscribe robot from event
 router.post(
   '/robot/:robotId/unsubscribe',
   authenticateToken,
-  validateRequest({ params: robotIdParamSchema, body: subscribeBodySchema }),
-  async (req: AuthRequest, res: Response) => {
-    const robotId = Number(req.params.robotId);
-    const { eventType } = req.body;
+  ...validated({ params: robotIdParamSchema, body: subscribeBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
+    const robotId = params.robotId;
+    const { eventType } = body;
     const result = await unsubscribeRobot(robotId, eventType, req.user!.userId);
     res.json({ success: true, message: `Unsubscribed from ${eventType}.`, ...result });
-  },
+  }),
 );
 
 // PUT /api/subscriptions/robot/:robotId — replace a robot's whole subscription set
 router.put(
   '/robot/:robotId',
   authenticateToken,
-  validateRequest({ params: robotIdParamSchema, body: setSubscriptionsBodySchema }),
-  async (req: AuthRequest, res: Response) => {
-    const robotId = Number(req.params.robotId);
-    const { eventTypes } = req.body;
+  ...validated({ params: robotIdParamSchema, body: setSubscriptionsBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
+    const robotId = params.robotId;
+    const { eventTypes } = body;
     const result = await setSubscriptionsForRobot(robotId, eventTypes, req.user!.userId);
     const achievementUnlocks = await checkSubscriptionAchievements(req.user!.userId, robotId);
     res.json({ success: true, ...result, achievementUnlocks });
-  },
+  }),
 );
 
 // GET /api/subscriptions/overview — stable-level matrix (all robots × all events)

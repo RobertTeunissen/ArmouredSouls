@@ -3,7 +3,7 @@
  *
  * **Validates: Requirements 4.4**
  *
- * For any robot returned via the public robots endpoint (/all/robots) to a user
+ * For any robot returned through a public robot response (e.g. GET /api/robots/:id) to a user
  * who does not own that robot, the response object shall not contain any key from
  * the SENSITIVE_ROBOT_FIELDS constant (23 attributes, battle config, combat state,
  * equipment IDs).

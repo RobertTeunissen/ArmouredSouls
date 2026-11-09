@@ -162,29 +162,6 @@ describe('Weapon Inventory Routes', () => {
     });
   });
 
-  describe('GET /api/weapon-inventory/:id/available', () => {
-    it('should return 403 for an inventory item that does not exist', async () => {
-      const response = await request(server)
-        .get('/api/weapon-inventory/99999/available')
-        .set('Authorization', `Bearer ${authToken}`)
-        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-
-      // 403, not 404. `verifyWeaponOwnership` answers a generic "Access denied" for an
-      // absent item as well as one owned by someone else, so the response cannot be
-      // used to probe which inventory ids exist. See the ownership rule in
-      // .kiro/steering/coding-standards.md.
-      expect(response.status).toBe(403);
-      expect(response.body).toHaveProperty('error');
-    });
-
-    it('should return 401 without authentication', async () => {
-      const response = await request(server)
-        .get('/api/weapon-inventory/1/available');
-
-      expect(response.status).toBe(401);
-    });
-  });
-
   // ─────────────────────────────────────────────────────────────────────
   // DELETE /api/weapon-inventory/:id — Resale (Spec #33)
   // ─────────────────────────────────────────────────────────────────────

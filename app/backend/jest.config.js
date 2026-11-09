@@ -18,6 +18,10 @@ module.exports = {
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
+    // Test files are not product code: counting them inflated the executed
+    // ones to 100% and the other tiers' files (never run here) to 0%.
+    '!src/**/__tests__/**',
+    '!src/**/*.test.ts',
   ],
   transform: baseTransform,
   testTimeout: 60000,

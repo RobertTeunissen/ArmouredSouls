@@ -136,16 +136,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const userData = await api.get<User>('/api/user/profile');
       setUser(userData);
     } catch (error) {
-      // Only logout on definitive auth failures from our own backend.
-      // Proxy/WAF/DDoS layers may return 401/403 with non-JSON bodies; those
+      // Only logout on definitive auth failures from our own backend, which
+      // always answers a bad token with 401 (a 403 is a permission answer).
+      // Proxy/WAF/DDoS layers may return 401 with non-JSON bodies; those
       // arrive here as `ApiError` with `code === 'UNKNOWN_ERROR'` (the typed
       // wrapper falls back to that when the response body lacks a `code`
       // field). They should NOT destroy the session since the token may
       // still be valid.
-      if (
-        error instanceof ApiError &&
-        (error.statusCode === 401 || error.statusCode === 403)
-      ) {
+      if (error instanceof ApiError && error.statusCode === 401) {
         const isBackendAuthError = error.code !== 'UNKNOWN_ERROR';
 
         if (isBackendAuthError) {
@@ -153,7 +151,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           logout();
         } else {
           log.warn(
-            'Non-backend 401/403 during profile fetch (possible proxy/WAF block), keeping session',
+            'Non-backend 401 during profile fetch (possible proxy/WAF block), keeping session',
             { error },
           );
         }

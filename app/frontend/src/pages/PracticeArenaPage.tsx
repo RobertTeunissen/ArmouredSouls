@@ -106,8 +106,9 @@ function PracticeArenaPage() {
               {/* Run Controls */}
               <div className="flex flex-col sm:flex-row items-center gap-4 justify-center">
                 <div className="flex items-center gap-2">
-                  <label className="text-sm text-secondary">Simulation runs:</label>
+                  <label htmlFor="practice-batch-count" className="text-sm text-secondary">Simulation runs:</label>
                   <select
+                    id="practice-batch-count"
                     value={batchCount}
                     onChange={(e) => setBatchCount(parseInt(e.target.value))}
                     className="bg-surface border border-white/10 rounded px-3 py-2 text-sm text-primary"

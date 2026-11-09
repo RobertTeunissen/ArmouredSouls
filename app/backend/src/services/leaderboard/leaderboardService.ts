@@ -214,69 +214,10 @@ async function refreshAll(): Promise<void> {
   logger.info(`[LeaderboardService] Refresh complete — active generation is now ${nextGen}`);
 }
 
-/**
- * Serve paginated leaderboard entries for a category from the cache.
- */
-async function getLeaderboard(
-  category: LeaderboardCategory,
-  page: number,
-  limit: number,
-): Promise<LeaderboardResult> {
-  const enabled = await isEnabled('leaderboard_cache_active');
-  if (!enabled) {
-    logger.warn('[LeaderboardService] leaderboard_cache_active flag is disabled — returning empty result');
-    return {
-      entries: [],
-      pagination: { page, pageSize: limit, total: 0, totalPages: 0 },
-      updatedAt: null,
-    };
-  }
-
-  const activeGen = await getActiveGeneration();
-
-  const total = await prisma.leaderboardCache.count({
-    where: { category, generation: activeGen },
-  });
-
-  if (total === 0) {
-    return {
-      entries: [],
-      pagination: { page, pageSize: limit, total: 0, totalPages: 0 },
-      updatedAt: null,
-    };
-  }
-
-  const offset = (page - 1) * limit;
-
-  const rows = await prisma.leaderboardCache.findMany({
-    where: { category, generation: activeGen },
-    orderBy: { rank: 'asc' },
-    skip: offset,
-    take: limit,
-  });
-
-  const entries: LeaderboardEntry[] = rows.map((r) => ({
-    rank: r.rank,
-    entityType: r.entityType as 'robot' | 'user',
-    entityId: r.entityId,
-    score: r.score,
-  }));
-
-  const updatedAt = rows.length > 0 ? rows[0].updatedAt : null;
-  const totalPages = Math.ceil(total / limit);
-
-  return {
-    entries,
-    pagination: { page, pageSize: limit, total, totalPages },
-    updatedAt,
-  };
-}
-
 // ─── Singleton Export ────────────────────────────────────────────────────────
 
 export const leaderboardService = {
   refreshAll,
-  getLeaderboard,
 };
 
 export type { LeaderboardCategory, LeaderboardEntry, LeaderboardResult };

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import BattleHistoryPage from '../BattleHistoryPage';
 import type { BattleHistory, BattleParticipantData } from '../../utils/matchmakingApi';
@@ -175,5 +175,39 @@ describe('BattleHistoryPage display instances', () => {
       expect(screen.getByText('No Battles Found')).toBeInTheDocument();
     });
     expect(screen.queryAllByRole('button', { name: /bye result/i })).toHaveLength(0);
+  });
+});
+
+describe('BattleHistoryPage loading', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('requests the history once on mount and the next page on Next', async () => {
+    mockGetMatchHistory.mockImplementation(async (page: number) => ({
+      data: [battle([participant(10, 7, 1, 100, 10), participant(20, 8, 2, 900, 90)])],
+      pagination: { page, pageSize: 20, total: 40, totalPages: 2 },
+    }));
+
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText('Page 1 of 2')).toBeInTheDocument());
+    expect(mockGetMatchHistory).toHaveBeenCalledTimes(1);
+    expect(mockGetMatchHistory).toHaveBeenLastCalledWith(1, 20, 'overall', undefined, expect.any(AbortSignal));
+
+    fireEvent.click(screen.getByRole('button', { name: /next/i }));
+
+    await waitFor(() => expect(screen.getByText('Page 2 of 2')).toBeInTheDocument());
+    expect(mockGetMatchHistory).toHaveBeenCalledTimes(2);
+    expect(mockGetMatchHistory).toHaveBeenLastCalledWith(2, 20, 'overall', undefined, expect.any(AbortSignal));
+  });
+
+  it('starts at page 1 of the filter given in the URL', async () => {
+    mockGetMatchHistory.mockResolvedValue({ data: [], pagination: { page: 1, pageSize: 50, total: 0, totalPages: 0 } });
+
+    renderPage('/battle-history?type=koth&pageSize=50');
+
+    await waitFor(() => expect(mockGetMatchHistory).toHaveBeenCalledTimes(1));
+    expect(mockGetMatchHistory).toHaveBeenCalledWith(1, 50, 'koth', undefined, expect.any(AbortSignal));
   });
 });

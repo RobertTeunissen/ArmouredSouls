@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { api } from '../../utils/api';
 import { ApiError } from '../../utils/ApiError';
 
@@ -24,6 +25,10 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
   const [canReset, setCanReset] = useState(false);
   const [blockers, setBlockers] = useState<ResetBlocker[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const titleId = useId();
+  const confirmInputId = useId();
+  // Escape closes like the overlay does, except while the reset is running.
+  useEscapeKey(onClose, isOpen && !isLoading);
 
   // Check reset eligibility when modal opens
   useEffect(() => {
@@ -116,13 +121,19 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
       <div
         className="absolute inset-0 bg-black bg-opacity-75"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Modal */}
-      <div className="relative bg-surface rounded-lg shadow-2xl max-w-lg w-full mx-4 border border-white/10 animate-scale-in">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative bg-surface rounded-lg shadow-2xl max-w-lg w-full mx-4 border border-white/10 animate-scale-in"
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-white/10">
-          <h3 className="text-xl font-semibold text-white">Reset Account</h3>
+          <h3 id={titleId} className="text-xl font-semibold text-white">Reset Account</h3>
         </div>
 
         {/* Body */}
@@ -287,10 +298,11 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
 
               {/* Confirmation Input */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-secondary mb-2">
+                <label htmlFor={confirmInputId} className="block text-sm font-medium text-secondary mb-2">
                   Type <span className="text-error font-bold">"RESET"</span> to confirm:
                 </label>
                 <input
+                  id={confirmInputId}
                   type="text"
                   value={confirmationText}
                   onChange={(e) => setConfirmationText(e.target.value)}

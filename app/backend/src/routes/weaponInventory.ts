@@ -2,10 +2,8 @@ import express, { Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { getStorageStatus } from '../utils/storageCalculations';
 import prisma from '../lib/prisma';
-import { EconomyError, EconomyErrorCode } from '../errors';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { positiveIntParam, safeName } from '../utils/securityValidation';
 import { verifyWeaponOwnership } from '../middleware/ownership';
 import { securityMonitor } from '../services/security/securityMonitor';
@@ -15,6 +13,11 @@ import { getIdempotencyKey, idempotencyHeadersSchema } from '../utils/idempotenc
 import { purchaseWeapon } from '../services/economy/weaponPurchaseService';
 import { sellWeapon } from '../services/economy/weaponSaleService';
 import { refineWeapon } from '../services/economy/weaponRefinementService';
+import {
+  getWeaponStorageStatus,
+  listWeaponInventory,
+  setWeaponCustomName,
+} from '../services/economy/weaponInventoryQueryService';
 
 const router = express.Router();
 
@@ -179,29 +182,13 @@ const customNameRateLimiter = rateLimit({
 
 // Get user's weapon inventory
 router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
-  const userId = req.user!.userId;
-
-  const inventory = await prisma.weaponInventory.findMany({
-    where: { userId },
-    include: {
-      weapon: true,
-      robotsMain: { select: { id: true, name: true } },
-      robotsOffhand: { select: { id: true, name: true } },
-      // Spec #34: include refinements so the My Inventory tab can render the
-      // slot bar and rank-prefixed weapon name. Ordered by slotIndex for
-      // stable display.
-      refinements: { orderBy: { slotIndex: 'asc' } },
-    },
-    orderBy: { purchasedAt: 'desc' },
-  });
-
-  res.json(inventory);
+  res.json(await listWeaponInventory(req.user!.userId));
 });
 
 // Purchase a weapon into inventory
-router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBodySchema, headers: idempotencyHeadersSchema }), async (req: AuthRequest, res: Response) => {
+router.post('/purchase', authenticateToken, ...validated({ body: purchaseBodySchema, headers: idempotencyHeadersSchema }, async (req: AuthRequest, res: Response, { body }) => {
   const userId = req.user!.userId;
-  const { weaponId } = req.body;
+  const { weaponId } = body;
   const requestKey = getIdempotencyKey(req.headers);
   const weaponIdNum = Number(weaponId);
 
@@ -226,51 +213,11 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
       } catch { return []; }
     })(),
   });
-});
-
-// Get available robots for a weapon
-router.get('/:id/available', authenticateToken, validateRequest({ params: inventoryIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const userId = req.user!.userId;
-  const inventoryId = parseInt(String(req.params.id));
-
-  await verifyWeaponOwnership(prisma, inventoryId, userId);
-
-  const weaponInv = await prisma.weaponInventory.findUnique({
-    where: { id: inventoryId },
-    include: { weapon: true },
-  });
-
-  if (!weaponInv) {
-    throw new EconomyError(EconomyErrorCode.WEAPON_NOT_FOUND, 'Weapon not found in your inventory', 404);
-  }
-
-  const robots = await prisma.robot.findMany({
-    where: { userId },
-    select: { id: true, name: true, mainWeaponId: true, offhandWeaponId: true },
-  });
-
-  res.json({
-    weapon: weaponInv.weapon,
-    robots,
-    currentlyEquippedTo: robots.find(r => r.mainWeaponId === inventoryId || r.offhandWeaponId === inventoryId)?.id || null,
-  });
-});
+}));
 
 // Get storage capacity status
 router.get('/storage-status', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
-  const userId = req.user!.userId;
-
-  const storageFacility = await prisma.facility.findUnique({
-    where: {
-      userId_facilityType: { userId, facilityType: 'storage_facility' },
-    },
-  });
-
-  const storageFacilityLevel = storageFacility?.level || 0;
-  const currentWeaponCount = await prisma.weaponInventory.count({ where: { userId } });
-  const storageStatus = getStorageStatus(currentWeaponCount, storageFacilityLevel);
-
-  res.json(storageStatus);
+  res.json(await getWeaponStorageStatus(req.user!.userId));
 });
 
 /**
@@ -295,10 +242,9 @@ router.delete(
   '/:id',
   authenticateToken,
   resaleRateLimiter, // After authenticateToken so req.user is populated for keyGenerator
-  validateRequest({ params: inventoryIdParamsSchema, headers: idempotencyHeadersSchema }),
-  async (req: AuthRequest, res: Response) => {
+  ...validated({ params: inventoryIdParamsSchema, headers: idempotencyHeadersSchema }, async (req: AuthRequest, res: Response, { params }) => {
     const userId = req.user!.userId;
-    const inventoryId = parseInt(String(req.params.id));
+    const inventoryId = params.id;
     const requestKey = getIdempotencyKey(req.headers);
 
     // Spec #55 task 2.3: the sale itself lives in weaponSaleService.
@@ -334,7 +280,7 @@ router.delete(
       message: completedSale.message,
       achievementUnlocks,
     });
-  },
+  }),
 );
 
 /**
@@ -372,11 +318,10 @@ router.post(
   '/:id/refine',
   authenticateToken,
   refineRateLimiter, // After authenticateToken so req.user is populated for keyGenerator
-  validateRequest({ params: inventoryIdParamsSchema, body: refineBodySchema, headers: idempotencyHeadersSchema }),
-  async (req: AuthRequest, res: Response) => {
+  ...validated({ params: inventoryIdParamsSchema, body: refineBodySchema, headers: idempotencyHeadersSchema }, async (req: AuthRequest, res: Response, { params, body }) => {
     const userId = req.user!.userId;
-    const inventoryId = parseInt(String(req.params.id));
-    const { tier, magnitude, targetAttribute } = req.body as z.infer<typeof refineBodySchema>;
+    const inventoryId = params.id;
+    const { tier, magnitude, targetAttribute } = body;
     const requestKey = getIdempotencyKey(req.headers);
 
     // Spec #55 task 2.4: the refinement itself lives in weaponRefinementService.
@@ -417,7 +362,7 @@ router.post(
       message: completedRefinement.message,
       achievementUnlocks,
     });
-  },
+  }),
 );
 
 /**
@@ -438,25 +383,17 @@ router.patch(
   '/:id/custom-name',
   authenticateToken,
   customNameRateLimiter, // After authenticateToken so req.user is populated for keyGenerator
-  validateRequest({ params: inventoryIdParamsSchema, body: customNameBodySchema }),
-  async (req: AuthRequest, res: Response) => {
+  ...validated({ params: inventoryIdParamsSchema, body: customNameBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
     const userId = req.user!.userId;
-    const inventoryId = parseInt(String(req.params.id));
-    const { customName } = req.body as z.infer<typeof customNameBodySchema>;
+    const inventoryId = params.id;
+    const { customName } = body;
 
     await verifyWeaponOwnership(prisma, inventoryId, userId);
 
-    const updated = await prisma.weaponInventory.update({
-      where: { id: inventoryId },
-      data: { customName },
-      include: {
-        weapon: true,
-        refinements: { orderBy: { slotIndex: 'asc' } },
-      },
-    });
+    const updated = await setWeaponCustomName(inventoryId, customName);
 
     res.json({ weaponInventory: updated });
-  },
+  }),
 );
 
 export default router;

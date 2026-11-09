@@ -181,32 +181,6 @@ describe('ChangelogService', () => {
 
   // ── getUnreadCount ────────────────────────────────────────────────
 
-  describe('getUnreadCount', () => {
-    it('should return correct count of unread entries', async () => {
-      const lastSeen = new Date('2025-06-01T00:00:00Z');
-      (prisma.user.findUnique as jest.Mock).mockResolvedValue({ lastSeenChangelog: lastSeen });
-      (prisma.changelogEntry.count as jest.Mock).mockResolvedValue(5);
-
-      const count = await changelogService.getUnreadCount(42);
-
-      expect(prisma.changelogEntry.count).toHaveBeenCalledWith({
-        where: {
-          status: 'published',
-          publishDate: { gt: lastSeen },
-        },
-      });
-      expect(count).toBe(5);
-    });
-
-    it('should return 0 if user not found', async () => {
-      (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
-
-      const count = await changelogService.getUnreadCount(999);
-
-      expect(count).toBe(0);
-    });
-  });
-
   // ── dismiss ───────────────────────────────────────────────────────
 
   describe('dismiss', () => {

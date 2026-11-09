@@ -14,6 +14,7 @@
 
 import { useState } from 'react';
 import { api } from '../../utils/api';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { ApiError } from '../../utils/ApiError';
 import { applyResaleRate } from '../../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../../utils/weaponImages';
@@ -38,6 +39,8 @@ export function ConfirmSaleModal({
   const isFreeSell = resaleRate === 0;
 
   const [submitting, setSubmitting] = useState(false);
+  // Escape cancels like the backdrop does, except while the request is running.
+  useEscapeKey(onCancel, !submitting);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
 
@@ -62,16 +65,16 @@ export function ConfirmSaleModal({
 
   return (
     <div
+      role="presentation"
       className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-      onClick={onCancel}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="confirm-sale-title"
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
       data-testid="confirm-sale-modal"
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-sale-title"
         className="bg-surface rounded-lg max-w-md w-full p-6"
-        onClick={(e) => e.stopPropagation()}
       >
         <h2 id="confirm-sale-title" className="text-2xl font-bold mb-4">
           Sell {item.weapon.name}?

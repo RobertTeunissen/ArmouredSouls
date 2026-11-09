@@ -14,7 +14,7 @@
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import logger from '../config/logger';
 import { recordAction as recordAuditAction } from '../services/admin/adminAuditLogService';
 import { runBulkCycles, startBulkCycles } from '../services/admin/adminBulkCycleRunService';
@@ -47,9 +47,9 @@ const bulkCyclesBodySchema = z.object({
  * returns 202 with the queued run at once (Cycle Controls); 409 when a bulk
  * run is already queued or running.
  */
-router.post('/cycles/bulk', authenticateToken, requireAdmin, validateRequest({ body: bulkCyclesBodySchema }), async (req: Request, res: Response) => {
+router.post('/cycles/bulk', authenticateToken, requireAdmin, ...validated({ body: bulkCyclesBodySchema }, async (req: Request, res: Response, { body }) => {
   const authReq = req as AuthRequest;
-  const { background, ...options } = req.body as z.infer<typeof bulkCyclesBodySchema>;
+  const { background, ...options } = body;
   if (background) {
     const run = await startBulkCycles(options, authReq.user!.userId);
     recordAuditAction(authReq.user!.userId, 'cycles_bulk', 'success', { cyclesRequested: options.cycles, runId: run.runId, background: true });
@@ -70,7 +70,7 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, validateRequest({ b
       error: 'Failed to run bulk cycles',
     });
   }
-});
+}));
 
 /**
  * GET /api/admin/practice-arena/overview

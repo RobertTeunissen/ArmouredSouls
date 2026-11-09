@@ -103,17 +103,13 @@ This document summarizes the implementation of the Cycle-Based Audit Logging and
 ## API Endpoints
 
 ### Analytics Endpoints
+
+Current (Nov 2026; the stable summary, robot performance, single-facility ROI, cycle performance, integrity and event-statistics endpoints listed here originally were removed as unused):
 - `GET /api/analytics/cycle/current` - Get current cycle number
-- `GET /api/analytics/stable/:userId/summary` - Stable income summary
-- `GET /api/analytics/comparison` - Historical cycle comparison
-- `GET /api/analytics/trends` - Time-series trend data
-- `GET /api/analytics/robot/:robotId/performance` - Robot performance summary
 - `GET /api/analytics/robot/:robotId/metric/:metricName` - Metric progression
-- `GET /api/analytics/facility/:userId/roi` - Facility ROI data
+- `GET /api/analytics/robot/:id/koth-performance` - KotH performance
+- `GET /api/analytics/facility/:userId/roi/all-economic` - ROI of every economic facility
 - `GET /api/analytics/facility/:userId/recommendations` - Investment recommendations
-- `GET /api/analytics/performance` - Cycle performance metrics
-- `GET /api/analytics/integrity` - Data integrity reports
-- `GET /api/analytics/events/stats` - Event log statistics
 
 ## Services Architecture
 

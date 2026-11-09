@@ -22,7 +22,6 @@ export const SCHEDULER_HEARTBEAT_INTERVAL_MS = 60_000;
 const MAX_ERROR_LENGTH = 500;
 
 let currentProcessId: number | null = null;
-let currentProcessStartedAt: Date | null = null;
 let heartbeat: NodeJS.Timeout | null = null;
 
 function describe(error: unknown): string {
@@ -32,11 +31,6 @@ function describe(error: unknown): string {
 /** The id of this process's `scheduler_processes` row, or null before `startProcess`. */
 export function getCurrentProcessId(): number | null {
   return currentProcessId;
-}
-
-/** When this process registered itself, or null before `startProcess`. */
-export function getCurrentProcessStartedAt(): Date | null {
-  return currentProcessStartedAt;
 }
 
 /**
@@ -56,7 +50,6 @@ export async function startProcess(options: { schedulerEnabled: boolean; deployT
       },
     });
     currentProcessId = process.id;
-    currentProcessStartedAt = process.startedAt;
 
     await markInterruptedRuns(process.id);
     startHeartbeat(process.id);
@@ -110,7 +103,6 @@ export function stopHeartbeat(): void {
 export function resetRunStore(): void {
   stopHeartbeat();
   currentProcessId = null;
-  currentProcessStartedAt = null;
 }
 
 /**

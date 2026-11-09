@@ -176,7 +176,7 @@ describe('UpcomingMatches perspective and readiness', () => {
     });
     expect(screen.getAllByText('Robot 20').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Robot 30').length).toBeGreaterThan(0);
-    expect(mockedGetUpcomingMatches).toHaveBeenCalledWith(20);
+    expect(mockedGetUpcomingMatches).toHaveBeenCalledWith(20, expect.any(AbortSignal));
   });
 
   it('Robot Detail should render a team card when the viewer owns neither side', async () => {

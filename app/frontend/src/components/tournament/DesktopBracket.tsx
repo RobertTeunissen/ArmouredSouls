@@ -60,6 +60,9 @@ const DesktopBracket: React.FC<DesktopBracketProps> = ({
   }, [userParticipantIds, futurePathMatchIds]);
 
   return (
+    // Drag-to-pan and wheel zoom enhance the container's native scrolling,
+    // which keyboard users keep.
+    // eslint-disable-next-line jsx-a11y-x/no-static-element-interactions
     <div
       ref={containerRef}
       data-testid="desktop-bracket"

@@ -91,34 +91,6 @@ export function checkStanceWinsCached(
 
 // ─── DB Query Helpers ───────────────────────────────────────────────
 
-export async function checkRobotStat(
-  robotId: number | null,
-  field: string,
-  threshold?: number,
-): Promise<boolean> {
-  if (!robotId || threshold === undefined) return false;
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-    select: { [field]: true },
-  });
-  if (!robot) return false;
-  return Number(robot[field as keyof typeof robot]) >= threshold;
-}
-
-export async function checkUserStat(
-  userId: number,
-  field: string,
-  threshold?: number,
-): Promise<boolean> {
-  if (threshold === undefined) return false;
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { [field]: true },
-  });
-  if (!user) return false;
-  return Number(user[field as keyof typeof user]) >= threshold;
-}
-
 export async function checkWeaponCount(
   userId: number,
   threshold?: number,
@@ -247,42 +219,6 @@ export async function checkWeaponType(
     where: { userId, weapon: { weaponType } },
   });
   return count > 0;
-}
-
-export async function checkLoadoutWins(
-  robotId: number,
-  loadoutType: string,
-  threshold?: number,
-): Promise<boolean> {
-  if (threshold === undefined) return false;
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-    select: { dualWieldWins: true },
-  });
-  if (!robot) return false;
-  if (loadoutType === 'dual_wield') {
-    return robot.dualWieldWins >= threshold;
-  }
-  return false;
-}
-
-export async function checkStanceWins(
-  robotId: number,
-  stance: string,
-  threshold?: number,
-): Promise<boolean> {
-  if (threshold === undefined) return false;
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-    select: { offensiveWins: true, defensiveWins: true, balancedWins: true },
-  });
-  if (!robot) return false;
-  switch (stance) {
-    case 'offensive': return robot.offensiveWins >= threshold;
-    case 'defensive': return robot.defensiveWins >= threshold;
-    case 'balanced': return robot.balancedWins >= threshold;
-    default: return false;
-  }
 }
 
 export async function checkAllModesWin(userId: number): Promise<boolean> {

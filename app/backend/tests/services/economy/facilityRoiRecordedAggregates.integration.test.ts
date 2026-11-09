@@ -5,7 +5,7 @@
  * purchase-cycle fallback are aggregated in the database as well.
  *
  * Against real PostgreSQL this suite asserts:
- *  (a) the aggregates, `calculateFacilityROI` and `calculateAllEconomicROIs`
+ *  (a) the aggregates and `calculateAllEconomicROIs`
  *      produce exactly the totals of the previous row-loading path (the old
  *      `findMany` queries fed to the per-row reference helpers), on a fixture
  *      with valid, legacy, malformed, out-of-window and other-user rows;
@@ -527,12 +527,11 @@ describe('(a) aggregate path equals the previous row-loading path', () => {
       expect(all.facilities).toHaveLength(2);
 
       for (const facilityType of ['streaming_studio', 'repair_bay'] as const) {
-        const single = await unifiedFacilityROIService.calculateFacilityROI(userId, facilityType);
-        expect(single).not.toBeNull();
+        const single = all.facilities.find((f) => f.facilityType === facilityType);
+        expect(single).toBeDefined();
         expect(single!.dataSource).toBe('snapshot');
         expect(single!.cyclesSincePurchase).toBe(state.toCycle - from + 1);
         expect(single!.totalReturns).toBe(expected[facilityType]);
-        expect(all.facilities.find((f) => f.facilityType === facilityType)).toEqual(single);
       }
     },
   );
@@ -559,20 +558,6 @@ describe('(b) bounded statements and row volume', () => {
     expect(large.statements.filter((sql) => /GROUP BY/i.test(sql) && sql.includes('"financial_ledger"'))).toHaveLength(1);
     expect(large.statements.filter((sql) => /GROUP BY/i.test(sql) && sql.includes('"audit_logs"'))).toHaveLength(1);
 
-    for (const facilityType of ['streaming_studio', 'repair_bay'] as const) {
-      const smallSingle = await captureStatements(() =>
-        unifiedFacilityROIService.calculateFacilityROI(state.users.small, facilityType),
-      );
-      const largeSingle = await captureStatements(() =>
-        unifiedFacilityROIService.calculateFacilityROI(state.users.large, facilityType),
-      );
-      process.stdout.write(
-        `calculateFacilityROI(${facilityType}) statements: small ${smallSingle.statements.length}, large ${largeSingle.statements.length}\n`,
-      );
-      expect(largeSingle.statements.length).toBe(smallSingle.statements.length);
-      expect(rowWiseHistoryReads(largeSingle.statements)).toEqual([]);
-      expect(rowWiseSnapshotReads(largeSingle.statements)).toEqual([]);
-    }
   });
 
   it('reads the same cycle_snapshots statements for a 60-cycle and a 100-cycle ownership window (#550)', async () => {

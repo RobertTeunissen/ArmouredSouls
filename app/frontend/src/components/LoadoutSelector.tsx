@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { updateLoadoutType } from '../utils/robotApi';
 import { LOADOUT_BONUSES, formatLoadoutName, getLoadoutDescription } from '../utils/robotStats';
+import { onActivationKey } from '../utils/keyboardActivation';
 
 interface LoadoutSelectorProps {
   robotId: number;
@@ -76,7 +77,12 @@ function LoadoutSelector({ robotId, currentLoadout, onLoadoutChange }: LoadoutSe
                   ? 'border-blue-500 bg-blue-900 bg-opacity-30 ring-2 ring-blue-500 shadow-lg'
                   : 'border-gray-600 bg-gradient-to-br from-gray-700 to-gray-750 hover:border-gray-500 hover:bg-gray-650 hover:shadow-md'
               } ${loading ? 'opacity-50 cursor-wait' : ''}`}
+              role="button"
+              tabIndex={0}
+              aria-pressed={isSelected}
+              aria-disabled={loading}
               onClick={() => !loading && handleChange(loadoutType)}
+              onKeyDown={onActivationKey(() => { if (!loading) handleChange(loadoutType); })}
             >
               {/* Loadout Icon */}
               <div className="text-center mb-2">

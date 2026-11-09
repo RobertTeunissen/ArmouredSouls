@@ -35,10 +35,7 @@ async function save(page: Page): Promise<void> {
 test.describe('Tuning in the Workshop', () => {
   test('shows the tuning pool and per-attribute tuning steppers in the Build table', async ({ page }) => {
     // Req 9.1, 9.2
-    if (!(await openFirstWorkshop(page))) {
-      test.skip(true, 'No robots available for test_user_001');
-      return;
-    }
+    expect(await openFirstWorkshop(page), 'No robots available for test_user_001').toBe(true);
     await expect(page.getByRole('tab', { name: 'build' })).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByRole('heading', { name: /Combat Systems/ })).toBeVisible();
     await expect(page.getByLabel(/Increase .* tuning$/).first()).toBeVisible();
@@ -51,10 +48,7 @@ test.describe('Tuning in the Workshop', () => {
   test('allocating tuning points, saving, and verifying persistence after reload', async ({ page }) => {
     // Req 9.2, 9.4
     test.setTimeout(60_000);
-    if (!(await openFirstWorkshop(page))) {
-      test.skip(true, 'No robots available for test_user_001');
-      return;
-    }
+    expect(await openFirstWorkshop(page), 'No robots available for test_user_001').toBe(true);
     const workshopUrl = page.url().split('?')[0];
 
     // Start from an empty allocation
@@ -67,10 +61,7 @@ test.describe('Tuning in the Workshop', () => {
     }
 
     const increment = page.getByLabel(/Increase .* tuning$/).first();
-    if (!(await increment.isEnabled().catch(() => false))) {
-      test.skip(true, 'No tuning room: every attribute is at its tuning max or the pool is empty');
-      return;
-    }
+    await expect(increment, 'No tuning room: every attribute is at its tuning max or the pool is empty').toBeEnabled();
     await increment.click();
     await expect(page.getByText(/[1-9]\d* \/ \d+ used/)).toBeVisible({ timeout: 3000 });
     await save(page);

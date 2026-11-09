@@ -166,6 +166,18 @@ describe('movementAI property tests', () => {
         { numRuns: 500 },
       );
     });
+
+    // Regression (fast-check seed -314758915): a robot a rounding error outside the
+    // wall with no step (target = position) produced a NaN position.
+    it('clamps a stationary robot sitting a rounding error outside the wall', () => {
+      const radius = 99.99999994999992;
+      const position = { x: -99.99999999999993, y: 0 };
+      const state = makeState({ position, effectiveMovementSpeed: 0.1 });
+      const newPos = applyMovement(state, makeIntent({ targetPosition: position }), makeArena(radius), 0.01);
+
+      expect(Number.isFinite(newPos.x) && Number.isFinite(newPos.y)).toBe(true);
+      expect(euclideanDistance(newPos, { x: 0, y: 0 })).toBeLessThanOrEqual(radius + 1e-9);
+    });
   });
 
   /**

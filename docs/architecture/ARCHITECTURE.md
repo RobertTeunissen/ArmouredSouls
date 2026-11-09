@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls
 **Document Type**: Technical architecture reference
-**Version**: v2.3
-**Last Updated**: September 21, 2026
+**Version**: v2.4
+**Last Updated**: November 9, 2026
 **Status**: ✅ Current
 **Owner**: Robert Teunissen
 
@@ -14,6 +14,7 @@
 - v2.1 (Apr 10, 2026): Added architecture decisions, security controls, and service/route inventory
 - v2.2 (Jun 2026): Added moderation, image-upload dependencies, team-battle domains, and deployment details
 - v2.3 (Sep 21, 2026): Updated package versions, service inventory, unified scheduling/schema terminology, current player routes, Finance Center, and operational alerting
+- v2.4 (Nov 9, 2026): Added the Shared Code section (`app/shared/utils` formulas and `app/shared/types` API contract types)
 
 ---
 
@@ -146,7 +147,7 @@ The backend currently contains 36 service directories under `app/backend/src/ser
 | `auth` | Registration, login, password, and JWT management |
 | `battle` | Combat engine, shared orchestration, post-combat updates, and byes |
 | `changelog` | In-game changelog entries and image handling |
-| `common` | Shared event logging, guides, queries, integrity, and resets |
+| `common` | Shared event logging, guides, integrity, and resets |
 | `cycle` | Cron scheduler, settlement, snapshots, and CSV exports |
 | `dashboard` | Player dashboard cycle and readiness data |
 | `economy` | Repairs, streaming revenue, ROI, and recommendations |
@@ -181,7 +182,7 @@ The backend currently contains 36 service directories under `app/backend/src/ser
 - `errorHandler.ts` — Centralized error handling with `AppError` hierarchy
 - `rateLimiter.ts` — Auth-specific and general rate limiters
 - `userRateLimiter.ts` — Per-user economic rate limiter
-- `schemaValidator.ts` — Zod validation through `validateRequest`
+- `schemaValidator.ts` — Zod validation through `validateRequest`, and `validated()` (validation plus a handler that receives the parsed, typed values)
 - `ownership.ts` — Resource ownership verification
 - `requestLogger.ts` — Winston-based request logging
 
@@ -219,6 +220,17 @@ Representative public paths include:
 /api/admin              — Admin controls and analytics
 /api/health             — Health check
 ```
+
+## Shared Code (`app/shared`)
+
+Code used by both the backend and the frontend lives in `app/shared` and is deployed with the backend (`deploy.yml` syncs it to the VPS).
+
+| Folder | Contents | Backend path | Frontend path |
+|--------|----------|--------------|---------------|
+| `utils/` | Game formulas (repair cost, discounts, prestige gates, attributes) | `src/shared/utils` (symlink) | `@shared/utils/*` |
+| `types/` | API contract types: the JSON shape of a response | `src/shared/types` (symlink) | `@shared/types` |
+
+Contract types describe the wire format, so dates are ISO 8601 strings. They are imported with `import type` and contain no runtime code. The backend service returns the shared type and the frontend API call uses it, so a field change on either side fails `tsc` on the other. Response shapes that only one app uses stay local. Current contracts: placement standing (`/api/robots/:id/koth-standing`, `/grand-melee-standing`), tier changes (`/api/leagues/tier-changes/unseen`) and the finance summary (`/api/finances/summary`); other endpoints move over when they are next changed.
 
 ## Database Schema
 

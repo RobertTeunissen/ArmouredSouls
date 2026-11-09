@@ -155,7 +155,7 @@ export function ImageDetailPanel({ imageId, onClose, onRemoved }: ImageDetailPan
         <div className="space-y-5" data-testid="image-detail">
           <p className="text-xs text-secondary">Uploaded {fullDateTime(detail.uploadedAt)} · 512 × 512 WebP · {bytesText(detail.fileSize)}</p>
           <div className="flex flex-wrap items-start gap-4">
-            <img src={detail.imageUrl} alt={`Uploaded robot image from ${ownerLabel(detail.owner)}`} className="aspect-square w-full max-w-xs rounded-md bg-surface-elevated object-cover" />
+            <img src={detail.imageUrl} alt={`Upload from ${ownerLabel(detail.owner)}`} className="aspect-square w-full max-w-xs rounded-md bg-surface-elevated object-cover" />
             <a href={detail.imageUrl} target="_blank" rel="noopener noreferrer" className={`text-xs text-primary hover:underline ${ADMIN_FOCUS_RING}`}>
               Open original <span aria-hidden="true">↗</span>
             </a>

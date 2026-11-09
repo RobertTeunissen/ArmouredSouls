@@ -36,34 +36,6 @@ export function random(min: number, max: number): number {
 }
 
 /**
- * Get effective attribute value including weapon bonuses and tuning bonuses.
- *
- * @deprecated After `prepareRobotForCombat()` runs, all robot attributes already
- * contain canonical effective values: round2((base + both weapons' refined bonuses
- * + tuning) × (1 + loadout modifier)) (#517). The combat simulator should read them
- * directly with `Number(robot.attribute)`. This function is kept as a no-op
- * passthrough for backward compatibility.
- *
- * Loadout and stance effects that are NOT attribute modifiers live in the formulas
- * below and stack with the prepared attributes: Two-Handed ×1.10 damage, ×2.5 crit
- * multiplier and +10 crit chance; Dual Wield ×0.90 damage; Weapon+Shield ×1.10
- * counter chance; stance damage/hit/counter/regen effects. Do not add stance
- * multipliers to the prepared attributes.
- */
-export function getEffectiveAttribute(
-  _robot: RobotWithWeapons,
-  baseAttribute: number | string | { toNumber(): number },
-  _hand: 'main' | 'offhand',
-  _bonusField: keyof Weapon
-): number {
-  // Attributes are pre-computed by prepareRobotForCombat() — just return the value.
-  return typeof baseAttribute === 'object' && 'toNumber' in baseAttribute
-    ? baseAttribute.toNumber()
-    : Number(baseAttribute);
-}
-
-
-/**
  * Calculate hit chance based on attacker and defender attributes
  */
 export function calculateHitChance(

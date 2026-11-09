@@ -220,15 +220,11 @@ export async function refreshRarityCache(cache: AchievementRarityCache): Promise
     const achievementCounts = await prisma.userAchievement.groupBy({
       by: ['achievementId'],
       _count: { achievementId: true },
-      where: {
-        user: {
-          username: { not: { startsWith: 'auto_' } },
-          AND: { username: { not: { startsWith: 'test_user_' } } },
-          // Spec #55 R1.8: rarity counts Human_Stables only; Automatons still
-          // earn achievements but are left out of the percentage.
-          stableType: { not: 'automaton' },
-        },
-      },
+      // Spec #55 R1.8: rarity counts Human_Stables only. Automatons and
+      // generated filler stables (incl. the seeded test_user_* WimpBots) still
+      // earn achievements but are left out of the percentage. The stable type
+      // is the classification; usernames are never used to tell them apart.
+      where: { user: { stableType: 'human' } },
     });
 
     const counts = new Map<string, number>();
@@ -236,17 +232,10 @@ export async function refreshRarityCache(cache: AchievementRarityCache): Promise
       counts.set(row.achievementId, row._count.achievementId);
     }
 
-    const activePlayerResult = await prisma.$queryRawUnsafe<[{ count: bigint }]>(
-      `SELECT COUNT(DISTINCT r.user_id) as count
-       FROM robots r
-       JOIN users u ON u.id = r.user_id
-       WHERE r.total_battles > 0
-         
-         AND u.username NOT LIKE 'auto\\_%'
-         AND u.username NOT LIKE 'test\\_user\\_%'
-         AND u.stable_type <> 'automaton'`
-    );
-    const totalActivePlayers = Number(activePlayerResult[0]?.count ?? 0);
+    // Active player = a Human_Stable with at least one robot that has fought.
+    const totalActivePlayers = await prisma.user.count({
+      where: { stableType: 'human', robots: { some: { totalBattles: { gt: 0 } } } },
+    });
 
     const newCache: AchievementRarityCache = {
       counts,

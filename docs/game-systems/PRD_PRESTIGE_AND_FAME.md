@@ -107,7 +107,7 @@ See the [Finance Center PRD](../prd_pages/PRD_INCOME_DASHBOARD.md) and [reportin
 
 #### Facility Unlock Gates (✅ Enforced)
 
-Prestige requirements are checked and enforced in `routes/facility.ts` when upgrading. If the player doesn't have enough prestige, the upgrade is rejected with a 403 error.
+Prestige requirements are checked and enforced in `services/economy/facilityUpgradeService.ts` (`upgradeFacility`) when upgrading. If the player doesn't have enough prestige, the upgrade is rejected with a 403 error.
 
 Prestige thresholds are defined in `config/facilities.ts` using the universal `PRESTIGE_GATES_10` curve shared by all facilities: L4: 1,000 · L5: 3,000 · L6: 5,000 · L7: 10,000 · L8: 15,000 · L9: 25,000 · L10: 50,000. Levels 1–3 are free.
 
@@ -263,7 +263,7 @@ All paths relative to `app/backend/src/`.
 | `services/economy/streamingRevenueService.ts` | `calculateStreamingRevenue()` — uses fame in multiplier |
 | `utils/economyCalculations.ts` | `getPrestigeMultiplier()`, `calculateBattleWinnings()`, merchandising scaling |
 | `config/facilities.ts` | `prestigeRequirements` arrays per facility |
-| `routes/facility.ts` | Prestige gate enforcement on upgrade |
+| `services/economy/facilityUpgradeService.ts` | Prestige gate enforcement on upgrade (`POST /api/facilities/upgrade`) |
 | `routes/leaderboards.ts` | Prestige and fame leaderboard endpoints |
 
 ---

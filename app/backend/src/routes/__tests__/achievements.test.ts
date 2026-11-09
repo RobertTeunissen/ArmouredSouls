@@ -37,10 +37,22 @@ jest.mock('../../middleware/auth', () => ({
   AuthRequest: {},
 }));
 
-// Mock validateRequest to pass through
-jest.mock('../../middleware/schemaValidator', () => ({
-  validateRequest: () => (_req: unknown, _res: unknown, next: () => void) => next(),
-}));
+// Validation passes everything through; `validated()` still hands the handler
+// the request's own params/query/body.
+jest.mock('../../middleware/schemaValidator', () => {
+  const passThrough = (_req: unknown, _res: unknown, next: () => void): void => next();
+  return {
+    validateRequest: () => passThrough,
+    validated: (
+      _schemas: unknown,
+      handler: (req: { params: unknown; query: unknown; body: unknown }, res: unknown, input: unknown) => unknown,
+    ) => [
+      passThrough,
+      (req: { params: unknown; query: unknown; body: unknown }, res: unknown) =>
+        handler(req, res, { params: req.params, query: req.query, body: req.body }),
+    ],
+  };
+});
 
 // Mock logger to suppress output during tests
 jest.mock('../../config/logger', () => ({

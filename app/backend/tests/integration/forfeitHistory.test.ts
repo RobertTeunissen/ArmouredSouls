@@ -8,7 +8,8 @@
  * them.
  */
 import prisma from '../../src/lib/prisma';
-import { getBattleLog, getMatchHistory } from '../../src/services/match/matchHistoryService';
+import { getMatchHistory } from '../../src/services/match/matchHistoryService';
+import { getBattleLog } from '../../src/services/match/battleLogService';
 import { battleLogFixture } from '../helpers/battleLogFixture';
 
 const RUN = `fh${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;

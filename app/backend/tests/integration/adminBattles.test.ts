@@ -22,7 +22,7 @@ import {
   type BattleListParams,
 } from '../../src/services/admin/battles';
 import { estimateBattleCycle } from '../../src/services/admin/battles/battlePayoutCheck';
-import { getBattleLog } from '../../src/services/match/matchHistoryService';
+import { getBattleLog } from '../../src/services/match/battleLogService';
 import { encodeBattleLog } from '../../src/services/battle/battleLogCodec';
 
 const TAG = `${Date.now().toString().slice(-7)}${Math.floor(Math.random() * 900 + 100)}`;

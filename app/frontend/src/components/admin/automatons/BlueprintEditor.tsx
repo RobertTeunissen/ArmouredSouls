@@ -171,7 +171,7 @@ export function BlueprintEditor({ item, weapons, buildFocusOptions, expanded, er
             <div className="min-w-0">
               <p className="block text-sm font-medium text-white mb-1">Image</p>
               <div className="flex items-center gap-2">
-                {item.imageUrl && <img src={item.imageUrl} alt={`Image of ${f.robotName}`} className="h-11 w-11 rounded object-cover" />}
+                {item.imageUrl && <img src={item.imageUrl} alt={f.robotName} className="h-11 w-11 rounded object-cover" />}
                 <input
                   ref={fileRef}
                   type="file"

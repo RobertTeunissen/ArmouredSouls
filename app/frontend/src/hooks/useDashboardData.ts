@@ -22,7 +22,8 @@ import { fetchTuningAllocationSummaries, TuningAllocationSummary } from '../util
 import { fetchCycleProgressSummary, CycleProgressSummary } from '../utils/dashboardApi';
 import { useRobotStore, useStableStore } from '../stores';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
-import type { RecentTournamentWinner, TierChange } from '../utils/dashboardNotifications';
+import type { RecentTournamentWinner } from '../utils/dashboardNotifications';
+import type { TierChange, TierChangesResponse } from '@shared/types';
 
 /** Tournament wins are only celebrated for this long afterwards. */
 const CHAMPION_WINDOW_MS = 48 * 60 * 60 * 1000;
@@ -120,7 +121,7 @@ export function useDashboardData(
       .then(state => { if (!cancelled) setOnboardingState(state); })
       .catch(() => { if (!cancelled) setOnboardingState(null); });
 
-    api.get<{ changes: TierChange[] }>('/api/leagues/tier-changes/unseen')
+    api.get<TierChangesResponse>('/api/leagues/tier-changes/unseen')
       .then(data => { if (!cancelled) setTierChanges(data.changes); })
       .catch(() => { /* an unseen-change banner is optional */ });
 

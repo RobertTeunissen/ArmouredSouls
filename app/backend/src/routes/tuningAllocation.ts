@@ -14,7 +14,7 @@ import express, { Response } from 'express';
 import { z } from 'zod';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import { getTuningAllocation, getTuningAllocationSummaries, setTuningAllocation } from '../services/tuning-pool';
 import { ROBOT_ATTRIBUTES, type RobotAttribute } from '../services/tuning-pool/tuningPoolConfig';
@@ -101,17 +101,16 @@ router.get(
 router.get(
   '/:id/tuning-allocation',
   authenticateToken,
-  validateRequest({ params: tuningParamsSchema }),
-  async (req: AuthRequest, res: Response) => {
+  ...validated({ params: tuningParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
     if (!req.user) {
       throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
-    const robotId = Number(req.params.id);
+    const robotId = params.id;
     const state = await getTuningAllocation(robotId, req.user.userId);
 
     res.json(state);
-  },
+  }),
 );
 
 /**
@@ -124,14 +123,13 @@ router.get(
 router.put(
   '/:id/tuning-allocation',
   authenticateToken,
-  validateRequest({ params: tuningParamsSchema, body: tuningBodySchema }),
-  async (req: AuthRequest, res: Response) => {
+  ...validated({ params: tuningParamsSchema, body: tuningBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
     if (!req.user) {
       throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
-    const robotId = Number(req.params.id);
-    const allocations = req.body as Partial<Record<RobotAttribute, number>>;
+    const robotId = params.id;
+    const allocations = body as Partial<Record<RobotAttribute, number>>;
     const state = await setTuningAllocation(robotId, req.user.userId, allocations);
 
     let achievementUnlocks: UnlockedAchievement[] = [];
@@ -143,7 +141,7 @@ router.put(
     } catch { /* achievement failures don't block */ }
 
     res.json({ ...state, achievementUnlocks });
-  },
+  }),
 );
 
 export default router;

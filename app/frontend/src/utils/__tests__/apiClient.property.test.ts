@@ -127,8 +127,10 @@ describe('API Client Interceptors - Property Tests', () => {
       );
     });
 
-    it('does not clear token for non-401 error responses', async () => {
-      const nonAuthStatusArb = fc.integer({ min: 400, max: 599 }).filter((s) => s !== 401 && s !== 403);
+    it('does not clear token for non-401 error responses (including backend 403s)', async () => {
+      // 403 is included on purpose: the backend uses it for permission answers
+      // (not your robot, prestige gate, tier lock, admin only), never for a bad token.
+      const nonAuthStatusArb = fc.integer({ min: 400, max: 599 }).filter((s) => s !== 401);
 
       await fc.assert(
         fc.asyncProperty(nonAuthStatusArb, async (status) => {
@@ -151,6 +153,31 @@ describe('API Client Interceptors - Property Tests', () => {
         }),
         { numRuns: 100 },
       );
+    });
+
+    it('keeps the session on backend permission 403s from ownership, prestige and tier gates', async () => {
+      const forbiddenBodies = [
+        { error: 'Access denied', code: 'FORBIDDEN' },
+        { error: 'Training Facility Level 5 requires 1,000 prestige', code: 'FORBIDDEN', details: { required: 1000, current: 10 } },
+        { error: 'Refinement Lab level 3 required to refine.', code: 'WEAPON_REFINEMENT_TIER_LOCKED' },
+        { error: 'Admin access required' },
+      ];
+      for (const body of forbiddenBodies) {
+        vi.mocked(localStorage.getItem).mockReturnValue('some-token');
+        vi.mocked(localStorage.removeItem).mockClear();
+        (window.location as unknown as { href: string }).href = '';
+
+        mock.onPost('/api/facilities/upgrade').reply(403, body);
+
+        await expect(apiClient.post('/api/facilities/upgrade', {})).rejects.toMatchObject({
+          response: { status: 403 },
+        });
+
+        expect(localStorage.removeItem).not.toHaveBeenCalled();
+        expect(window.location.href).toBe('');
+
+        mock.reset();
+      }
     });
 
     it('keeps the session on a backend 401/403 when the request opted out (telemetry)', async () => {

@@ -146,13 +146,6 @@ export function startRequestMetrics(): void {
   timer.unref();
 }
 
-/** Stop the writer and write what is buffered (shutdown, tests). */
-export async function stopRequestMetrics(): Promise<void> {
-  if (timer) clearInterval(timer);
-  timer = null;
-  await flushRequestMetrics();
-}
-
 /** Buffered buckets (tests). */
 export function pendingRequestMetrics(): Bucket[] {
   return [...buckets.values()];

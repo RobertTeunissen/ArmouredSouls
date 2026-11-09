@@ -234,12 +234,13 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
                   <div className="flex items-center gap-2">
                     {getWeaponTypeIcon(weapon.weaponType)}
                     <div className="flex flex-col">
-                      <span 
-                        className="font-medium cursor-pointer hover:text-primary transition-colors"
+                      <button
+                        type="button"
+                        className="font-medium text-left cursor-pointer hover:text-primary transition-colors"
                         onClick={() => onWeaponClick?.(weapon)}
                       >
                         {weapon.name}
-                      </span>
+                      </button>
                       {ownedWeapons && ownedWeapons.has(weapon.id) && (
                         <span className="text-xs text-success">
                           Own ({ownedWeapons.get(weapon.id)})

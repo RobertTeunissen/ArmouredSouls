@@ -1,7 +1,7 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import { useApiQuery } from '../hooks/useApiQuery';
 import BattleHistorySummary from '../components/BattleHistorySummary';
 import CompactBattleCard from '../components/CompactBattleCard';
 import {
@@ -28,15 +28,6 @@ function BattleHistoryPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [battles, setBattles] = useState<BattleHistory[]>([]);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    pageSize: 20,
-    total: 0,
-    totalPages: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Read filter/sort state from URL params with safe defaults
   const battleFilter: BattleFilterType = VALID_BATTLE_FILTERS.includes(searchParams.get('type') as BattleFilterType)
@@ -89,49 +80,29 @@ function BattleHistoryPage() {
     updateParams({ pageSize: value === 20 ? null : String(value) });
   }, [updateParams]);
 
-  useEffect(() => {
-    fetchBattles(1, battleFilter);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    // Refetch when results per page or battle filter changes
-    fetchBattles(1, battleFilter);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resultsPerPage, battleFilter]);
-
-  const fetchBattles = async (page: number, filter: typeof battleFilter) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Authentication required');
-        setLoading(false);
-        return;
-      }
-      
-      const data: PaginatedResponse<BattleHistory> = await getMatchHistory(page, resultsPerPage, filter);
-      
-      setBattles(data.data);
-      setPagination(data.pagination);
-      setError(null);
-    } catch (err: unknown) {
-      const message = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
-      setError(message || 'Failed to load battle history');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // A battle-type or page-size change starts again at page 1.
+  const filterKey = `${battleFilter}|${resultsPerPage}`;
+  const [pageState, setPageState] = useState({ key: filterKey, page: 1 });
+  const requestedPage = pageState.key === filterKey ? pageState.page : 1;
   const handlePageChange = (newPage: number) => {
-    fetchBattles(newPage, battleFilter);
+    setPageState({ key: filterKey, page: newPage });
   };
 
-  const getMatchData = (battle: BattleHistory) => {
-    return getBattlePerspective(battle, { userId: user?.id });
-  };
+  // A 401 ends the session in the API client; this page only reports other failures.
+  const history = useApiQuery<PaginatedResponse<BattleHistory>>(
+    (signal) => getMatchHistory(requestedPage, resultsPerPage, battleFilter, undefined, signal),
+    [requestedPage, resultsPerPage, battleFilter],
+  );
+  const battles = useMemo(() => history.data?.data ?? [], [history.data]);
+  const pagination = history.data?.pagination ?? { page: 1, pageSize: resultsPerPage, total: 0, totalPages: 0 };
+  const loading = history.loading;
+  const error = history.error ? 'Failed to load battle history' : null;
+
+  const userId = user?.id;
+  const getMatchData = useCallback(
+    (battle: BattleHistory) => getBattlePerspective(battle, { userId }),
+    [userId],
+  );
 
   // Calculate summary statistics (extracted to battleHistoryStats.ts)
   const summaryStats = useMemo(
@@ -188,8 +159,7 @@ function BattleHistoryPage() {
     });
 
     return sorted;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [battles, outcomeFilter, searchTerm, sortBy]);
+  }, [battles, outcomeFilter, searchTerm, sortBy, getMatchData]);
 
   const clearFilters = useCallback(() => {
     setSearchParams({}, { replace: true });

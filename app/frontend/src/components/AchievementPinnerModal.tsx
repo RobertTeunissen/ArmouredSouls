@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useId } from 'react';
 import AchievementBadge from './AchievementBadge';
 import { api } from '../utils/api';
 import type { AchievementWithProgress } from '../utils/achievementUtils';
@@ -18,6 +18,7 @@ export default function AchievementPinnerModal({
   onPinnedChange,
 }: AchievementPinnerModalProps) {
   const [pinned, setPinned] = useState<string[]>(currentPinned);
+  const titleId = useId();
   const [saving, setSaving] = useState(false);
 
   const unlocked = achievements.filter(a => a.unlocked);
@@ -56,15 +57,18 @@ export default function AchievementPinnerModal({
 
   return (
     <div
+      role="presentation"
       className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className="bg-surface border border-white/10 rounded-lg p-6 max-w-lg w-full max-h-[80vh] flex flex-col"
-        onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-white">Pin Achievements ({pinned.length}/6)</h3>
+          <h3 id={titleId} className="text-lg font-bold text-white">Pin Achievements ({pinned.length}/6)</h3>
           <button
             onClick={onClose}
             className="text-secondary hover:text-white text-xl"

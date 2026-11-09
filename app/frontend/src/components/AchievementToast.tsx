@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import AchievementBadge from './AchievementBadge';
 import AchievementReward from './AchievementReward';
 import type { UnlockedAchievement } from '../utils/achievementUtils';
@@ -10,7 +10,6 @@ interface AchievementToastProps {
 }
 
 export default function AchievementToast({ achievement, onDismiss }: AchievementToastProps) {
-  const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -24,9 +23,9 @@ export default function AchievementToast({ achievement, onDismiss }: Achievement
   }, [onDismiss]);
 
   return (
-    <div
-      role="alert"
-      onClick={() => navigate('/achievements')}
+    <div role="alert">
+    <Link
+      to="/achievements"
       className={`flex items-center gap-3 bg-surface border border-white/20 rounded-lg p-3 shadow-xl cursor-pointer transition-all duration-300 ease-out motion-reduce:transition-none ${
         visible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       }`}
@@ -49,6 +48,7 @@ export default function AchievementToast({ achievement, onDismiss }: Achievement
           />
         </p>
       </div>
+    </Link>
     </div>
   );
 }

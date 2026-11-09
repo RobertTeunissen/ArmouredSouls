@@ -2,7 +2,7 @@ import express, { Response } from 'express';
 import { z } from 'zod';
 import multer from 'multer';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import { changelogService, processAndStore } from '../services/changelog';
 import { ChangelogError, ChangelogErrorCode } from '../errors/changelogErrors';
@@ -55,22 +55,16 @@ const multerUpload = multer({
 // --- Player endpoints ---
 
 // GET /api/changelog — list published entries (paginated, filterable by category)
-router.get('/', authenticateToken, validateRequest({ query: listQuerySchema }), async (req: AuthRequest, res: Response) => {
-  const { page, perPage, category } = req.query as unknown as { page: number; perPage: number; category?: string };
+router.get('/', authenticateToken, ...validated({ query: listQuerySchema }, async (req: AuthRequest, res: Response, { query }) => {
+  const { page, perPage, category } = query as unknown as { page: number; perPage: number; category?: string };
   const result = await changelogService.listPublished(page, perPage, category);
   res.json(result);
-});
+}));
 
 // GET /api/changelog/unread — get unread entries for current user
 router.get('/unread', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   const entries = await changelogService.getUnread(req.user!.userId);
   res.json(entries);
-});
-
-// GET /api/changelog/unread/count — get count of unread entries
-router.get('/unread/count', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
-  const count = await changelogService.getUnreadCount(req.user!.userId);
-  res.json({ count });
 });
 
 // POST /api/changelog/dismiss — update lastSeenChangelog to now
@@ -81,48 +75,52 @@ router.post('/dismiss', authenticateToken, validateRequest({}), async (req: Auth
 
 // --- Admin endpoints ---
 
-// GET /api/changelog/admin — list all entries (drafts + published)
-router.get('/admin', authenticateToken, requireAdmin, validateRequest({}), async (req: AuthRequest, res: Response) => {
-  const page = Number(req.query.page) || 1;
-  const perPage = Number(req.query.perPage) || 20;
-  const result = await changelogService.listAll(page, perPage);
-  res.json(result);
+// Lenient on purpose (unchanged behaviour): a missing or malformed value falls back to page 1 / 20 per page.
+const adminListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional().catch(undefined),
+  perPage: z.coerce.number().int().positive().max(100).optional().catch(undefined),
 });
 
+// GET /api/changelog/admin — list all entries (drafts + published)
+router.get('/admin', authenticateToken, requireAdmin, ...validated({ query: adminListQuerySchema }, async (_req: AuthRequest, res: Response, { query }) => {
+  const result = await changelogService.listAll(query.page ?? 1, query.perPage ?? 20);
+  res.json(result);
+}));
+
 // POST /api/changelog/admin — create new entry
-router.post('/admin', authenticateToken, requireAdmin, validateRequest({ body: createEntrySchema }), async (req: AuthRequest, res: Response) => {
+router.post('/admin', authenticateToken, requireAdmin, ...validated({ body: createEntrySchema }, async (req: AuthRequest, res: Response, { body }) => {
   const entry = await changelogService.create({
-    ...req.body,
+    ...body,
     createdBy: req.user!.userId,
   });
   recordAdminAction(req.user!.userId, 'changelog_create', 'success', { entryId: entry.id, title: entry.title, status: entry.status });
   res.status(201).json(entry);
-});
+}));
 
 // PUT /api/changelog/admin/:id — update entry
-router.put('/admin/:id', authenticateToken, requireAdmin, validateRequest({ params: entryIdParamsSchema, body: updateEntrySchema }), async (req: AuthRequest, res: Response) => {
-  const id = Number(req.params.id);
-  const entry = await changelogService.update(id, req.body);
+router.put('/admin/:id', authenticateToken, requireAdmin, ...validated({ params: entryIdParamsSchema, body: updateEntrySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
+  const id = params.id;
+  const entry = await changelogService.update(id, body);
   // Field names only, never the body text.
-  recordAdminAction(req.user!.userId, 'changelog_update', 'success', { entryId: entry.id, title: entry.title, fields: Object.keys(req.body as object) });
+  recordAdminAction(req.user!.userId, 'changelog_update', 'success', { entryId: entry.id, title: entry.title, fields: Object.keys(body) });
   res.json(entry);
-});
+}));
 
 // DELETE /api/changelog/admin/:id — delete entry
-router.delete('/admin/:id', authenticateToken, requireAdmin, validateRequest({ params: entryIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const id = Number(req.params.id);
+router.delete('/admin/:id', authenticateToken, requireAdmin, ...validated({ params: entryIdParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+  const id = params.id;
   await changelogService.delete(id);
   recordAdminAction(req.user!.userId, 'changelog_delete', 'success', { entryId: id });
   res.status(204).send();
-});
+}));
 
 // POST /api/changelog/admin/:id/publish — publish a draft entry
-router.post('/admin/:id/publish', authenticateToken, requireAdmin, validateRequest({ params: entryIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const id = Number(req.params.id);
+router.post('/admin/:id/publish', authenticateToken, requireAdmin, ...validated({ params: entryIdParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+  const id = params.id;
   const entry = await changelogService.publish(id);
   recordAdminAction(req.user!.userId, 'changelog_publish', 'success', { entryId: entry.id, title: entry.title });
   res.json(entry);
-});
+}));
 
 // POST /api/changelog/admin/upload-image — upload and process changelog image
 router.post(

@@ -130,8 +130,8 @@ export function useWeaponShop() {
         const storage = await api.get<StorageStatus>('/api/weapon-inventory/storage-status');
         setStorageStatus(storage);
       } catch (err: unknown) {
-        // Check if it's an authentication error
-        if (err instanceof ApiError && (err.statusCode === 401 || err.statusCode === 403)) {
+        // Check if it's an authentication error (the backend rejects a bad token with 401)
+        if (err instanceof ApiError && err.statusCode === 401) {
           setError('Authentication failed. Please log out and log back in.');
         } else {
           setError('Failed to load weapons. Please try refreshing the page.');

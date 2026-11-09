@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { listTournaments, Tournament, ParticipantType } from '../utils/tournamentApi';
+import { useApiQuery } from '../hooks/useApiQuery';
 import { getRoundLabel } from '../utils/bracketUtils';
 
 type TypeFilter = 'all' | 'robot' | 'team_2v2' | 'team_3v3';
@@ -19,44 +19,20 @@ function getTypeBadge(participantType: ParticipantType) {
 }
 
 function TournamentsPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
 
-  useEffect(() => {
-    fetchTournaments();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typeFilter]);
-
-  const fetchTournaments = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      const participantType = typeFilter === 'all' ? undefined : typeFilter as ParticipantType;
-      const data = await listTournaments(participantType);
-      setTournaments(data.tournaments || []);
-      setError(null);
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      }
-      setError('Failed to load tournaments');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // A 401 ends the session in the API client; this page only reports other failures.
+  const query = useApiQuery(
+    (signal) => listTournaments(typeFilter === 'all' ? undefined : typeFilter as ParticipantType, signal),
+    [typeFilter],
+  );
+  const tournaments: Tournament[] = query.data?.tournaments ?? [];
+  const loading = query.loading;
+  const error = query.error ? 'Failed to load tournaments' : null;
+  const fetchTournaments = query.refetch;
 
   const getFilteredTournaments = () => {
     if (filter === 'all') return tournaments;

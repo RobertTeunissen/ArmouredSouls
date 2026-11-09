@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
 import { getUpcomingMatches, ScheduledMatch } from '../utils/matchmakingApi';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useApiQuery } from '../hooks/useApiQuery';
 import { KothMatchCard, ByeMatchCard, StandardMatchCard, TeamBattleMatchCard } from './match-cards';
 import { expandUpcomingMatchInstances, type UpcomingMatchInstance } from '../utils/match-display-instances';
 import { resolveByeCardSubject } from './match-cards/bye-match-data';
@@ -18,44 +16,12 @@ interface UpcomingMatchesProps {
 }
 
 function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}) {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [matches, setMatches] = useState<ScheduledMatch[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchMatches();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [robotId]);
-
-  const fetchMatches = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const token = localStorage.getItem('token');
-      if (!token) {
-        logout();
-        navigate('/login');
-        return;
-      }
-
-      const data = await getUpcomingMatches(robotId);
-
-      setMatches(data);
-      setError(null);
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      }
-      setError(axios.isAxiosError(err) ? err.response?.data?.message || 'Failed to load upcoming matches' : 'Failed to load upcoming matches');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { user } = useAuth();
+  // A 401 ends the session in the API client; this panel only reports other failures.
+  const query = useApiQuery((signal) => getUpcomingMatches(robotId, signal), [robotId]);
+  const matches: ScheduledMatch[] = query.data ?? [];
+  const loading = query.loading;
+  const error = query.error ? 'Failed to load upcoming matches' : null;
 
   const getMatchResult = (match: ScheduledMatch, perspectiveRobotId?: number) => {
     if (!match.robot1 || !match.robot2) return null;

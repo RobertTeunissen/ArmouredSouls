@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { BattleError, BattleErrorCode } from '../errors/battleErrors';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validated } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import {
   resolveRobotAndTeamIds,
@@ -37,31 +37,31 @@ const upcomingQuerySchema = z.object({
  * If ?robotId=X is provided, returns matches for that specific robot (public).
  * Otherwise returns matches for the current user's robots.
  */
-router.get('/upcoming', authenticateToken, validateRequest({ query: upcomingQuerySchema }), async (req: AuthRequest, res: Response) => {
+router.get('/upcoming', authenticateToken, ...validated({ query: upcomingQuerySchema }, async (req: AuthRequest, res: Response, { query }) => {
     if (!req.user) {
       throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
-    const queryRobotId = req.query.robotId ? parseInt(req.query.robotId as string) : undefined;
+    const queryRobotId = query.robotId;
     const { robotIds, teamIds, teamBattleIds } = await resolveRobotAndTeamIds(req.user.userId, queryRobotId);
     const result = await getUpcomingMatches(robotIds, teamIds, teamBattleIds);
 
     res.json(result);
-});
+}));
 
 /**
  * GET /api/matches/history
  * Get paginated battle history for the current user's robots
  */
-router.get('/history', authenticateToken, validateRequest({ query: matchHistoryQuerySchema }), async (req: AuthRequest, res: Response) => {
+router.get('/history', authenticateToken, ...validated({ query: matchHistoryQuerySchema }, async (req: AuthRequest, res: Response, { query }) => {
     if (!req.user) {
       throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 20));
-    const robotId = req.query.robotId ? parseInt(req.query.robotId as string) : undefined;
-    const battleType = req.query.battleType as string | undefined;
+    const page = Math.max(1, query.page || 1);
+    const perPage = Math.min(100, Math.max(1, query.perPage || 20));
+    const robotId = query.robotId;
+    const battleType = query.battleType as string | undefined;
 
     const result = await getMatchHistory({
       page,
@@ -72,18 +72,18 @@ router.get('/history', authenticateToken, validateRequest({ query: matchHistoryQ
     });
 
     res.json(result);
-});
+}));
 
 /**
  * GET /api/matches/battles/:id/log
  * Get detailed battle log with combat messages for a specific battle
  */
-router.get('/battles/:id/log', authenticateToken, validateRequest({ params: battleIdParamsSchema }), async (req: AuthRequest, res: Response) => {
+router.get('/battles/:id/log', authenticateToken, ...validated({ params: battleIdParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
     if (!req.user) {
       throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
     }
 
-    const battleId = parseInt(String(req.params.id));
+    const battleId = params.id;
     const result = await getBattleLog(battleId);
 
     if (!result) {
@@ -91,6 +91,6 @@ router.get('/battles/:id/log', authenticateToken, validateRequest({ params: batt
     }
 
     res.json(result);
-});
+}));
 
 export default router;

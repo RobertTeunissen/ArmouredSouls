@@ -20,13 +20,25 @@ module.exports = {
   testMatch: testMatchFor('unit'),
   maxWorkers: '75%',
   testTimeout: 30000,
-  // Coverage thresholds — enforce 90% on services that already meet it,
-  // set an achievable global floor to prevent regressions.
+  // Coverage floors, enforced in CI by `pnpm run test:unit:coverage`. Until
+  // Nov 2026 CI ran the unit tier without --coverage, so none of these were
+  // checked. Measured 9 Nov 2026 (unit tier only, test files excluded). Jest
+  // computes `global` over the files no directory entry below matches: there it
+  // was statements 59.9%, branches 48.7%, functions 53.9%, lines 60.8%. The
+  // directories: auth 95.9%, combat-simulator 90.9%, financial 79.8%,
+  // scheduling 61.6%, standings 97.6%, leaderboard 98.4%, team-battle 95.9%.
+  //
+  // financial/ and scheduling/ were set to 95% when they held only pure code.
+  // They now also hold database-backed services (thinInstanceByes,
+  // financeReportQueryService, economicRequestReplayService) that the
+  // integration tier covers, so their floors sit at the measured unit-tier
+  // value. Raise a floor when unit coverage grows; never lower one silently.
   coverageThreshold: {
+    global: { statements: 58, branches: 47, functions: 52, lines: 59 },
     'src/services/auth/': { lines: 90 },
     'src/services/battle/combat-simulator/': { lines: 85 },
-    'src/services/financial/': { lines: 95 },
-    'src/services/scheduling/': { lines: 95 },
+    'src/services/financial/': { lines: 79 },
+    'src/services/scheduling/': { lines: 60 },
     'src/services/standings/': { lines: 95 },
     'src/services/leaderboard/': { lines: 90 },
     'src/services/team-battle/': { lines: 90 },

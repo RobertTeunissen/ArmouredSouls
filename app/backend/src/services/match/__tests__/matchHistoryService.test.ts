@@ -8,7 +8,8 @@
  */
 
 import prisma from '../../../lib/prisma';
-import { formatBattleHistoryEntry, getUpcomingMatches } from '../matchHistoryService';
+import { formatBattleHistoryEntry } from '../matchHistoryService';
+import { getUpcomingMatches } from '../upcomingMatchesService';
 import { battleLogFixture } from '../../../../tests/helpers/battleLogFixture';
 
 jest.mock('../../../lib/prisma', () => ({

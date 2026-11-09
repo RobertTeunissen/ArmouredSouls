@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import TutorialSettings from '../components/TutorialSettings';
 import { getProfile, ProfileData, updateProfile, ProfileUpdateRequest } from '../utils/userApi';
 
 function ProfilePage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Component state
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -156,31 +154,27 @@ function ProfilePage() {
     }
   };
 
-  // Fetch profile data on mount
+  // Fetch profile data once per signed-in user (not on every refreshUser()).
+  // A 401 ends the session in the API client.
+  const userId = user?.id;
   useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          logout();
-          navigate('/login');
-          return;
-        }
-
-        setLoading(true);
-        const profileData = await getProfile();
-        setProfile(profileData);
-      } catch {
-        setErrors({ general: 'Failed to load profile data' });
-      } finally {
-        setLoading(false);
-      }
+    if (userId === undefined) return undefined;
+    let cancelled = false;
+    setLoading(true);
+    getProfile()
+      .then((profileData) => {
+        if (!cancelled) setProfile(profileData);
+      })
+      .catch(() => {
+        if (!cancelled) setErrors({ general: 'Failed to load profile data' });
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
     };
-
-    if (user) {
-      fetchProfileData();
-    }
-  }, [user, logout, navigate]);
+  }, [userId]);
 
   // Warn user about unsaved changes when closing/refreshing page
   useEffect(() => {
@@ -302,8 +296,9 @@ function ProfilePage() {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Stable Name</label>
+                <label htmlFor="profile-stable-name" className="block text-sm font-medium mb-2">Stable Name</label>
                 <input
+                  id="profile-stable-name"
                   type="text"
                   className={`w-full px-3 py-2 bg-surface border rounded min-h-[44px] ${
                     errors.stableName ? 'border-red-500' : 'border-gray-600'
@@ -346,8 +341,9 @@ function ProfilePage() {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Current Password</label>
+                <label htmlFor="profile-current-password" className="block text-sm font-medium mb-2">Current Password</label>
                 <input
+                  id="profile-current-password"
                   type="password"
                   className={`w-full px-3 py-2 bg-surface border rounded min-h-[44px] ${
                     errors.currentPassword ? 'border-red-500' : 'border-gray-600'
@@ -370,8 +366,9 @@ function ProfilePage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">New Password</label>
+                <label htmlFor="profile-new-password" className="block text-sm font-medium mb-2">New Password</label>
                 <input
+                  id="profile-new-password"
                   type="password"
                   className={`w-full px-3 py-2 bg-surface border rounded min-h-[44px] ${
                     errors.newPassword ? 'border-red-500' : 'border-gray-600'

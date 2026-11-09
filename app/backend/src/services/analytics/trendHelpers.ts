@@ -11,29 +11,6 @@ export interface TrendLine {
   points: Array<{ cycleNumber: number; value: number }>;
 }
 
-interface DataPointLike {
-  cycleNumber: number;
-}
-
-/**
- * Calculate a 3-period moving average from ELO data points.
- */
-export function calculateEloMovingAverage(
-  dataPoints: Array<DataPointLike & { elo: number }>,
-): number[] {
-  const result: number[] = [];
-  for (let i = 0; i < dataPoints.length; i++) {
-    if (i < 2) {
-      result.push(dataPoints[i].elo);
-    } else {
-      const avg =
-        (dataPoints[i - 2].elo + dataPoints[i - 1].elo + dataPoints[i].elo) / 3;
-      result.push(Math.round(avg * 100) / 100);
-    }
-  }
-  return result;
-}
-
 /**
  * Calculate a linear regression trend line from data points.
  */

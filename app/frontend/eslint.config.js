@@ -2,6 +2,9 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
+// ESLint 10 compatible fork of eslint-plugin-jsx-a11y (same rules, `jsx-a11y-x/` prefix);
+// upstream has no ESLint 10 release yet (jsx-eslint/eslint-plugin-jsx-a11y#1075).
+import jsxA11y from 'eslint-plugin-jsx-a11y-x';
 import globals from 'globals';
 
 export default tseslint.config(
@@ -35,7 +38,9 @@ export default tseslint.config(
       // bundles React Compiler lint rules which require the compiler to be
       // enabled. We'll adopt those when/if we add the compiler.
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
+      // `useApiQuery(load, deps)` takes a dependency list like useEffect, so the
+      // rule checks it at every call site.
+      'react-hooks/exhaustive-deps': ['warn', { additionalHooks: '^useApiQuery$' }],
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
@@ -46,6 +51,12 @@ export default tseslint.config(
       }],
       'no-console': 'off',
     },
+  },
+  {
+    // Static accessibility checks on JSX. They only see the source, so rendered
+    // behaviour (contrast, focus order) still needs axe and manual testing.
+    ...jsxA11y.configs.recommended,
+    files: ['src/**/*.tsx'],
   },
   {
     // Forbid console.* in production source — route through `utils/logger.ts`

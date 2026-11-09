@@ -28,7 +28,7 @@ const SkipConfirmationModal = ({ modalRef, onCancel, onConfirm, loading }: SkipC
         <p className="text-secondary mb-6">
           Are you sure you want to skip the tutorial? You'll miss important guidance about:
         </p>
-        <ul className="list-disc list-inside text-secondary mb-6 space-y-2" role="list">
+        <ul className="list-disc list-inside text-secondary mb-6 space-y-2">
           <li>Roster strategy selection (1, 2, or 3 robots)</li>
           <li>Facility timing and priorities</li>
           <li>Budget allocation guidance</li>

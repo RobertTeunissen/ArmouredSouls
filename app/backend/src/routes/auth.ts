@@ -1,7 +1,7 @@
 /**
  * @module routes/auth
  *
- * Express router for authentication endpoints: registration, login, and logout.
+ * Express router for authentication endpoints: registration and login (logout only clears the token in the browser).
  * Handles input validation, duplicate checking, password hashing, JWT generation,
  * and structured error responses for the user registration module.
  *
@@ -284,42 +284,6 @@ router.post('/login', validateRequest({ body: loginBodySchema }), async (req: Re
       prestige: user.prestige,
     },
   });
-});
-
-/**
- * POST /api/auth/logout
- *
- * Logs the user out by incrementing tokenVersion, which invalidates all
- * existing JWT tokens for this user on subsequent requests.
- * Best-effort: returns 200 even if no valid token is provided.
- *
- * **Responses:**
- * - `200 OK` — `{ message: "Logged out successfully" }`
- */
-router.post('/logout', validateRequest({}), async (req: Request, res: Response) => {
-  // Best-effort server-side invalidation: if a valid token is present, bump tokenVersion
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (token) {
-    try {
-      const jwtSecret = (await import('../config/env')).getConfig().jwtSecret;
-      const jwt = (await import('jsonwebtoken')).default;
-      const decoded = jwt.verify(token, jwtSecret) as { userId: string | number };
-      const userId = typeof decoded.userId === 'string' ? parseInt(decoded.userId, 10) : decoded.userId;
-
-      if (userId) {
-        await prisma.user.update({
-          where: { id: userId },
-          data: { tokenVersion: { increment: 1 } },
-        });
-      }
-    } catch {
-      // Token invalid or expired — no-op, user is effectively logged out already
-    }
-  }
-
-  res.json({ message: 'Logged out successfully' });
 });
 
 export default router;

@@ -12,7 +12,7 @@
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { buildStableScopeFilter, STABLE_SCOPES } from '../utils/stableScope';
 import { getDashboardKpis } from '../services/admin/adminDashboardService';
 import { ACHIEVEMENT_STABLE_SCOPES, getAchievementAnalytics } from '../services/admin/achievements';
@@ -136,10 +136,9 @@ const LEAGUE_SEASON_STABLE_OF: Readonly<Record<(typeof STABLE_SCOPES)[number], L
  * GET /api/admin/dashboard/kpis
  * Get high-level KPI metrics for the admin dashboard.
  */
-router.get('/dashboard/kpis', authenticateToken, requireAdmin, validateRequest({ query: stableScopeQuerySchema }), async (req: Request, res: Response) => {
-  const query = stableScopeQuerySchema.parse(req.query);
+router.get('/dashboard/kpis', authenticateToken, requireAdmin, ...validated({ query: stableScopeQuerySchema }, async (req: Request, res: Response, { query }) => {
   res.json(await getDashboardKpis(buildStableScopeFilter(query.stables)));
-});
+}));
 
 /**
  * GET /api/admin/dashboard/status
@@ -153,20 +152,18 @@ router.get('/dashboard/status', authenticateToken, requireAdmin, validateRequest
  * GET /api/admin/dashboard/battle-activity
  * Battles per mode (last cycle, season, walkovers, queued, rates).
  */
-router.get('/dashboard/battle-activity', authenticateToken, requireAdmin, validateRequest({ query: dashboardBattleActivityQuerySchema }), async (req: Request, res: Response) => {
-  const query = dashboardBattleActivityQuerySchema.parse(req.query);
+router.get('/dashboard/battle-activity', authenticateToken, requireAdmin, ...validated({ query: dashboardBattleActivityQuerySchema }, async (req: Request, res: Response, { query }) => {
   res.json(await getBattleActivity(query.stables, { fresh: query.fresh === 'true' }));
-});
+}));
 
 /**
  * GET /api/admin/economy
  * Credit flows (sources and sinks from the ledger), earned vs spent per
  * cycle, balance bands and the per-stable-type table (Economy page).
  */
-router.get('/economy', authenticateToken, requireAdmin, validateRequest({ query: economyQuerySchema }), async (req: Request, res: Response) => {
-  const query = req.query as unknown as z.infer<typeof economyQuerySchema>;
+router.get('/economy', authenticateToken, requireAdmin, ...validated({ query: economyQuerySchema }, async (req: Request, res: Response, { query }) => {
   res.json(await getEconomyOverview(query.stables, query.window, { fresh: query.fresh === 'true' }));
-});
+}));
 /**
  * GET /api/admin/league-health
  * Every tiered league (1v1, 2v2, 3v3, Tag Team, KotH, Grand Melee): tiers,
@@ -185,10 +182,9 @@ router.get('/league-health', authenticateToken, requireAdmin, validateRequest({}
  * automatons | generated): per cycle, quiet cycles, and per tier boundary with the
  * bounce-back share. Read-only, from `league_history`.
  */
-router.get('/league-health/season', authenticateToken, requireAdmin, validateRequest({ query: leagueSeasonQuerySchema }), async (req: Request, res: Response) => {
-  const query = leagueSeasonQuerySchema.parse(req.query);
+router.get('/league-health/season', authenticateToken, requireAdmin, ...validated({ query: leagueSeasonQuerySchema }, async (req: Request, res: Response, { query }) => {
   res.json(await getLeagueSeason(query.mode, LEAGUE_SEASON_STABLE_OF[query.stables]));
-});
+}));
 
 /**
  * GET /api/admin/achievements/analytics
@@ -196,10 +192,9 @@ router.get('/league-health/season', authenticateToken, requireAdmin, validateReq
  * players | automatons | generated, default players). Player rates are out of
  * the players who logged in since the season started. Read-only.
  */
-router.get('/achievements/analytics', authenticateToken, requireAdmin, validateRequest({ query: achievementAnalyticsQuerySchema }), async (req: Request, res: Response) => {
-  const query = achievementAnalyticsQuerySchema.parse(req.query);
+router.get('/achievements/analytics', authenticateToken, requireAdmin, ...validated({ query: achievementAnalyticsQuerySchema }, async (req: Request, res: Response, { query }) => {
   res.json(await getAchievementAnalytics(query.stables));
-});
+}));
 
 /**
  * GET /api/admin/meta/choices
@@ -207,47 +202,42 @@ router.get('/achievements/analytics', authenticateToken, requireAdmin, validateR
  * weapon totals, facility ownership) for the selected stable type. Replaced
  * `GET /api/admin/stats`. Read-only.
  */
-router.get('/meta/choices', authenticateToken, requireAdmin, validateRequest({ query: stableScopeQuerySchema }), async (req: Request, res: Response) => {
-  const query = stableScopeQuerySchema.parse(req.query);
+router.get('/meta/choices', authenticateToken, requireAdmin, ...validated({ query: stableScopeQuerySchema }, async (req: Request, res: Response, { query }) => {
   res.json(await getMetaChoices(buildStableScopeFilter(query.stables)));
-});
+}));
 
 /**
  * GET /api/admin/meta/builds
  * The Tuning, Refinements and Event entry sections of the Meta page for the
  * selected stable type (`stables`, default players). Read-only.
  */
-router.get('/meta/builds', authenticateToken, requireAdmin, validateRequest({ query: stableScopeQuerySchema }), async (req: Request, res: Response) => {
-  const query = stableScopeQuerySchema.parse(req.query);
+router.get('/meta/builds', authenticateToken, requireAdmin, ...validated({ query: stableScopeQuerySchema }, async (req: Request, res: Response, { query }) => {
   res.json(await getMetaBuilds(buildStableScopeFilter(query.stables)));
-});
+}));
 
-router.get('/search-analytics/report', authenticateToken, requireAdmin, validateRequest({ query: searchAnalyticsReportQuerySchema }), async (req: Request, res: Response) => {
-  const query = searchAnalyticsReportQuerySchema.parse(req.query);
+router.get('/search-analytics/report', authenticateToken, requireAdmin, ...validated({ query: searchAnalyticsReportQuerySchema }, async (req: Request, res: Response, { query }) => {
   const report = await getSearchAnalyticsReport(query);
   res.json(report);
-});
+}));
 
 /**
  * GET /api/admin/search-analytics/phrases
  * Paginated phrase table (settled searches by default).
  */
-router.get('/search-analytics/phrases', authenticateToken, requireAdmin, validateRequest({ query: searchAnalyticsPhrasesQuerySchema }), async (req: Request, res: Response) => {
-  const query = searchAnalyticsPhrasesQuerySchema.parse(req.query);
+router.get('/search-analytics/phrases', authenticateToken, requireAdmin, ...validated({ query: searchAnalyticsPhrasesQuerySchema }, async (req: Request, res: Response, { query }) => {
   res.json(await getSearchAnalyticsPhrases(query));
-});
+}));
 
 /**
  * GET /api/admin/search-analytics/phrases/export
  * The same phrase table as CSV (capped at 5,000 rows; spreadsheet formulas neutralised).
  */
-router.get('/search-analytics/phrases/export', authenticateToken, requireAdmin, validateRequest({ query: searchAnalyticsPhrasesExportQuerySchema }), async (req: Request, res: Response) => {
-  const query = searchAnalyticsPhrasesExportQuerySchema.parse(req.query);
+router.get('/search-analytics/phrases/export', authenticateToken, requireAdmin, ...validated({ query: searchAnalyticsPhrasesExportQuerySchema }, async (req: Request, res: Response, { query }) => {
   const csv = await exportSearchAnalyticsPhrasesCsv(query);
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="search-phrases.csv"');
   res.setHeader('Cache-Control', 'no-store');
   res.send(csv);
-});
+}));
 
 export default router;

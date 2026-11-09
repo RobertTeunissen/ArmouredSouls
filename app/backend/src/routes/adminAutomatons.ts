@@ -24,7 +24,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { handleMulterError } from '../middleware/handleMulterError';
 import { AppError } from '../errors/AppError';
 import { AutomatonError, AutomatonErrorCode } from '../errors/automatonErrors';
@@ -295,10 +295,9 @@ router.get('/status', validateRequest({}), async (_req: AuthRequest, res: Respon
 router.get('/strategies/comparison', validateRequest({}), async (_req: AuthRequest, res: Response) => {
   res.json(await getStrategyComparison());
 });
-router.get('/strategies/economy', validateRequest({ query: economyQuery }), async (req: AuthRequest, res: Response) => {
-  const query = req.query as unknown as z.infer<typeof economyQuery>;
+router.get('/strategies/economy', ...validated({ query: economyQuery }, async (req: AuthRequest, res: Response, { query }) => {
   res.json(await getStrategyEconomy(query.activated ?? null));
-});
+}));
 
 router.get('/strategies', validateRequest({}), async (_req: AuthRequest, res: Response) => {
   res.json(await getStrategyLibrary());
@@ -307,10 +306,8 @@ router.get('/strategies', validateRequest({}), async (_req: AuthRequest, res: Re
 router.post(
   '/strategies/:key/upgrade',
   auditedUpgrade,
-  validateRequest({ params: strategyKeyParams, body: upgradeBody }),
-  async (req: AuthRequest, res: Response) => {
-    const strategyKey = String(req.params.key);
-    const body = req.body as z.infer<typeof upgradeBody>;
+  ...validated({ params: strategyKeyParams, body: upgradeBody }, async (req: AuthRequest, res: Response, { params, body }) => {
+    const strategyKey = params.key;
     if (body.confirm !== true) {
       res.json(await dryRunUpgrade(strategyKey, body));
       return;
@@ -329,53 +326,51 @@ router.post(
       })),
     ]);
     res.json(result);
-  },
+  }),
 );
 
 router.get('/strategy-drafts', validateRequest({}), async (_req: AuthRequest, res: Response) => {
   res.json({ drafts: await listDrafts() });
 });
 
-router.post('/strategy-drafts', audited('strategy_draft_create', 'none'), validateRequest({ body: createDraftBody }), async (req: AuthRequest, res: Response) => {
-  const draft = await createStrategyDraft(req.body as z.infer<typeof createDraftBody>, req.user!.userId);
-  recordSuccess(req, res, { draftId: draft.id, strategyKey: draft.definition.key, version: draft.definition.version, changedFields: Object.keys(req.body as object) });
+router.post('/strategy-drafts', audited('strategy_draft_create', 'none'), ...validated({ body: createDraftBody }, async (req: AuthRequest, res: Response, { body }) => {
+  const draft = await createStrategyDraft(body, req.user!.userId);
+  recordSuccess(req, res, { draftId: draft.id, strategyKey: draft.definition.key, version: draft.definition.version, changedFields: Object.keys(body) });
   res.status(201).json(draft);
-});
+}));
 
-router.get('/strategy-drafts/:id', validateRequest({ params: draftParams }), async (req: AuthRequest, res: Response) => {
-  res.json(await getDraft(Number(req.params.id)));
-});
+router.get('/strategy-drafts/:id', ...validated({ params: draftParams }, async (req: AuthRequest, res: Response, { params }) => {
+  res.json(await getDraft(params.id));
+}));
 
 router.put(
   '/strategy-drafts/:id',
   audited('strategy_draft_update', 'none'),
-  validateRequest({ params: draftParams, body: updateDraftBody }),
-  async (req: AuthRequest, res: Response) => {
-    const draft = await updateDraft(Number(req.params.id), req.body as z.infer<typeof updateDraftBody>);
+  ...validated({ params: draftParams, body: updateDraftBody }, async (req: AuthRequest, res: Response, { params, body }) => {
+    const draft = await updateDraft(params.id, body);
     recordSuccess(req, res, { draftId: draft.id, strategyKey: draft.definition.key, version: draft.definition.version, changedFields: fieldNames(req) });
     res.json(draft);
-  },
+  }),
 );
 
-router.delete('/strategy-drafts/:id', audited('strategy_draft_delete', 'none'), validateRequest({ params: draftParams }), async (req: AuthRequest, res: Response) => {
-  const deleted = await deleteStrategyDraft(Number(req.params.id));
+router.delete('/strategy-drafts/:id', audited('strategy_draft_delete', 'none'), ...validated({ params: draftParams }, async (req: AuthRequest, res: Response, { params }) => {
+  const deleted = await deleteStrategyDraft(params.id);
   recordSuccess(req, res, { draftId: deleted.id, strategyKey: deleted.key, version: deleted.version, changedFields: ['deleted'] });
   res.status(204).send();
-});
+}));
 
 router.post(
   '/strategy-drafts/:id/preview',
-  validateRequest({ params: draftParams, body: previewDraftBody }),
-  async (req: AuthRequest, res: Response) => {
-    res.json(await previewDraft(Number(req.params.id), (req.body as z.infer<typeof previewDraftBody>).catalogueKey));
-  },
+  ...validated({ params: draftParams, body: previewDraftBody }, async (req: AuthRequest, res: Response, { params, body }) => {
+    res.json(await previewDraft(params.id, body.catalogueKey));
+  }),
 );
 
-router.get('/strategy-drafts/:id/export', validateRequest({ params: draftParams }), async (req: AuthRequest, res: Response) => {
+router.get('/strategy-drafts/:id/export', ...validated({ params: draftParams }, async (req: AuthRequest, res: Response, { params }) => {
   // A JSON wrapper `{ fileName, definition, upgradeWarning }`, not the file itself, so no attachment
   // header: the admin page saves `definition` as `fileName` (review C10F-1).
-  res.json(await exportDraft(Number(req.params.id)));
-});
+  res.json(await exportDraft(params.id));
+}));
 
 router.get('/program', validateRequest({}), async (_req: AuthRequest, res: Response) => {
   res.json(await getProgramSwitch());
@@ -384,20 +379,19 @@ router.get('/program', validateRequest({}), async (_req: AuthRequest, res: Respo
 router.put(
   '/program',
   audited('program_switch', 'all'),
-  validateRequest({ body: programBody }),
-  async (req: AuthRequest, res: Response) => {
-    const change = await setProgramSwitch(req.body.turnsEnabled, req.user!.userId);
+  ...validated({ body: programBody }, async (req: AuthRequest, res: Response, { body }) => {
+    const change = await setProgramSwitch(body.turnsEnabled, req.user!.userId);
     recordSuccess(req, res, { changedFields: ['turnsEnabled'], previous: change.previous, current: change.current });
     res.json(change);
-  },
+  }),
 );
 
-router.get('/export', validateRequest({ query: exportQuery }), async (req: AuthRequest, res: Response) => {
-  const { keys } = req.query as unknown as { keys: string[] };
+router.get('/export', ...validated({ query: exportQuery }, async (req: AuthRequest, res: Response, { query }) => {
+  const { keys } = query as unknown as { keys: string[] };
   const document = await exportCatalogue({ keys });
   res.setHeader('Content-Disposition', 'attachment; filename="automaton-catalogue-export.json"');
   res.json(document);
-});
+}));
 
 router.get('/catalogue/sync-status', validateRequest({}), async (_req: AuthRequest, res: Response) => {
   res.json({ summary: await getLastCatalogueSyncSummary() });
@@ -412,84 +406,78 @@ router.post('/activate-drafts', audited('activate_all', 'all'), validateRequest(
   res.json({ outcomes });
 });
 
-router.get('/', validateRequest({ query: listQuery }), async (req: AuthRequest, res: Response) => {
-  const query = req.query as unknown as z.infer<typeof listQuery>;
+router.get('/', ...validated({ query: listQuery }, async (req: AuthRequest, res: Response, { query }) => {
   res.json(await listProfiles({ status: query.status, strategy: query.strategy, attention: query.attention, page: query.page, limit: query.limit }));
-});
+}));
 
-router.post('/', audited('create_draft', 'body'), validateRequest({ body: createBody }), async (req: AuthRequest, res: Response) => {
-  const { result, changedFields } = await createDraft(req.body);
+router.post('/', audited('create_draft', 'body'), ...validated({ body: createBody }, async (req: AuthRequest, res: Response, { body }) => {
+  const { result, changedFields } = await createDraft(body);
   recordSuccess(req, res, { changedFields });
   res.status(201).json(result);
-});
+}));
 
 // ── One profile ──────────────────────────────────────────────────────
 
-router.get('/:key', validateRequest({ params: keyParams }), async (req: AuthRequest, res: Response) => {
-  res.json(await getProfileDetail(String(req.params.key)));
-});
+router.get('/:key', ...validated({ params: keyParams }, async (req: AuthRequest, res: Response, { params }) => {
+  res.json(await getProfileDetail(params.key));
+}));
 
 router.patch(
   '/:key',
   audited('update_profile', 'param'),
-  validateRequest({ params: keyParams, body: updateBody }),
-  async (req: AuthRequest, res: Response) => {
-    const { result, changedFields } = await updateProfile(String(req.params.key), req.body);
+  ...validated({ params: keyParams, body: updateBody }, async (req: AuthRequest, res: Response, { params, body }) => {
+    const { result, changedFields } = await updateProfile(params.key, body);
     recordSuccess(req, res, { changedFields });
     res.json(result);
-  },
+  }),
 );
 
-router.delete('/:key', audited('delete_draft', 'param'), validateRequest({ params: keyParams }), async (req: AuthRequest, res: Response) => {
-  const { changedFields } = await deleteDraft(String(req.params.key));
+router.delete('/:key', audited('delete_draft', 'param'), ...validated({ params: keyParams }, async (req: AuthRequest, res: Response, { params }) => {
+  const { changedFields } = await deleteDraft(params.key);
   recordSuccess(req, res, { changedFields });
   res.status(204).send();
-});
+}));
 
 router.put(
   '/:key/strategy',
   audited('update_strategy', 'param'),
-  validateRequest({ params: keyParams, body: strategyBody }),
-  async (req: AuthRequest, res: Response) => {
-    const { result, changedFields } = await updateStrategy(String(req.params.key), req.body);
+  ...validated({ params: keyParams, body: strategyBody }, async (req: AuthRequest, res: Response, { params, body }) => {
+    const { result, changedFields } = await updateStrategy(params.key, body);
     recordSuccess(req, res, { changedFields, strategyKey: result.strategy.key, strategyVersion: result.strategy.version });
     res.json(result);
-  },
+  }),
 );
 
 router.post(
   '/:key/blueprints',
   audited('add_blueprint', 'param'),
-  validateRequest({ params: keyParams, body: addBlueprintBody }),
-  async (req: AuthRequest, res: Response) => {
-    const { result, changedFields } = await addBlueprint(String(req.params.key), req.body);
+  ...validated({ params: keyParams, body: addBlueprintBody }, async (req: AuthRequest, res: Response, { params, body }) => {
+    const { result, changedFields } = await addBlueprint(params.key, body);
     recordSuccess(req, res, { changedFields });
     res.status(201).json(result);
-  },
+  }),
 );
 
 router.patch(
   '/:key/blueprints/:slot',
   audited('update_blueprint', 'param'),
-  validateRequest({ params: slotParams, body: updateBlueprintBody }),
-  async (req: AuthRequest, res: Response) => {
-    const slot = Number(req.params.slot);
-    const { result, changedFields } = await updateBlueprint(String(req.params.key), slot, req.body);
+  ...validated({ params: slotParams, body: updateBlueprintBody }, async (req: AuthRequest, res: Response, { params, body }) => {
+    const slot = params.slot;
+    const { result, changedFields } = await updateBlueprint(params.key, slot, body);
     recordSuccess(req, res, { slot, changedFields });
     res.json(result);
-  },
+  }),
 );
 
 router.delete(
   '/:key/blueprints/:slot',
   audited('delete_blueprint', 'param'),
-  validateRequest({ params: slotParams, body: deleteBlueprintBody }),
-  async (req: AuthRequest, res: Response) => {
-    const slot = Number(req.params.slot);
-    const { result, changedFields } = await deleteBlueprint(String(req.params.key), slot, req.body ?? {});
+  ...validated({ params: slotParams, body: deleteBlueprintBody }, async (req: AuthRequest, res: Response, { params, body }) => {
+    const slot = params.slot;
+    const { result, changedFields } = await deleteBlueprint(params.key, slot, body ?? {});
     recordSuccess(req, res, { slot, changedFields });
     res.json(result);
-  },
+  }),
 );
 
 router.post(
@@ -497,33 +485,31 @@ router.post(
   audited('upload_image', 'param'),
   multerUpload.single('image'),
   auditMulterError,
-  validateRequest({ params: slotParams }),
-  async (req: AuthRequest, res: Response) => {
+  ...validated({ params: slotParams }, async (req: AuthRequest, res: Response, { params }) => {
     if (!req.file) throw new AutomatonError(AutomatonErrorCode.AUTOMATON_IMAGE_INVALID, 'No image file provided', 400);
-    const slot = Number(req.params.slot);
-    const stored = await storeBlueprintImage(String(req.params.key), slot, req.file.buffer, req.file.mimetype);
+    const slot = params.slot;
+    const stored = await storeBlueprintImage(params.key, slot, req.file.buffer, req.file.mimetype);
     recordSuccess(req, res, { slot, changedFields: ['imageUrl'], robotsUpdated: stored.robotsUpdated });
     res.json(stored);
-  },
+  }),
 );
 
-router.post('/:key/activate', audited('activate', 'param'), validateRequest({ params: keyParams }), async (req: AuthRequest, res: Response) => {
-  const { result, changedFields } = await activateProfile(String(req.params.key));
+router.post('/:key/activate', audited('activate', 'param'), ...validated({ params: keyParams }, async (req: AuthRequest, res: Response, { params }) => {
+  const { result, changedFields } = await activateProfile(params.key);
   recordSuccess(req, res, { changedFields, userId: result.userId });
   res.json(result);
-});
+}));
 
-router.get('/:key/preview', validateRequest({ params: keyParams }), async (req: AuthRequest, res: Response) => {
-  res.json(await previewProfileTurn(String(req.params.key)));
-});
+router.get('/:key/preview', ...validated({ params: keyParams }, async (req: AuthRequest, res: Response, { params }) => {
+  res.json(await previewProfileTurn(params.key));
+}));
 
-router.get('/:key/cashflow', validateRequest({ params: keyParams }), async (req: AuthRequest, res: Response) => {
-  res.json(await getProfileCashflow(String(req.params.key)));
-});
-router.get('/:key/turns', validateRequest({ params: keyParams, query: paginationQuery }), async (req: AuthRequest, res: Response) => {
-  const query = req.query as unknown as z.infer<typeof paginationQuery>;
-  res.json(await listTurnRecords(String(req.params.key), query.page, query.limit));
-});
+router.get('/:key/cashflow', ...validated({ params: keyParams }, async (req: AuthRequest, res: Response, { params }) => {
+  res.json(await getProfileCashflow(params.key));
+}));
+router.get('/:key/turns', ...validated({ params: keyParams, query: paginationQuery }, async (req: AuthRequest, res: Response, { params, query }) => {
+  res.json(await listTurnRecords(params.key, query.page, query.limit));
+}));
 
 // ── Rejections ───────────────────────────────────────────────────────
 

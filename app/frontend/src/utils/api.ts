@@ -43,7 +43,7 @@ export interface ApiRequestConfig {
   /** Request body for methods without a body argument (e.g. a DELETE that carries data). */
   data?: unknown;
   /**
-   * Fire-and-forget telemetry only: a 401/403 on this request must not clear
+   * Fire-and-forget telemetry only: a 401 on this request must not clear
    * the session or redirect to `/login`. The error is still rejected to the
    * caller. Never set this on a request whose failure the user should see.
    */

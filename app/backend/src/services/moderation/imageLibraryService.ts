@@ -24,7 +24,7 @@ import logger from '../../config/logger';
 import { loadEnvConfig } from '../../config/env';
 import { SeasonError, SeasonErrorCode } from '../../errors';
 import { fileStorageService, type OrphanCleanupResult } from './fileStorageService';
-import { forgetUpload, forgetUploadsOfUser, syncUploadedImages } from './uploadedImageService';
+import { forgetUpload, syncUploadedImages } from './uploadedImageService';
 
 const UPLOAD_URL_PREFIX = '/uploads/user-robots';
 
@@ -259,20 +259,6 @@ export async function deleteImage(
   return impact;
 }
 
-/** Delete a user's entire image directory. Used when an account is removed. */
-export async function deleteAllImagesForUser(userId: number): Promise<void> {
-  const userDir = fileStorageService.getAbsolutePath(`${UPLOAD_URL_PREFIX}/${userId}/`);
-  try {
-    await fs.rm(userDir, { recursive: true, force: true });
-    await forgetUploadsOfUser(userId);
-    logger.info(`[image-library] Removed image directory for deleted user ${userId}`);
-  } catch (error) {
-    logger.error(
-      `[image-library] Failed to remove image directory for user ${userId} — ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
-}
-
 // ─── Orphan sweep ────────────────────────────────────────────────────
 
 /**
@@ -318,6 +304,3 @@ export async function referencedUploadPaths(): Promise<Set<string>> {
 export function uploadUrlPrefix(): string {
   return UPLOAD_URL_PREFIX;
 }
-
-/** Re-exported for callers that need the raw path helper. */
-export const imageLibraryPaths = { join: path.join };

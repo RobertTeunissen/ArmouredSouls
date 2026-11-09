@@ -9,7 +9,7 @@
 import { Router, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { validateRequest } from '../middleware/schemaValidator';
+import { validateRequest, validated } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import { getCurrentSeason } from '../services/season/seasonService';
 import {
@@ -73,46 +73,42 @@ router.get(
 router.post(
   '/summary-seen',
   authenticateToken,
-  validateRequest({ body: summarySeenBodySchema }),
-  async (req: AuthRequest, res: Response) => {
-    await markSeasonSummarySeen(req.user!.userId, req.body.seasonNumber);
+  ...validated({ body: summarySeenBodySchema }, async (req: AuthRequest, res: Response, { body }) => {
+    await markSeasonSummarySeen(req.user!.userId, body.seasonNumber);
     return res.status(204).send();
-  },
+  }),
 );
 
 /** A stable's collapsed season history. */
 router.get(
   '/stables/:userId',
   authenticateToken,
-  validateRequest({ params: userParamsSchema }),
-  async (req: AuthRequest, res: Response) => {
-    const userId = Number(req.params.userId);
+  ...validated({ params: userParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+    const userId = params.userId;
     // Visibility matches the existing `GET /api/stables/:userId` endpoint,
     // which returns any authenticated user's stable without gating on
     // `profileVisibility` (Spec #45 R20.5 — "the same rules it applies today").
     return res.json(await getStableSeasonHistory(userId));
-  },
+  }),
 );
 
 /** One archived season of one stable, expanded. */
 router.get(
   '/stables/:userId/:seasonNumber',
   authenticateToken,
-  validateRequest({ params: userSeasonParamsSchema }),
-  async (req: AuthRequest, res: Response) => {
-    const userId = Number(req.params.userId);
-    return res.json(await getStableSeasonDetail(userId, Number(req.params.seasonNumber)));
-  },
+  ...validated({ params: userSeasonParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+    const userId = params.userId;
+    return res.json(await getStableSeasonDetail(userId, params.seasonNumber));
+  }),
 );
 
 /** One completed season's standings, champions, and accolades. */
 router.get(
   '/:seasonNumber',
   authenticateToken,
-  validateRequest({ params: seasonParamsSchema }),
-  async (req: AuthRequest, res: Response) => {
-    return res.json(await getSeasonDetail(Number(req.params.seasonNumber)));
-  },
+  ...validated({ params: seasonParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
+    return res.json(await getSeasonDetail(params.seasonNumber));
+  }),
 );
 
 export default router;

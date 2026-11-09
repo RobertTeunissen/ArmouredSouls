@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { RangeBand, getWeaponOptimalRange, getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../utils/weaponRange';
+import { onActivationKey } from '../utils/keyboardActivation';
 
 interface Weapon {
   id: number;
@@ -225,10 +226,17 @@ function WeaponSelectionModal({
                         ? 'border-2 border-blue-500'
                         : 'border-2 border-transparent hover:border-gray-500'
                     }`}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={isCurrentlyEquipped}
                     onClick={() => {
                       onSelect(inv.id);
                       onClose();
                     }}
+                    onKeyDown={onActivationKey(() => {
+                      onSelect(inv.id);
+                      onClose();
+                    })}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-semibold text-lg">{inv.weapon.name}</h3>

@@ -55,30 +55,17 @@ test.describe('Robot Creation', () => {
     await expect(page.getByText('50/50 characters')).toBeVisible();
   });
 
-  test('should create robot and navigate to robot detail page', async ({ page }) => {
-    // Req 3.1 — valid name + sufficient credits → creates robot and navigates to /robots/:id
+  test('should block creation while credits are below the frame cost', async ({ page }) => {
+    // Req 3.1 (insufficient-credit side). The seeded test_user_001 holds
+    // ₡100,000, below the ₡500,000 frame, so this test skipped itself on every
+    // CI run when it tried to create a robot. The successful creation path
+    // (fresh user, ₡500,000 deducted, robot page opens) is covered by
+    // critical-journey.spec.ts.
     await navigateToProtectedPage(page, '/robots/create');
 
-    const robotName = `E2E_Bot_${Date.now()}`;
-    await page.getByLabel('Robot Name').fill(robotName);
+    await page.getByLabel('Robot Name').fill(`E2E_Bot_${Date.now()}`);
 
-    const createButton = page.getByRole('button', { name: /Create Robot/ });
-
-    // Skip if the button is disabled (insufficient credits for test_user_001)
-    const isEnabled = await createButton.isEnabled().catch(() => false);
-    if (!isEnabled) {
-      test.skip(true, 'Create Robot button is disabled — test_user_001 has insufficient credits');
-      return;
-    }
-
-    await createButton.click();
-
-    // Wait for navigation to the new robot's detail page
-    await page.waitForURL(/\/robots\/\d+/, { timeout: 15000 });
-    await page.waitForLoadState('networkidle');
-
-    // Verify we're on a robot detail page
-    await expect(page).toHaveURL(/\/robots\/\d+/);
+    await expect(page.getByRole('button', { name: /Create Robot/ })).toBeDisabled();
   });
 
   test('should show created robot in the robots list', async ({ page }) => {
