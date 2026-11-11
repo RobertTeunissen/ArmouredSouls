@@ -93,8 +93,8 @@ Stage 2 VERIFY   — one stable archive per Human_Stable, robot archive count
 Stage 3 PURGE    — delete generated stables and dormant human stables (50
                    per transaction), reset competitive/economic state, purge
                    history, reset counter, open the next season in preparation.
-Stage 4 POST     — orphan sweep, VACUUM, preserved-state achievement
-                   re-award. All non-fatal.
+Stage 4 POST     — orphan sweep, preserved-state achievement re-award,
+                   achievement rarity cache refresh, VACUUM. All non-fatal.
 Stage 5 AUTOMATON — `season_open` Turn_Step (Spec #55): every
                    Active_Automaton takes its opening-build turn in the
                    new season. Non-fatal; runs for every rollover trigger.

@@ -333,6 +333,20 @@ export async function executeSeasonRollover(options: RolloverOptions): Promise<R
         `[season-rollover] Preserved-state achievement re-award failed (non-fatal) — ${describeError(error)}`,
       );
     }
+    // The rarity cache was last built by the settlement before this rollover,
+    // from the season just purged. Rebuild it now, or every "Held by N players"
+    // shows last season's counts, and the re-awarded achievements none, until
+    // the next settlement. A failed refresh keeps the old cache and logs.
+    tracker.setDetail('post', 'Refreshing achievement rarity');
+    try {
+      const { achievementService } = await import('../achievement');
+      await achievementService.refreshRarityCache();
+    } catch (error) {
+      postProblems.push('achievement rarity refresh failed');
+      logger.error(
+        `[season-rollover] Achievement rarity refresh failed (non-fatal) — ${describeError(error)}`,
+      );
+    }
 
     tracker.setDetail('post', 'Reclaiming space');
     if (!(await reclaimSpace())) postProblems.push('space reclamation failed');

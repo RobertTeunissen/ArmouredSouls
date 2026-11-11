@@ -41,10 +41,13 @@ jest.mock('../../cycle/schedulerRunStore', () => ({
 jest.mock('../../../utils/monitoringWebhook', () => ({ __esModule: true, sendMonitoringAlert: jest.fn() }));
 jest.mock('../../moderation/imageLibraryService', () => ({ __esModule: true, cleanupSeasonOrphans: jest.fn(async () => ({ filesDeleted: 0, bytesReclaimed: 0 })) }));
 jest.mock('../../achievement/preservedStateAchievements', () => ({ __esModule: true, reawardPreservedStateAchievements: jest.fn(async () => ({ achievementsAwarded: 0, stablesChecked: 0 })) }));
+jest.mock('../../achievement', () => ({ __esModule: true, achievementService: { refreshRarityCache: jest.fn(async () => undefined) } }));
 jest.mock('../../automaton', () => ({ __esModule: true, runTurnStepNonFatal: jest.fn() }));
 jest.mock('../../records/hallOfRecordsService', () => ({ __esModule: true, invalidateHallOfRecords: jest.fn() }));
 
 import { invalidateHallOfRecords } from '../../records/hallOfRecordsService';
+import { reawardPreservedStateAchievements } from '../../achievement/preservedStateAchievements';
+import { achievementService } from '../../achievement';
 import { getCurrentSeason, completeSeasonAndOpenNext } from '../seasonService';
 import { writeSeasonArchive, verifyArchive, hasCompleteArchive } from '../seasonArchiveService';
 import { seasonStartedAt } from '../dormantStables';
@@ -111,6 +114,10 @@ describe('executeSeasonRollover run recording', () => {
     expect(invalidateHallOfRecords).toHaveBeenCalledTimes(1);
     expect(mocked(invalidateHallOfRecords).mock.invocationCallOrder[0])
       .toBeGreaterThan(mocked(completeSeasonAndOpenNext).mock.invocationCallOrder[0]);
+    // Achievement rarity is rebuilt after the re-award, so holder counts describe the new season.
+    expect(achievementService.refreshRarityCache).toHaveBeenCalledTimes(1);
+    expect(mocked(achievementService.refreshRarityCache).mock.invocationCallOrder[0])
+      .toBeGreaterThan(mocked(reawardPreservedStateAchievements).mock.invocationCallOrder[0]);
     // Progress was written while it ran, and is visible in memory only while it runs.
     expect(updateRunSummary).toHaveBeenCalledWith(77, expect.objectContaining({ rollover: expect.any(Object) }));
     expect(progressSeen[0]).toMatchObject({ runId: 77, trigger: 'settlement', progress: { stages: expect.arrayContaining([expect.objectContaining({ stage: 'purge', status: 'running' })]) } });

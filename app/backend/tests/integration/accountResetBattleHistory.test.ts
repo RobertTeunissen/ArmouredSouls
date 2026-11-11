@@ -33,7 +33,10 @@ import { getBattleLog } from '../../src/services/match/battleLogService';
 import { getAdminBattleList, getAdminBattleDetail } from '../../src/services/admin/battles';
 import { battleLogFixture } from '../helpers/battleLogFixture';
 
-const SUFFIX = randomUUID().slice(0, 8);
+// Starts with a letter: the admin battle search reads an all-digit query as a
+// battle id (`parseBattleIdQuery`), and 8 hex characters are all digits in
+// about 1 run of 40.
+const SUFFIX = `x${randomUUID().slice(0, 7)}`;
 const SEASON_NUMBER = 92940 + Math.floor(Math.random() * 1000);
 const CYCLE_NUMBER = 929_400 + Math.floor(Math.random() * 1000);
 const ONE_HOUR_AGO = new Date(Date.now() - 60 * 60 * 1000);

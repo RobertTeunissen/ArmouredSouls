@@ -29,7 +29,7 @@ pnpm install
 pnpm run dev  # Terminal 2
 ```
 
-Open http://localhost:3000 — test credentials are in [LOCAL_SETUP.md](docs/guides/operations/LOCAL_SETUP.md).
+Open http://localhost:3000 — test accounts are defined in `app/backend/prisma/seed.ts` (see [LOCAL_SETUP.md](docs/guides/operations/LOCAL_SETUP.md)).
 
 If you see "Environment variable not found: DATABASE_URL", you forgot to create the `.env` file — run `cp .env.example .env` in `app/backend/`.
 
@@ -41,22 +41,27 @@ Armoured Souls is deployed to a production VPS with a full game loop: create rob
 - 6 battle modes: League (1v1), Tournament (bracket), Tag Team (2v2 sequential), Team Battle (2v2/3v3 simultaneous), King of the Hill (5-6 robot FFA), Grand Melee (20-robot elimination)
 - 23 robot attributes across 5 categories, all upgradeable
 - 47 weapons (41 weapons + 6 shields) across 4 range bands
-- 13 stable facilities with 10 levels each
+- 14 stable facilities with 10 levels each
 - 6-tier league system (Bronze → Champion) with LP-primary matchmaking
+- Seasons with archived standings, accolades, and season history
 - Economy: credits, prestige (stable-level), fame (robot-level), streaming revenue
+- Finance Center: ledger-backed, itemised report of how a stable's credits changed per period
 - Tuning Pool system for per-robot tactical attribute allocation
-- 77-achievement progression layer with badges and toast notifications
+- 135-achievement progression layer with badges and toast notifications
 - Booking Office event subscription system gating battle participation
+- Automaton stables: persistent computer-run opponents
+- Practice Arena: consequence-free 1v1 sandbox battles on the real combat engine
+- Hall of Records, leaderboards, and public stable and robot profiles
 - 5-step new player onboarding tutorial
 - Deterministic tick-based combat engine with battle replay viewer
-- In-game guide system
-- Admin portal with cycle management, battle viewer, analytics, and 6 dashboards
+- In-game guide system and changelog
+- Admin portal with cycle and season controls, battle viewer, economy, security, automaton management, analytics, and an action audit log
 - Monitoring & alerting via Discord webhooks
 
 ### Tech Stack
 - Backend: Node.js 24, TypeScript 6, Express 5, Prisma 7, PostgreSQL 17
 - Frontend: React 19, Vite 8, Tailwind CSS 4, Zustand 5, React Router 7
-- Testing: Jest 30 (backend), Vitest 4 (frontend), Playwright (E2E), fast-check (property-based)
+- Testing: Jest 30 (backend), Vitest 5 (frontend), Playwright (E2E), fast-check (property-based)
 - Infrastructure: Scaleway VPS, Caddy (auto HTTPS), PM2, GitHub Actions CI/CD
 
 ## Repository Structure
@@ -71,11 +76,13 @@ ArmouredSouls/
 │   ├── design_ux/           # Design system and brand guidelines
 │   ├── balance_changes/     # Game balance modifications
 │   ├── implementation_notes/ # Implementation contracts and release evidence
-│   └── analysis/            # Feature analysis and planning
+│   ├── analysis/            # Feature analysis and planning
+│   ├── features/            # Feature specifications
+│   └── api/                 # API specifications
 ├── app/
-│   ├── backend/             # Express 5 API (36 service directories)
+│   ├── backend/             # Express 5 API (38 service directories)
 │   ├── frontend/            # React 19 SPA
-│   ├── shared/              # Shared utilities (game formulas)
+│   ├── shared/              # Shared game formulas (utils/) and API contract types (types/)
 │   ├── docker-compose.yml   # PostgreSQL for local dev
 │   ├── Caddyfile            # Reverse proxy config (production)
 │   └── ecosystem.config.js  # PM2 config (production)

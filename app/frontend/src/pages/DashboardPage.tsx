@@ -150,11 +150,11 @@ function DashboardPage() {
           </div>
         </div>
 
-        {/* Season phase card — preparation state, cycle 1 notice, or cycle progress */}
-        <SeasonPhaseCard />
-
         {/* Critical Notifications/Warnings - All alerts above overview blocks */}
         <div className="mb-6 space-y-3">
+          {/* Season phase: preparation, or the cycle 1 scheduling notice */}
+          <SeasonPhaseCard />
+
           {/* League tier changes and tournament champions (events — celebratory first) */}
           {eventNotifications.map(n => renderNotification(n))}
 

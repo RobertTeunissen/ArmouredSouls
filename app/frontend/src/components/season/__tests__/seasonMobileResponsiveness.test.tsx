@@ -221,6 +221,10 @@ describe('Season surfaces — R28 mobile responsiveness', () => {
         );
         const card = screen.getByTestId('season-preparation-card');
         expect(card.textContent).toContain('No competitive battles are scheduled');
+        expect(card.textContent).toContain('Competitive play resumes in 1 cycle.');
+        // The site's notification styling (theme tokens), not a palette of its own.
+        expect(card.firstElementChild?.className).toContain('bg-primary/10');
+        expect(card.innerHTML).not.toMatch(/amber-/);
         expectNoForcedOverflow(container, width);
       });
     }

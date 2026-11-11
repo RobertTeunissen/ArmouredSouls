@@ -73,7 +73,7 @@ v2.0 (stable page revamp) replaced the v1 layout, a wall of ten equal stat tiles
 ### Trophy cabinet
 
 - Up to 6 badges (`SHOWCASE_SIZE`, the pin limit): the owner's pins in their order, then the stable's rarest other unlocks.
-- Rarity is the human-stable holder count from the achievement rarity cache (Automatons excluded, as on the achievements page). Ties: harder achievement tier, then most recent unlock. Until the cache has loaded, harder tiers come first and no holder count is shown.
+- Rarity is the human-stable holder count from the achievement rarity cache (Automatons excluded, as on the achievements page). Ties: harder achievement tier, then most recent unlock. Until the cache has loaded, harder tiers come first and no holder count is shown. A badge unlocked after the cache's last refresh that the cache does not list also shows no holder count, since the cache cannot know about it yet.
 - Hidden (secret) achievements are never auto-filled, so the cabinet cannot reveal one; a pinned one is shown.
 - Owner: **Customise** opens the existing pinner modal (pin, unpin, save). There are no hover-only controls.
 - Below the badges: the best Hall of Records placements over all completed seasons (rank first, then newest season), without tournament wins, whose `rank` is a list position rather than a placement.

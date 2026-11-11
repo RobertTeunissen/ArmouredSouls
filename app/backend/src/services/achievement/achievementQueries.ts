@@ -15,6 +15,7 @@ import type {
   StableAchievementData,
   AchievementRarityCache,
 } from './achievementTypes';
+import { holderCount } from './rarityHolders';
 
 // ─── Recent Unlocks ──────────────────────────────────────────────────
 
@@ -131,8 +132,6 @@ export function buildShowcase(
   rarityCache: AchievementRarityCache | null,
 ): ShowcaseAchievement[] {
   const unlockedAt = new Map(unlocks.map((u) => [u.achievementId, u.unlockedAt]));
-  const counts = rarityCache && rarityCache.counts.size > 0 ? rarityCache.counts : null;
-  const holders = (id: string): number | null => (counts ? counts.get(id) ?? 0 : null);
 
   const toEntry = (id: string, pinned: boolean): ShowcaseAchievement | null => {
     const definition = getAchievementById(id);
@@ -141,7 +140,7 @@ export function buildShowcase(
     return {
       id: definition.id, name: definition.name, tier: definition.tier,
       badgeIconFile: definition.badgeIconFile, unlockedAt: at.toISOString(),
-      pinned, holders: holders(id),
+      pinned, holders: holderCount(rarityCache, id, at),
     };
   };
 
@@ -217,6 +216,10 @@ export async function getStableAchievements(
 
 export async function refreshRarityCache(cache: AchievementRarityCache): Promise<AchievementRarityCache> {
   try {
+    // Taken before the holder query: an unlock committed while the queries run
+    // is then newer than (or equal to) the snapshot, so `holderCount` reports
+    // it as unknown instead of 0.
+    const snapshotAt = new Date();
     const achievementCounts = await prisma.userAchievement.groupBy({
       by: ['achievementId'],
       _count: { achievementId: true },
@@ -240,7 +243,7 @@ export async function refreshRarityCache(cache: AchievementRarityCache): Promise
     const newCache: AchievementRarityCache = {
       counts,
       totalActivePlayers,
-      refreshedAt: new Date(),
+      refreshedAt: snapshotAt,
     };
 
     logger.info(`Achievement rarity cache refreshed: ${counts.size} achievements, ${totalActivePlayers} active players`);
