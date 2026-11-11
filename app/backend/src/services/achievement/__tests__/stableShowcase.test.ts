@@ -67,6 +67,21 @@ describe('buildShowcase', () => {
     expect(showcase.every((s) => s.holders === null)).toBe(true);
   });
 
+  it('leaves holders unknown for an unlock the rarity cache has not seen yet', () => {
+    // E.g. the achievements a Season_Rollover re-awards after the settlement
+    // refresh: "No player holds this" under the stable's own badge is wrong.
+    const [a, b] = visible;
+    const before = { ...cache({ [a.id]: 12 }), refreshedAt: at(10) };
+
+    const showcase = buildShowcase([], [unlock(a.id, 11), unlock(b.id, 11), unlock(visible[2].id, 9)], before);
+
+    expect(new Map(showcase.map((s) => [s.id, s.holders]))).toEqual(new Map([
+      [a.id, 12], // listed: the count stands
+      [b.id, null], // not listed, unlocked after the refresh: unknown
+      [visible[2].id, 0], // not listed, unlocked before it: no human holder
+    ]));
+  });
+
   it('breaks rarity ties by the most recent unlock', () => {
     const [a, b] = visible.filter((x) => x.tier === 'easy');
     const showcase = buildShowcase([], [unlock(a.id, 1), unlock(b.id, 20)], cache({ [a.id]: 3, [b.id]: 3 }));

@@ -10,6 +10,7 @@
 import prisma from '../../lib/prisma';
 import { getAchievementById } from '../../config/achievements';
 import { achievementService } from '../achievement';
+import { holderCount } from '../achievement/rarityHolders';
 import {
   getRecentResults,
   getRobotStandings,
@@ -77,8 +78,7 @@ async function robotAchievements(robotId: number): Promise<ProfileAchievement[]>
     where: { robotId },
     select: { achievementId: true, unlockedAt: true },
   });
-  const counts = achievementService.getRarityData().counts;
-  const rarityKnown = counts.size > 0;
+  const rarity = achievementService.getRarityData();
   return unlocks
     .flatMap((u) => {
       const definition = getAchievementById(u.achievementId);
@@ -89,7 +89,7 @@ async function robotAchievements(robotId: number): Promise<ProfileAchievement[]>
         tier: definition.tier,
         badgeIconFile: definition.badgeIconFile,
         unlockedAt: u.unlockedAt.toISOString(),
-        holders: rarityKnown ? counts.get(definition.id) ?? 0 : null,
+        holders: holderCount(rarity, definition.id, u.unlockedAt),
       }];
     })
     .sort((a, b) =>

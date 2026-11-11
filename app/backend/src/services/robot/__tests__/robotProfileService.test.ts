@@ -8,7 +8,7 @@ const mockAchievementFindMany = jest.fn();
 const mockAccoladeFindMany = jest.fn();
 const mockGetRobotStandings = jest.fn();
 const mockGetRecentResults = jest.fn();
-const mockRarity = { counts: new Map<string, number>() };
+const mockRarity = { counts: new Map<string, number>(), totalActivePlayers: 80, refreshedAt: new Date('2026-10-05') };
 
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,

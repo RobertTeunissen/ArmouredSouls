@@ -613,7 +613,9 @@ Validated at the API layer: max 6 entries, each must be a valid achievement ID t
 
 Achievement rarity counts (how many players have earned each achievement) are cached and refreshed once per cycle during settlement, not computed on every request.
 
-**Option A (recommended for current scale)**: In-memory cache in the `AchievementService` singleton, refreshed on startup and after each cycle settlement.
+**Option A (recommended for current scale)**: In-memory cache in the `AchievementService` singleton, refreshed on startup, after each cycle settlement, and at the end of a Season_Rollover (after the preserved-state re-award, so holder counts never describe the purged season).
+
+An achievement missing from the cache has no human holder only if the cache is newer than the unlock being shown. A badge unlocked after the last refresh shows no holder count (`holders: null`, `services/achievement/rarityHolders.ts`) rather than "No player holds this".
 
 ```typescript
 // Cached in AchievementService
