@@ -662,6 +662,25 @@ describe('AchievementService.refreshRarityCache', () => {
     expect(rarityData.refreshedAt.getTime()).toBeGreaterThan(0);
   });
 
+  it('dates the cache from before the holder query, so unlocks during the refresh read as unknown', async () => {
+    const before = new Date('2026-11-11T00:00:00.000Z');
+    jest.useFakeTimers({ now: before });
+    try {
+      mockPrisma.userAchievement.groupBy.mockImplementationOnce(async () => {
+        // An unlock is committed while the queries run.
+        jest.setSystemTime(new Date('2026-11-11T00:00:05.000Z'));
+        return [];
+      });
+      mockPrisma.user.count.mockResolvedValueOnce(20);
+
+      await achievementService.refreshRarityCache();
+
+      expect(achievementService.getRarityData().refreshedAt).toEqual(before);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('classifies stables by stable type, never by username', async () => {
     await achievementService.refreshRarityCache();
 

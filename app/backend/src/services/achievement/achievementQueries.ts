@@ -216,6 +216,10 @@ export async function getStableAchievements(
 
 export async function refreshRarityCache(cache: AchievementRarityCache): Promise<AchievementRarityCache> {
   try {
+    // Taken before the holder query: an unlock committed while the queries run
+    // is then newer than (or equal to) the snapshot, so `holderCount` reports
+    // it as unknown instead of 0.
+    const snapshotAt = new Date();
     const achievementCounts = await prisma.userAchievement.groupBy({
       by: ['achievementId'],
       _count: { achievementId: true },
@@ -239,7 +243,7 @@ export async function refreshRarityCache(cache: AchievementRarityCache): Promise
     const newCache: AchievementRarityCache = {
       counts,
       totalActivePlayers,
-      refreshedAt: new Date(),
+      refreshedAt: snapshotAt,
     };
 
     logger.info(`Achievement rarity cache refreshed: ${counts.size} achievements, ${totalActivePlayers} active players`);

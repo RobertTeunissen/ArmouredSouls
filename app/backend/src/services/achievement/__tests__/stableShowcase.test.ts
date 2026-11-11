@@ -82,6 +82,14 @@ describe('buildShowcase', () => {
     ]));
   });
 
+  it('treats an unlock at the snapshot boundary as unknown', () => {
+    // The boundary is taken before the holder query, so an unlock with the
+    // same timestamp may have been committed while the query ran.
+    const [a] = visible;
+    const showcase = buildShowcase([], [unlock(a.id, 10)], { ...cache({ [visible[1].id]: 3 }), refreshedAt: at(10) });
+    expect(showcase[0].holders).toBeNull();
+  });
+
   it('breaks rarity ties by the most recent unlock', () => {
     const [a, b] = visible.filter((x) => x.tier === 'easy');
     const showcase = buildShowcase([], [unlock(a.id, 1), unlock(b.id, 20)], cache({ [a.id]: 3, [b.id]: 3 }));

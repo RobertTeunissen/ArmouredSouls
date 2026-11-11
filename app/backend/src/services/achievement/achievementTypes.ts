@@ -119,6 +119,7 @@ export interface StableAchievementData {
 export interface AchievementRarityCache {
   counts: Map<string, number>;
   totalActivePlayers: number;
+  /** Snapshot boundary, taken before the holder query: unlocks at or after it may be missing from `counts`. */
   refreshedAt: Date;
 }
 
