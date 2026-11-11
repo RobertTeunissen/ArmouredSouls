@@ -5,13 +5,15 @@ import { api } from '../utils/api';
 import { createRobot } from '../utils/robotApi';
 import { ApiError } from '../utils/ApiError';
 import { useRobotStore } from '../stores';
+import { ERROR_NOTICE, PRIMARY_BUTTON, SECONDARY_BUTTON } from '../components/robot-setup/styles';
 
 function CreateRobotPage() {
   const [name, setName] = useState('');
   const [currency, setCurrency] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { user, logout, refreshUser } = useAuth();
+  const [rosterFull, setRosterFull] = useState(false);
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -28,6 +30,7 @@ function CreateRobotPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setRosterFull(false);
 
     if (!name.trim()) {
       setError('Robot name is required');
@@ -80,13 +83,10 @@ function CreateRobotPage() {
         navigate(`/robots/${data.robot.id}/setup`, { replace: true });
       }
     } catch (err: unknown) {
+      // A 401 already ended the session in the API client.
       if (err instanceof ApiError) {
-        if (err.statusCode === 401) {
-          logout();
-          navigate('/login');
-          return;
-        }
         setError(err.message || 'Failed to create robot');
+        setRosterFull(err.code === 'MAX_ROBOTS_REACHED');
       } else {
         setError(err instanceof Error ? err.message : 'Failed to create robot');
       }
@@ -100,18 +100,18 @@ function CreateRobotPage() {
   return (
     <div className="min-h-screen bg-background text-white">
 
-      <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
+      <div className="container mx-auto px-4 py-6 pb-24 lg:pb-8">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8">Create New Robot</h2>
+          <h1 className="text-3xl font-bold mb-6">Create New Robot</h1>
 
-          <div className="bg-surface p-8 rounded-lg mb-6">
+          <div className="rounded-lg border border-white/10 bg-surface p-4 sm:p-6 mb-6">
             {/* Onboarding banner */}
             {isOnboarding && (
-              <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6">
+              <div className="rounded-lg border border-info/40 bg-info/10 p-4 mb-6">
                 <div className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">🎓</span>
+                  <span className="text-xl flex-shrink-0" aria-hidden="true">🎓</span>
                   <div>
-                    <p className="text-primary font-semibold">Tutorial: Robot Creation</p>
+                    <p className="text-info font-semibold">Tutorial: Robot Creation</p>
                     <p className="text-sm text-secondary">
                       Choose a name for your robot and confirm the purchase. Your robot will start with all attributes at Level 1.
                     </p>
@@ -120,17 +120,17 @@ function CreateRobotPage() {
               </div>
             )}
             <div className="mb-6">
-              <h3 className="text-xl font-semibold mb-4">Robot Frame Cost</h3>
-              <div className="bg-surface-elevated p-6 rounded-lg">
+              <h2 className="text-lg font-semibold mb-3">Robot Frame Cost</h2>
+              <div className="bg-surface-elevated p-4 sm:p-6 rounded-lg">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-secondary">Frame Cost:</span>
-                  <span className="text-3xl font-bold text-warning">
+                  <span className="text-3xl font-bold tabular-nums text-warning">
                     ₡{ROBOT_CREATION_COST.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-secondary">Your Balance:</span>
-                  <span className={`text-2xl font-semibold ${canAfford ? 'text-success' : 'text-error'}`}>
+                  <span className={`text-2xl font-semibold tabular-nums ${canAfford ? 'text-success' : 'text-error'}`}>
                     ₡{currency.toLocaleString()}
                   </span>
                 </div>
@@ -138,31 +138,27 @@ function CreateRobotPage() {
             </div>
 
             <div className="mb-6">
-              <h3 className="text-xl font-semibold mb-4">Robot Specifications</h3>
-              <div className="bg-surface-elevated p-6 rounded-lg">
+              <h2 className="text-lg font-semibold mb-3">Robot Specifications</h2>
+              <div className="bg-surface-elevated p-4 sm:p-6 rounded-lg">
                 <p className="text-secondary mb-2">Your new robot will come with:</p>
                 <ul className="list-disc list-inside text-secondary space-y-1">
                   <li>All 23 attributes starting at Level 1</li>
-                  <li>No weapon equipped (can be added later)</li>
+                  <li>No weapon equipped: the setup after this page buys and equips one</li>
                   <li>Ready for upgrades and customization</li>
                 </ul>
               </div>
             </div>
 
             {error && (
-              <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded mb-6">
+              <div className={`${ERROR_NOTICE} mb-6`} role="alert">
                 {error}
-                {error.toLowerCase().includes('robot limit') && (
-                  <div className="mt-3 pt-3 border-t border-red-700">
-                    <p className="text-sm mb-2">
-                      You need to upgrade your <strong>Roster Expansion</strong> facility to create more robots.
-                    </p>
+                {rosterFull && (
+                  <div className="mt-3">
                     <button
                       type="button"
                       onClick={() => navigate('/facilities#roster_expansion')}
-                      className="inline-flex items-center gap-2 bg-red-800 hover:bg-red-700 px-4 py-2 rounded text-sm font-semibold transition-colors"
+                      className={SECONDARY_BUTTON}
                     >
-                      <span>🏭</span>
                       Go to Facilities
                     </button>
                   </div>
@@ -171,7 +167,7 @@ function CreateRobotPage() {
             )}
 
             {!canAfford && (
-              <div className="bg-yellow-900 border border-yellow-700 text-yellow-200 px-4 py-3 rounded mb-6">
+              <div className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning mb-6" role="status">
                 Insufficient credits! You need ₡{(ROBOT_CREATION_COST - currency).toLocaleString()} more.
               </div>
             )}
@@ -187,7 +183,7 @@ function CreateRobotPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter robot name (1-50 characters)"
-                  className="w-full bg-surface-elevated border border-gray-600 rounded px-4 py-3 text-white focus:outline-none focus:border-blue-500 min-h-[44px]"
+                  className="w-full bg-surface-elevated border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary min-h-[44px]"
                   disabled={loading}
                   maxLength={50}
                   required
@@ -195,22 +191,18 @@ function CreateRobotPage() {
                 <p className="text-secondary text-sm mt-1">{name.length}/50 characters</p>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col-reverse gap-3 sm:flex-row">
                 <button
                   type="button"
                   onClick={() => navigate(isOnboarding ? '/onboarding' : '/robots')}
-                  className="flex-1 bg-surface-elevated hover:bg-gray-600 px-6 py-3 rounded-lg transition-colors font-semibold min-h-[44px]"
+                  className={`${SECONDARY_BUTTON} flex-1`}
                   disabled={loading}
                 >
                   {isOnboarding ? 'Back to Tutorial' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className={`flex-1 px-6 py-3 rounded-lg transition-colors font-semibold min-h-[44px] ${
-                    canAfford && !loading
-                      ? 'bg-green-600 hover:bg-green-700'
-                      : 'bg-gray-600 cursor-not-allowed'
-                  }`}
+                  className={`${PRIMARY_BUTTON} flex-1`}
                   disabled={!canAfford || loading}
                 >
                   {loading ? 'Creating...' : `Create Robot (₡${ROBOT_CREATION_COST.toLocaleString()})`}

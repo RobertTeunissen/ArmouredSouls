@@ -100,6 +100,14 @@ describe('RobotWorkshopPage', () => {
     expect(screen.getByTestId('profile')).toBeInTheDocument();
   });
 
+  it('does not ask for tuning before the robot has loaded (no /api/robots/0 request)', async () => {
+    setDetail({ loading: true, robot: null });
+    renderAt();
+    expect(screen.getByText('Loading workshop…')).toBeInTheDocument();
+    await Promise.resolve();
+    expect(api.fetchTuningAllocation).not.toHaveBeenCalled();
+  });
+
   it('asks the owner to reload when the owner fields are missing', () => {
     setDetail({ robot: { ...robot, stance: undefined } });
     renderAt();

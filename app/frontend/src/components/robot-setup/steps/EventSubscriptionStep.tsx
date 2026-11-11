@@ -1,206 +1,158 @@
 /**
- * EventSubscriptionStep — Step 6 of the robot setup wizard.
- * Displays event checklist with subscription cap indicator.
- * Pre-checks relevant team events if robot was assigned to a team.
+ * EventSubscriptionStep — last wizard step: enter battle events (a hard gate).
+ *
+ * Opens with the solo events ticked (or the robot's current entries), so one
+ * click saves the set and finishes the setup. Saves the whole set through
+ * `saveRobotSubscriptions`, the same call the Booking Office uses.
  *
  * Requirements: 5.7, 6.1, 6.2, 10.3
  */
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSubscriptionStore, selectOverview } from '../../../stores/subscriptionStore';
-import { api } from '../../../utils/api';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { saveRobotSubscriptions, useEventRegistry, useStableOverview } from '../../../hooks/useSubscriptions';
+import { ApiError } from '../../../utils/ApiError';
+import { defaultEventSelection } from '../../../utils/robotSetupSteps';
+import { ERROR_NOTICE, PANEL, PRIMARY_BUTTON, SECONDARY_BUTTON } from '../styles';
 import type { StepProps } from '../types';
 
-interface SubscriptionToggle {
-  eventType: string;
-  label: string;
-  active: boolean;
+function saveErrorMessage(err: unknown): string {
+  if (err instanceof ApiError && err.code === 'SUBSCRIPTION_CAP_EXCEEDED') return err.message;
+  return 'Saving the events failed. Please try again.';
 }
 
-const EVENT_LABELS: Record<string, string> = {
-  league_1v1: '1v1 League',
-  tournament_1v1: '1v1 Tournament',
-  koth: 'King of the Hill',
-  grand_melee: 'Grand Melee',
-  league_2v2: '2v2 League',
-  league_3v3: '3v3 League',
-  tag_team: 'Tag Team',
-  tournament_2v2: '2v2 Tournament',
-  tournament_3v3: '3v3 Tournament',
-};
-
 function EventSubscriptionStep({ robotId, onComplete, onSkip }: StepProps) {
-  const navigate = useNavigate();
-  const overview = useSubscriptionStore(selectOverview);
-  const fetchOverview = useSubscriptionStore(state => state.fetchOverview);
-  const [toggles, setToggles] = useState<SubscriptionToggle[]>([]);
-  const [cap, setCap] = useState(3);
-  const [activeCount, setActiveCount] = useState(0);
-  const [busy, setBusy] = useState(false);
+  const { data: overview, loading: overviewLoading, error: overviewError, refetch } = useStableOverview();
+  const { events, error: registryError } = useEventRegistry();
+  const [selected, setSelected] = useState<string[] | null>(null);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
+  const robot = overview?.robots.find((r) => r.robotId === robotId) ?? null;
+  const cap = robot?.cap ?? 0;
+  const held = useMemo(() => robot?.heldSlots ?? [], [robot]);
+  const eligible = useMemo(() => events.filter((e) => e.eligible).map((e) => e.type), [events]);
+  const available = events.filter((e) => e.eligible);
+  // Team events a small stable can't enter yet: one short note, not a row each.
+  const unavailable = events.filter((e) => !e.eligible);
+
+  // The shared overview is cached briefly; a robot created moments ago may
+  // not be in it yet, so ask once for a fresh copy.
+  const [refreshed, setRefreshed] = useState(false);
   useEffect(() => {
-    fetchOverview();
-  }, [fetchOverview]);
-
-  useEffect(() => {
-    if (!overview) return;
-
-    const robot = overview.robots.find((r) => r.robotId === robotId);
-    if (!robot) return;
-
-    setCap(robot.cap);
-
-    const events = overview.registeredEvents.map((event) => {
-      const isActive = robot.subscriptions.some(
-        (s) => s.eventType === event.type && s.status === 'active'
-      );
-      return {
-        eventType: event.type,
-        label: EVENT_LABELS[event.type] || event.label,
-        active: isActive,
-      };
-    });
-
-    setToggles(events);
-    setActiveCount(events.filter((e) => e.active).length);
-  }, [overview, robotId]);
-
-  const handleToggle = async (eventType: string): Promise<void> => {
-    const toggle = toggles.find((t) => t.eventType === eventType);
-    if (!toggle) return;
-
-    const newActive = !toggle.active;
-
-    // Cap check
-    if (newActive && activeCount >= cap) {
-      setError(`Subscription cap reached (${cap}). Upgrade your Booking Office for more slots.`);
-      return;
+    if (overview && !robot && !refreshed) {
+      setRefreshed(true);
+      void refetch();
     }
+  }, [overview, robot, refreshed, refetch]);
+  const robotMissing = refreshed && !overviewLoading && Boolean(overview) && !robot;
 
-    setBusy(true);
+  // Tick the defaults once both the robot's slots and the event list are in.
+  useEffect(() => {
+    if (selected !== null || !robot || events.length === 0) return;
+    const active = robot.subscriptions.filter((s) => s.status === 'active').map((s) => s.eventType);
+    setSelected(defaultEventSelection(eligible, active, cap));
+  }, [selected, robot, events.length, eligible, cap]);
+
+  const chosen = selected ?? [];
+  // A slot with a booked match stays taken until that match is fought.
+  const occupied = new Set([...chosen, ...held]);
+  const full = occupied.size >= cap;
+
+  const toggle = (type: string): void => {
+    setSelected((current) => {
+      const list = current ?? [];
+      return list.includes(type) ? list.filter((t) => t !== type) : [...list, type];
+    });
+  };
+
+  const save = async (): Promise<void> => {
+    setSaving(true);
     setError(null);
-
     try {
-      // Build the full subscription set
-      const desired = toggles.map((t) =>
-        t.eventType === eventType ? { eventType: t.eventType, active: newActive } : { eventType: t.eventType, active: t.active }
-      );
-
-      const activeEvents = desired.filter((d) => d.active).map((d) => d.eventType);
-
-      await api.put(`/api/subscriptions/robot/${robotId}`, { subscriptions: activeEvents });
-
-      // Update local state
-      setToggles((prev) =>
-        prev.map((t) => t.eventType === eventType ? { ...t, active: newActive } : t)
-      );
-      setActiveCount(newActive ? activeCount + 1 : activeCount - 1);
-      setSaved(true);
+      await saveRobotSubscriptions(robotId, chosen);
+      onComplete();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to update subscription');
+      setError(saveErrorMessage(err));
     } finally {
-      setBusy(false);
+      setSaving(false);
     }
   };
 
-  if (!overview) {
-    return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-white">Event Subscriptions</h2>
-        <div className="text-secondary text-sm animate-pulse">Loading events...</div>
-      </div>
-    );
-  }
+  const loadFailed = (Boolean(overviewError || registryError) || robotMissing) && selected === null;
+  const ready = selected !== null;
 
   return (
-    <div className="space-y-4">
-      <div className="text-center mb-2">
-        <h2 className="text-xl font-bold text-white">Event Subscriptions</h2>
-        <p className="text-secondary text-sm mt-1">
-          Subscribe to battle events so your robot gets scheduled for fights.
-          You need at least one subscription for your robot to compete.
-        </p>
-      </div>
+    <section className={PANEL} aria-labelledby="events-step-heading">
+      <h2 id="events-step-heading" className="text-lg font-semibold">Enter battle events</h2>
+      <p className="mt-1 text-sm text-secondary">
+        Your robot is only scheduled for the events it is entered in. You can change these any time in the{' '}
+        <Link to="/booking-office" className="text-primary hover:underline">Booking Office</Link>.
+      </p>
 
-      {/* Cap indicator */}
-      <div className="bg-surface border border-gray-700 rounded-lg p-3 flex justify-between items-center">
-        <span className="text-secondary text-sm">Subscription Slots</span>
-        <span className={`font-semibold text-sm ${activeCount >= cap ? 'text-warning' : 'text-white'}`}>
-          {activeCount} / {cap}
-        </span>
-      </div>
+      {loadFailed && <p className={`${ERROR_NOTICE} mt-4`} role="alert">Could not load the events. Skip this step and enter them in the Booking Office.</p>}
+      {!ready && !loadFailed && <p className="mt-4 text-sm text-secondary">Loading events…</p>}
 
-      {activeCount >= cap && (
-        <div className="bg-warning/10 border border-warning rounded-lg p-3 flex items-center justify-between">
-          <span className="text-warning text-sm">Cap reached — upgrade Booking Office for more slots</span>
-          <button
-            onClick={() => navigate('/facilities')}
-            className="text-warning hover:text-yellow-300 text-sm font-semibold min-h-[44px] px-3 py-2 transition-colors"
-          >
-            Upgrade →
-          </button>
-        </div>
+      {ready && (
+        <>
+          <p className="mt-4 text-sm" aria-live="polite">
+            <span className={`font-semibold tabular-nums ${full ? 'text-warning' : 'text-white'}`}>{occupied.size} / {cap}</span>
+            <span className="text-secondary"> event slots used{full ? ' · upgrade the Booking Office for more' : ''}</span>
+          </p>
+          <fieldset className="mt-3">
+            <legend className="sr-only">Battle events</legend>
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {available.map((event) => {
+                const isChecked = chosen.includes(event.type);
+                const disabled = !isChecked && full;
+                const heldNote = held.includes(event.type) && !isChecked;
+                return (
+                  <li key={event.type}>
+                    <label
+                      className={`flex min-h-11 items-center gap-3 rounded-lg border px-3 py-2 ${
+                        isChecked ? 'border-primary/60 bg-primary/10' : 'border-white/10 bg-surface-elevated'
+                      } ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:border-primary/40'}`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-5 w-5 flex-shrink-0 accent-primary"
+                        checked={isChecked}
+                        disabled={disabled}
+                        onChange={() => toggle(event.type)}
+                      />
+                      <span className="text-sm">
+                        {event.label}
+                        {heldNote && <span className="block text-xs text-secondary">Slot held until its booked match</span>}
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          </fieldset>
+          {unavailable.length > 0 && (
+            <div className="mt-3 text-xs text-secondary" data-testid="unavailable-events">
+              <p>Not available yet:</p>
+              <ul className="mt-1 list-inside list-disc space-y-0.5">
+                {unavailable.map((event) => <li key={event.type}>{event.reason ?? event.label}</li>)}
+              </ul>
+            </div>
+          )}
+        </>
       )}
 
-      {error && (
-        <div className="bg-error/10 border border-error rounded-lg p-3 text-error text-sm">
-          {error}
-        </div>
+      {error && <p className={`${ERROR_NOTICE} mt-4`} role="alert">{error}</p>}
+      {ready && chosen.length === 0 && held.length === 0 && (
+        <p className="mt-4 text-sm text-warning">Without an event this robot will never be scheduled for a battle.</p>
       )}
 
-      {/* Event toggles */}
-      <div className="space-y-2">
-        {toggles.map((toggle) => (
-          <button
-            key={toggle.eventType}
-            onClick={() => handleToggle(toggle.eventType)}
-            disabled={busy || (!toggle.active && activeCount >= cap)}
-            className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors min-h-[44px] ${
-              toggle.active
-                ? 'bg-primary/10 border-primary'
-                : 'bg-surface border-gray-700 hover:border-gray-500'
-            } disabled:opacity-50`}
-          >
-            <span className={`text-sm font-medium ${toggle.active ? 'text-primary' : 'text-white'}`}>
-              {toggle.label}
-            </span>
-            <span className={`text-xs font-semibold px-2 py-1 rounded ${
-              toggle.active ? 'bg-primary text-white' : 'bg-surface-elevated text-secondary'
-            }`}>
-              {toggle.active ? '✓ Active' : 'Inactive'}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {/* Action buttons */}
-      <div className="flex gap-3 pt-2">
-        <button
-          onClick={onComplete}
-          disabled={activeCount === 0}
-          className="bg-primary hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg min-h-[44px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saved ? 'Continue' : 'Continue'}
+      <div className="mt-5 flex flex-wrap justify-end gap-3">
+        {onSkip && <button type="button" onClick={onSkip} disabled={saving} className={SECONDARY_BUTTON}>Skip for now</button>}
+        <button type="button" onClick={() => void save()} disabled={!ready || saving || chosen.length === 0} className={PRIMARY_BUTTON}>
+          {saving ? 'Saving…' : `Enter ${chosen.length} ${chosen.length === 1 ? 'event' : 'events'} & finish`}
         </button>
-        {onSkip && activeCount === 0 && (
-          <button
-            onClick={onSkip}
-            className="bg-surface-elevated hover:bg-gray-600 text-white px-6 py-3 rounded-lg min-h-[44px] transition-colors"
-          >
-            Skip — Subscribe Later
-          </button>
-        )}
       </div>
-
-      {activeCount === 0 && (
-        <p className="text-warning text-xs text-center">
-          ⚠️ Without at least one subscription, your robot will never be scheduled for battles.
-        </p>
-      )}
-    </div>
+    </section>
   );
 }
 

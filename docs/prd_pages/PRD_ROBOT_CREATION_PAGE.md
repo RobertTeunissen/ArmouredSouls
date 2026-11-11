@@ -28,20 +28,19 @@ Allows players to create a new robot by choosing a name and paying the creation 
 
 ## Post-Creation Wizard (Spec #47)
 
-After normal creation, the player lands on a 7-step setup wizard that guides them through:
-1. Portrait selection
-2. Weapon equip (buy if needed)
-3. Stance + yield threshold
-4. Tuning allocation
-5. Team assignment
-6. Event subscriptions
-7. Attribute upgrades
+After normal creation, the player lands on a short setup that makes the robot battle-ready:
+1. Portrait selection (optional)
+2. Weapon: equip a spare one or buy and equip, one click
+3. Team (optional, only for stables with 2+ robots)
+4. Event subscriptions, pre-ticked with the solo events, one click
 
-The wizard is skippable at any point. Each step commits immediately. See `PRD_ROBOT_SETUP_WIZARD.md` for full details.
+The setup is skippable at any point and each step commits immediately. Stance, yield, tuning and upgrades are in the Workshop, where the setup ends. See `PRD_ROBOT_SETUP_WIZARD.md` for full details.
+
+Layout: page title `h1`, one panel (`bg-surface`, `border-white/10`), primary **Create Robot** and secondary **Cancel** buttons in the Workshop style; a server error is an `error` notice, too few credits a `warning` notice.
 
 ## Related Pages
 
-- `/robots/:id` — Robot Detail Page (destination after wizard completes)
+- `/robots/:id/prepare` — Robot Workshop (destination after the setup completes or is skipped)
 - `/robots/:id/setup` — Setup Wizard Page
 - `/robots` — Robots List (destination for browser-back from wizard due to `replace: true`)
 - `/onboarding` — Onboarding tutorial (destination for onboarding-path creation)

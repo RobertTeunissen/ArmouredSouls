@@ -258,4 +258,21 @@ describe('CreateRobotPage - Onboarding Integration', () => {
       });
     });
   });
+  describe('Errors', () => {
+    it('shows the roster limit once, with a link to the Roster Expansion facility', async () => {
+      const user = userEvent.setup();
+      vi.mocked(apiClient.post).mockRejectedValue({
+        response: { status: 400, data: { error: 'Robot limit reached. Upgrade Roster Expansion facility to create more robots. Current limit: 1', code: 'MAX_ROBOTS_REACHED' } },
+      });
+      renderInNormalMode();
+      await waitFor(() => expect(screen.getByRole('button', { name: /Create Robot/i })).not.toBeDisabled());
+      await user.type(screen.getByLabelText('Robot Name'), 'Second');
+      await user.click(screen.getByRole('button', { name: /Create Robot/i }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Robot limit reached');
+      expect(screen.getAllByText(/Roster Expansion/)).toHaveLength(1);
+      await user.click(screen.getByRole('button', { name: 'Go to Facilities' }));
+      expect(mockNavigate).toHaveBeenCalledWith('/facilities#roster_expansion');
+    });
+  });
 });

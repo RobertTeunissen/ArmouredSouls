@@ -26,6 +26,9 @@ const mockPrisma = {
     update: jest.fn(),
     delete: jest.fn(),
   },
+  facility: {
+    findFirst: jest.fn(),
+  },
 };
 
 jest.mock('../../../lib/prisma', () => ({
@@ -50,6 +53,7 @@ const ROBOT_ID = 42;
 
 const makeRobot = (overrides = {}) => ({
   id: ROBOT_ID,
+  userId: 7,
   name: 'TestBot',
   loadoutType: 'single',
   mainWeaponId: 1,
@@ -58,6 +62,16 @@ const makeRobot = (overrides = {}) => ({
   offhandWeapon: null,
   ...overrides,
 });
+
+/** An allocation row holding `points` in total (split over two attributes). */
+const tuningRow = (combatPower: number, armorPlating = 0) => ({
+  id: 1,
+  robotId: ROBOT_ID,
+  combatPower: combatPower.toFixed(2),
+  armorPlating: armorPlating.toFixed(2),
+});
+
+const fullTuning = () => tuningRow(6, 4);
 
 const weaponReady = () => ({
   isReady: true,
@@ -80,7 +94,9 @@ beforeEach(() => {
   mockPrisma.robot.findUniqueOrThrow.mockResolvedValue(makeRobot());
   mockCheckSchedulingReadiness.mockReturnValue(weaponReady());
   mockPrisma.subscription.count.mockResolvedValue(1);
-  mockPrisma.tuningAllocation.findUnique.mockResolvedValue({ id: 1, robotId: ROBOT_ID });
+  // Tuning Bay level 0 → pool of 10 points, all allocated.
+  mockPrisma.facility.findFirst.mockResolvedValue(null);
+  mockPrisma.tuningAllocation.findUnique.mockResolvedValue(fullTuning());
 });
 
 // ─── Tests ───────────────────────────────────────────────────────────
@@ -98,7 +114,7 @@ describe('computeSchedulingEligibility', () => {
       const weaponGate = report.gates.find((g) => g.id === 'weapon_equipped');
       expect(weaponGate).toEqual({
         id: 'weapon_equipped',
-        label: 'Weapon equipped',
+        label: 'Equip a weapon',
         severity: 'hard',
         met: true,
         detail: null,
@@ -107,7 +123,7 @@ describe('computeSchedulingEligibility', () => {
       const subGate = report.gates.find((g) => g.id === 'event_subscribed');
       expect(subGate).toEqual({
         id: 'event_subscribed',
-        label: 'Subscribed to at least one battle event',
+        label: 'Enter at least one battle event',
         severity: 'hard',
         met: true,
         detail: null,
@@ -116,7 +132,7 @@ describe('computeSchedulingEligibility', () => {
       const tuningGate = report.gates.find((g) => g.id === 'tuning_allocated');
       expect(tuningGate).toEqual({
         id: 'tuning_allocated',
-        label: 'Tuning points allocated',
+        label: 'Allocate your tuning points',
         severity: 'soft',
         met: true,
         detail: null,
@@ -140,7 +156,7 @@ describe('computeSchedulingEligibility', () => {
       expect(report.gates[1].met).toBe(false);
       expect(report.gates[1].detail).toBe('No event subscriptions — robot will never be scheduled for battles');
       expect(report.gates[2].met).toBe(false);
-      expect(report.gates[2].detail).toBe('Free stat bonuses available via Tuning Bay');
+      expect(report.gates[2].detail).toBe('10 of 10 free tuning points unallocated');
     });
   });
 
@@ -250,6 +266,38 @@ describe('computeSchedulingEligibility', () => {
       expect(mockPrisma.tuningAllocation.create).not.toHaveBeenCalled();
       expect(mockPrisma.tuningAllocation.update).not.toHaveBeenCalled();
       expect(mockPrisma.tuningAllocation.delete).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('tuning gate counts allocated points (#582)', () => {
+    it('treats an allocation row holding 0 points as unmet', async () => {
+      mockPrisma.tuningAllocation.findUnique.mockResolvedValue(tuningRow(0));
+
+      const report = await computeSchedulingEligibility(ROBOT_ID);
+
+      expect(report.gates[2]).toMatchObject({ met: false, label: 'Allocate your tuning points', detail: '10 of 10 free tuning points unallocated' });
+      expect(report.isFullyConfigured).toBe(false);
+      expect(report.isEligible).toBe(true);
+    });
+
+    it('stays unmet while points are left, sized by the Tuning Bay level', async () => {
+      mockPrisma.facility.findFirst.mockResolvedValue({ level: 2 });
+      mockPrisma.tuningAllocation.findUnique.mockResolvedValue(tuningRow(12.5, 5));
+
+      const report = await computeSchedulingEligibility(ROBOT_ID);
+
+      expect(mockPrisma.facility.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: 7, facilityType: 'tuning_bay' } }));
+      expect(report.gates[2]).toMatchObject({ met: false, detail: '12.5 of 30 free tuning points unallocated' });
+    });
+
+    it('is met once the whole pool is allocated', async () => {
+      mockPrisma.facility.findFirst.mockResolvedValue({ level: 1 });
+      mockPrisma.tuningAllocation.findUnique.mockResolvedValue(tuningRow(15, 5));
+
+      const report = await computeSchedulingEligibility(ROBOT_ID);
+
+      expect(report.gates[2]).toMatchObject({ met: true, detail: null });
+      expect(report.isFullyConfigured).toBe(true);
     });
   });
 

@@ -46,7 +46,7 @@ docs/
 │   ├── PRD_AUTO_USER_GENERATION.md Auto-generated opponents
 │   ├── PRD_AUTOMATON_STABLES.md    Automaton stables: computer-run stables that play by human rules
 │   ├── PRD_SEASON_SYSTEM.md        100-cycle competitive seasons
-│   ├── PRD_ROBOT_SETUP_WIZARD.md   7-step guided robot configuration
+│   ├── PRD_ROBOT_SETUP_WIZARD.md   Guided setup to battle-ready
 │   ├── STABLE_SYSTEM.md            Facilities and stable mechanics
 │   ├── TUNING_BAY_SYSTEM.md        Per-robot tactical tuning
 │   └── README.md                   Section index

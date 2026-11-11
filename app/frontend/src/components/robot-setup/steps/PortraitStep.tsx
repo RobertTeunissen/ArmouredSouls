@@ -1,61 +1,52 @@
 /**
- * PortraitStep — Step 1 of the robot setup wizard.
- * Wraps the existing RobotImageSelector to let the player choose a portrait.
+ * PortraitStep — optional first step of the robot setup wizard.
+ * Opens the existing RobotImageSelector straight away: picking an image saves
+ * it and moves on, closing the selector skips the step.
  *
  * Requirements: 5.2, 6.1, 6.2, 9.4, 9.5
  */
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import RobotImageSelector from '../../RobotImageSelector';
 import { updateAppearance } from '../../../utils/robotApi';
+import { PANEL } from '../styles';
 import type { StepProps } from '../types';
 
 function PortraitStep({ robotId, onComplete, onSkip }: StepProps) {
-  const [showSelector, setShowSelector] = useState(true);
   const [saving, setSaving] = useState(false);
+  // The selector calls onClose right after onSelect; only a close without a
+  // pick is a skip (otherwise the wizard advanced twice and skipped the weapon).
+  const picked = useRef(false);
 
   const handleSelect = async (imageUrl: string): Promise<void> => {
+    picked.current = true;
     setSaving(true);
     try {
       await updateAppearance(robotId, imageUrl);
-      onComplete();
     } catch {
-      // If image update fails, still allow advancing (portrait is optional)
-      onComplete();
+      // The portrait is optional; a failed save must not block the setup.
     } finally {
       setSaving(false);
     }
+    onComplete();
   };
-
-  const handleClose = (): void => {
-    setShowSelector(false);
-    // Skipping portrait selection
-    if (onSkip) onSkip();
-  };
-
-  if (!showSelector) return null;
 
   return (
-    <div className="space-y-4">
-      <div className="text-center mb-4">
-        <h2 className="text-xl font-bold text-white">Choose a Portrait</h2>
-        <p className="text-secondary text-sm mt-1">
-          Pick a look for your robot. You can always change this later from the robot detail page.
-        </p>
-      </div>
+    <section className={PANEL} aria-labelledby="portrait-step-heading">
+      <h2 id="portrait-step-heading" className="text-lg font-semibold">Choose a portrait</h2>
+      <p className="mt-1 text-sm text-secondary">
+        Pick a look for your robot, or close the picker to skip. You can change it any time in the Workshop.
+      </p>
+      {saving && <p className="mt-3 text-sm text-secondary" role="status">Saving portrait…</p>}
 
       <RobotImageSelector
-        isOpen={true}
+        isOpen={!saving}
         currentImageUrl={null}
         onSelect={handleSelect}
-        onClose={handleClose}
+        onClose={() => { if (!picked.current) onSkip?.(); }}
         robotId={robotId}
       />
-
-      {saving && (
-        <div className="text-center text-secondary text-sm">Saving portrait...</div>
-      )}
-    </div>
+    </section>
   );
 }
 

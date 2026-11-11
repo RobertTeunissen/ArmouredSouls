@@ -1,240 +1,107 @@
 /**
- * RobotSetupWizard — Shell component for the 7-step guided robot setup flow.
+ * RobotSetupWizard — the guided setup for a new robot (Spec #47).
  *
- * Fetches eligibility on mount, manages step navigation via useRobotSetupWizard,
- * renders lazy-loaded step components, and provides a sticky bottom action bar.
- *
- * Requirements: 3.1, 4.5, 4.6, 5.1, 9.1-9.6, 10.4, 11.2, 11.3
+ * Shows only the steps the robot still needs (see `planSetupSteps`): portrait,
+ * weapon, team (stables with 2+ robots) and events. Every step saves as it
+ * goes; finishing or leaving opens the robot's Workshop, where stance, yield,
+ * tuning and upgrades live.
  */
+import { lazy, Suspense, useState } from 'react';
+import { WIZARD_STEP_LABELS, type WizardStepId } from '../../utils/robotSetupSteps';
+import { TEXT_LINK } from './styles';
+import type { StepProps } from './types';
 
-import { useState, useEffect, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { api } from '../../utils/api';
-import { ApiError } from '../../utils/ApiError';
-import { useRobotSetupWizard } from './useRobotSetupWizard';
-import type { SchedulingEligibilityReport, StepProps } from './types';
-
-// Lazy-loaded step components
 const PortraitStep = lazy(() => import('./steps/PortraitStep'));
 const WeaponEquipStep = lazy(() => import('./steps/WeaponEquipStep'));
-const BattleConfigStep = lazy(() => import('./steps/BattleConfigStep'));
-const TuningAllocationStep = lazy(() => import('./steps/TuningAllocationStep'));
 const TeamAssignmentStep = lazy(() => import('./steps/TeamAssignmentStep'));
 const EventSubscriptionStep = lazy(() => import('./steps/EventSubscriptionStep'));
-const AttributeUpgradeStep = lazy(() => import('./steps/AttributeUpgradeStep'));
+
+const STEP_COMPONENTS: Record<WizardStepId, React.ComponentType<StepProps>> = {
+  portrait: PortraitStep,
+  weapon: WeaponEquipStep,
+  team: TeamAssignmentStep,
+  events: EventSubscriptionStep,
+};
 
 interface RobotSetupWizardProps {
   robotId: number;
   robotName: string;
   loadoutType: string;
-  onComplete: () => void;
-  onSkip: () => void;
+  steps: WizardStepId[];
+  /** Leave the wizard (finished or skipped) for the robot's Workshop. */
+  onExit: () => void;
 }
 
-const STEP_LABELS = [
-  'Portrait',
-  'Weapon',
-  'Battle Config',
-  'Tuning',
-  'Team',
-  'Subscriptions',
-  'Upgrades',
-];
-
 function StepLoadingFallback() {
+  return <p className="text-sm text-secondary">Loading…</p>;
+}
+
+function SetupProgress({ steps, current }: { steps: WizardStepId[]; current: number }) {
   return (
-    <div className="bg-surface-elevated rounded-lg p-6 animate-pulse">
-      <div className="h-6 bg-surface rounded w-48 mb-4" />
-      <div className="h-4 bg-surface rounded w-64 mb-2" />
-      <div className="h-4 bg-surface rounded w-56" />
-    </div>
+    <ol className="flex flex-wrap items-center gap-x-4 gap-y-2" aria-label="Setup steps">
+      {steps.map((id, i) => {
+        const done = i < current;
+        const active = i === current;
+        return (
+          <li key={id} className="flex items-center gap-2" aria-current={active ? 'step' : undefined}>
+            <span
+              className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
+                active ? 'bg-primary text-background' : done ? 'bg-primary/20 text-primary' : 'bg-surface-elevated text-secondary'
+              }`}
+              aria-hidden="true"
+            >
+              {done ? '✓' : i + 1}
+            </span>
+            <span className={`text-sm ${active ? 'font-semibold text-white' : 'text-secondary'}`}>
+              {WIZARD_STEP_LABELS[id]}
+              {done && <span className="sr-only"> (done)</span>}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
-function RobotSetupWizard({ robotId, robotName, loadoutType, onComplete, onSkip }: RobotSetupWizardProps) {
-  const navigate = useNavigate();
-  const wizard = useRobotSetupWizard(robotId);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+function RobotSetupWizard({ robotId, robotName, loadoutType, steps, onExit }: RobotSetupWizardProps) {
+  const [index, setIndex] = useState(0);
+  const step = steps[index];
 
-  // Fetch eligibility on mount
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    api.get<SchedulingEligibilityReport>(`/api/robots/${robotId}/scheduling-eligibility`)
-      .then((report) => {
-        if (cancelled) return;
-
-        // Already fully configured → redirect to robot detail
-        if (report.isFullyConfigured) {
-          onComplete();
-        }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        if (err instanceof ApiError) {
-          if (err.statusCode === 403) {
-            setError('You do not have access to this robot.');
-          } else if (err.statusCode === 404) {
-            setError('Robot not found.');
-          } else {
-            setError(err.message || 'Failed to load robot eligibility.');
-          }
-        } else {
-          setError('Failed to load robot eligibility.');
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => { cancelled = true; };
-  }, [robotId, onComplete]);
-
-  // Handle wizard completion
-  useEffect(() => {
-    if (wizard.isComplete) {
-      onComplete();
-    }
-  }, [wizard.isComplete, onComplete]);
-
-  // Loading state
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-secondary">Loading setup...</div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-error/10 border border-error rounded-lg p-6 text-center">
-          <span className="text-3xl mb-3 block">⚠️</span>
-          <p className="text-error font-semibold mb-2">{error}</p>
-          <button
-            onClick={() => navigate('/robots')}
-            className="bg-primary hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg min-h-[44px] transition-colors mt-4"
-          >
-            Back to Robots
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Step rendering
-  const stepProps: StepProps = {
-    robotId,
-    loadoutType,
-    onComplete: wizard.advance,
-    onSkip: wizard.skipStep,
+  const next = (): void => {
+    if (index + 1 >= steps.length) onExit();
+    else setIndex(index + 1);
   };
 
-  const renderStep = (): React.ReactNode => {
-    switch (wizard.currentStep) {
-      case 1: return <PortraitStep {...stepProps} />;
-      case 2: return <WeaponEquipStep {...stepProps} />;
-      case 3: return <BattleConfigStep {...stepProps} />;
-      case 4: return <TuningAllocationStep {...stepProps} />;
-      case 5: return <TeamAssignmentStep {...stepProps} />;
-      case 6: return <EventSubscriptionStep {...stepProps} />;
-      case 7: return <AttributeUpgradeStep {...stepProps} />;
-      default: return null;
-    }
-  };
+  if (!step) return null;
+  const Step = STEP_COMPONENTS[step];
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pb-28">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-1">Set Up {robotName}</h1>
-        <p className="text-secondary text-sm">
-          Step {wizard.currentStep} of {wizard.totalSteps} — {STEP_LABELS[wizard.currentStep - 1]}
-        </p>
-      </div>
-
-      {/* Progress dots */}
-      <div className="flex items-center justify-center gap-2 mb-6" aria-label="Setup progress">
-        {STEP_LABELS.map((label, i) => {
-          const stepNum = i + 1;
-          const isCurrent = stepNum === wizard.currentStep;
-          const isCompleted = wizard.state.completedSteps.includes(stepNum);
-          const isSkipped = wizard.state.skippedSteps.includes(stepNum);
-
-          return (
-            <div
-              key={stepNum}
-              className={`
-                w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors
-                ${isCurrent ? 'bg-primary text-white ring-2 ring-primary/50' : ''}
-                ${isCompleted ? 'bg-primary/60 text-white' : ''}
-                ${isSkipped ? 'bg-surface-elevated text-secondary' : ''}
-                ${!isCurrent && !isCompleted && !isSkipped ? 'bg-surface-elevated text-secondary' : ''}
-              `}
-              title={label}
-              aria-label={`Step ${stepNum}: ${label}${isCurrent ? ' (current)' : ''}${isCompleted ? ' (completed)' : ''}${isSkipped ? ' (skipped)' : ''}`}
-            >
-              {stepNum}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Step content */}
-      <div className="bg-surface-elevated border border-gray-700 rounded-lg p-4 sm:p-6 motion-safe:animate-fade-in">
-        <Suspense fallback={<StepLoadingFallback />}>
-          {renderStep()}
-        </Suspense>
-      </div>
-
-      {/* Sticky bottom action bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-surface border-t border-gray-700 p-4 z-40">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
-          {/* Back */}
-          <button
-            onClick={() => wizard.goBack()}
-            disabled={wizard.currentStep <= 1}
-            className="bg-surface-elevated hover:bg-gray-600 text-white px-4 py-3 rounded-lg min-h-[44px] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            aria-label="Go back"
-          >
+    <div className="mx-auto max-w-2xl space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {index > 0 ? (
+          <button type="button" onClick={() => setIndex(index - 1)} className={TEXT_LINK}>
             ← Back
           </button>
-
-          <div className="flex items-center gap-3">
-            {/* Skip All */}
-            <button
-              onClick={() => {
-                wizard.skipAll();
-                onSkip();
-              }}
-              className="text-secondary hover:text-white text-sm px-3 py-3 min-h-[44px] transition-colors"
-            >
-              Skip All
-            </button>
-
-            {/* Skip Step */}
-            <button
-              onClick={wizard.skipStep}
-              className="bg-surface-elevated hover:bg-gray-600 text-white px-4 py-3 rounded-lg min-h-[44px] transition-colors"
-            >
-              Skip
-            </button>
-
-            {/* Next / Complete */}
-            <button
-              onClick={wizard.advance}
-              className="bg-primary hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg min-h-[44px] transition-colors"
-            >
-              {wizard.currentStep === wizard.totalSteps ? 'Complete' : 'Next →'}
-            </button>
-          </div>
-        </div>
+        ) : <span />}
+        <button type="button" onClick={onExit} className={TEXT_LINK}>
+          Skip setup →
+        </button>
       </div>
+
+      <header className="space-y-3">
+        <div>
+          <h1 className="text-xl font-bold sm:text-2xl">Set up {robotName}</h1>
+          <p className="mt-1 text-sm text-secondary">
+            Step {index + 1} of {steps.length} · {WIZARD_STEP_LABELS[step]}. Everything saves as you go.
+          </p>
+        </div>
+        {steps.length > 1 && <SetupProgress steps={steps} current={index} />}
+      </header>
+
+      <Suspense fallback={<StepLoadingFallback />}>
+        {/* Keyed so a revisited step starts fresh instead of reusing stale local state. */}
+        <Step key={step} robotId={robotId} loadoutType={loadoutType} onComplete={next} onSkip={next} />
+      </Suspense>
     </div>
   );
 }

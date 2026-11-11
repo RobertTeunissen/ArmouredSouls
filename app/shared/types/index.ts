@@ -6,3 +6,4 @@
 export type { FinancialSummary } from './finances';
 export type { TierChange, TierChangeType, TierChangesResponse } from './league-notifications';
 export type { PlacementStanding, PlacementStandingResponse } from './robot-standings';
+export type { SchedulingEligibilityGate, SchedulingEligibilityGateId, SchedulingEligibilityReport } from './robot-setup';
