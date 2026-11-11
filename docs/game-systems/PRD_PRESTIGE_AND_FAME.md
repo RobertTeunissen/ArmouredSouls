@@ -1,6 +1,6 @@
 # Product Requirements Document: Prestige and Fame System
 
-**Last Updated**: November 6, 2026
+**Last Updated**: November 11, 2026 (battle winnings bonus removed, #596)
 **Status**: ✅ Implemented core earning/benefits and Finance Center forecast; release and verification evidence tracked separately
 **Owner**: Robert Teunissen  
 **Epic**: Economy System — Reputation
@@ -73,23 +73,9 @@ Winner bonus: 1st place with more than 50% HP left gets ×1.5. Fields average ~1
 
 ### Prestige Benefits
 
-#### Battle Winnings Bonus
+#### No battle winnings bonus
 
-Applied via `getPrestigeMultiplier()` in `utils/economyCalculations.ts`:
-
-```text
-battle_credit_multiplier = min(1.50, 1 + prestige / 50,000)
-```
-
-The multiplier applies to the base Credits awarded for a battle. Prestige itself is not converted into Credits or added as a second income line. Finance Center explains the stored award and multiplier facts captured for that event; it never recalculates an older payout using current Prestige or current formula code.
-
-| Prestige | Bonus |
-|---|---|
-| 0 | 0% |
-| 1,000 | +2% |
-| 5,000 | +10% |
-| 10,000 | +20% |
-| 25,000+ | +50% (cap) |
+Removed November 2026 (#596): battle rewards no longer depend on prestige, so a win in a tier pays every stable the same. The old `min(1.50, 1 + prestige / 50,000)` multiplier applied only to the 1v1 league win reward and paid stables that were already ahead up to 50% more. Prestige still gates facility levels and scales merchandising. Record: [PRESTIGE_BATTLE_BONUS_REMOVAL.md](../balance_changes/PRESTIGE_BATTLE_BONUS_REMOVAL.md).
 
 #### Merchandising Income Scaling
 
@@ -239,7 +225,7 @@ The removed `league` filter had the same effect for a different reason: it match
 
 **Every stable is ranked, with no minimum robot count.** The removed `minRobots` filter suppressed small stables from a ranking of stable prestige. `totalRobots` is retained as identifying context.
 
-The derived bonus column was removed. It combined the battle-winnings bonus and the merchandising multiplier — neither is a ranked quantity, and both belong on the income dashboard where a player can act on them. Removing it also deleted a third copy of the merchandising multiplier formula, which Spec #46 R2 re-bases to prestige per robot slot.
+The derived bonus column was removed. It combined the (since removed) battle-winnings bonus and the merchandising multiplier — neither is a ranked quantity, and both belong on the income dashboard where a player can act on them. Removing it also deleted a third copy of the merchandising multiplier formula, which Spec #46 R2 re-bases to prestige per robot slot.
 
 **Prestige accrues once per winning robot, so a larger roster ranks higher.** This is a property of the metric and is deliberately not normalised. Spec #46 R2 addresses roster scaling only where prestige drives *income*, not where it drives ranking.
 
@@ -261,7 +247,7 @@ All paths relative to `app/backend/src/`.
 | `services/koth/kothBattleOrchestrator.ts` | `calculateKothRewards()` — placement-based prestige/fame |
 | `services/battle/battlePostCombat.ts` | `awardPrestigeToUser()`, `awardFameToRobot()`, `logBattleAuditEvent()` |
 | `services/economy/streamingRevenueService.ts` | `calculateStreamingRevenue()` — uses fame in multiplier |
-| `utils/economyCalculations.ts` | `getPrestigeMultiplier()`, `calculateBattleWinnings()`, merchandising scaling |
+| `utils/economyCalculations.ts` | Merchandising scaling (`calculateMerchandisingIncome`) |
 | `config/facilities.ts` | `prestigeRequirements` arrays per facility |
 | `services/economy/facilityUpgradeService.ts` | Prestige gate enforcement on upgrade (`POST /api/facilities/upgrade`) |
 | `routes/leaderboards.ts` | Prestige and fame leaderboard endpoints |

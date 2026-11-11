@@ -13,9 +13,6 @@ import prisma from '../lib/prisma';
 // Re-export all pure calculation functions for backward compatibility
 export {
   calculateFacilityOperatingCost,
-  getPrestigeMultiplier,
-  calculateBattleWinnings,
-  getNextPrestigeTier,
   getMerchandisingBaseRate,
   calculateMerchandisingIncome,
   getRosterCapacity,

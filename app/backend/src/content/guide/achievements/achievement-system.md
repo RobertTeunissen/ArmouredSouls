@@ -2,7 +2,7 @@
 title: "Achievement System"
 description: "How achievements work — difficulty tiers, credit and prestige rewards, progress tracking, and how milestones are earned through gameplay."
 order: 1
-lastUpdated: "2026-11-04"
+lastUpdated: "2026-11-11"
 relatedArticles:
   - seasons/what-resets
   - achievements/achievement-catalog
@@ -40,7 +40,7 @@ Tiers are set from how many active players actually earned each achievement in t
 
 ### Trophies
 
-A few achievements are **🏆 Trophies**: winning a tournament, reaching Champion league, reaching 1800 ELO, a 15-win league streak, and reaching 25,000 prestige. They reward placing above other players, and the stables that earn them already collect the biggest prizes for it. Paying credits and prestige on top would make it harder for everyone else to catch up, so Trophies pay **nothing** — they're bragging rights. Their badge still shows the tier colour, and the achievements page, unlock toast and battle report mark them with a **Trophy** label instead of a reward.
+A few achievements are **🏆 Trophies**: winning a tournament, reaching Champion league, reaching 1800 ELO, a 15-win league streak and reaching 25,000 prestige, plus the ones for owning a lot: 5 or 7 robots, 10 weapons, a Legendary or fully forged weapon, ₡1,000,000 spent on refinements, and 50+ tuning points on one robot. They reward placing above other players or having more to spend, and the stables that earn them already collect the biggest prizes for it. Paying credits and prestige on top would make it harder for everyone else to catch up, so Trophies pay **nothing** — they're bragging rights. Their badge still shows the tier colour, and the achievements page, unlock toast and battle report mark them with a **Trophy** label instead of a reward.
 
 The credits and prestige go to achievements everyone can earn by playing.
 

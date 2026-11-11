@@ -650,9 +650,7 @@ The orchestrators share several utility modules. Since the backend service conso
   │                                                              │
   │  utils/economyCalculations.ts                                │
   │    ├─ getLeagueWinReward()        Credits by league tier     │
-  │    ├─ getParticipationReward()    Loser/draw credits         │
-  │    ├─ calculateBattleWinnings()   Total credit calculation   │
-  │    └─ getPrestigeMultiplier()     Prestige bonus %           │
+  │    └─ getParticipationReward()    Loser/draw credits         │
   │                                                              │
   │  utils/tournamentRewards.ts                                  │
   │    ├─ calculateTournamentBattleRewards()                     │

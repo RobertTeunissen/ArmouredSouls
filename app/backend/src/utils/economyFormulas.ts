@@ -43,32 +43,6 @@ export function calculateFacilityOperatingCost(facilityType: string, level: numb
 // ==================== REVENUE STREAMS ====================
 
 /**
- * Get prestige multiplier for battle winnings.
- * Smooth formula: min(1.50, 1 + prestige / 50,000)
- * Cap: +50% at 25,000+ prestige
- */
-export function getPrestigeMultiplier(prestige: number): number {
-  return Math.min(1.50, 1 + prestige / 50000);
-}
-
-/**
- * Calculate battle winnings with prestige bonus.
- */
-export function calculateBattleWinnings(baseReward: number, prestige: number): number {
-  const multiplier = getPrestigeMultiplier(prestige);
-  return Math.round(baseReward * multiplier);
-}
-
-/**
- * Get prestige progress information for UI display.
- * Returns null if already at max (50% bonus at 25,000+ prestige).
- */
-export function getNextPrestigeTier(currentPrestige: number): { threshold: number; bonus: string } | null {
-  if (currentPrestige >= 25000) return null; // Cap reached
-  return { threshold: 25000, bonus: '+50% (max)' };
-}
-
-/**
  * Roster_Capacity — re-exported from the shared module.
  *
  * Moved to `app/shared/utils/rosterCapacity.ts` under Spec #46 R11, because the

@@ -94,11 +94,11 @@ Per the [Prestige & Fame Design Exploration](../analysis/PRESTIGE_FAME_DESIGN_EX
 | 🟠 **Hard** | ₡100,000 | +100 | Orange/Amber (`#d29922`) | Months of play. Bragging rights. |
 | 🔴 **Very Hard** | ₡250,000 | +250 | Red (`#f85149`) | Multi-season grind. Legendary status. |
 | ⬛ **Secret** | ₡50,000 (default) | +50 (default) | Purple (`#a371f7`) | Hidden until earned. Surprise moments. |
-| 🏆 **Trophy** (any tier) | ₡0 | 0 | The tier's colour | Recognition only, for placing above other players (issue #446). |
+| 🏆 **Trophy** (any tier) | ₡0 | 0 | The tier's colour | Recognition only, for placing above other players (issue #446) or for owning more (issue #596). |
 
 The tier distribution is maintained in the achievement config file. The full set is designed to be uncompletable within a single season.
 
-**Season 2 rules (November 2026).** Tiers follow the observed Season 1 unlock rate among active players: easy 75%+, medium 40–75%, hard 15–40%, very hard under 15%. Achievements that pay you for already being ahead (tournament wins, Champion league, 1800 ELO, a 15-win streak, 25,000 prestige) are **Trophies**: config flag `trophy: true`, rewards `TROPHY_REWARDS` (₡0, 0 prestige), no ledger row and no prestige award on unlock. The UI shows a Trophy chip instead of a reward line (`components/AchievementReward.tsx`).
+**Season 2 rules (November 2026).** Tiers follow the observed Season 1 unlock rate among active players: easy 75%+, medium 40–75%, hard 15–40%, very hard under 15%. Achievements that pay you for already being ahead (tournament wins, Champion league, 1800 ELO, a 15-win streak, 25,000 prestige) are **Trophies**. Since #596 (November 2026, before Season 2's first battles) so are the seven that pay for owning more: Arsenal (10 weapons), Robot Army (5 robots), Rise of the Machines (7 robots), Overclocked (50+ tuning points on one robot), Master Craftsman (₡1M on refinements), Legendary Smith and Forge Master. In Season 1 the top half of active human stables unlocked them at 33–58%, the bottom half at 0–17%. Trophies use config flag `trophy: true`, rewards `TROPHY_REWARDS` (₡0, 0 prestige), no ledger row and no prestige award on unlock. The UI shows a Trophy chip instead of a reward line (`components/AchievementReward.tsx`).
 
 ---
 
@@ -202,27 +202,27 @@ Stable-wide economic activity, facilities, weapons and roster management.
 | E3 | **"Show Me the Money"** | Jerry Maguire | 🔵 Medium | Stable | Accumulate ₡5,000,000 in your balance at once |
 | E4 | **"Scrooge McDuck"** | DuckTales | 🔵 Medium | Stable | Earn ₡25,000,000 lifetime from all sources |
 | E5 | **"Buy the Dip"** | Finance meme | 🟢 Easy | Stable | Purchase your first weapon |
-| E6 | **"Arsenal"** | Military / football club | 🟠 Hard | Stable | Own 10 weapons simultaneously |
+| E6 | **"Arsenal"** | Military / football club | 🟠 Hard 🏆 | Stable | Own 10 weapons simultaneously |
 | E7 | **"Mall Cop"** | Paul Blart / pun | 🔵 Medium | Stable | Buy your first shield |
 | E8 | **"Pimp My Bot"** | Pimp My Ride | 🟢 Easy | Stable | Upgrade any robot attribute for the first time |
 | E9 | **"Fully Operational"** | Death Star, Star Wars | 🔵 Medium | Stable | Reach an effective stat of 50 on any attribute on a robot |
 | E10 | **"The Architect"** | The Matrix | 🟢 Easy | Stable | Own 3 facilities at level 3+ |
 | E11 | **"Megacorp"** | Sci-fi trope | 🟢 Easy | Stable | Own 5 facilities at level 3+ |
 | E12 | **"Skynet Is Online"** | Terminator | 🔵 Medium | Stable | Own 3 robots simultaneously |
-| E13 | **"Robot Army"** | General sci-fi | 🟠 Hard | Stable | Own 5 robots simultaneously |
-| E14 | **"Rise of the Machines"** | Terminator 3 | 🟠 Hard | Stable | Own 7 robots simultaneously |
+| E13 | **"Robot Army"** | General sci-fi | 🟠 Hard 🏆 | Stable | Own 5 robots simultaneously |
+| E14 | **"Rise of the Machines"** | Terminator 3 | 🟠 Hard 🏆 | Stable | Own 7 robots simultaneously |
 | E15 | **"Fine-Tuned Machine"** | Common phrase / Tuning Bay | 🟢 Easy | Stable | Allocate tuning points on any robot for the first time |
-| E16 | **"Overclocked"** | PC gaming term | 🟠 Hard | Stable | Allocate 50+ tuning points on a single robot |
+| E16 | **"Overclocked"** | PC gaming term | 🟠 Hard 🏆 | Stable | Allocate 50+ tuning points on a single robot |
 | E17 | **"Bankrupt!"** | Monopoly / economy | ⬛ Secret | Stable | Have your balance drop below ₡0 from daily operating costs |
 | E18 | **"Pawn Star"** | Pawn Stars TV show | 🔵 Medium | Stable | Sell your first weapon |
 | E19 | **"Shrewd Negotiator"** | Business / negotiation trope | 🔴 Very Hard | Stable | Earn ₡500,000 lifetime from weapon resales |
 | E20 | **"Arms Dealer"** | Arms dealer trope | 🔴 Very Hard | Stable | Sell 10 weapons |
 | E21 | **"Buy High, Sell Higher"** | Trader meme | 🟠 Hard | Stable | Sell a weapon with Weapons Workshop level 5 or higher (50%+ resale) |
 | E22 | **"First Refinement"** | Weapon Refinement | 🔵 Medium | Stable | Refine your first weapon |
-| E23 | **"Master Craftsman"** | Crafting trope | 🟠 Hard | Stable | Spend ₡1,000,000 lifetime on weapon refinements |
-| E24 | **"Legendary Smith"** | Smithing trope | 🟠 Hard | Stable | Own a Legendary weapon (5 refinements) |
+| E23 | **"Master Craftsman"** | Crafting trope | 🟠 Hard 🏆 | Stable | Spend ₡1,000,000 lifetime on weapon refinements |
+| E24 | **"Legendary Smith"** | Smithing trope | 🟠 Hard 🏆 | Stable | Own a Legendary weapon (5 refinements) |
 | E25 | **"Identity Forged"** | Identity build | 🔴 Very Hard | Stable | Refine a starter weapon (Practice Sword, Practice Blaster, Training Rifle, or Training Beam) to Legendary status |
-| E26 | **"Forge Master"** | Forge / DPS build | 🟠 Hard | Stable | Own a weapon with all four DPS slots filled (2 Sharpen + 2 Forge) |
+| E26 | **"Forge Master"** | Forge / DPS build | 🟠 Hard 🏆 | Stable | Own a weapon with all four DPS slots filled (2 Sharpen + 2 Forge) |
 | E27 | **"Better, Stronger, Faster"** | The Six Million Dollar Man | 🟢 Easy | Stable | Spend ₡6,000,000 on attribute upgrades |
 | E28 | **"Back to the Future"** | Back to the Future | 🟢 Easy | Stable | Recover from a balance below ₡100,000 to above ₡1,000,000 |
 | E29 | **"SimCity"** | SimCity | 🟠 Hard | Stable | Own every facility type at level 1 or higher |

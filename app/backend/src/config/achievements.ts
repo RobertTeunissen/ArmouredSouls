@@ -125,9 +125,10 @@ export interface AchievementDefinition {
   progressLabel?: string;
   badgeIconFile: string;
   /**
-   * Trophy: recognition only, no credits or prestige (issue #446). Set on
-   * achievements that reward placing above other players, so a reward does not
-   * compound an existing lead. The tier still says how hard it is.
+   * Trophy: recognition only, no credits or prestige (issues #446, #596). Set
+   * on achievements that reward placing above other players or owning more
+   * (robots, weapons, refinements, tuning), so a reward does not compound an
+   * existing lead. The tier still says how hard it is.
    */
   trophy?: boolean;
 }
@@ -985,14 +986,15 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     category: 'economy',
     tier: 'hard',
     scope: 'user',
-    rewardCredits: TIER_REWARDS.hard.credits,
-    rewardPrestige: TIER_REWARDS.hard.prestige,
+    rewardCredits: TROPHY_REWARDS.credits,
+    rewardPrestige: TROPHY_REWARDS.prestige,
     hidden: false,
     triggerType: 'weapon_count',
     triggerThreshold: 10,
     progressType: 'numeric',
     progressLabel: 'weapons',
     badgeIconFile: 'achievement-e6',
+    trophy: true,
   },
   {
     id: 'E7',
@@ -1102,14 +1104,15 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     category: 'economy',
     tier: 'hard',
     scope: 'user',
-    rewardCredits: TIER_REWARDS.hard.credits,
-    rewardPrestige: TIER_REWARDS.hard.prestige,
+    rewardCredits: TROPHY_REWARDS.credits,
+    rewardPrestige: TROPHY_REWARDS.prestige,
     hidden: false,
     triggerType: 'robot_count',
     triggerThreshold: 5,
     progressType: 'numeric',
     progressLabel: 'robots',
     badgeIconFile: 'achievement-e13',
+    trophy: true,
   },
   {
     id: 'E14',
@@ -1119,14 +1122,15 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     category: 'economy',
     tier: 'hard',
     scope: 'user',
-    rewardCredits: TIER_REWARDS.hard.credits,
-    rewardPrestige: TIER_REWARDS.hard.prestige,
+    rewardCredits: TROPHY_REWARDS.credits,
+    rewardPrestige: TROPHY_REWARDS.prestige,
     hidden: false,
     triggerType: 'robot_count',
     triggerThreshold: 7,
     progressType: 'numeric',
     progressLabel: 'robots',
     badgeIconFile: 'achievement-e14',
+    trophy: true,
   },
   {
     id: 'E15',
@@ -1151,14 +1155,15 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     category: 'economy',
     tier: 'hard',
     scope: 'user',
-    rewardCredits: TIER_REWARDS.hard.credits,
-    rewardPrestige: TIER_REWARDS.hard.prestige,
+    rewardCredits: TROPHY_REWARDS.credits,
+    rewardPrestige: TROPHY_REWARDS.prestige,
     hidden: false,
     triggerType: 'tuning_full',
     triggerThreshold: 50,
     progressType: 'numeric',
     progressLabel: 'tuning points',
     badgeIconFile: 'achievement-e16',
+    trophy: true,
   },
   {
     id: 'E17',
@@ -1266,14 +1271,15 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     category: 'economy',
     tier: 'hard',
     scope: 'user',
-    rewardCredits: TIER_REWARDS.hard.credits,
-    rewardPrestige: TIER_REWARDS.hard.prestige,
+    rewardCredits: TROPHY_REWARDS.credits,
+    rewardPrestige: TROPHY_REWARDS.prestige,
     hidden: false,
     triggerType: 'weapons_refined_credits_spent',
     triggerThreshold: 1_000_000,
     progressType: 'numeric',
     progressLabel: 'credits spent on refinement',
     badgeIconFile: 'achievement-e23',
+    trophy: true,
   },
   {
     id: 'E24',
@@ -1283,12 +1289,13 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     category: 'economy',
     tier: 'hard',
     scope: 'user',
-    rewardCredits: TIER_REWARDS.hard.credits,
-    rewardPrestige: TIER_REWARDS.hard.prestige,
+    rewardCredits: TROPHY_REWARDS.credits,
+    rewardPrestige: TROPHY_REWARDS.prestige,
     hidden: false,
     triggerType: 'owns_legendary_weapon',
     progressType: 'boolean',
     badgeIconFile: 'achievement-e24',
+    trophy: true,
   },
   {
     id: 'E25',
@@ -1314,12 +1321,13 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     category: 'economy',
     tier: 'hard',
     scope: 'user',
-    rewardCredits: TIER_REWARDS.hard.credits,
-    rewardPrestige: TIER_REWARDS.hard.prestige,
+    rewardCredits: TROPHY_REWARDS.credits,
+    rewardPrestige: TROPHY_REWARDS.prestige,
     hidden: false,
     triggerType: 'owns_max_dps_weapon',
     progressType: 'boolean',
     badgeIconFile: 'achievement-e26',
+    trophy: true,
   },
 
   // ============================================================

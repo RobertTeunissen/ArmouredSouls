@@ -256,6 +256,34 @@ describe('Battle Orchestrator', () => {
       }
     });
 
+    it('pays the tier reward regardless of the winner\'s prestige (#596: no prestige bonus)', async () => {
+      // Both stables far past the old +50% cap (25,000 prestige).
+      const richA = await prisma.user.create({ data: { username: `battle_test_rich_a_${Date.now()}`, passwordHash: 'hash', currency: 1000000, prestige: 60000 } });
+      const richB = await prisma.user.create({ data: { username: `battle_test_rich_b_${Date.now()}`, passwordHash: 'hash', currency: 1000000, prestige: 60000 } });
+      const robots = [];
+      for (const owner of [richA, richB]) {
+        const inv = await prisma.weaponInventory.create({ data: { userId: owner.id, weaponId: practiceSword.id, pricePaid: 0 } });
+        const robot = await prisma.robot.create({
+          data: {
+            userId: owner.id, name: `Rich Fighter ${owner.id}`, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2,
+            elo: 1200, loadoutType: 'single', mainWeaponId: inv.id,
+          },
+        });
+        robots.push(robot);
+      }
+
+      const result = await processBattle(await createScheduledMatch(robots[0].id, robots[1].id, { leagueType: 'gold' }));
+      const battle = await prisma.battle.findUnique({ where: { id: result.battleId } });
+
+      // Gold: win ₡30,000 + participation ₡6,000; the loser gets the participation.
+      if (battle!.winnerId === null) {
+        expect(battle!.winnerReward).toBe(6000);
+      } else {
+        expect(battle!.winnerReward).toBe(36000);
+        expect(battle!.loserReward).toBe(6000);
+      }
+    });
+
     it('should handle bye-robot battles correctly', async () => {
       const weaponInv = await prisma.weaponInventory.create({
         data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },

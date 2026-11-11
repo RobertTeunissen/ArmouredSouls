@@ -5,8 +5,6 @@
 
 import {
   calculateFacilityOperatingCost,
-  getPrestigeMultiplier,
-  calculateBattleWinnings,
   getMerchandisingBaseRate,
   calculateMerchandisingIncome,
   getLeagueWinReward,
@@ -51,38 +49,6 @@ describe('Economy Calculations', () => {
       expect(calculateFacilityOperatingCost('booking_office', 1)).toBe(150);
       expect(calculateFacilityOperatingCost('booking_office', 5)).toBe(750);
       expect(calculateFacilityOperatingCost('booking_office', 10)).toBe(1500);
-    });
-  });
-
-  describe('Prestige Multipliers', () => {
-    it('should return 1.0 for zero prestige', () => {
-      expect(getPrestigeMultiplier(0)).toBe(1.0);
-    });
-
-    it('should scale smoothly with prestige using formula min(1.50, 1 + prestige/50000)', () => {
-      expect(getPrestigeMultiplier(1000)).toBeCloseTo(1.02, 5);   // +2%
-      expect(getPrestigeMultiplier(5000)).toBeCloseTo(1.10, 5);   // +10%
-      expect(getPrestigeMultiplier(10000)).toBeCloseTo(1.20, 5);  // +20%
-      expect(getPrestigeMultiplier(25000)).toBeCloseTo(1.50, 5);  // +50% (cap)
-    });
-
-    it('should cap at 1.50 for prestige at or above 25000', () => {
-      expect(getPrestigeMultiplier(25000)).toBe(1.50);
-      expect(getPrestigeMultiplier(50000)).toBe(1.50);
-      expect(getPrestigeMultiplier(100000)).toBe(1.50);
-    });
-  });
-
-  describe('Battle Winnings', () => {
-    it('should calculate battle winnings with no prestige bonus', () => {
-      expect(calculateBattleWinnings(10000, 0)).toBe(10000);
-    });
-
-    it('should calculate battle winnings with smooth prestige scaling', () => {
-      expect(calculateBattleWinnings(10000, 5000)).toBe(11000);  // +10%
-      expect(calculateBattleWinnings(10000, 10000)).toBe(12000); // +20%
-      expect(calculateBattleWinnings(10000, 25000)).toBe(15000); // +50% (cap)
-      expect(calculateBattleWinnings(10000, 50000)).toBe(15000); // +50% (cap)
     });
   });
 

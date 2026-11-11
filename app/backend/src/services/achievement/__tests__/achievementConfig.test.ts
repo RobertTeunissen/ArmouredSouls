@@ -52,11 +52,14 @@ describe('Achievement Config', () => {
       }
     });
 
-    it('pays nothing for Trophies (issue #446)', () => {
+    it('pays nothing for Trophies (issues #446, #596)', () => {
       const trophies = ACHIEVEMENTS.filter((a) => a.trophy);
-      expect(trophies.map((a) => a.id).sort()).toEqual(
-        ['C13', 'L10', 'L11', 'L14', 'L22', 'L23', 'L24', 'L25', 'L5', 'P4'],
-      );
+      expect(trophies.map((a) => a.id).sort()).toEqual([
+        // Placing above other players (#446)
+        'C13', 'L10', 'L11', 'L14', 'L22', 'L23', 'L24', 'L25', 'L5', 'P4',
+        // Owning more: robots, weapons, refinements, tuning (#596)
+        'E13', 'E14', 'E16', 'E23', 'E24', 'E26', 'E6',
+      ].sort());
       for (const a of trophies) {
         expect(a.rewardCredits).toBe(0);
         expect(a.rewardPrestige).toBe(0);

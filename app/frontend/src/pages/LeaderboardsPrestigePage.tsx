@@ -233,8 +233,7 @@ function LeaderboardsPrestigePage() {
 
         <h3 className="text-lg font-semibold text-primary mt-6 mb-4">Income Bonuses</h3>
         <div className="text-secondary space-y-2">
-          <p>• Battle Winnings Bonus: Scales smoothly up to +50% (formula: prestige / 50,000, capped at 25,000 prestige)</p>
-          <p>• Merchandising Multiplier: Scales with prestige (formula: 1 + prestige/10,000)</p>
+          <p>• Merchandising Multiplier: scales with prestige per roster slot (formula: 1 + prestige ÷ roster capacity ÷ 10,000)</p>
         </div>
       </div>
     </div>

@@ -12,8 +12,6 @@ import { BYE_MODE_SPECS } from '../../utils/byeRewards';
 import {
   getLeagueWinReward,
   getParticipationReward,
-  calculateBattleWinnings,
-  getPrestigeMultiplier,
 } from '../../utils/economyCalculations';
 import {
   calculateELOChange,
@@ -435,41 +433,24 @@ async function createBattleRecord(
     : robot2.elo + eloChanges.winnerChange;
   
   
-  // Calculate rewards based on league tier and prestige
+  // Rewards depend on the tier only: a win pays the same to every stable (#596
+  // removed the prestige bonus, which paid leading stables up to 50% more).
   const baseWinRewardAmount = getLeagueWinReward(scheduledMatch.leagueType);
   const participationReward = getParticipationReward(scheduledMatch.leagueType);
-  
-  // Get users for prestige multiplier (parallel fetch)
-  const [robot1User, robot2User] = await Promise.all([
-    prisma.user.findUnique({ where: { id: robot1.userId }, select: { id: true, prestige: true } }),
-    prisma.user.findUnique({ where: { id: robot2.userId }, select: { id: true, prestige: true } }),
-  ]);
-  
+
   // NOTE: Repair costs are NOT calculated here anymore.
   // They are calculated by RepairService when repairs are actually triggered.
   // This ensures accurate costs based on current damage and facility levels.
-  
-  // Winner gets midpoint of league range + participation reward, with prestige bonus
-  // Loser gets only participation reward
+
+  // Winner gets the tier win reward + participation; loser and draws get participation.
   let robot1Reward = participationReward;
   let robot2Reward = participationReward;
-  
+
   if (!result.isDraw && !result.isByeMatch) {
-    if (isRobot1Winner && robot1User) {
-      const baseWinReward = baseWinRewardAmount;
-      const winRewardWithPrestige = calculateBattleWinnings(baseWinReward, robot1User.prestige);
-      robot1Reward = winRewardWithPrestige + participationReward;
-    } else if (!isRobot1Winner && robot2User) {
-      const baseWinReward = baseWinRewardAmount;
-      const winRewardWithPrestige = calculateBattleWinnings(baseWinReward, robot2User.prestige);
-      robot2Reward = winRewardWithPrestige + participationReward;
-    }
-  } else if (result.isDraw) {
-    // Draw: both get participation reward only (no win reward)
-    robot1Reward = participationReward;
-    robot2Reward = participationReward;
+    if (isRobot1Winner) robot1Reward = baseWinRewardAmount + participationReward;
+    else robot2Reward = baseWinRewardAmount + participationReward;
   }
-  
+
   // Generate battle log with combat messages from REAL simulator events
   const battleLog = CombatMessageGenerator.convertBattleEvents({
     robot1Name: robot1.name,
@@ -497,15 +478,12 @@ async function createBattleRecord(
   });
   
   // Add financial reward details to battle log
-  const winnerPrestige = isRobot1Winner ? robot1User?.prestige || 0 : robot2User?.prestige || 0;
   const winnerReward = isRobot1Winner ? robot1Reward : robot2Reward;
   const loserReward = isRobot1Winner ? robot2Reward : robot1Reward;
-  const prestigeMultiplier = getPrestigeMultiplier(winnerPrestige);
   
   // Add reward summary to battle log
   if (!result.isDraw && !result.isByeMatch) {
     const baseWinReward = baseWinRewardAmount;
-    const prestigeBonus = winnerReward - participationReward - baseWinReward;
     
     battleLog.push({
       timestamp: result.durationSeconds,
@@ -525,13 +503,6 @@ async function createBattleRecord(
       message: `      • League Base (${scheduledMatch.leagueType}): ₡${baseWinReward.toLocaleString()}`,
     });
     
-    if (prestigeBonus > 0) {
-      battleLog.push({
-        timestamp: result.durationSeconds,
-        type: 'reward_breakdown',
-        message: `      • Prestige Bonus (${Math.round((prestigeMultiplier - 1) * 100)}%): +₡${prestigeBonus.toLocaleString()}`,
-      });
-    }
     
     battleLog.push({
       timestamp: result.durationSeconds,

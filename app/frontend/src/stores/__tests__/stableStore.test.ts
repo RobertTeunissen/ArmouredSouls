@@ -39,7 +39,6 @@ const mockFinancialSummary: FinancialSummary = {
   dailyOperatingCosts: 100,
   dailyPassiveIncome: 250,
   netPassiveIncome: 150,
-  prestigeMultiplier: 1.2,
 };
 
 describe('stableStore', () => {

@@ -2,7 +2,7 @@
 title: "Achievement Catalog"
 description: "All achievements organized by category — Combat, League & Competition, Economy & Stable, Prestige & Fame, and Style & Quirky — with how to earn them, tiers and Trophies."
 order: 2
-lastUpdated: "2026-11-04"
+lastUpdated: "2026-11-11"
 relatedArticles:
   - achievements/achievement-system
   - achievements/badges-and-showcase
@@ -121,26 +121,26 @@ Stable-wide economic activity, facilities, weapons, roster management and the Bo
 | **"Show Me the Money"** | 🔵 Medium | Accumulate ₡5,000,000 in your balance at once |
 | **"Scrooge McDuck"** | 🔵 Medium | Earn ₡25,000,000 lifetime from all sources |
 | **"Buy the Dip"** | 🟢 Easy | Purchase your first weapon |
-| **"Arsenal"** | 🟠 Hard | Own 10 weapons simultaneously |
+| **"Arsenal"** | 🟠 Hard · 🏆 Trophy | Own 10 weapons simultaneously |
 | **"Mall Cop"** | 🔵 Medium | Buy your first shield |
 | **"Pimp My Bot"** | 🟢 Easy | Upgrade any robot attribute for the first time |
 | **"Fully Operational"** | 🔵 Medium | Reach an effective stat of 50 on any attribute on a robot |
 | **"The Architect"** | 🟢 Easy | Own 3 facilities at level 3+ |
 | **"Megacorp"** | 🟢 Easy | Own 5 facilities at level 3+ |
 | **"Skynet Is Online"** | 🔵 Medium | Own 3 robots simultaneously |
-| **"Robot Army"** | 🟠 Hard | Own 5 robots simultaneously |
-| **"Rise of the Machines"** | 🟠 Hard | Own 7 robots simultaneously |
+| **"Robot Army"** | 🟠 Hard · 🏆 Trophy | Own 5 robots simultaneously |
+| **"Rise of the Machines"** | 🟠 Hard · 🏆 Trophy | Own 7 robots simultaneously |
 | **"Fine-Tuned Machine"** | 🟢 Easy | Allocate tuning points on any robot for the first time |
-| **"Overclocked"** | 🟠 Hard | Allocate 50+ tuning points on a single robot |
+| **"Overclocked"** | 🟠 Hard · 🏆 Trophy | Allocate 50+ tuning points on a single robot |
 | **"Pawn Star"** | 🔵 Medium | Sell your first weapon |
 | **"Shrewd Negotiator"** | 🔴 Very Hard | Earn ₡500,000 lifetime from weapon resales |
 | **"Arms Dealer"** | 🔴 Very Hard | Sell 10 weapons |
 | **"Buy High, Sell Higher"** | 🟠 Hard | Sell a weapon with Weapons Workshop level 5 or higher (50%+ resale) |
 | **"First Refinement"** | 🔵 Medium | Refine your first weapon |
-| **"Master Craftsman"** | 🟠 Hard | Spend ₡1,000,000 lifetime on weapon refinements |
-| **"Legendary Smith"** | 🟠 Hard | Own a Legendary weapon (5 refinements) |
+| **"Master Craftsman"** | 🟠 Hard · 🏆 Trophy | Spend ₡1,000,000 lifetime on weapon refinements |
+| **"Legendary Smith"** | 🟠 Hard · 🏆 Trophy | Own a Legendary weapon (5 refinements) |
 | **"Identity Forged"** | 🔴 Very Hard | Refine a starter weapon (Practice Sword, Practice Blaster, Training Rifle, or Training Beam) to Legendary status |
-| **"Forge Master"** | 🟠 Hard | Own a weapon with all four DPS slots filled (2 Sharpen + 2 Forge) |
+| **"Forge Master"** | 🟠 Hard · 🏆 Trophy | Own a weapon with all four DPS slots filled (2 Sharpen + 2 Forge) |
 | **"Better, Stronger, Faster"** | 🟢 Easy | Spend ₡6,000,000 on attribute upgrades |
 | **"Back to the Future"** | 🟢 Easy | Recover from a balance below ₡100,000 to above ₡1,000,000 |
 | **"SimCity"** | 🟠 Hard | Own every facility type at level 1 or higher |
