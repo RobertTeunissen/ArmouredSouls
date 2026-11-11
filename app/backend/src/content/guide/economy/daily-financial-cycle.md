@@ -2,7 +2,7 @@
 title: "Daily Financial Cycle"
 description: "A visual overview of how Credits flow through your stable each cycle — revenue streams in, operating costs out, and the net income that determines your financial health."
 order: 6
-lastUpdated: "2026-10-17"
+lastUpdated: "2026-11-11"
 relatedArticles:
   - economy/credits-and-income
   - economy/battle-rewards
@@ -62,7 +62,7 @@ Three income sources feed into your total revenue each cycle:
 
 ### Battle Winnings
 
-Your primary income. Earned from league battles and tournament matches. League battle rewards depend on your robots' [league tier](/guide/economy/battle-rewards) and your stable's [Prestige](/guide/prestige-fame/prestige-ranks) bonus multiplier. Tournament rewards scale with tournament size and round progression instead. Winning pays more than losing, but every battle generates some income.
+Your primary income. Earned from league battles and tournament matches. League battle rewards depend on your robots' [league tier](/guide/economy/battle-rewards) and the result; your stable's [Prestige](/guide/prestige-fame/prestige-ranks) doesn't change them. Tournament rewards scale with tournament size and round progression instead. Winning pays more than losing, but every battle generates some income.
 
 ### Merchandising Income
 

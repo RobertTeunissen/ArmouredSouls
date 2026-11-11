@@ -8,6 +8,7 @@ import prisma from '../../lib/prisma';
 import type { StandingsMode } from '../../../generated/prisma';
 import { MAX_TEAMS_PER_INSTANCE } from './teamBattleAdapter';
 import { getEntityHistory } from '../league/leagueHistoryService';
+import { countPlayersPerInstance } from '../standings/playerStables';
 
 const TEAM_MEMBER_ROBOT_SELECT = {
   id: true,
@@ -91,13 +92,19 @@ export async function listStableTeams(userId: number, teamSize?: number) {
   });
 }
 
-/** Instances of one team-mode tier with their population, in instance-number order. */
+/**
+ * Instances of one team-mode tier with their population and how many of its
+ * teams belong to human players, in instance-number order.
+ */
 export async function listTeamInstances(mode: StandingsMode, tier: string) {
-  const instances = await prisma.standing.groupBy({
-    by: ['leagueInstanceId'],
-    where: { mode, tier },
-    _count: true,
-  });
+  const [instances, players] = await Promise.all([
+    prisma.standing.groupBy({
+      by: ['leagueInstanceId'],
+      where: { mode, tier },
+      _count: true,
+    }),
+    countPlayersPerInstance(mode, tier),
+  ]);
   const instanceNumber = (id: string): number => parseInt(id.split('_')[1] ?? '1', 10);
   return instances
     .sort((a, b) => instanceNumber(a.leagueInstanceId) - instanceNumber(b.leagueInstanceId))
@@ -106,6 +113,7 @@ export async function listTeamInstances(mode: StandingsMode, tier: string) {
       leagueTier: tier,
       currentTeams: inst._count,
       maxTeams: MAX_TEAMS_PER_INSTANCE,
+      players: players.get(inst.leagueInstanceId) ?? 0,
     }));
 }
 

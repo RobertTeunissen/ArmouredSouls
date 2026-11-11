@@ -49,11 +49,12 @@ export async function getModeKillsMap(
  * Top robots by destructions in one battle type, highest first.
  *
  * Robots with no destructions are excluded, so an untouched mode yields an empty
- * list instead of a page of zeroes.
+ * list instead of a page of zeroes. `take` undefined returns every robot with a
+ * destruction (the Hall of Records players' lists read the whole ranking).
  */
 export async function getTopModeKills(
   mode: StandingsMode,
-  take: number,
+  take?: number,
 ): Promise<Array<{ robotId: number; kills: number }>> {
   const rows = await prisma.robotModeKills.findMany({
     where: { mode, kills: { gt: 0 } },

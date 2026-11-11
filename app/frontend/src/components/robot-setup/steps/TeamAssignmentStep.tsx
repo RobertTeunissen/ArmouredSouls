@@ -1,205 +1,151 @@
 /**
- * TeamAssignmentStep — Step 5 of the robot setup wizard.
- * Shows existing teams with open slots and offers inline team creation.
- * Placed before subscriptions so the player knows which team events are relevant.
+ * TeamAssignmentStep — optional wizard step, shown only to stables with two
+ * or more robots. Creates a 2v2 or 3v3 team with this robot and teammates the
+ * player picks. Placed before Events so the team events can be entered next.
  *
  * Requirements: 5.6, 6.1, 10.5
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getMyTeamBattles, registerTeamBattle, type TeamBattle } from '../../../utils/teamBattleApi';
 import { useRobotStore } from '../../../stores';
+import { ERROR_NOTICE, PANEL, PRIMARY_BUTTON, SECONDARY_BUTTON } from '../styles';
 import type { StepProps } from '../types';
 
-function TeamAssignmentStep({ robotId, onComplete }: StepProps) {
+const TEAM_NAME_MIN = 3;
+const TEAM_NAME_MAX = 32;
+
+function SizeChip({ size, pressed, disabled, onClick }: { size: 2 | 3; pressed: boolean; disabled: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      disabled={disabled}
+      onClick={onClick}
+      className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border-2 px-4 text-sm font-medium transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-40 ${
+        pressed ? 'border-white bg-primary text-white' : 'border-transparent bg-surface-elevated text-secondary hover:text-white'
+      }`}
+    >
+      {pressed && <span aria-hidden="true">✓</span>}
+      {size}v{size}
+    </button>
+  );
+}
+
+function TeamAssignmentStep({ robotId, onComplete, onSkip }: StepProps) {
+  const robots = useRobotStore((state) => state.robots);
+  const fetchRobots = useRobotStore((state) => state.fetchRobots);
   const [teams, setTeams] = useState<TeamBattle[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [teamName, setTeamName] = useState('');
+  const [teamSize, setTeamSize] = useState<2 | 3>(2);
+  const [teammates, setTeammates] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
-  const [newTeamName, setNewTeamName] = useState('');
-  const [newTeamSize, setNewTeamSize] = useState<2 | 3>(2);
 
-  const robots = useRobotStore(state => state.robots);
-  const fetchRobots = useRobotStore(state => state.fetchRobots);
-  const otherRobots = robots.filter((r) => r.id !== robotId);
-
+  useEffect(() => { void fetchRobots(); }, [fetchRobots]);
   useEffect(() => {
-    fetchRobots();
-  }, [fetchRobots]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getMyTeamBattles()
-      .then((data) => {
-        if (!cancelled) setTeams(data);
-      })
-      .catch(() => {
-        // Fail silently
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => { cancelled = true; };
+    const controller = new AbortController();
+    getMyTeamBattles(undefined, controller.signal).then(setTeams).catch(() => { /* the team list is a hint only */ });
+    return () => controller.abort();
   }, []);
 
-  // Teams with open slots that this robot could join
-  const teamsWithSlots = teams.filter((t) => {
-    const memberIds = t.members.map((m) => m.robotId);
-    // Team has an open slot AND this robot isn't already a member
-    return memberIds.length < t.teamSize && !memberIds.includes(robotId);
-  });
+  const others = useMemo(() => robots.filter((r) => r.id !== robotId), [robots, robotId]);
+  const memberOf = teams.filter((t) => t.members.some((m) => m.robotId === robotId));
 
-  const handleCreateTeam = async (): Promise<void> => {
-    if (!newTeamName.trim() || otherRobots.length === 0) return;
+  // Default teammates: the first other robots, re-picked when the size or roster changes.
+  useEffect(() => {
+    setTeammates(others.slice(0, teamSize - 1).map((r) => r.id));
+  }, [others, teamSize]);
 
+  const name = teamName.trim();
+  const nameValid = name.length >= TEAM_NAME_MIN && name.length <= TEAM_NAME_MAX;
+  const teammatesValid = teammates.length === teamSize - 1 && new Set(teammates).size === teammates.length;
+
+  const setTeammate = (slot: number, id: number): void => {
+    setTeammates((current) => current.map((value, i) => (i === slot ? id : value)));
+  };
+
+  const createTeam = async (): Promise<void> => {
+    if (!nameValid || !teammatesValid) return;
     setBusy(true);
     setError(null);
     try {
-      // Pick first available other robot as teammate
-      const teammateId = otherRobots[0].id;
-      const robotIds = newTeamSize === 2
-        ? [robotId, teammateId]
-        : [robotId, teammateId, ...(otherRobots.length > 1 ? [otherRobots[1].id] : [])];
-
-      if (robotIds.length < newTeamSize) {
-        setError(`Need ${newTeamSize} robots for a ${newTeamSize}v${newTeamSize} team`);
-        setBusy(false);
-        return;
-      }
-
-      await registerTeamBattle(robotIds, newTeamName.trim(), newTeamSize);
+      await registerTeamBattle([robotId, ...teammates], name, teamSize);
       onComplete();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to create team');
+      setError(err instanceof Error && err.message ? err.message : 'Failed to create the team.');
     } finally {
       setBusy(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-white">Team Assignment</h2>
-        <div className="text-secondary text-sm animate-pulse">Loading teams...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      <div className="text-center mb-2">
-        <h2 className="text-xl font-bold text-white">Team Assignment</h2>
-        <p className="text-secondary text-sm mt-1">
-          Assign your robot to a team for 2v2 or 3v3 battles. This is optional — you can play solo events without a team.
+    <section className={PANEL} aria-labelledby="team-step-heading">
+      <h2 id="team-step-heading" className="text-lg font-semibold">Form a team</h2>
+      <p className="mt-1 text-sm text-secondary">
+        Optional. A team can enter 2v2 League, 3v3 League, Tag Team and the team tournaments. Solo events need no team.
+      </p>
+
+      {memberOf.length > 0 && (
+        <p className="mt-3 text-sm text-secondary">
+          Already on {memberOf.map((t) => t.teamName).join(', ')}.{' '}
+          <Link to="/team-battles" className="text-primary hover:underline">Manage teams</Link>
         </p>
-      </div>
-
-      {error && (
-        <div className="bg-error/10 border border-error rounded-lg p-3 text-error text-sm">
-          {error}
-        </div>
       )}
 
-      {/* Existing teams with open slots */}
-      {teamsWithSlots.length > 0 && (
+      <div className="mt-4 space-y-4">
         <div>
-          <p className="text-secondary text-sm mb-2">Teams with open slots:</p>
-          <div className="space-y-2">
-            {teamsWithSlots.map((team) => (
-              <div key={team.id} className="bg-surface border border-gray-700 rounded-lg p-3 flex items-center justify-between">
-                <div>
-                  <div className="font-semibold text-white text-sm">{team.teamName}</div>
-                  <div className="text-xs text-secondary">
-                    {team.teamSize}v{team.teamSize} • {team.members.length}/{team.teamSize} members
-                  </div>
-                </div>
-                <span className="text-xs text-secondary">Use Team Management to add</span>
-              </div>
-            ))}
-          </div>
+          <label htmlFor="new-team-name" className="mb-1 block text-sm">Team name</label>
+          <input
+            id="new-team-name"
+            type="text"
+            value={teamName}
+            onChange={(e) => setTeamName(e.target.value)}
+            maxLength={TEAM_NAME_MAX}
+            aria-describedby="new-team-name-help"
+            className="min-h-[44px] w-full rounded-lg border border-white/10 bg-surface-elevated px-3 text-white focus:border-primary focus:outline-none"
+          />
+          <p id="new-team-name-help" className="mt-1 text-xs text-secondary">{TEAM_NAME_MIN}–{TEAM_NAME_MAX} characters.</p>
         </div>
-      )}
 
-      {/* Not enough robots for team */}
-      {otherRobots.length === 0 && (
-        <div className="bg-surface border border-gray-700 rounded-lg p-4 text-center">
-          <span className="text-3xl block mb-2">👥</span>
-          <p className="text-secondary text-sm">
-            You need at least 2 robots to form a team. Create more robots first!
-          </p>
-        </div>
-      )}
-
-      {/* Create new team (inline) */}
-      {otherRobots.length > 0 && !showCreate && (
-        <button
-          onClick={() => setShowCreate(true)}
-          className="w-full bg-surface border border-dashed border-gray-600 hover:border-primary rounded-lg p-4 text-center transition-colors min-h-[44px]"
-        >
-          <span className="text-primary font-semibold">+ Create New Team</span>
-        </button>
-      )}
-
-      {showCreate && otherRobots.length > 0 && (
-        <div className="bg-surface border border-gray-700 rounded-lg p-4 space-y-3">
-          <h4 className="font-semibold text-white text-sm">Create New Team</h4>
-          <div>
-            <label htmlFor="new-team-name" className="text-xs text-secondary block mb-1">Team Name</label>
-            <input
-              id="new-team-name"
-              type="text"
-              value={newTeamName}
-              onChange={(e) => setNewTeamName(e.target.value)}
-              placeholder="Enter team name"
-              className="w-full bg-surface-elevated border border-gray-600 rounded px-3 py-2 text-white text-sm min-h-[44px] focus:outline-none focus:border-primary"
-              maxLength={32}
-            />
+        <div>
+          <p id="new-team-size-label" className="mb-1 text-sm">Team size</p>
+          <div className="flex gap-2" role="group" aria-labelledby="new-team-size-label">
+            <SizeChip size={2} pressed={teamSize === 2} disabled={false} onClick={() => setTeamSize(2)} />
+            <SizeChip size={3} pressed={teamSize === 3} disabled={others.length < 2} onClick={() => setTeamSize(3)} />
           </div>
-          <div>
-            <p id="new-team-size-label" className="text-xs text-secondary block mb-1">Team Size</p>
-            <div className="flex gap-2" role="group" aria-labelledby="new-team-size-label">
-              <button
-                onClick={() => setNewTeamSize(2)}
-                className={`flex-1 px-3 py-2 rounded text-sm font-semibold min-h-[44px] transition-colors ${
-                  newTeamSize === 2 ? 'bg-primary text-white' : 'bg-surface-elevated text-secondary hover:text-white'
-                }`}
+          {others.length < 2 && <p className="mt-1 text-xs text-secondary">3v3 needs three robots in your stable.</p>}
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {teammates.map((selected, slot) => (
+            <div key={slot}>
+              <label htmlFor={`teammate-${slot}`} className="mb-1 block text-sm">Teammate {slot + 1}</label>
+              <select
+                id={`teammate-${slot}`}
+                value={selected}
+                onChange={(e) => setTeammate(slot, Number(e.target.value))}
+                className="min-h-[44px] w-full rounded-lg border border-white/10 bg-surface-elevated px-3 text-white focus:border-primary focus:outline-none"
               >
-                2v2
-              </button>
-              <button
-                onClick={() => setNewTeamSize(3)}
-                disabled={otherRobots.length < 2}
-                className={`flex-1 px-3 py-2 rounded text-sm font-semibold min-h-[44px] transition-colors disabled:opacity-30 ${
-                  newTeamSize === 3 ? 'bg-primary text-white' : 'bg-surface-elevated text-secondary hover:text-white'
-                }`}
-              >
-                3v3
-              </button>
+                {others
+                  .filter((r) => r.id === selected || !teammates.includes(r.id))
+                  .map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
             </div>
-          </div>
-          <button
-            onClick={handleCreateTeam}
-            disabled={busy || !newTeamName.trim()}
-            className="w-full bg-primary hover:bg-blue-700 text-white font-semibold px-4 py-3 rounded-lg min-h-[44px] transition-colors disabled:opacity-50"
-          >
-            {busy ? 'Creating...' : 'Create Team'}
-          </button>
+          ))}
         </div>
-      )}
 
-      {/* Action buttons */}
-      <div className="flex gap-3 pt-2">
-        <button
-          onClick={onComplete}
-          className="bg-surface-elevated hover:bg-gray-600 text-white px-6 py-3 rounded-lg min-h-[44px] transition-colors"
-        >
-          {teamsWithSlots.length > 0 || showCreate ? 'Continue' : 'Skip — Solo Only'}
+        {error && <p className={ERROR_NOTICE} role="alert">{error}</p>}
+      </div>
+
+      <div className="mt-5 flex flex-wrap justify-end gap-3">
+        {onSkip && <button type="button" onClick={onSkip} disabled={busy} className={SECONDARY_BUTTON}>Skip</button>}
+        <button type="button" onClick={() => void createTeam()} disabled={busy || !nameValid || !teammatesValid} className={PRIMARY_BUTTON}>
+          {busy ? 'Creating…' : `Create ${teamSize}v${teamSize} team`}
         </button>
       </div>
-    </div>
+    </section>
   );
 }
 

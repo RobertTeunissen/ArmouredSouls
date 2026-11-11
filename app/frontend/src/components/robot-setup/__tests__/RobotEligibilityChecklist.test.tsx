@@ -1,5 +1,6 @@
 /**
- * Tests for RobotEligibilityChecklist component.
+ * Tests for RobotEligibilityChecklist: one "Not ready for battle" warning for
+ * unmet hard gates (single Finish setup action), a tuning recommendation.
  *
  * Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 9.7
  */
@@ -9,24 +10,36 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import RobotEligibilityChecklist from '../RobotEligibilityChecklist';
+import type { SchedulingEligibilityReport } from '../types';
 
-// Mock api
-const mockGet = vi.fn();
-vi.mock('../../../utils/api', () => ({
-  api: { get: (...args: unknown[]) => mockGet(...args) },
+const mockFetch = vi.fn();
+vi.mock('../../../utils/robotApi', () => ({
+  fetchSchedulingEligibility: (...args: unknown[]) => mockFetch(...args),
 }));
 
-// Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-function renderChecklist(props?: Partial<Parameters<typeof RobotEligibilityChecklist>[0]>) {
+function report(met: { weapon: boolean; events: boolean; tuning: boolean }): SchedulingEligibilityReport {
+  return {
+    robotId: 1,
+    isEligible: met.weapon && met.events,
+    isFullyConfigured: met.weapon && met.events && met.tuning,
+    gates: [
+      { id: 'weapon_equipped', label: 'Equip a weapon', severity: 'hard', met: met.weapon, detail: met.weapon ? null : 'No main weapon equipped' },
+      { id: 'event_subscribed', label: 'Enter at least one battle event', severity: 'hard', met: met.events, detail: null },
+      { id: 'tuning_allocated', label: 'Allocate your tuning points', severity: 'soft', met: met.tuning, detail: met.tuning ? null : '10 of 10 free tuning points unallocated' },
+    ],
+  };
+}
+
+function renderChecklist(showRecommendations = true) {
   return render(
     <MemoryRouter>
-      <RobotEligibilityChecklist robotId={1} {...props} />
+      <RobotEligibilityChecklist robotId={1} showRecommendations={showRecommendations} />
     </MemoryRouter>,
   );
 }
@@ -36,156 +49,56 @@ describe('RobotEligibilityChecklist', () => {
     vi.clearAllMocks();
   });
 
-  it('should render hard-gate warnings when hard gates are unmet', async () => {
-    mockGet.mockResolvedValue({
-      robotId: 1,
-      isEligible: false,
-      isFullyConfigured: false,
-      gates: [
-        { id: 'weapon_equipped', label: 'Weapon equipped', severity: 'hard', met: false, detail: 'No main weapon equipped' },
-        { id: 'event_subscribed', label: 'Subscribed to events', severity: 'hard', met: false, detail: 'No event subscriptions' },
-        { id: 'tuning_allocated', label: 'Tuning allocated', severity: 'soft', met: false, detail: null },
-      ],
-    });
-
-    renderChecklist({ showRecommendations: true });
-
-    await waitFor(() => {
-      expect(screen.getByText('Robot Not Eligible for Battles')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Weapon equipped')).toBeInTheDocument();
-    expect(screen.getByText('Subscribed to events')).toBeInTheDocument();
-    expect(screen.getByText('No main weapon equipped')).toBeInTheDocument();
-    expect(screen.getByText('Complete Setup')).toBeInTheDocument();
-  });
-
-  it('should render soft recommendations when showRecommendations is true', async () => {
-    mockGet.mockResolvedValue({
-      robotId: 1,
-      isEligible: true,
-      isFullyConfigured: false,
-      gates: [
-        { id: 'weapon_equipped', label: 'Weapon equipped', severity: 'hard', met: true, detail: null },
-        { id: 'event_subscribed', label: 'Subscribed to events', severity: 'hard', met: true, detail: null },
-        { id: 'tuning_allocated', label: 'Tuning allocated', severity: 'soft', met: false, detail: 'Free stat bonuses available' },
-      ],
-    });
-
-    renderChecklist({ showRecommendations: true });
-
-    await waitFor(() => {
-      expect(screen.getByText('Recommendations')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Tuning allocated')).toBeInTheDocument();
-    expect(screen.getByText('Free stat bonuses available')).toBeInTheDocument();
-  });
-
-  it('should not render when isFullyConfigured is true', async () => {
-    mockGet.mockResolvedValue({
-      robotId: 1,
-      isEligible: true,
-      isFullyConfigured: true,
-      gates: [
-        { id: 'weapon_equipped', label: 'Weapon equipped', severity: 'hard', met: true, detail: null },
-        { id: 'event_subscribed', label: 'Subscribed to events', severity: 'hard', met: true, detail: null },
-        { id: 'tuning_allocated', label: 'Tuning allocated', severity: 'soft', met: true, detail: null },
-      ],
-    });
-
-    const { container } = renderChecklist({ showRecommendations: true });
-
-    await waitFor(() => {
-      // Give it time to load and decide not to render
-      expect(mockGet).toHaveBeenCalled();
-    });
-
-    // Should render nothing
-    expect(container.querySelector('.bg-warning\\/10')).not.toBeInTheDocument();
-    expect(container.querySelector('.bg-primary\\/10')).not.toBeInTheDocument();
-  });
-
-  it('should not render soft gates when showRecommendations is false and robot is eligible', async () => {
-    mockGet.mockResolvedValue({
-      robotId: 1,
-      isEligible: true,
-      isFullyConfigured: false,
-      gates: [
-        { id: 'weapon_equipped', label: 'Weapon equipped', severity: 'hard', met: true, detail: null },
-        { id: 'event_subscribed', label: 'Subscribed to events', severity: 'hard', met: true, detail: null },
-        { id: 'tuning_allocated', label: 'Tuning allocated', severity: 'soft', met: false, detail: 'Free bonuses' },
-      ],
-    });
-
-    const { container } = renderChecklist({ showRecommendations: false });
-
-    await waitFor(() => {
-      expect(mockGet).toHaveBeenCalled();
-    });
-
-    // Should not show anything — eligible + no recommendations flag
-    expect(container.querySelector('.bg-primary\\/10')).not.toBeInTheDocument();
-  });
-
-  it('should navigate to setup wizard when Complete Setup is clicked', async () => {
-    mockGet.mockResolvedValue({
-      robotId: 1,
-      isEligible: false,
-      isFullyConfigured: false,
-      gates: [
-        { id: 'weapon_equipped', label: 'Weapon equipped', severity: 'hard', met: false, detail: 'No weapon' },
-        { id: 'event_subscribed', label: 'Subscribed', severity: 'hard', met: true, detail: null },
-        { id: 'tuning_allocated', label: 'Tuning', severity: 'soft', met: true, detail: null },
-      ],
-    });
-
+  it('lists the unmet hard gates as tasks in one warning with a single action', async () => {
+    mockFetch.mockResolvedValue(report({ weapon: false, events: false, tuning: false }));
     const user = userEvent.setup();
     renderChecklist();
 
-    await waitFor(() => {
-      expect(screen.getByText('Complete Setup')).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Not ready for battle')).toBeInTheDocument();
+    expect(screen.getByText('Equip a weapon · Enter at least one battle event')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Finish setup' })).toHaveLength(1);
 
-    await user.click(screen.getByText('Complete Setup'));
-
+    await user.click(screen.getByRole('button', { name: 'Finish setup' }));
     expect(mockNavigate).toHaveBeenCalledWith('/robots/1/setup');
   });
 
-  it('should not render when API call fails', async () => {
-    mockGet.mockRejectedValue(new Error('Network error'));
+  it('shows the tuning recommendation with its point count and a link to the Build section', async () => {
+    mockFetch.mockResolvedValue(report({ weapon: true, events: true, tuning: false }));
+    const user = userEvent.setup();
+    renderChecklist();
 
-    const { container } = renderChecklist();
+    expect(await screen.findByText('Allocate your tuning points')).toBeInTheDocument();
+    expect(screen.getByText('10 of 10 free tuning points unallocated')).toBeInTheDocument();
+    expect(screen.queryByText('Not ready for battle')).not.toBeInTheDocument();
 
-    // Wait for the fetch to complete
-    await waitFor(() => {
-      expect(mockGet).toHaveBeenCalled();
-    });
-
-    // Allow a tick for state to settle
-    await new Promise((r) => setTimeout(r, 50));
-
-    expect(container.querySelector('.bg-warning\\/10')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Allocate tuning' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/robots/1/prepare');
   });
 
-  it('should render action buttons for each unmet gate', async () => {
-    mockGet.mockResolvedValue({
-      robotId: 1,
-      isEligible: false,
-      isFullyConfigured: false,
-      gates: [
-        { id: 'weapon_equipped', label: 'Weapon equipped', severity: 'hard', met: false, detail: null },
-        { id: 'event_subscribed', label: 'Subscribed to events', severity: 'hard', met: false, detail: null },
-        { id: 'tuning_allocated', label: 'Tuning allocated', severity: 'soft', met: false, detail: null },
-      ],
-    });
+  it('hides recommendations unless asked for them', async () => {
+    mockFetch.mockResolvedValue(report({ weapon: true, events: true, tuning: false }));
+    const { container } = renderChecklist(false);
 
-    renderChecklist({ showRecommendations: true });
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith(1, expect.any(AbortSignal)));
+    await Promise.resolve();
+    expect(container).toBeEmptyDOMElement();
+  });
 
-    await waitFor(() => {
-      expect(screen.getByText('Equip Weapon')).toBeInTheDocument();
-      expect(screen.getByText('Subscribe to Events')).toBeInTheDocument();
-      expect(screen.getByText('Allocate Tuning')).toBeInTheDocument();
-    });
+  it('renders nothing when the robot is fully configured', async () => {
+    mockFetch.mockResolvedValue(report({ weapon: true, events: true, tuning: true }));
+    const { container } = renderChecklist();
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+    await Promise.resolve();
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('renders nothing when the report cannot be loaded', async () => {
+    mockFetch.mockRejectedValue(new Error('Network error'));
+    const { container } = renderChecklist();
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 10));
+    expect(container).toBeEmptyDOMElement();
   });
 });

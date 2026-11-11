@@ -1,13 +1,9 @@
 /**
  * Prestige Features Integration Tests
- * Tests end-to-end functionality of prestige gates and income multipliers
+ * Tests end-to-end functionality of prestige gates and the merchandising multiplier
  */
 
-import {
-  getPrestigeMultiplier,
-  calculateMerchandisingIncome,
-  getNextPrestigeTier,
-} from '../src/utils/economyCalculations';
+import { calculateMerchandisingIncome } from '../src/utils/economyCalculations';
 import { getFacilityConfig } from '../src/config/facilities';
 
 describe('Prestige Features Integration', () => {
@@ -55,42 +51,16 @@ describe('Prestige Features Integration', () => {
       const userPrestige = 15000;
       const incomeGeneratorLevel = 4;
       
-      // Calculate all income streams
-      const prestigeMultiplier = getPrestigeMultiplier(userPrestige);
+      // Prestige feeds merchandising only; battle winnings carry no prestige bonus (#596).
       const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige, 1);
-      const nextTier = getNextPrestigeTier(userPrestige);
       
       // Verify calculations
-      // Prestige multiplier: min(1.50, 1 + 15000/50000) = 1.30
       // Season 2 (#524): baseRate for level 4 = 100000, merchandising multiplier is
       // 1 + prestigePerSlot/10000 = 1 + 15000/1/10000 = 2.5
-      expect(prestigeMultiplier).toBeCloseTo(1.30, 5); // 30% bonus
       expect(merchandising).toBe(250000); // 100000 * 2.5
-      expect(nextTier).toEqual({ threshold: 25000, bonus: '+50% (max)' });
       
       const totalPassiveIncome = merchandising;
       expect(totalPassiveIncome).toBe(250000);
-    });
-
-    test('should show smooth progression of prestige multiplier', () => {
-      const prestiges = [0, 1000, 5000, 10000, 25000, 50000];
-      const expectedMultipliers = [1.0, 1.02, 1.10, 1.20, 1.50, 1.50];
-      const expectedNextTiers = [
-        { threshold: 25000, bonus: '+50% (max)' },
-        { threshold: 25000, bonus: '+50% (max)' },
-        { threshold: 25000, bonus: '+50% (max)' },
-        { threshold: 25000, bonus: '+50% (max)' },
-        null,
-        null,
-      ];
-      
-      prestiges.forEach((prestige, index) => {
-        const multiplier = getPrestigeMultiplier(prestige);
-        const nextTier = getNextPrestigeTier(prestige);
-        
-        expect(multiplier).toBeCloseTo(expectedMultipliers[index], 5);
-        expect(nextTier).toEqual(expectedNextTiers[index]);
-      });
     });
 
     test('should calculate realistic income scenario', () => {
@@ -139,12 +109,8 @@ describe('Prestige Features Integration', () => {
       const userPrestige = 75000;
       const incomeGeneratorLevel = 10;
       
-      const prestigeMultiplier = getPrestigeMultiplier(userPrestige);
-      const nextTier = getNextPrestigeTier(userPrestige);
       const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige, 1);
       
-      expect(prestigeMultiplier).toBe(1.50); // Max tier
-      expect(nextTier).toBeNull(); // No next tier
       expect(merchandising).toBeGreaterThan(0);
       
       // User should have access to all facilities

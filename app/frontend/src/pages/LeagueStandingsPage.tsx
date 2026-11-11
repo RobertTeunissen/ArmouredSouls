@@ -7,13 +7,16 @@
  * the promotion and demotion places and a status per row.
  *
  * URL state: `mode` (1v1, 2v2, 3v3, tag_team, koth, grand_melee), `tier`,
- * `instance` (absent = whole tier), `page` (whole tier only). Without a tier
- * the page opens on the viewer's best instance in the league.
+ * `instance` (absent = whole tier), `page` (whole tier only), `stables`
+ * (players = human players only, #595). Without a tier the page opens on the
+ * viewer's best instance in the league.
  */
 import { useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSeasonStore, selectSeason } from '../stores/seasonStore';
+import { StableFilterControl } from '../components/StableFilterControl';
+import { useStableFilter } from '../hooks/useStableFilter';
 import {
   InstanceChips,
   LeagueCards,
@@ -27,6 +30,7 @@ import {
 import {
   bestInstanceIn,
   countBy,
+  entityCount,
   instanceLabel,
   modeFromParam,
   modeInfo,
@@ -38,6 +42,7 @@ import {
 } from '../utils/leagueStandings';
 import { getTierName } from '../utils/tierHelpers';
 import type { StandingsPageRequest } from '../utils/leagueStandingsApi';
+import type { StableFilter } from '../utils/stableFilter';
 
 /** Instances hold at most 100, so one instance is always one page. */
 const INSTANCE_PAGE_SIZE = 100;
@@ -50,14 +55,16 @@ interface ViewParams {
   tier: string;
   instance: string | null;
   page?: number;
+  stables: StableFilter;
 }
 
-function standingsHref({ mode, tier, instance, page }: ViewParams): string {
+function standingsHref({ mode, tier, instance, page, stables }: ViewParams): string {
   const params = new URLSearchParams();
   if (mode !== '1v1') params.set('mode', mode);
   params.set('tier', tier);
   if (instance) params.set('instance', instance);
   if (!instance && page && page > 1) params.set('page', String(page));
+  if (stables === 'players') params.set('stables', 'players');
   return `/league-standings?${params.toString()}`;
 }
 
@@ -65,6 +72,8 @@ function LeagueStandingsPage() {
   const { user } = useAuth();
   const season = useSeasonStore(selectSeason);
   const [params, setParams] = useSearchParams();
+  const [stables, setStables] = useStableFilter();
+  const playersOnly = stables === 'players';
   const my = useMyStandings();
 
   const mode = modeFromParam(params.get('mode'));
@@ -78,11 +87,11 @@ function LeagueStandingsPage() {
   useEffect(() => {
     if (tierParam || !my.settled) return;
     const view = openingView(my.entries, mode);
-    setParams(() => new URLSearchParams(standingsHref({ mode, ...view }).split('?')[1]), { replace: true });
-  }, [tierParam, my.settled, my.entries, mode, setParams]);
+    setParams(() => new URLSearchParams(standingsHref({ mode, ...view, stables }).split('?')[1]), { replace: true });
+  }, [tierParam, my.settled, my.entries, mode, stables, setParams]);
 
   const request: StandingsPageRequest | null = tierParam
-    ? { mode, tier: tierParam, instance, page: instance ? 1 : page, perPage: instance ? INSTANCE_PAGE_SIZE : TIER_PAGE_SIZE }
+    ? { mode, tier: tierParam, instance, page: instance ? 1 : page, perPage: instance ? INSTANCE_PAGE_SIZE : TIER_PAGE_SIZE, stables }
     : null;
   const standings = useStandingsPage(request);
 
@@ -118,22 +127,31 @@ function LeagueStandingsPage() {
           entries={my.entries}
           active={mode}
           stableName={stableName}
-          hrefFor={(m) => (m === '1v1' ? '/league-standings?mode=1v1' : `/league-standings?mode=${m}`)}
+          hrefFor={(m) => `/league-standings?mode=${m}${playersOnly ? '&stables=players' : ''}`}
         />
 
         <TierChips
           active={tier}
           yours={tierCounts}
-          hrefFor={(t) => standingsHref({ mode, tier: t, instance: bestInstanceIn(my.entries, mode, t) })}
+          hrefFor={(t) => standingsHref({ mode, tier: t, instance: bestInstanceIn(my.entries, mode, t), stables })}
         />
 
-        <InstanceChips
-          tier={tier}
-          instances={standings.instances}
-          active={instance}
-          yours={instanceCounts}
-          hrefFor={(i) => standingsHref({ mode, tier, instance: i })}
-        />
+        {/* Phones: the Stables control first and full width; from lg it sits right of the instances. */}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 lg:order-2 lg:shrink-0">
+            <StableFilterControl value={stables} onChange={setStables} />
+          </div>
+          <div className="min-w-0 lg:order-1 lg:flex-1">
+            <InstanceChips
+              tier={tier}
+              instances={standings.instances}
+              active={instance}
+              yours={instanceCounts}
+              playersOnly={playersOnly}
+              hrefFor={(i) => standingsHref({ mode, tier, instance: i, stables })}
+            />
+          </div>
+        </div>
 
         {!data && !standings.failed && (
           <p className="py-16 text-center text-secondary" role="status">Loading standings…</p>
@@ -157,10 +175,19 @@ function LeagueStandingsPage() {
             <h2 id="standings-heading" className="text-2xl font-bold text-white">{heading}</h2>
             <p className="mt-1 text-sm text-secondary" data-testid="zone-summary">{zoneSummary(data.zoneMeta, info, !instance).join(' · ')}</p>
             {warning && <p className="mt-1 text-sm text-warning" data-testid="zone-warning">{warning}</p>}
+            {playersOnly && (
+              <p className="mt-1 text-sm text-secondary" data-testid="players-summary">
+                {data.pagination.total} {data.pagination.total === 1 ? 'player' : 'players'} among {entityCount(info, data.zoneMeta.totalEntities)} in {heading}.
+                {' '}Places count every {info.entity}, so they don’t change when you filter.{' '}
+                <button type="button" onClick={() => setStables('all')} className="inline-flex min-h-[44px] items-center align-middle text-primary hover:underline">Show all stables</button>
+              </p>
+            )}
 
             {data.rows.length === 0 ? (
               <p className="mt-6 rounded-lg border border-white/10 bg-surface p-6 text-secondary" data-testid="standings-empty">
-                No {info.entity === 'robot' ? 'robots' : 'teams'} in {heading} yet.
+                {playersOnly
+                  ? `No players’ ${info.entity === 'robot' ? 'robots' : 'teams'} in ${heading}.`
+                  : `No ${info.entity === 'robot' ? 'robots' : 'teams'} in ${heading} yet.`}
               </p>
             ) : (
               <div className="mt-4">
@@ -169,12 +196,13 @@ function LeagueStandingsPage() {
                   mode={info}
                   tier={tier}
                   meta={data.zoneMeta}
-                  instanceView={instance !== null}
+                  bands={instance !== null && !playersOnly}
+                  showGroup={instance === null}
                   viewerId={viewerId}
                   caption={`${info.label}, ${heading}`}
                 />
                 {!instance && (
-                  <StandingsPager pagination={data.pagination} hrefFor={(p) => standingsHref({ mode, tier, instance: null, page: p })} />
+                  <StandingsPager pagination={data.pagination} hrefFor={(p) => standingsHref({ mode, tier, instance: null, page: p, stables })} />
                 )}
               </div>
             )}

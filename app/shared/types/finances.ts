@@ -6,5 +6,4 @@ export interface FinancialSummary {
   dailyOperatingCosts: number;
   dailyPassiveIncome: number;
   netPassiveIncome: number;
-  prestigeMultiplier: number;
 }

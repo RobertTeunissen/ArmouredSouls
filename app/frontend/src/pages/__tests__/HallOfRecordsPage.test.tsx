@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import HallOfRecordsPage from '../HallOfRecordsPage';
 import { useSeasonStore } from '../../stores/seasonStore';
 import { emptyRecords, fullRecords } from '../../components/hall-of-records/__tests__/fixtures';
+import type { RecordsData } from '../../components/hall-of-records/types';
 
 const mockGet = vi.fn();
 
@@ -35,7 +36,75 @@ function renderPage(path = '/hall-of-records') {
 
 beforeEach(() => {
   mockGet.mockReset();
+  vi.mocked(localStorage.getItem).mockReturnValue(null);
+  vi.mocked(localStorage.setItem).mockClear();
   useSeasonStore.setState(useSeasonStore.getInitialState());
+});
+
+/** The players' payload: the human and the viewer's robots keep their places #2 and #3. */
+function playersRecords(): RecordsData {
+  const data = emptyRecords();
+  const [, human, viewer] = fullRecords().career.highestElo;
+  data.stables = 'players';
+  data.career.highestElo = [{ ...human, place: 2 }, { ...viewer, place: 3 }];
+  return data;
+}
+
+function serveByFilter(players: RecordsData = playersRecords()) {
+  mockGet.mockImplementation((path: string) => Promise.resolve(path === '/api/records?stables=players' ? players : fullRecords()));
+}
+
+describe('HallOfRecordsPage — Stables filter (#595)', () => {
+  it('switches to the players\' top 10s, keeps their places, and remembers the choice', async () => {
+    serveByFilter();
+    const user = userEvent.setup();
+    renderPage();
+
+    const filter = await screen.findByRole('group', { name: 'Stables' });
+    await user.click(within(filter).getByRole('button', { name: 'Players' }));
+
+    expect(screen.getByTestId('location')).toHaveTextContent('stables=players');
+    expect(mockGet).toHaveBeenLastCalledWith('/api/records?stables=players');
+    expect(localStorage.setItem).toHaveBeenCalledWith('stableFilter', 'players');
+    const tile = await screen.findByTestId('record-tile-highestElo');
+    expect(within(tile).getByTestId('record-tile-place')).toHaveTextContent('Place #2');
+    expect(screen.getByTestId('records-players-note')).toHaveTextContent('Places count every stable');
+    expect(within(screen.getByTestId('your-places')).getByText(/1 players’ top-10 place$/)).toBeInTheDocument();
+  });
+
+  it('opens with the remembered Players choice and writes it into the URL', async () => {
+    vi.mocked(localStorage.getItem).mockReturnValue('players');
+    serveByFilter();
+    renderPage();
+
+    expect(await screen.findByTestId('records-players-note')).toBeInTheDocument();
+    expect(screen.getByTestId('location')).toHaveTextContent('stables=players');
+    expect(mockGet).toHaveBeenCalledWith('/api/records?stables=players');
+  });
+
+  it('lists the players\' top 10 with their real places in the full list', async () => {
+    serveByFilter();
+    renderPage('/hall-of-records?record=highestElo&stables=players');
+
+    const detail = await screen.findByTestId('record-detail');
+    expect(within(detail).getByText('Top 10 players')).toBeInTheDocument();
+    const rows = within(detail).getAllByTestId('record-detail-row');
+    expect(rows.map((row) => within(row).getByLabelText(/^Rank \d+$/).getAttribute('aria-label'))).toEqual(['Rank 2', 'Rank 3']);
+    expect(within(detail).getByTestId('record-detail-players-note')).toBeInTheDocument();
+  });
+
+  it('says so when no player holds a place yet, and offers every stable', async () => {
+    serveByFilter({ ...emptyRecords(), stables: 'players' });
+    const user = userEvent.setup();
+    renderPage('/hall-of-records?stables=players');
+
+    expect(await screen.findByTestId('records-empty-players')).toHaveTextContent('No player holds a record place yet this season.');
+    await user.click(screen.getByRole('button', { name: 'Show all stables' }));
+
+    expect(screen.getByTestId('location')).not.toHaveTextContent('stables=players');
+    expect(await screen.findByTestId('record-group-robots')).toBeInTheDocument();
+    expect(screen.queryByTestId('record-tile-place')).not.toBeInTheDocument();
+  });
 });
 
 describe('HallOfRecordsPage — board', () => {

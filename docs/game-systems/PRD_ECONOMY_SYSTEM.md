@@ -300,8 +300,7 @@ curl -H "Authorization: Bearer <token>" \
   "prestige": 12000,
   "dailyOperatingCosts": 29000,
   "dailyPassiveIncome": 57000,
-  "netPassiveIncome": 28000,
-  "prestigeMultiplier": 1.10
+  "netPassiveIncome": 28000
 }
 ```
 
@@ -485,7 +484,6 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - Never decreases (only increases)
 - Used to unlock facility levels and high-tier content
 - Scales merchandising income, divided by roster capacity (Spec #46)
-- Provides battle winnings multiplier
 
 **Tertiary Resource: Fame (Robot-Level)**
 - **See [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)**
@@ -1135,56 +1133,9 @@ To achieve sustainability at 50% win rate with participation awards:
 4. **New economics**: ₡36,750 income covers 82% of ₡44,625 repairs
 5. **Gap**: ₡7,875/week deficit - covered by facility income streams (merchandising, streaming) or reduced operating costs 
 
-### 2. Prestige Bonuses (Battle Multiplier)
+### 2. Prestige Bonuses (removed)
 
-> **For complete prestige earning mechanics**, see [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
-
-Higher stable prestige increases battle winnings via smooth scaling:
-
-**Formula**: `min(1.50, 1 + prestige / 50,000)`
-
-| Prestige | Battle Winnings Bonus |
-|-------------------|---------------------|
-| 0 | 0% |
-| 1,000 | +2% |
-| 2,500 | +5% |
-| 5,000 | +10% |
-| 10,000 | +20% |
-| 25,000+ | +50% (cap) |
-
-**Bonus Application**: Prestige bonus multiplies the base battle reward **AFTER** ELO calculation, extending beyond the league reward range.
-
-**Prestige Accumulation Timeline**:
-- Starting prestige: 0
-- Bronze wins (+5 prestige each): 1,000 wins needed for 5,000 prestige threshold
-- Average player (50% win rate, 7 battles/week): 3.5 wins/week = ~285 weeks (5.5 years)
-- **More realistic**: Mix of leagues + achievements + tournaments
-  - Bronze: 100 wins = +500 prestige
-  - Silver: 100 wins = +1,000 prestige  
-  - Gold: 50 wins = +1,000 prestige
-  - Achievements: ~1,000 prestige
-  - Tournaments: ~500 prestige
-  - **Total to 5,000**: ~6-12 months of regular play
-
-**"Win More" Concern**: 
-- Yes, prestige rewards successful players with better rewards
-- Counterbalance: ELO matchmaking ensures ~50% win rate long-term
-- Benefit: Rewards player loyalty and continued engagement
-- Alternative: Prestige could reduce operating costs instead of increasing income
-
-**Formula**:
-```
-prestige_multiplier = min(1.50, 1 + prestige / 50000)
-
-final_battle_reward = base_reward × prestige_multiplier
-```
-
-**Example**:
-- Bronze league win: ₡7,500 base (midpoint of ₡5K-₡10K range)
-- Prestige: 12,000
-- Multiplier: 1 + 12000/50000 = 1.24 (+24%)
-- Final reward: ₡7,500 × 1.24 = ₡9,300
-- **Note**: Base reward midpoint is determined by ELO matchup. Closer matches → higher base (closer to ₡10K). Mismatched opponents → lower base (closer to ₡5K).
+**Removed November 2026 (#596, before Season 2's first battles).** Battle rewards no longer depend on prestige: a win in a tier pays every stable the same. The old bonus, `min(1.50, 1 + prestige / 50,000)` on the 1v1 league win reward only, paid stables that were already ahead up to 50% more for the same win and applied in no other mode. `getPrestigeMultiplier`, `calculateBattleWinnings` and `getNextPrestigeTier` were deleted, and `GET /api/finances/summary` no longer returns `prestigeMultiplier` (no client read it). Prestige still drives facility gates and merchandising (below). Record: [PRESTIGE_BATTLE_BONUS_REMOVAL.md](../balance_changes/PRESTIGE_BATTLE_BONUS_REMOVAL.md).
 
 ### 3. Merchandising Income (Merchandising Hub Facility)
 

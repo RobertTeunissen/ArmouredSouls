@@ -63,7 +63,7 @@ Owner-only (`app/frontend/src/pages/RobotWorkshopPage.tsx`, `components/robot-wo
 - **Robot switcher** — previous/next arrows and a dropdown over the stable's robots, keeping the current section. Leaving with unsaved Build changes asks for confirmation. It sits in a bar pinned under the navigation, so the robot being edited stays visible while scrolling; a one-robot stable shows just the name there.
 - **Header** — image (editable), name, tier chip, ELO and gear summary, condition bar (HP and shield).
 - **Repair** — "Repair all damaged · ₡X" with this robot's price on the second line. Uses the existing `POST /api/robots/repair-all` (manual repair, half the automatic price). There is deliberately no single-robot repair: it would be a new credit writer. Shows "All robots fully repaired" when nothing is damaged.
-- **Eligibility checklist** with recommendations (`RobotEligibilityChecklist`).
+- **Eligibility notices** (`RobotEligibilityChecklist`, `DashboardNotification` style): "Not ready for battle" with **Finish setup** (the setup wizard at the missing steps) while a weapon or events are missing, and "Allocate your tuning points" with **Allocate tuning** while tuning points are left. See `docs/game-systems/PRD_ROBOT_SETUP_WIZARD.md`.
 
 ### Build section
 

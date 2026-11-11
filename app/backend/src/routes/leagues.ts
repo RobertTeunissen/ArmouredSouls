@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/league/leagueInstanceService';
 import { getRobotLeagueStandings, ROBOT_LEAGUE_MODES } from '../services/league/leagueStandingsService';
 import { getMyStandings } from '../services/league/myStandingsService';
+import { countPlayersPerInstance, STABLE_FILTERS } from '../services/standings/playerStables';
 import { getRecentTierChanges } from '../services/league/tierChangeFeedService';
 import { LeagueError, LeagueErrorCode } from '../errors';
 import { validateRequest, validated } from '../middleware/schemaValidator';
@@ -27,6 +28,8 @@ const standingsQuerySchema = z.object({
   instance: leagueInstanceId.optional(),
   page: z.coerce.number().int().positive().default(1),
   perPage: z.coerce.number().int().positive().max(100).default(50),
+  /** 'players': human players' robots only, each with its place among all robots (#595). */
+  stables: z.enum(STABLE_FILTERS).default('all'),
 });
 
 const instancesQuerySchema = z.object({ mode: robotModeSchema });
@@ -49,18 +52,19 @@ router.get('/my-standings', validateRequest({}), async (req: Request, res: Respo
 });
 
 /**
- * GET /api/leagues/:tier/standings?mode=league_1v1|koth|grand_melee&instance=&page=&perPage=
+ * GET /api/leagues/:tier/standings?mode=league_1v1|koth|grand_melee&instance=&page=&perPage=&stables=all|players
  * One tier (or one instance of it) of a robot league, ranked by LP, with each
- * row's zone and status from the executor's tier plan.
+ * row's zone and status from the executor's tier plan. `stables=players` lists
+ * human players' robots only, each with its place among all robots.
  */
 router.get(
   '/:tier/standings',
   ...validated({ params: leagueTierParamsSchema, query: standingsQuerySchema }, async (req: Request, res: Response, { params, query }) => {
     const tier = params.tier;
     assertTier(tier);
-    const { mode, instance, page, perPage } = query;
+    const { mode, instance, page, perPage, stables } = query;
 
-    const result = await getRobotLeagueStandings(mode, { tier, instance, page, perPage });
+    const result = await getRobotLeagueStandings(mode, { tier, instance, page, perPage, stables });
     res.set('Cache-Control', 'private, max-age=60');
     res.json({ data: result.rows, pagination: result.pagination, zoneMeta: result.zoneMeta });
   }),
@@ -68,7 +72,8 @@ router.get(
 
 /**
  * GET /api/leagues/:tier/instances?mode=league_1v1|koth|grand_melee
- * Every instance of a tier with its population, in instance-number order.
+ * Every instance of a tier with its population and how many of its robots
+ * belong to human players, in instance-number order.
  */
 router.get(
   '/:tier/instances',
@@ -77,12 +82,16 @@ router.get(
     assertTier(tier);
     const { mode } = query;
 
-    const instances = await getInstancesForTier(tier, { mode, maxPerInstance: 100 });
+    const [instances, players] = await Promise.all([
+      getInstancesForTier(tier, { mode, maxPerInstance: 100 }),
+      countPlayersPerInstance(mode, tier),
+    ]);
     res.json(instances.map((instance) => ({
       leagueId: instance.leagueId,
       leagueTier: tier,
       currentRobots: instance.currentRobots,
       maxRobots: instance.maxRobots,
+      players: players.get(instance.leagueId) ?? 0,
     })));
   }),
 );

@@ -74,6 +74,8 @@ export function useWorkshopBuild({ robotId, values, academyLevels, costs, credit
   const [saving, setSaving] = useState(false);
 
   const loadTuning = useCallback(async (): Promise<void> => {
+    // The page passes 0 until the robot has loaded; there is nothing to fetch yet.
+    if (robotId <= 0) return;
     try {
       const state = await fetchTuningAllocation(robotId);
       setPool({ poolSize: state.poolSize, facilityLevel: state.facilityLevel });

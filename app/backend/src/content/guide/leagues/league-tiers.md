@@ -2,7 +2,7 @@
 title: "League Tiers & Instances"
 description: "The six competitive tiers in Armoured Souls — from Bronze to Champion — and how the instance system keeps leagues balanced and competitive."
 order: 1
-lastUpdated: "2026-10-14"
+lastUpdated: "2026-11-11"
 relatedArticles:
   - leagues/matchmaking
   - leagues/league-points
@@ -81,7 +81,7 @@ Higher tiers mean bigger rewards. Each tier has a fixed base win reward — the 
 | Diamond | ₡115,000 | ₡24,000 |
 | Champion | ₡225,000 | ₡45,000 |
 
-These base rewards are further modified by your stable's [Prestige](/guide/prestige-fame/prestige-ranks) level, which applies a bonus multiplier (up to +50%) to all battle winnings.
+These rewards are the same for every stable: [Prestige](/guide/prestige-fame/prestige-ranks) doesn't change what a battle pays.
 
 ```callout-tip
 The jump from Bronze to Silver doubles your base win reward. Even a single tier promotion has a meaningful impact on your stable's income. See the [Economy Guide](/guide/economy/battle-rewards) for the full breakdown of how rewards are calculated.

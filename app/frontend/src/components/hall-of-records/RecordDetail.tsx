@@ -16,6 +16,8 @@ export interface RecordDetailProps {
   notInListNote?: string | null;
   /** Heading level of the record title (3 when the list sits under its own h2). */
   headingLevel?: 2 | 3;
+  /** Players' lists (#595): the top 10 players, each with its place among every stable. */
+  playersOnly?: boolean;
 }
 
 const RANK_BADGES: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
@@ -90,7 +92,7 @@ function DetailRow({ row, ranked, viewerId }: { row: RecordRow; ranked: boolean;
  */
 export function RecordDetail({
   record, siblings, variantKey, viewerId, backHref, detailHref,
-  notInListNote = 'Your stable is not in this top 10 yet.', headingLevel = 2,
+  notInListNote = 'Your stable is not in this top 10 yet.', headingLevel = 2, playersOnly = false,
 }: RecordDetailProps) {
   const Heading = headingLevel === 3 ? 'h3' : 'h2';
   const variant = record.variants.find((v) => v.key === variantKey) ?? record.variants[0];
@@ -167,7 +169,7 @@ export function RecordDetail({
       {variant ? (
         <section className="mt-4 overflow-hidden rounded-lg border border-white/10 bg-surface" aria-label={`${record.title}${variant.label ? `, ${variant.label}` : ''}`}>
           <div className="flex items-center justify-between border-b border-white/10 px-3 py-2 text-xs uppercase tracking-wide text-secondary sm:px-4">
-            <span>{record.ranked ? 'Top 10' : 'Most recent'}</span>
+            <span>{record.ranked ? (playersOnly ? 'Top 10 players' : 'Top 10') : (playersOnly ? 'Most recent, players' : 'Most recent')}</span>
             <span>{record.valueLabel}</span>
           </div>
           <ol>
@@ -178,6 +180,12 @@ export function RecordDetail({
         </section>
       ) : (
         <p className="mt-6 text-secondary">No one holds this record yet this season.</p>
+      )}
+
+      {playersOnly && record.ranked && variant && (
+        <p className="mt-3 text-xs text-secondary" data-testid="record-detail-players-note">
+          Players only. Places count every stable, so they don’t change when you filter.
+        </p>
       )}
 
       {record.ranked && variant && !mineInVariant && viewerId != null && notInListNote && (

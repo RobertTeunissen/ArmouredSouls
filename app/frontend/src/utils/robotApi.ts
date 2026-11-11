@@ -1,5 +1,6 @@
 import { api } from './api';
 import type { RobotAttribute } from '../../../shared/utils/robotAttributes';
+import type { SchedulingEligibilityReport } from '@shared/types';
 
 interface WeaponSlot {
   id: number;
@@ -173,6 +174,13 @@ export const fetchMyRobots = async (): Promise<Robot[]> => {
  */
 export const fetchRobotById = async (robotId: number): Promise<Robot> => {
   return api.get<Robot>(`/api/robots/${robotId}`);
+};
+
+/**
+ * Fetch which scheduling gates a robot still fails (weapon, events, tuning).
+ */
+export const fetchSchedulingEligibility = async (robotId: number, signal?: AbortSignal): Promise<SchedulingEligibilityReport> => {
+  return api.get<SchedulingEligibilityReport>(`/api/robots/${robotId}/scheduling-eligibility`, signal ? { signal } : undefined);
 };
 
 /**

@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v2.0
-**Date**: November 8, 2026
+**Version**: v2.1
+**Date**: November 11, 2026
 **Status**: ✅ Implemented
 
 ---
@@ -15,6 +15,7 @@
 - v1.3 - Added King of the Hill Records category (7 records) (March 18, 2026)
 - v1.4 - Spec #46: removed five degenerate record categories, scoped Most Damage per battle mode, restricted Biggest Upset to tournament modes and added summed-team-ELO team upsets, rounded the KotH zone metrics, labelled Career mode coverage, added the Win Streaks tab, added kills per match to Grand Melee (July 26, 2026)
 - v2.0 - Redesign (November 8, 2026): record board with one tile per record and a top-10 view per record, URL-addressable groups, "your places" for the viewer, links to every robot and stable; the payload is served from a background-refreshing cache warmed at start-up (a cold build took 9–10 s on ACC). Removed Narrowest Victory, Grand Melee Highest LP and four team duration/duplicate records; fixed the KotH win streak (it never reset), the KotH average zone score ranking, the per-battle figures of lifetime damage and destructions, and the missing league on two cards; generated bot stables no longer rank as richest. This document now describes v2.0 only; the v1.x feature catalogue is in git history.
+- v2.1 - "Stables: All | Players" filter (#595, November 11, 2026): with Players on, every record lists the players' top 10, each entry with its place among every stable (filtering never re-ranks). A second cached payload (`GET /api/records?stables=players`); the choice is shared with League Standings, remembered on the device and carried in the URL.
 
 ---
 
@@ -30,10 +31,10 @@
 |---|---|
 | Route | `app/backend/src/routes/records.ts` (`GET /api/records`) |
 | Payload and cache | `app/backend/src/services/records/hallOfRecordsService.ts` (`buildHallOfRecords`, `getHallOfRecords`, `warmHallOfRecords`, `invalidateHallOfRecords`), `app/backend/src/lib/refreshingCache.ts` |
-| Queries | `app/backend/src/services/records/recordsQueryService.ts` |
+| Queries | `app/backend/src/services/records/recordsQueryService.ts`; players' lists: `app/backend/src/services/records/recordScope.ts` (`loadPlayerSets`, `topPlaced`, `cutRanking`), `app/backend/src/services/standings/playerStables.ts` (the "Players" rule) |
 | Accolades | `app/backend/src/services/season/seasonArchiveService.ts` (`writeAccolades`) |
 | KotH streak | `app/backend/src/services/standings/standingsService.ts` (`awardKothPoints`), migration `20261108120000_rebuild_koth_win_streaks` |
-| Page | `app/frontend/src/pages/HallOfRecordsPage.tsx` (composition and URL state) |
+| Page | `app/frontend/src/pages/HallOfRecordsPage.tsx` (composition and URL state); Stables filter: `components/StableFilterControl.tsx`, `hooks/useStableFilter.ts`, `utils/stableFilter.ts` (shared with League Standings) |
 | Components | `app/frontend/src/components/hall-of-records/` (RecordBoard, RecordTile, RecordDetail, RecordGroupTabs, ScrollRow, YourPlacesStrip, RecordNames, RecordStableName, useHallOfRecords, types) |
 | View model | `app/frontend/src/utils/hallOfRecords.ts` (`buildRecordCatalogue`, `findMyPlaces`, `summariseMyPlaces`, `rankRows`, `tileFootprint`, `boardColumns`) |
 
@@ -49,7 +50,7 @@ Records are live, current-season data. When a season ends the top placements are
 
 ## Page structure
 
-1. **Header**: "Hall of Records", the season line ("Season 1 records · cycle 97 of 100 · updated after every cycle"; "preparation" during the preparation phase) and a link "Past seasons: Season Archive ›".
+1. **Header**: "Hall of Records", the season line ("Season 1 records · cycle 97 of 100 · updated after every cycle"; "preparation" during the preparation phase), the **Stables: All | Players** control (see below; full width on phones) and a link "Past seasons: Season Archive ›".
 2. **Your stable strip** (`YourPlacesStrip`): the viewer's stable name, "N records held · M top-10 places", the records held (or the best place when none is held), and a **Show only my places** toggle. "Records held" counts each record (or record mode) once, even when two of the stable's robots tie for its top spot. A stable with no place says "No top-10 places yet this season" and shows no toggle, unless the filter is already on (a bookmarked `mine=1` link), so it can always be switched off.
 3. **Group tabs** (`RecordGroupTabs`): All records, Robots, Single battles, Streaks, KotH & Melee, Stables. A group without any record gets no tab.
 4. **Record board** (`RecordBoard`): per group a heading with a one-line note, then a grid of tiles: 1 column on phones, 2 from `md`, and from `xl` 3 or 4 columns per group, whichever leaves fewer empty cells (`boardColumns`; six robot records fill two rows of three, not one and a half of four).
@@ -69,6 +70,19 @@ The group tabs, the record chips and the mode switcher (`ScrollRow`) are single 
 ### Full list (`RecordDetail`, `?record=<key>[&mode=<variant>]`)
 "← All records", title, scope line, chips for the other records of the group, a mode switcher for per-mode records (a static "Mode: …" line when only one mode is populated), and an ordered list of up to 10 rows: rank (🥇🥈🥉 for 1–3), holder, stable, context, battle report link, value. The viewer's rows are highlighted with a "You" chip; when none is present a note says so. An unknown record key falls back to the board.
 
+### Stables filter (#595)
+"Stables: All | Players" is the same control, with the same words, as on League Standings and in the admin portal. **Players** are human stables (`stableType = human`, not generated); Automatons and generated stables are left out.
+
+- **Players** shows, per record (and per mode), the top 10 entries a player holds, each with its **place among every stable**: a player's robot at #14 stays #14. The gaps are Automatons and bots. Rows that tie on the ranked value share the place of the first of them, as in the all-stables list.
+- Tiles show the best player's place before the value ("#14 412"); per-mode tiles show it per mode. A note under the strip reads "Each record lists the players' top 10. Places count every stable, so they don't change when you filter." with a **Show all stables** link. The full list's header reads "Top 10 players", with the same note under it.
+- Battle records are held by the side that holds the record: the dealer of the damage, the upset's underdog (the winner), the decisive victory's winners. A team side is one stable's team.
+- Latest champions is a log, not a ranking: with Players on it lists the 10 most recent tournaments a player won, without places.
+- The strip counts places in the players' top 10s ("N players' top-10 places"); "records held" still means place 1 among every stable.
+- With no player in any list: "No player holds a record place yet this season." and **Show all stables**.
+- Records with a leaderboard page (Most destructions, Highest fame, Highest prestige) still link to the unfiltered leaderboard; those pages fold into the Hall with #586.
+- The choice is stored on the device (`localStorage` `stableFilter`, shared with League Standings) and carried in the URL (`stables=players`). A remembered Players is written into the URL on load (replace), so a shared link shows what the sender saw. While the other payload loads, the previous one stays on screen and is labelled by what it is (`stables` in the payload), not by the control.
+- The Season Archive is not filtered: its accolades keep no stable type.
+
 ### Links
 - Robot names link to `robotPath(id, isOwner)`: the owner's Workshop for their own robots, the public Robot Profile for everyone else.
 - Stable names link to `/stables/:userId` through `OwnerNameLink` (Automaton_Badge included); names without an id render through `RecordStableName`.
@@ -76,7 +90,7 @@ The group tabs, the record chips and the mode switcher (`ScrollRow`) are single 
 - Most destructions, Highest fame and Highest prestige link to `/leaderboards/losses`, `/leaderboards/fame` and `/leaderboards/prestige` instead of a top-10 view: those pages already rank the full list.
 
 ### URL state
-`group` (board filter), `record` and `mode` (full list), `mine=1` (only records the viewer appears in). Changing the group or the "mine" filter clears `record` and `mode`.
+`group` (board filter), `record` and `mode` (full list), `mine=1` (only records the viewer appears in), `stables=players` (players' lists). Changing the group or the "mine" filter clears `record` and `mode`; changing the Stables filter keeps them, so an open list switches in place.
 
 ---
 
@@ -137,9 +151,10 @@ Every list is the top 10. Rows that tie on the ranked value share a rank ("1, 1,
 
 ## API
 
-`GET /api/records` (authenticated) returns:
+`GET /api/records[?stables=all|players]` (authenticated; default `all`, anything else is a 400) returns:
 
 ```text
+stables                        'all' | 'players'
 combat.mostDamageInBattle      { [mode]: [{ battleId, damageDealt, robot, opponent?, durationSeconds, date }] }
 upsets.biggestUpset            [{ battleId, eloDifference, underdog, favorite, date }]
 upsets.biggestTeamUpset        [{ battleId, battleType, eloDifference, underdog: { robots, teamEloBefore }, favorite, date }]
@@ -154,7 +169,7 @@ tournamentChampions1v1 | 2v2 | 3v3 (omitted when empty)
 timestamp
 ```
 
-v2.0 removed `combat.narrowestVictory`, `economic.mostExpensiveBattle`, `grandMelee.highestLp`, `career.mostKills[].killRate` and the team keys `fastestVictory`, `longestSurvival`, `mostDamageDealt`, `longestNonDrawBattle` (team decisive victories now return `winners`/`losers` instead of `team1`/`team2`). It added `userId` on every owner, `allModesBattleCount` and `killsPerBattle` on career rows, `currentWinStreak`/`isActive` on KotH streaks, and `ownerUserId`/`championRobotId` on champions. The SPA is the only client.
+v2.0 removed `combat.narrowestVictory`, `economic.mostExpensiveBattle`, `grandMelee.highestLp`, `career.mostKills[].killRate` and the team keys `fastestVictory`, `longestSurvival`, `mostDamageDealt`, `longestNonDrawBattle` (team decisive victories now return `winners`/`losers` instead of `team1`/`team2`). It added `userId` on every owner, `allModesBattleCount` and `killsPerBattle` on career rows, `currentWinStreak`/`isActive` on KotH streaks, and `ownerUserId`/`championRobotId` on champions. v2.1 added `stables` and, in the players' payload only, `place` on every ranked entry (its shared place among every stable); the all-stables payload has no `place`, its position is the place. The SPA is the only client.
 
 ## Performance and caching
 
@@ -164,7 +179,8 @@ A cold build of the payload took 9–10 s on ACC (`request_metrics`, `/api/recor
 - **Warm-up**: the server builds the payload 5 s after start-up, so the first visitor after a deploy does not wait either.
 - **Season rollover**: once the old season is purged and the next one opened, the rollover calls `invalidateHallOfRecords()`. That drops the payload and discards any build still in flight (it may have read half-purged data), so the Hall never shows the previous season's records, or links to deleted robots and battles, under the new season's heading. The first visitor after the rollover waits for one build.
 - **Narrower reads**: Most damage no longer loads the battles' combat logs (`battle_log_zst`, ~4.8 MB per build across the 60 battles on ACC) or full robot rows; every robot a record names is read as id, name and stable only; tournament champions load all winners of a type in one query instead of one per tournament.
-- Each build logs `[HallOfRecords] Built in N ms`.
+- **Two payloads** (v2.1): all stables and players, each in its own `RefreshingCache`; start-up warms them one after the other, and the rollover invalidates both. The players' build loads the players' robot, team and stable ids once (`loadPlayerSets`). Robot, stable and standings rankings (about a thousand rows each on ACC) are read in full as ids and sort values, and the first 10 player entries keep their index-based shared place (`topPlaced`). Battle rankings (every battle) stay in SQL: `cutRanking` adds `RANK()` over the full ranking and keeps the player-held rows. On a local copy at ACC scale (1 M `battle_participants`, 1,130 robots, 500 stables) both builds took about 0.3 s, and the places matched independent counts; the ACC figure is in the build log once Season 2 battles exist.
+- Each build logs `[HallOfRecords] Built (all|players) in N ms`.
 
 ## Accolades
 
@@ -190,8 +206,8 @@ The Season Archive (`/seasons`) shows each completed season's records with the s
 
 ## Tests
 
-- Backend: `src/services/standings/__tests__/standingsService.test.ts` (KotH streak reset), `src/services/records/__tests__/careerMostBattles.test.ts` (per-battle figures), `tests/records.test.ts` (removed keys, generated stables), `tests/integration/automatonPublicExposure.test.ts` (owner type and id on every record), `tests/integration/kothWinStreakRebuildMigration.test.ts` (migration).
+- Backend: `src/services/standings/__tests__/standingsService.test.ts` (KotH streak reset), `src/services/records/__tests__/careerMostBattles.test.ts` (per-battle figures), `tests/records.test.ts` (removed keys, generated stables, the players' lists and places for robot, battle, upset and stable records, `?stables=` validation), `tests/integration/automatonPublicExposure.test.ts` (owner type and id on every record), `tests/integration/kothWinStreakRebuildMigration.test.ts` (migration).
 - Backend cache: `src/lib/__tests__/refreshingCache.test.ts` (including invalidation discarding a build in flight), `src/services/season/__tests__/seasonRolloverRun.test.ts` (rollover invalidates the Hall once the new season is open).
 - Season Archive: `utils/__tests__/seasonArchiveRecords.test.ts`, `pages/__tests__/SeasonArchivePage.test.tsx`, `pages/__tests__/AutomatonBadgePages.test.tsx`, and the archive block of the Playwright spec below.
 - Playwright: `tests/e2e/hall-of-records.spec.ts` (chromium project). Against the seeded backend: the page loads, a record opens its top 10 and returns, the Social menu reaches it. With `/api/records` answered from an ACC-like fixture (`tests/e2e/helpers/hallOfRecords.ts`): every group, the viewer's places, Automaton badge and bot chip, group and "mine" filters in the URL, mode deep links and switching, the viewer's highlighted row, the leaderboard link, robot and stable links, and at 320 and 390 px no horizontal overflow, 44 px touch targets, collapsed groups and the scroll fade.
-- Frontend: `utils/__tests__/hallOfRecords.test.ts`, `components/hall-of-records/__tests__/RecordTile.test.tsx`, `RecordBoard.test.tsx`, `ScrollRow.test.tsx`, `AutomatonRecordBadge.test.tsx`, `pages/__tests__/HallOfRecordsPage.test.tsx`.
+- Frontend: `utils/__tests__/hallOfRecords.test.ts`, `components/hall-of-records/__tests__/RecordTile.test.tsx`, `RecordBoard.test.tsx`, `ScrollRow.test.tsx`, `AutomatonRecordBadge.test.tsx`, `pages/__tests__/HallOfRecordsPage.test.tsx` (including the Stables filter: switching, the remembered choice, real places in tiles and the full list, the empty players' state).

@@ -116,6 +116,33 @@ test.describe('League Standings — instance (fixture)', () => {
     await expect(page.getByRole('columnheader', { name: 'Wins / matches' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'ELO' })).toHaveCount(0);
   });
+
+  test('Stables: Players keeps only players\' robots at their real places, and is remembered (#595)', async ({ page }) => {
+    await openStandings(page, '/league-standings?tier=diamond&instance=diamond_1');
+    await expect(page.getByTestId('standings-row')).toHaveCount(67);
+
+    await page.getByRole('group', { name: 'Stables' }).getByRole('button', { name: 'Players' }).click();
+    await expect(page).toHaveURL(/stables=players/);
+    const rows = page.getByTestId('standings-row');
+    await expect(rows).toHaveCount(3);
+    await expect(rows.first()).toContainText('StommeAap');
+    await expect(rows.first().getByRole('cell').first()).toContainText('3');
+    await expect(page.getByTestId('zone-band-up')).toHaveCount(0);
+    await expect(page.getByTestId('players-summary')).toContainText('3 players among 67 robots in Diamond 1');
+    await expect(page.getByTestId('instance-chip-all')).toContainText('All of Diamond · 3 players');
+
+    // The whole tier keeps the filter and names each row's instance.
+    await page.getByTestId('instance-chip-all').click();
+    await expect(page).toHaveURL(/tier=diamond&stables=players|stables=players.*tier=diamond/);
+    await expect(page.getByRole('columnheader', { name: 'Group' })).toBeVisible();
+
+    // Remembered on this device: a plain link opens on Players again.
+    await openStandings(page, '/league-standings?tier=diamond&instance=diamond_1');
+    await expect(page).toHaveURL(/stables=players/);
+    await page.getByRole('button', { name: 'Show all stables' }).click();
+    await expect(page).not.toHaveURL(/stables=/);
+    await expect(page.getByTestId('standings-row')).toHaveCount(67);
+  });
 });
 
 for (const width of [320, 390]) {
@@ -141,6 +168,16 @@ for (const width of [320, 390]) {
       // The selected tier chip is scrolled into view; the league cards fade where there are more.
       await expect(page.getByTestId('tier-chip-diamond')).toBeInViewport();
       await expect(page.getByRole('navigation', { name: 'Leagues' }).locator('..').getByTestId('scroll-fade-end')).toBeVisible();
+    });
+
+    test('fits the screen with Stables: Players on, the control full width', async ({ page }) => {
+      await openStandings(page, '/league-standings?tier=diamond&instance=diamond_1&stables=players');
+      await expect(page.getByTestId('players-summary')).toBeVisible();
+
+      const control = await page.getByTestId('stable-filter').boundingBox();
+      expect(control?.width ?? 0).toBeGreaterThanOrEqual(width - 32 - 1);
+      await expectNoHorizontalOverflow(page, ROOT);
+      await expectTouchTargets(page, ROOT);
     });
   });
 }

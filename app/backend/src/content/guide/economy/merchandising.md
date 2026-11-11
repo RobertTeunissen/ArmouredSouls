@@ -2,7 +2,7 @@
 title: "Merchandising Income"
 description: "How your stable's Prestige drives passive merchandising income — the more renowned your stable, the more fans buy your merchandise."
 order: 4
-lastUpdated: "2026-10-17"
+lastUpdated: "2026-11-11"
 relatedArticles:
   - economy/credits-and-income
   - economy/streaming-revenue
@@ -71,7 +71,7 @@ As your Prestige grows, merchandising becomes a major income source. A Level 5 H
 
 | Income Source | Depends On | Consistency | Scaling |
 |---------------|-----------|-------------|---------|
-| Battle Winnings | League tier, win/loss, Prestige | Variable per cycle | Scales with tier promotion |
+| Battle Winnings | League tier, win/loss | Variable per cycle | Scales with tier promotion |
 | Merchandising | Prestige per robot slot, Merchandising Hub | Very consistent | Scales with Prestige and Hub level |
 | Streaming | Battles, Fame, Streaming Studio | Moderate consistency | Scales with battle count, Fame and activity |
 

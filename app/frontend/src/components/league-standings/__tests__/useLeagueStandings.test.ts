@@ -12,7 +12,7 @@ vi.mock('../../../utils/leagueStandingsApi', () => ({
 }));
 
 const req = (over: Partial<StandingsPageRequest> = {}): StandingsPageRequest =>
-  ({ mode: '1v1', tier: 'diamond', instance: 'diamond_1', page: 1, perPage: 100, ...over });
+  ({ mode: '1v1', tier: 'diamond', instance: 'diamond_1', page: 1, perPage: 100, stables: 'all', ...over });
 
 const page = (label: string): StandingsPage => ({
   rows: [{ rank: 1, entityId: 1, name: label } as StandingsPage['rows'][number]],
@@ -30,7 +30,7 @@ function deferred<T>() {
 beforeEach(() => {
   fetchStandingsPage.mockReset();
   fetchInstances.mockReset();
-  fetchInstances.mockResolvedValue([{ id: 'diamond_1', size: 67 }]);
+  fetchInstances.mockResolvedValue([{ id: 'diamond_1', size: 67, players: 4 }]);
 });
 
 describe('useStandingsPage', () => {
@@ -87,5 +87,22 @@ describe('useStandingsPage', () => {
     await act(async () => { next.resolve(page('page 2')); await next.promise; });
     await waitFor(() => expect(result.current.stale).toBe(false));
     expect(result.current.data?.rows[0].name).toBe('page 2');
+  });
+
+  it('treats the Players filter as another view and asks the API for it (#595)', async () => {
+    fetchStandingsPage.mockResolvedValueOnce(page('all stables'));
+    const { result, rerender } = renderHook(({ request }) => useStandingsPage(request), {
+      initialProps: { request: req() },
+    });
+    await waitFor(() => expect(result.current.data?.rows[0].name).toBe('all stables'));
+
+    const players = deferred<StandingsPage>();
+    fetchStandingsPage.mockReturnValueOnce(players.promise);
+    rerender({ request: req({ stables: 'players' }) });
+    expect(result.current.data).toBeNull();
+    expect(fetchStandingsPage).toHaveBeenLastCalledWith(expect.objectContaining({ stables: 'players' }));
+
+    await act(async () => { players.resolve(page('players only')); await players.promise; });
+    await waitFor(() => expect(result.current.data?.rows[0].name).toBe('players only'));
   });
 });

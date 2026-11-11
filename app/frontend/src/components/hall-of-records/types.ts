@@ -6,6 +6,15 @@ import type { StableType } from '../../types/stable';
 
 // ─── API payload ────────────────────────────────────────────────────
 
+/**
+ * Players' lists only ("Stables: Players", #595): the entry's place among every
+ * stable's entries. Absent in the all-stables payload, where the position is
+ * the place.
+ */
+export interface RecordPlace {
+  place?: number;
+}
+
 /** The owning stable as every record ships it. */
 export interface RecordOwner {
   /** The stable's user id (links to `/stables/:id`); null when unknown. */
@@ -22,7 +31,7 @@ export interface RecordRobot extends RecordOwner {
 }
 
 /** Robot-level list entry (career, KotH, Grand Melee, fame). */
-export interface RobotRecordBase extends RecordOwner {
+export interface RobotRecordBase extends RecordOwner, RecordPlace {
   robotId: number;
   robotName: string;
 }
@@ -47,7 +56,7 @@ export const WIN_STREAK_MODES = ['league_1v1', 'league_2v2', 'league_3v3', 'tag_
 
 export type WinStreakMode = typeof WIN_STREAK_MODES[number];
 
-export interface MostDamageInBattle {
+export interface MostDamageInBattle extends RecordPlace {
   battleId: number;
   damageDealt: number;
   robot: RecordRobot;
@@ -57,7 +66,7 @@ export interface MostDamageInBattle {
   date: string;
 }
 
-export interface BiggestUpset {
+export interface BiggestUpset extends RecordPlace {
   battleId: number;
   eloDifference: number;
   underdog: RecordRobot & { eloBefore: number };
@@ -66,7 +75,7 @@ export interface BiggestUpset {
 }
 
 /** Team tournament upset, from summed team ELO (Spec #46 R4.7). */
-export interface BiggestTeamUpset {
+export interface BiggestTeamUpset extends RecordPlace {
   battleId: number;
   battleType: string;
   eloDifference: number;
@@ -123,7 +132,7 @@ export interface HighestFame extends RobotRecordBase {
   elo: number;
 }
 
-export interface StableRecordBase extends RecordOwner {
+export interface StableRecordBase extends RecordOwner, RecordPlace {
   userId: number;
   prestige: number;
   robotCount: number;
@@ -174,7 +183,7 @@ export interface KothZoneDominator extends RobotRecordBase {
   kothMatches: number;
 }
 
-export interface TeamDecisiveVictory {
+export interface TeamDecisiveVictory extends RecordPlace {
   battleId: number;
   /** HP left on the winning side minus the losing side. */
   hpDifference: number;
@@ -198,7 +207,7 @@ export interface GrandMeleeMostKills extends RobotRecordBase {
   killsPerMatch: number;
 }
 
-export interface WinStreakEntry extends RecordOwner {
+export interface WinStreakEntry extends RecordOwner, RecordPlace {
   entityId: number;
   /** Robot name for `league_1v1`, team name for the three team modes. */
   entityName: string;
@@ -225,6 +234,8 @@ export interface TournamentChampionRecord {
 }
 
 export interface RecordsData {
+  /** Which payload this is: every stable, or players only (#595). */
+  stables?: 'all' | 'players';
   combat: {
     mostDamageInBattle: Partial<Record<DamageRecordMode, MostDamageInBattle[]>>;
   };

@@ -95,7 +95,35 @@ export async function signedInStable(page: Page, request: APIRequestContext): Pr
   return { userId: profile.id, username: profile.stableName || profile.username };
 }
 
-/** Answer `/api/records` with the fixture for this page. */
+/**
+ * The players' payload (`?stables=players`, #595): only human stables'
+ * entries, each with its place among every stable. The viewer's GekkeAap is
+ * #14 on ELO; the Automaton and bot entries are gone.
+ */
+export function playersRecordsFixture(viewer: { userId: number; username: string }) {
+  const all = recordsFixture(viewer);
+  const ME = { userId: viewer.userId, username: viewer.username, stableType: 'human' };
+  const HM = { userId: 900001, username: 'Hit Machine', stableType: 'human' };
+  return {
+    ...all,
+    stables: 'players',
+    upsets: { biggestUpset: all.upsets.biggestUpset.map((e) => ({ ...e, place: 1 })), biggestTeamUpset: [] },
+    career: {
+      ...all.career,
+      highestElo: [
+        { robotId: 12, robotName: 'HitHard', ...HM, elo: 2393, wins: 470, losses: 20, draws: 5, place: 1 },
+        { robotId: 11, robotName: 'GekkeAap', ...ME, elo: 1980, wins: 280, losses: 270, draws: 9, place: 14 },
+      ],
+    },
+    koth: { ...all.koth, mostZoneTime: [] },
+    timestamp: all.timestamp,
+  };
+}
+
+/** Answer `/api/records` (both Stables filters) with the fixtures for this page. */
 export async function mockRecords(page: Page, viewer: { userId: number; username: string }): Promise<void> {
-  await page.route('**/api/records', (route) => route.fulfill({ json: recordsFixture(viewer) }));
+  await page.route(/\/api\/records(\?.*)?$/, (route) => {
+    const players = new URL(route.request().url()).searchParams.get('stables') === 'players';
+    return route.fulfill({ json: players ? playersRecordsFixture(viewer) : recordsFixture(viewer) });
+  });
 }

@@ -33,6 +33,9 @@ jest.mock('../../../lib/prisma', () => ({
       upsert: jest.fn(),
       deleteMany: jest.fn(),
     },
+    facility: {
+      findFirst: jest.fn(),
+    },
   },
 }));
 
@@ -70,6 +73,7 @@ describe('robotSchedulingEligibilityService — Property-Based Tests', () => {
             (mockedPrisma.robot.findUniqueOrThrow as jest.Mock).mockResolvedValue({
               id: 1,
               loadoutType: 'single',
+              userId: 1,
               mainWeaponId: weaponCheck ? 1 : null,
               offhandWeaponId: null,
               mainWeapon: weaponCheck ? { id: 1 } : null,
@@ -85,8 +89,10 @@ describe('robotSchedulingEligibilityService — Property-Based Tests', () => {
 
             (mockedPrisma.subscription.count as jest.Mock).mockResolvedValue(subscriptionCount);
 
+            // Tuning Bay level 0 → pool of 10; "tuned" = the whole pool allocated.
+            (mockedPrisma.facility.findFirst as jest.Mock).mockResolvedValue(null);
             (mockedPrisma.tuningAllocation.findUnique as jest.Mock).mockResolvedValue(
-              hasTuning ? { id: 1, robotId: 1 } : null,
+              hasTuning ? { id: 1, robotId: 1, combatPower: '10.00' } : null,
             );
 
             const report = await computeSchedulingEligibility(1);
@@ -118,6 +124,7 @@ describe('robotSchedulingEligibilityService — Property-Based Tests', () => {
             (mockedPrisma.robot.findUniqueOrThrow as jest.Mock).mockResolvedValue({
               id: 1,
               loadoutType: 'single',
+              userId: 1,
               mainWeaponId: weaponCheck ? 1 : null,
               offhandWeaponId: null,
               mainWeapon: weaponCheck ? { id: 1 } : null,
@@ -133,8 +140,10 @@ describe('robotSchedulingEligibilityService — Property-Based Tests', () => {
 
             (mockedPrisma.subscription.count as jest.Mock).mockResolvedValue(subscriptionCount);
 
+            // Tuning Bay level 0 → pool of 10; "tuned" = the whole pool allocated.
+            (mockedPrisma.facility.findFirst as jest.Mock).mockResolvedValue(null);
             (mockedPrisma.tuningAllocation.findUnique as jest.Mock).mockResolvedValue(
-              hasTuning ? { id: 1, robotId: 1 } : null,
+              hasTuning ? { id: 1, robotId: 1, combatPower: '10.00' } : null,
             );
 
             const report = await computeSchedulingEligibility(1);
@@ -171,6 +180,7 @@ describe('robotSchedulingEligibilityService — Property-Based Tests', () => {
             (mockedPrisma.robot.findUniqueOrThrow as jest.Mock).mockResolvedValue({
               id: 1,
               loadoutType: 'single',
+              userId: 1,
               mainWeaponId: weaponCheck ? 1 : null,
               offhandWeaponId: null,
               mainWeapon: weaponCheck ? { id: 1 } : null,
@@ -186,8 +196,10 @@ describe('robotSchedulingEligibilityService — Property-Based Tests', () => {
 
             (mockedPrisma.subscription.count as jest.Mock).mockResolvedValue(subscriptionCount);
 
+            // Tuning Bay level 0 → pool of 10; "tuned" = the whole pool allocated.
+            (mockedPrisma.facility.findFirst as jest.Mock).mockResolvedValue(null);
             (mockedPrisma.tuningAllocation.findUnique as jest.Mock).mockResolvedValue(
-              hasTuning ? { id: 1, robotId: 1 } : null,
+              hasTuning ? { id: 1, robotId: 1, combatPower: '10.00' } : null,
             );
 
             // Clear call counts before the function under test

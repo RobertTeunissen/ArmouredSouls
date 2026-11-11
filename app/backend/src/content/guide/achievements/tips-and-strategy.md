@@ -2,7 +2,7 @@
 title: "Tips & Strategy"
 description: "Efficient paths to earning achievements — quick wins for new players, mid-game targets, and long-term goals for completionists."
 order: 4
-lastUpdated: "2026-11-06"
+lastUpdated: "2026-11-11"
 relatedArticles:
   - achievements/achievement-system
   - achievements/achievement-catalog
@@ -44,7 +44,6 @@ Once you're past the basics, these become your next targets:
 
 ### Economy
 - **"Skynet Is Online"** (3 robots) — Expand your roster when your economy supports it.
-- **"Arsenal"** (10 weapons) — Buy weapons as they appear in the shop. Don't hoard credits.
 
 ### Prestige & Fame
 - **"15 Minutes of Fame"** (100 fame on a robot) — Your most-active robot will hit Known tier within a few weeks.
@@ -68,7 +67,7 @@ These take sustained commitment. Here's how to approach them:
 You don't need to win a tournament to earn from it. **"Round One… Fight!"** pays for any tournament match you win, **"The Final Countdown"** for reaching a semi-final, and **"I've Got a Bad Feeling About This"** for losing the final.
 
 ```callout-warning
-Don't sacrifice your economy chasing Hard achievements. A stable that goes bankrupt trying to own 5 robots simultaneously ("Robot Army") is worse off than one that grows steadily. Achievements reward patience.
+Don't sacrifice your economy chasing achievements. Owning more robots or weapons than you need pays nothing extra: "Robot Army", "Arsenal" and the other big-stable milestones are Trophies. A stable that grows steadily beats one that goes bankrupt buying for a badge.
 ```
 
 ## Losing Well
@@ -91,7 +90,7 @@ These are the rare ones. Don't stress about them — they're meant to be aspirat
 
 ## Trophies — Bragging Rights
 
-Trophies pay no credits or prestige, but they're the rarest badges to pin on your stable: winning tournaments ("There Can Be Only One", "Thunderdome" and the 2v2/3v3 tournament wins), **"We Are the Champions"** (Champion league), **"The Chosen One"** (1800 ELO), **"Look What They Need to Mimic a Fraction of Our Power"** (15 league wins in a row) and **"Legendary"** (25,000 prestige).
+Trophies pay no credits or prestige, but they're the rarest badges to pin on your stable: winning tournaments ("There Can Be Only One", "Thunderdome" and the 2v2/3v3 tournament wins), **"We Are the Champions"** (Champion league), **"The Chosen One"** (1800 ELO), **"Look What They Need to Mimic a Fraction of Our Power"** (15 league wins in a row) and **"Legendary"** (25,000 prestige). The big-stable milestones are Trophies too: **"Robot Army"** and **"Rise of the Machines"** (5 and 7 robots), **"Arsenal"** (10 weapons), **"Legendary Smith"**, **"Forge Master"**, **"Master Craftsman"** and **"Overclocked"**.
 
 ## Secret Achievement Hints
 

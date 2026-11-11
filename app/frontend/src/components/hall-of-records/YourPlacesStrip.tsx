@@ -6,6 +6,8 @@ export interface YourPlacesStripProps {
   summary: MyPlacesSummary;
   onlyMine: boolean;
   onToggleOnlyMine: () => void;
+  /** Players' lists (#595): places count in the players' top 10s. */
+  playersOnly?: boolean;
 }
 
 function placeText(place: MyPlace): string {
@@ -18,11 +20,12 @@ function placeText(place: MyPlace): string {
  * The viewer's stable on the board: how many records it holds, how many top-10
  * places, and a filter that shows only the records it appears in.
  */
-export function YourPlacesStrip({ stableName, summary, onlyMine, onToggleOnlyMine }: YourPlacesStripProps) {
+export function YourPlacesStrip({ stableName, summary, onlyMine, onToggleOnlyMine, playersOnly = false }: YourPlacesStripProps) {
   const { held, placeCount, best } = summary;
+  const top10 = playersOnly ? 'players’ top-10' : 'top-10';
   const headline = placeCount === 0
-    ? 'No top-10 places yet this season'
-    : `${held.length} ${held.length === 1 ? 'record' : 'records'} held · ${placeCount} top-10 ${placeCount === 1 ? 'place' : 'places'}`;
+    ? `No ${top10} places yet this season`
+    : `${held.length} ${held.length === 1 ? 'record' : 'records'} held · ${placeCount} ${top10} ${placeCount === 1 ? 'place' : 'places'}`;
 
   return (
     <section

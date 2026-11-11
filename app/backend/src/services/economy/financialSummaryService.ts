@@ -8,7 +8,6 @@ import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import {
   calculateDailyPassiveIncome,
   calculateTotalDailyOperatingCosts,
-  getPrestigeMultiplier,
 } from '../../utils/economyCalculations';
 import type { FinancialSummary } from '../../shared/types';
 
@@ -27,6 +26,5 @@ export async function getFinancialSummary(userId: number): Promise<FinancialSumm
     dailyOperatingCosts: operatingCosts.total,
     dailyPassiveIncome: passiveIncome.total,
     netPassiveIncome: passiveIncome.total - operatingCosts.total,
-    prestigeMultiplier: getPrestigeMultiplier(user.prestige),
   };
 }

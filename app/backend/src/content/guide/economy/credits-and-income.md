@@ -2,7 +2,7 @@
 title: "Credits, Income & the Finance Center"
 description: "Understand Credits, earned income, investments, costs, and how the Finance Center explains each financial cycle."
 order: 1
-lastUpdated: "2026-10-17"
+lastUpdated: "2026-11-11"
 relatedArticles:
   - economy/battle-rewards
   - economy/merchandising
@@ -172,7 +172,7 @@ See [Daily Financial Cycle](/guide/economy/daily-financial-cycle) for the schedu
 
 ## What’s Next?
 
-- [Battle Rewards](/guide/economy/battle-rewards) — Mode and tier rewards plus Prestige multiplier
+- [Battle Rewards](/guide/economy/battle-rewards) — Mode and tier rewards for wins, losses and byes
 - [Operating Costs & Repairs](/guide/economy/repair-costs) — Actual repair charges and operating costs
 - [Merchandising](/guide/economy/merchandising) — Prestige per roster capacity
 - [Streaming Revenue](/guide/economy/streaming-revenue) — Per-robot, per-battle income

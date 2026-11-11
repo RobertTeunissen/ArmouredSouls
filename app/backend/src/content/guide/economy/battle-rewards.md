@@ -1,8 +1,8 @@
 ---
 title: "Battle Reward Scaling"
-description: "How battle winnings scale by league tier from Bronze through Champion, and how Prestige bonus multipliers increase your earnings."
+description: "How battle winnings scale by league tier from Bronze through Champion, what a win, a loss and a bye pay, and why Prestige doesn't change the amount."
 order: 2
-lastUpdated: "2026-10-17"
+lastUpdated: "2026-11-11"
 relatedArticles:
   - economy/credits-and-income
   - leagues/league-tiers
@@ -13,7 +13,7 @@ relatedArticles:
 
 ## Overview
 
-Battle winnings are your primary income source in Armoured Souls. Every league battle and tournament match generates Credits, with the amount determined by your robot's **league tier** and your stable's **Prestige level**. Climbing to higher tiers is the single most impactful thing you can do for your stable's finances.
+Battle winnings are your primary income source in Armoured Souls. Every league battle and tournament match generates Credits, with the amount determined by your robot's **league tier** and the result. A win in a tier pays every stable the same. Climbing to higher tiers is the single most impactful thing you can do for your stable's finances.
 
 ![League tier reward scaling](/images/guide/economy/league-tier-reward-scaling.png)
 
@@ -27,7 +27,7 @@ Each league tier has a fixed base win reward — the amount a winner earns per b
 | **Silver** | ₡15,000 | ₡3,000 | 2× |
 | **Gold** | ₡30,000 | ₡6,000 | 4× |
 | **Platinum** | ₡60,000 | ₡12,000 | 8× |
-| **Diamond** | ₡115,000 | ₡24,000 | ~15× |
+| **Diamond** | ₡115,000 | ₡23,000 | ~15× |
 | **Champion** | ₡225,000 | ₡45,000 | 30× |
 
 ```callout-tip
@@ -38,8 +38,11 @@ The jump between tiers is substantial. Promoting even one robot from Bronze to S
 
 Every battle participant earns credits. The outcome determines how much:
 
-- **Victory** — You earn the full base win reward for your tier
-- **Loss** — You earn the participation reward (20% of your tier's base win reward)
+- **Victory** — The base win reward for your tier plus the participation reward (a Gold win pays ₡36,000)
+- **Draw** — The participation reward
+- **Loss** — The participation reward (20% of your tier's base win reward)
+
+Every robot that fights also earns [streaming revenue](/guide/economy/streaming-revenue), win or lose. It grows with the robot's battles, Fame and your Streaming Studio, so in the lower tiers it is a large part of what a loss pays.
 
 Even a loss generates income. Your robots are professional fighters — they get paid for showing up, win or lose. But winning consistently is the path to financial growth.
 
@@ -61,24 +64,9 @@ No combat is simulated for a bye, so your robot takes no damage and you get no r
 
 Byes exist so that a subscription always returns something. If you allocated a Booking Office slot to an event, a quiet day should not mean a wasted slot — see [Booking Office](/guide/facilities/booking-office).
 
-## Prestige Bonus Multipliers
+## Prestige Doesn't Change Battle Rewards
 
-Your stable's **Prestige** level applies a bonus multiplier to all battle winnings. This multiplier stacks on top of the tier-based reward, making Prestige one of the most valuable long-term investments.
-
-| Prestige Rank | Bonus Effect |
-|---------------|-------------|
-| **Novice** (0) | No bonus — baseline earnings |
-| **Established** (1,000) | +10% to all battle winnings |
-| **Veteran** (5,000) | +20% to all battle winnings |
-| **Elite** (10,000) | +30% to all battle winnings |
-| **Champion** (25,000) | +40% to all battle winnings |
-| **Legendary** (50,000) | +50% to all battle winnings |
-
-The Prestige bonus is applied after the base tier reward is calculated. A Legendary-prestige stable fighting in Champion tier earns substantially more per battle than a Novice-prestige stable in the same tier.
-
-```callout-tip
-Prestige grows naturally as your robots compete in higher tiers. You don't need to do anything special — just keep fighting and promoting. Over time, the Prestige bonus compounds with tier rewards to create exponential income growth.
-```
+Battle rewards depend on the tier and the result, never on your stable's Prestige. Until Season 2, 1v1 league wins paid up to 50% extra to stables with a lot of Prestige; that bonus was removed because it paid the stables already ahead more for the same win. Prestige still unlocks facility levels and raises [merchandising income](/guide/economy/merchandising).
 
 ## Maximizing Battle Income
 
@@ -91,10 +79,6 @@ Each tier promotion is a massive income boost. Focus on meeting [promotion requi
 ### Run Multiple Robots
 
 More robots means more battles per cycle, which means more total income. Three robots in Silver earn more total Credits than one robot in Gold, though the single Gold robot has lower maintenance costs.
-
-### Build Prestige
-
-Prestige multipliers apply to every battle across your entire stable. Even a small Prestige bonus adds up quickly when multiplied across all your robots' battles every cycle.
 
 ### Win More Often
 
