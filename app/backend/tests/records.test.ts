@@ -5,7 +5,15 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import recordsRoutes from '../src/routes/records';
-import { createTestUser, deleteTestUser } from './testHelpers';
+import { errorHandler } from '../src/middleware/errorHandler';
+import { loadPlayerSets } from '../src/services/records/recordScope';
+import {
+  fetchCareerRecords,
+  fetchCombatRecords,
+  fetchPrestigeRecords,
+  fetchUpsetRecords,
+} from '../src/services/records/recordsQueryService';
+import { createTestBattle, createTestRobot, createTestUser, deleteTestBattle, deleteTestUser } from './testHelpers';
 
 dotenv.config();
 
@@ -15,6 +23,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/records', recordsRoutes);
+app.use(errorHandler);
 
 describe('Records Routes', () => {
   let userId: number;
@@ -221,6 +230,100 @@ describe('Records Routes', () => {
       expect(prestige.highestPrestige.length).toBeLessThanOrEqual(10);
       expect(Array.isArray(prestige.mostTitles)).toBe(true);
       expect(prestige.mostTitles.length).toBeLessThanOrEqual(10);
+    });
+  });
+
+  describe('players filter (#595): players\' top 10, real places kept', () => {
+    // Values far above anything else in the test database, so the fixture
+    // robots and stables hold the top places: automaton first, the player second.
+    const TOP = 2_000_000_000;
+    const stamp = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    let automatonId: number;
+    let generatedId: number;
+    let automatonRobot: number;
+    let playerRobot: number;
+    const battleIds: number[] = [];
+
+    beforeAll(async () => {
+      automatonId = (await prisma.user.create({
+        data: { username: `rec_auto_${stamp}`, passwordHash: 'x', stableType: 'automaton', prestige: TOP },
+      })).id;
+      generatedId = (await prisma.user.create({
+        data: { username: `rec_gen_${stamp}`, passwordHash: 'x', stableType: 'generated', isGenerated: true, prestige: TOP - 2 },
+      })).id;
+      await prisma.user.update({ where: { id: userId }, data: { prestige: TOP - 1 } });
+
+      automatonRobot = (await createTestRobot(automatonId, `RecAuto_${stamp}`)).id;
+      playerRobot = (await createTestRobot(userId, `RecPlayer_${stamp}`)).id;
+      const generatedRobot = (await createTestRobot(generatedId, `RecGen_${stamp}`)).id;
+      await prisma.robot.update({ where: { id: automatonRobot }, data: { elo: TOP } });
+      await prisma.robot.update({ where: { id: playerRobot }, data: { elo: TOP - 1 } });
+      await prisma.robot.update({ where: { id: generatedRobot }, data: { elo: TOP - 2 } });
+
+      // Most Damage (league 1v1): the automaton dealt the most, the player second.
+      battleIds.push((await createTestBattle({
+        robot1Id: automatonRobot, robot2Id: playerRobot, winnerId: automatonRobot, battleType: 'league_1v1',
+        robot1DamageDealt: TOP, robot2DamageDealt: TOP - 1,
+      })).id);
+      // Biggest Upset: the automaton's upset is larger than the player's.
+      battleIds.push((await createTestBattle({
+        robot1Id: automatonRobot, robot2Id: playerRobot, winnerId: automatonRobot, battleType: 'tournament_1v1',
+        robot1ELOBefore: 0, robot2ELOBefore: 1_000_000,
+      })).id);
+      battleIds.push((await createTestBattle({
+        robot1Id: playerRobot, robot2Id: automatonRobot, winnerId: playerRobot, battleType: 'tournament_1v1',
+        robot1ELOBefore: 0, robot2ELOBefore: 999_999,
+      })).id);
+    });
+
+    afterAll(async () => {
+      for (const id of battleIds) await deleteTestBattle(id);
+      await deleteTestUser(automatonId);
+      await deleteTestUser(generatedId);
+    });
+
+    it('lists only players\' entries, each with its place among every stable', async () => {
+      const players = await loadPlayerSets();
+      const [career, combat, upsets, prestige] = await Promise.all([
+        fetchCareerRecords(players),
+        fetchCombatRecords(players),
+        fetchUpsetRecords(players),
+        fetchPrestigeRecords(players),
+      ]);
+
+      expect(career.highestElo[0]).toMatchObject({ robotId: playerRobot, place: 2, stableType: 'human' });
+      expect(career.highestElo.every((entry) => entry.stableType === 'human')).toBe(true);
+      // The generated robot (place 3) is left out, so the next player is #4 or lower.
+      expect(career.highestElo.slice(1).every((entry) => (entry.place ?? 0) >= 4)).toBe(true);
+
+      expect(combat.mostDamageInBattle.league_1v1[0]).toMatchObject({
+        damageDealt: TOP - 1, place: 2, robot: { id: playerRobot },
+      });
+      expect(upsets.biggestUpset[0]).toMatchObject({
+        battleId: battleIds[2], eloDifference: 999_999, place: 2, underdog: { id: playerRobot },
+      });
+      expect(prestige.highestPrestige[0]).toMatchObject({ userId, place: 2 });
+    });
+
+    it('keeps every stable, without places, when not filtered', async () => {
+      const career = await fetchCareerRecords();
+      expect(career.highestElo.slice(0, 3).map((entry) => entry.robotId)).toEqual([automatonRobot, playerRobot, expect.any(Number)]);
+      expect(career.highestElo.every((entry) => !('place' in entry))).toBe(true);
+    });
+
+    it('serves the players\' payload on ?stables=players', async () => {
+      const response = await request(app)
+        .get('/api/records').query({ stables: 'players' }).set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.stables).toBe('players');
+      expect(response.body.career.highestElo[0]).toMatchObject({ robotId: playerRobot, place: 2 });
+    });
+
+    it('rejects an unknown stables value', async () => {
+      const response = await request(app)
+        .get('/api/records').query({ stables: 'bots' }).set('Authorization', `Bearer ${authToken}`);
+      expect(response.status).toBe(400);
     });
   });
 });

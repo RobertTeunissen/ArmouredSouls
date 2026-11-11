@@ -24,7 +24,7 @@ const entries = [
 
 const robotRow = (rank: number, over: Record<string, unknown> = {}) => ({
   rank, id: 100 + rank, name: `AverageBot ${rank}`, elo: 1200, leaguePoints: 130 - rank, wins: 40, draws: 5, losses: 30,
-  totalBattles: 75, userId: 900, cyclesInCurrentLeague: 10, isSubscribed: true, user: BOT, status: null, ...over,
+  totalBattles: 75, userId: 900, cyclesInCurrentLeague: 10, leagueInstanceId: 'diamond_1', isSubscribed: true, user: BOT, status: null, ...over,
 });
 
 function zoneMeta(over: Record<string, unknown> = {}) {
@@ -53,6 +53,15 @@ function respond(url: string, options?: { params?: Record<string, unknown> }) {
   const standings = url.match(/^\/api\/leagues\/(\w+)\/standings$/);
   if (standings) {
     const tier = standings[1];
+    if (params.stables === 'players') {
+      // The server keeps each player's place among every robot.
+      const players = diamondRows().filter((row) => row.user === ME);
+      return Promise.resolve({
+        data: players,
+        pagination: { page: 1, pageSize: Number(params.perPage), total: players.length, totalPages: 1 },
+        zoneMeta: zoneMeta({ tier }),
+      });
+    }
     const rows = params.instance ? diamondRows() : diamondRows().slice(0, 5);
     return Promise.resolve({
       data: rows,
@@ -62,7 +71,7 @@ function respond(url: string, options?: { params?: Record<string, unknown> }) {
   }
   if (/^\/api\/leagues\/(\w+)\/instances$/.test(url)) {
     const tier = url.split('/')[3];
-    return Promise.resolve([{ leagueId: `${tier}_2`, currentRobots: 60 }, { leagueId: `${tier}_1`, currentRobots: 12 }]);
+    return Promise.resolve([{ leagueId: `${tier}_2`, currentRobots: 60, players: 1 }, { leagueId: `${tier}_1`, currentRobots: 12, players: 2 }]);
   }
   if (url.includes('/tag-team-instances') || /\/team-battles\/leagues\/\d\/\w+\/instances$/.test(url)) return Promise.resolve([]);
   if (url.includes('/team-battles/leagues/')) {
@@ -90,6 +99,8 @@ beforeEach(() => {
   mockGet.mockReset();
   mockGet.mockImplementation(respond);
   useSeasonStore.setState(useSeasonStore.getInitialState());
+  vi.mocked(localStorage.getItem).mockReturnValue(null);
+  vi.mocked(localStorage.setItem).mockClear();
 });
 
 describe('LeagueStandingsPage — opening view', () => {
@@ -233,5 +244,58 @@ describe('LeagueStandingsPage — loading', () => {
     await new Promise((r) => setTimeout(r, 20));
     expect(screen.getByRole('link', { name: 'GoldBot' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'StommeAap' })).not.toBeInTheDocument();
+  });
+});
+
+describe('LeagueStandingsPage — Players filter (#595)', () => {
+  it('lists only players with their real places, counts players per instance and drops the bands', async () => {
+    const user = userEvent.setup();
+    renderPage('/league-standings?tier=diamond&instance=diamond_1');
+    await screen.findByTestId('standings-table');
+    expect(screen.getByTestId('zone-band-up')).toBeInTheDocument();
+
+    const control = screen.getByRole('group', { name: 'Stables' });
+    expect(within(control).getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(within(control).getByRole('button', { name: 'Players' }));
+
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('stables=players'));
+    expect(localStorage.setItem).toHaveBeenCalledWith('stableFilter', 'players');
+    await waitFor(() => expect(mockGet).toHaveBeenCalledWith('/api/leagues/diamond/standings', { params: { page: 1, perPage: 100, instance: 'diamond_1', stables: 'players', mode: 'league_1v1' } }));
+    const rows = await screen.findAllByTestId('standings-row');
+    expect(rows.map((row) => within(row).getAllByRole('cell')[0].textContent)).toEqual(['3', '11']);
+    expect(screen.queryByTestId('zone-band-up')).not.toBeInTheDocument();
+    expect(screen.getByTestId('players-summary')).toHaveTextContent('2 players among 12 robots in Diamond 1. Places count every robot');
+    expect(screen.getByTestId('instance-chip-diamond_1')).toHaveTextContent('Diamond 1 · 2 players · 1 yours');
+    expect(screen.getByTestId('instance-chip-all')).toHaveTextContent('All of Diamond · 3 players');
+    expect(screen.getByTestId('instance-chip-diamond_2')).toHaveAttribute('href', '/league-standings?tier=diamond&instance=diamond_2&stables=players');
+  });
+
+  it('opens filtered when Players is remembered, and puts it in the URL', async () => {
+    vi.mocked(localStorage.getItem).mockImplementation((key: string) => (key === 'stableFilter' ? 'players' : null));
+    renderPage('/league-standings?tier=diamond&instance=diamond_1');
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/league-standings?tier=diamond&instance=diamond_1&stables=players'));
+    expect(await screen.findByTestId('players-summary')).toBeInTheDocument();
+    expect(within(screen.getByRole('group', { name: 'Stables' })).getByRole('button', { name: 'Players' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('keeps the filter when the page picks its opening view', async () => {
+    renderPage('/league-standings?stables=players');
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/league-standings?tier=champion&instance=champion_1&stables=players'));
+  });
+
+  it('goes back to every stable with "Show all stables"', async () => {
+    const user = userEvent.setup();
+    renderPage('/league-standings?tier=diamond&instance=diamond_1&stables=players');
+    await user.click(await screen.findByRole('button', { name: 'Show all stables' }));
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/league-standings?tier=diamond&instance=diamond_1'));
+    expect(screen.getByTestId('location')).not.toHaveTextContent('stables');
+    expect(localStorage.setItem).toHaveBeenCalledWith('stableFilter', 'all');
+    expect(await screen.findAllByTestId('standings-row')).toHaveLength(12);
+  });
+
+  it('shows each robot\'s group in the whole-tier view', async () => {
+    renderPage('/league-standings?tier=diamond');
+    expect(await screen.findByRole('columnheader', { name: 'Group' })).toBeInTheDocument();
+    expect(within(screen.getAllByTestId('standings-row')[0]).getByText('Diamond 1')).toBeInTheDocument();
   });
 });

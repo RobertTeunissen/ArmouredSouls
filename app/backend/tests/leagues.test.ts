@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 import leaguesRoutes from '../src/routes/leagues';
 import teamBattlesRoutes from '../src/routes/teamBattles';
 import { createTestRobot, createTestUser, deleteTestUser } from './testHelpers';
-import { enterRobotStanding } from './helpers/standings';
+import { enterRobotStanding, enterTeamStanding } from './helpers/standings';
 import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
@@ -231,6 +231,94 @@ describe('Leagues Routes', () => {
       const response = await request(app).get('/api/leagues/my-standings').set('Authorization', `Bearer ${token}`);
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ entries: [] });
+    });
+  });
+
+  describe('players filter (#595): human players only, real places kept', () => {
+    const stamp = Date.now() % 100000;
+    const instanceId = `silver_pl${stamp}`;
+    const tagInstanceId = `silver_plt${stamp}`;
+    const owners: Record<'player' | 'automaton' | 'generated', { id: number }> = {} as never;
+    const teamIds: number[] = [];
+
+    beforeAll(async () => {
+      owners.player = testUser;
+      owners.automaton = await prisma.user.create({ data: { username: `pl_auto_${stamp}`, passwordHash: 'x', stableType: 'automaton' } });
+      owners.generated = await prisma.user.create({ data: { username: `pl_gen_${stamp}`, passwordHash: 'x', stableType: 'generated', isGenerated: true } });
+      testUserIds.push(owners.automaton.id, owners.generated.id);
+      // LP order: automaton 90, player 80, generated 70, player 60.
+      const lineup: Array<['player' | 'automaton' | 'generated', number]> = [['automaton', 90], ['player', 80], ['generated', 70], ['player', 60]];
+      for (const [index, [owner, lp]] of lineup.entries()) {
+        const robot = await createTestRobot(owners[owner].id, `Pl_${owner}_${index}_${stamp}`);
+        testRobotIds.push(robot.id);
+        await enterRobotStanding(robot.id, 'league_1v1', { tier: 'silver', leagueInstanceId: instanceId, leaguePoints: lp });
+      }
+      for (const [index, [owner, lp]] of lineup.entries()) {
+        const team = await prisma.teamBattle.create({ data: { stableId: owners[owner].id, teamSize: 2, teamName: `PlTeam ${index} ${stamp}` } });
+        teamIds.push(team.id);
+        await enterTeamStanding(team.id, 'tag_team', { tier: 'silver', leagueInstanceId: tagInstanceId, leaguePoints: lp });
+      }
+    });
+
+    afterAll(async () => {
+      await prisma.standing.deleteMany({ where: { entityType: 'team', entityId: { in: teamIds } } });
+      await prisma.teamBattle.deleteMany({ where: { id: { in: teamIds } } });
+    });
+
+    it('lists only players\' robots, each with its place among every robot', async () => {
+      const response = await request(app)
+        .get('/api/leagues/silver/standings').set('Authorization', `Bearer ${authToken}`)
+        .query({ instance: instanceId, stables: 'players', perPage: 100 });
+
+      expect(response.status).toBe(200);
+      const rows = response.body.data as Array<{ rank: number; leaguePoints: number; leagueInstanceId: string; user: { stableType: string } }>;
+      expect(rows.map((row) => [row.rank, row.leaguePoints])).toEqual([[2, 80], [4, 60]]);
+      expect(rows.every((row) => row.user.stableType === 'human' && row.leagueInstanceId === instanceId)).toBe(true);
+      expect(response.body.pagination).toMatchObject({ total: 2, totalPages: 1 });
+      // The zone figures stay those of the whole instance.
+      expect(response.body.zoneMeta.totalEntities).toBe(4);
+    });
+
+    it('pages the players\' entries, not every entry', async () => {
+      const response = await request(app)
+        .get('/api/leagues/silver/standings').set('Authorization', `Bearer ${authToken}`)
+        .query({ instance: instanceId, stables: 'players', perPage: 1, page: 2 });
+
+      expect(response.body.data.map((row: { rank: number }) => row.rank)).toEqual([4]);
+      expect(response.body.pagination).toMatchObject({ page: 2, total: 2, totalPages: 2 });
+    });
+
+    it('lists every stable without the filter', async () => {
+      const response = await request(app)
+        .get('/api/leagues/silver/standings').set('Authorization', `Bearer ${authToken}`)
+        .query({ instance: instanceId, perPage: 100 });
+
+      expect(response.body.data.map((row: { rank: number }) => row.rank)).toEqual([1, 2, 3, 4]);
+    });
+
+    it('rejects an unknown stables value', async () => {
+      const response = await request(app)
+        .get('/api/leagues/silver/standings').set('Authorization', `Bearer ${authToken}`)
+        .query({ stables: 'bots' });
+      expect(response.status).toBe(400);
+    });
+
+    it('counts the players in each instance', async () => {
+      const response = await request(app).get('/api/leagues/silver/instances').set('Authorization', `Bearer ${authToken}`);
+      const mine = (response.body as Array<{ leagueId: string; currentRobots: number; players: number }>).find((i) => i.leagueId === instanceId);
+      expect(mine).toMatchObject({ currentRobots: 4, players: 2 });
+    });
+
+    it('filters team leagues by the team\'s stable', async () => {
+      const response = await request(app)
+        .get('/api/team-battles/leagues/2/silver/tag-team-standings').set('Authorization', `Bearer ${authToken}`)
+        .query({ instance: tagInstanceId, stables: 'players', perPage: 100 });
+
+      expect(response.status).toBe(200);
+      expect(response.body.standings.map((row: { rank: number; tagTeamLp: number }) => [row.rank, row.tagTeamLp])).toEqual([[2, 80], [4, 60]]);
+
+      const instances = await request(app).get('/api/team-battles/leagues/2/silver/tag-team-instances').set('Authorization', `Bearer ${authToken}`);
+      expect((instances.body as Array<{ leagueId: string; players: number }>).find((i) => i.leagueId === tagInstanceId)?.players).toBe(2);
     });
   });
 

@@ -2,7 +2,7 @@
 title: "League Points"
 description: "How League Points (LP) are earned through wins, losses, and draws — and why LP is the primary currency of competitive progression."
 order: 3
-lastUpdated: "2026-11-08"
+lastUpdated: "2026-11-11"
 relatedArticles:
   - leagues/promotion-demotion
   - leagues/matchmaking
@@ -66,6 +66,7 @@ The [League Standings](/league-standings) page opens on your own robots:
 - **Promotion and demotion places** — the top and bottom 10% of the instance, between a green and a red band
 - **Status** — on every robot in those places: **Promotes** or **Demotes** at the next rebalance, or why it is held there: **Needs 125 LP** (below the tier's LP minimum) or **2 cycles to go** (not long enough in the tier yet)
 - Your robots' place, LP, record and, in the 1v1 League, ELO
+- **Stables: All | Players** — Players shows only human players' robots and teams, without Automatons and bot stables. Everyone keeps their real place, so a robot in 14th place still reads #14. The [Hall of Records](/hall-of-records) has the same switch, and your choice is remembered for both pages
 
 A held place stays empty: the next robot down does not move up in its place.
 

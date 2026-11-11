@@ -187,6 +187,14 @@ describe('getTopRobotsByAllModesBattleCount (Most Battles ranking)', () => {
     expect(values).toEqual([[...PLACEMENT_COUNTED_MODES], 7]);
   });
 
+  it('binds a NULL limit (every robot) when no limit is given', async () => {
+    mockQueryRaw.mockResolvedValue([]);
+    await getTopRobotsByAllModesBattleCount();
+
+    const [, ...values] = mockQueryRaw.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
+    expect(values).toEqual([[...PLACEMENT_COUNTED_MODES], null]);
+  });
+
   it('returns the robots in rank order with the count from the same row', async () => {
     mockQueryRaw.mockResolvedValue([
       { id: 9, total_battles: 2_000_000_000, placement_matches: BigInt(2_000_000_000) },

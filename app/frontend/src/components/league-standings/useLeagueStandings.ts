@@ -55,7 +55,7 @@ export interface StandingsPageState {
 }
 
 const sameView = (a: StandingsPageRequest | null, b: StandingsPageRequest | null): boolean =>
-  a !== null && b !== null && a.mode === b.mode && a.tier === b.tier && a.instance === b.instance;
+  a !== null && b !== null && a.mode === b.mode && a.tier === b.tier && a.instance === b.instance && a.stables === b.stables;
 
 const sameRequest = (a: StandingsPageRequest | null, b: StandingsPageRequest | null): boolean =>
   sameView(a, b) && a!.page === b!.page && a!.perPage === b!.perPage;
@@ -74,7 +74,7 @@ export function useStandingsPage(request: StandingsPageRequest | null): Standing
   const [attempt, setAttempt] = useState(0);
   const current = useRef(0);
 
-  const { mode, tier, instance, page, perPage } = request ?? {};
+  const { mode, tier, instance, page, perPage, stables } = request ?? {};
   useEffect(() => {
     // Advance first: with no request, a response still in flight is stale too.
     const id = ++current.current;
@@ -82,7 +82,7 @@ export function useStandingsPage(request: StandingsPageRequest | null): Standing
       setLoading(false);
       return;
     }
-    const req: StandingsPageRequest = { mode, tier, instance: instance ?? null, page, perPage };
+    const req: StandingsPageRequest = { mode, tier, instance: instance ?? null, page, perPage, stables: stables ?? 'all' };
     setLoading(true);
     setFailed(false);
     Promise.all([fetchStandingsPage(req), fetchInstances(mode, tier)])
@@ -99,7 +99,7 @@ export function useStandingsPage(request: StandingsPageRequest | null): Standing
       .finally(() => {
         if (id === current.current) setLoading(false);
       });
-  }, [mode, tier, instance, page, perPage, attempt]);
+  }, [mode, tier, instance, page, perPage, stables, attempt]);
 
   useEffect(() => () => { current.current += 1; }, []);
 

@@ -11,8 +11,12 @@ export interface InstanceChipsProps {
   active: string | null;
   /** How many of the viewer's entries are in each instance. */
   yours: ReadonlyMap<string, number>;
+  /** Stables filter on Players: count players' entries instead of all entries. */
+  playersOnly?: boolean;
   hrefFor: (instance: string | null) => string;
 }
+
+const players = (n: number): string => `${n} ${n === 1 ? 'player' : 'players'}`;
 
 const chipClasses = (selected: boolean): string =>
   `inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full border px-4 text-sm transition-colors ${
@@ -22,9 +26,10 @@ const chipClasses = (selected: boolean): string =>
   }`;
 
 /** The tier's instances (each is a league of its own) and "All of <tier>". */
-export function InstanceChips({ tier, instances, active, yours, hrefFor }: InstanceChipsProps) {
+export function InstanceChips({ tier, instances, active, yours, playersOnly = false, hrefFor }: InstanceChipsProps) {
   if (instances.length === 0) return null;
   const total = instances.reduce((sum, i) => sum + i.size, 0);
+  const totalPlayers = instances.reduce((sum, i) => sum + i.players, 0);
   return (
     <ScrollRow as="navigation" label={`${getTierName(tier)} instances`} wrapFrom="md">
       {instances.map((instance) => {
@@ -37,14 +42,14 @@ export function InstanceChips({ tier, instances, active, yours, hrefFor }: Insta
             data-testid={`instance-chip-${instance.id}`}
             className={chipClasses(instance.id === active)}
           >
-            {instanceLabel(instance.id)} · {instance.size}
+            {instanceLabel(instance.id)} · {playersOnly ? players(instance.players) : instance.size}
             {count > 0 && ` · ${count} yours`}
           </Link>
         );
       })}
       {instances.length > 1 && (
         <Link to={hrefFor(null)} aria-current={active === null ? 'page' : undefined} data-testid="instance-chip-all" className={chipClasses(active === null)}>
-          All of {getTierName(tier)} · {total}
+          All of {getTierName(tier)} · {playersOnly ? players(totalPlayers) : total}
         </Link>
       )}
     </ScrollRow>

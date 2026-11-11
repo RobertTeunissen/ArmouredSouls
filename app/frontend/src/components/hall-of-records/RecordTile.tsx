@@ -12,6 +12,11 @@ export interface RecordTileProps {
   myBest: MyPlace | null;
   /** Extra classes, e.g. to hide a collapsed tile on phones. */
   className?: string;
+  /**
+   * Players' lists (#595): the top row is the best player, not the record, so
+   * the tile shows its place among every stable ("#14").
+   */
+  showPlace?: boolean;
 }
 
 function linkLabel(record: RecordDefinition): string {
@@ -19,6 +24,15 @@ function linkLabel(record: RecordDefinition): string {
   // The champions log holds the 10 most recent winners per type, not all of them.
   if (!record.ranked) return 'Last 10 per type ›';
   return record.variants.length > 1 ? 'Top 10 per mode ›' : 'Top 10 ›';
+}
+
+/** "#14", the best player's place among every stable. */
+function PlaceBadge({ rank }: { rank: number }) {
+  return (
+    <span className="shrink-0 text-xs font-semibold text-secondary" data-testid="record-tile-place">
+      <span className="sr-only">Place </span>#{rank}
+    </span>
+  );
 }
 
 /** Grid classes for a tile's footprint (see `tileFootprint`). */
@@ -64,7 +78,7 @@ function TileHeader({ record, detailHref }: { record: RecordDefinition; detailHr
  * One record on the board: the holder of the top spot, its value and a line of
  * context. Records ranked per mode list the top holder of each mode instead.
  */
-export function RecordTile({ record, detailHref, viewerId, myBest, className = '' }: RecordTileProps) {
+export function RecordTile({ record, detailHref, viewerId, myBest, className = '', showPlace = false }: RecordTileProps) {
   const base = `flex flex-col rounded-lg border border-white/10 bg-surface p-4 ${footprintClasses(record)} ${className}`;
 
   // The champions log: one stacked entry per tournament type, narrow enough
@@ -98,6 +112,7 @@ export function RecordTile({ record, detailHref, viewerId, myBest, className = '
             return (
               <li key={variant.key} className="flex items-baseline gap-3 py-2 text-sm">
                 <span className="w-24 shrink-0 text-xs text-secondary sm:w-32">{variant.label}</span>
+                {showPlace && <PlaceBadge rank={top.rank} />}
                 <span className="min-w-0 flex-1">
                   <RecordHolderLine holder={top.holder} viewerId={viewerId} />
                 </span>
@@ -129,6 +144,7 @@ export function RecordTile({ record, detailHref, viewerId, myBest, className = '
         <p className="mt-1 text-xs text-secondary" data-testid="record-tile-mode">{modeLabel}</p>
       )}
       <p className="mt-2 text-2xl font-bold text-warning">
+        {showPlace && <span className="mr-2 align-middle"><PlaceBadge rank={top.rank} /></span>}
         {top.value}
         {top.running && <span className="ml-2 align-middle text-xs font-normal text-success">● running</span>}
       </p>

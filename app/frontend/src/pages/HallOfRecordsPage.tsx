@@ -8,12 +8,16 @@
  * season only.
  *
  * URL state: `group` (board filter), `record` + `mode` (full list), `mine=1`
- * (only records the viewer's stable appears in).
+ * (only records the viewer's stable appears in), `stables=players` (#595: the
+ * players' top 10 per record, each with its place among every stable; also
+ * remembered on this device).
  */
 import { useCallback, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSeasonStore, selectSeason } from '../stores/seasonStore';
+import { StableFilterControl } from '../components/StableFilterControl';
+import { useStableFilter } from '../hooks/useStableFilter';
 import {
   RecordBoard,
   RecordDetail,
@@ -43,8 +47,11 @@ function seasonLine(season: SeasonState | null): string {
 function HallOfRecordsPage() {
   const { user } = useAuth();
   const season = useSeasonStore(selectSeason);
-  const { records, loading, failed, reload } = useHallOfRecords();
+  const [stables, setStables] = useStableFilter();
+  const { records, loading, failed, reload } = useHallOfRecords(stables);
   const [params, setParams] = useSearchParams();
+  // What the payload on screen is, which lags the control while the other loads.
+  const playersOnly = records?.stables === 'players';
 
   const viewerId = user?.id ?? null;
   const groupParam = params.get('group');
@@ -108,9 +115,15 @@ function HallOfRecordsPage() {
               {seasonLine(season)} · updated after every cycle
             </p>
           </div>
-          <Link to="/seasons" className="inline-flex min-h-[44px] items-center text-sm text-primary hover:underline">
-            Past seasons: Season Archive ›
-          </Link>
+          {/* Phones: the Stables control first and full width; from sm both on one line, the control last. */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
+            <div className="sm:order-2">
+              <StableFilterControl value={stables} onChange={setStables} />
+            </div>
+            <Link to="/seasons" className="inline-flex min-h-[44px] items-center text-sm text-primary hover:underline sm:order-1">
+              Past seasons: Season Archive ›
+            </Link>
+          </div>
         </header>
 
         {loading && !records && (
@@ -130,7 +143,18 @@ function HallOfRecordsPage() {
           </div>
         )}
 
-        {records && catalogue.length === 0 && (
+        {records && catalogue.length === 0 && playersOnly && (
+          <div className="rounded-lg border border-white/10 bg-surface p-8 text-center" data-testid="records-empty-players">
+            <p className="text-white">No player holds a record place yet this season.</p>
+            <p className="mt-2 text-sm text-secondary">
+              <button type="button" onClick={() => setStables('all')} className="inline-flex min-h-[44px] items-center text-primary hover:underline">
+                Show all stables
+              </button>
+            </p>
+          </div>
+        )}
+
+        {records && catalogue.length === 0 && !playersOnly && (
           <div className="rounded-lg border border-white/10 bg-surface p-8 text-center" data-testid="records-empty">
             <p className="text-white">No records yet this season.</p>
             <p className="mt-2 text-sm text-secondary">
@@ -148,6 +172,8 @@ function HallOfRecordsPage() {
             viewerId={viewerId}
             backHref={backHref}
             detailHref={detailHref}
+            playersOnly={playersOnly}
+            {...(playersOnly ? { notInListNote: 'Your stable is not in the players’ top 10 yet.' } : {})}
           />
         )}
 
@@ -158,7 +184,17 @@ function HallOfRecordsPage() {
               summary={summary}
               onlyMine={onlyMine}
               onToggleOnlyMine={() => setFilter({ mine: !onlyMine })}
+              playersOnly={playersOnly}
             />
+            {playersOnly && (
+              <p className="text-sm text-secondary" data-testid="records-players-note">
+                Each record lists the players’ top 10. Places count every stable, so they don’t change when you
+                filter.{' '}
+                <button type="button" onClick={() => setStables('all')} className="inline-flex min-h-[44px] items-center align-middle text-primary hover:underline">
+                  Show all stables
+                </button>
+              </p>
+            )}
             <RecordGroupTabs
               active={activeGroup}
               available={availableGroups}
@@ -172,10 +208,11 @@ function HallOfRecordsPage() {
                 places={places}
                 detailHref={detailHref}
                 collapseOnMobile={!activeGroup && !onlyMine}
+                showPlaces={playersOnly}
               />
             ) : (
               <p className="py-10 text-center text-secondary" data-testid="records-none-mine">
-                {activeGroup ? 'Your stable has no top-10 place in this group yet.' : 'Your stable has no top-10 place yet.'}
+                {`Your stable has no ${playersOnly ? 'players’ top-10' : 'top-10'} place${activeGroup ? ' in this group' : ''} yet.`}
               </p>
             )}
           </div>

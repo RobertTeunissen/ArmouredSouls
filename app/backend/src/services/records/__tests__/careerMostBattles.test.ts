@@ -97,9 +97,10 @@ describe('fetchCareerRecords() per-battle figures', () => {
   // win/loss-mode `totalBattles` overstated them (a 373% "kill rate" on ACC).
   it('divides lifetime damage and destructions by the all-modes battle count', async () => {
     const killer = { ...robotRow(7, 100, 60), kills: 250, damageDealtLifetime: 50_000 };
+    // The rankings read ids first, then load the ranked robots by id.
     mockRobotFindMany.mockImplementation(async (args: { where?: { id?: { in: number[] } }; orderBy?: unknown }) => {
-      if (args.where?.id?.in) return [];
-      return [killer];
+      const ids = args.where?.id?.in;
+      return !ids || ids.includes(killer.id) ? [killer] : [];
     });
     mockAllModesCounts.mockResolvedValue(new Map([[7, 250]]));
 
@@ -112,7 +113,10 @@ describe('fetchCareerRecords() per-battle figures', () => {
 
   it('reports 0 per battle for a robot without battles', async () => {
     const idle = { ...robotRow(8, 0, 0), kills: 0, damageDealtLifetime: 0 };
-    mockRobotFindMany.mockImplementation(async (args: { where?: { id?: { in: number[] } } }) => (args.where?.id?.in ? [] : [idle]));
+    mockRobotFindMany.mockImplementation(async (args: { where?: { id?: { in: number[] } } }) => {
+      const ids = args.where?.id?.in;
+      return !ids || ids.includes(idle.id) ? [idle] : [];
+    });
 
     const { mostKills, mostLifetimeDamage } = await fetchCareerRecords();
 

@@ -89,6 +89,8 @@ export interface RankedAllModesBattleCount {
 /**
  * The `limit` robots with the highest all-modes battle count, best first, each
  * with that count (Hall of Records "Most Battles" and its season accolade).
+ * Every robot when `limit` is undefined: PostgreSQL reads `LIMIT NULL` as no
+ * limit (the Hall's players' list reads the whole ranking).
  *
  * Ranked in SQL on the combined value, so a robot whose KotH / Grand Melee
  * matches lift it into the top N is never dropped by a pre-filter on
@@ -102,7 +104,7 @@ export interface RankedAllModesBattleCount {
  * from one read. Arithmetic is bigint: `SUM(int)` is bigint already, and int4 +
  * int4 overflows (PostgreSQL 22003) once the two parts pass 2^31 together.
  */
-export async function getTopRobotsByAllModesBattleCount(limit: number): Promise<RankedAllModesBattleCount[]> {
+export async function getTopRobotsByAllModesBattleCount(limit?: number): Promise<RankedAllModesBattleCount[]> {
   const rows = await prisma.$queryRaw<Array<{ id: number; total_battles: number; placement_matches: bigint }>>`
     SELECT r.id, r.total_battles, COALESCE(p.placement_matches, 0::bigint) AS placement_matches
     FROM robots r
@@ -114,7 +116,7 @@ export async function getTopRobotsByAllModesBattleCount(limit: number): Promise<
       GROUP BY s.entity_id
     ) p ON p.entity_id = r.id
     ORDER BY r.total_battles::bigint + COALESCE(p.placement_matches, 0::bigint) DESC, r.total_battles DESC, r.id ASC
-    LIMIT ${limit}
+    LIMIT ${limit ?? null}
   `;
   return rows.map((row) => ({
     robotId: row.id,

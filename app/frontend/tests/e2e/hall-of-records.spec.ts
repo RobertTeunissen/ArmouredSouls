@@ -134,6 +134,36 @@ test.describe('Hall of Records — board (fixture)', () => {
     await expect(tile.getByRole('link', { name: 'HitHard' })).toHaveAttribute('href', '/robots/12');
     await expect(tile.getByRole('link', { name: 'Hit Machine' })).toHaveAttribute('href', '/stables/900001');
   });
+
+  test('Stables: Players lists the players\' top 10s with their real places, and is remembered (#595)', async ({ page }) => {
+    await openBoard(page);
+    const players = page.waitForRequest((r) => r.url().endsWith('/api/records?stables=players'));
+    await page.getByRole('group', { name: 'Stables' }).getByRole('button', { name: 'Players' }).click();
+    await players;
+
+    await expect(page).toHaveURL(/stables=players/);
+    await expect(page.getByTestId('records-players-note')).toContainText('Places count every stable');
+    await expect(page.getByTestId('record-tile-highestElo').getByTestId('record-tile-place')).toHaveText('Place #1');
+    await expect(page.getByTestId('record-tile-biggestTeamUpset')).toHaveCount(0);
+
+    await page.getByRole('link', { name: /Highest ELO: Top 10/ }).click();
+    const detail = page.getByTestId('record-detail');
+    await expect(detail).toContainText('Top 10 players');
+    const mine = detail.locator('[data-testid="record-detail-row"][data-mine="true"]');
+    await expect(mine).toContainText('GekkeAap');
+    await expect(mine).toContainText('Rank 14');
+    await expect(page).toHaveURL(/stables=players/);
+
+    // Remembered on this device: a plain link opens on Players again.
+    await openBoard(page, '/hall-of-records');
+    await expect(page).toHaveURL(/stables=players/);
+    await expect(page.getByTestId('records-players-note')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Show all stables' }).click();
+    await expect(page).not.toHaveURL(/stables=/);
+    await expect(page.getByTestId('record-tile-biggestTeamUpset')).toBeVisible();
+    await expect(page.getByTestId('record-tile-place')).toHaveCount(0);
+  });
 });
 
 for (const width of [320, 390]) {
@@ -162,6 +192,16 @@ for (const width of [320, 390]) {
 
       // The group tabs scroll sideways with a fade on the side that has more.
       await expect(page.getByRole('group', { name: 'Record groups' }).locator('..').getByTestId('scroll-fade-end')).toBeVisible();
+    });
+
+    test('fits the screen with Stables: Players on, the control full width', async ({ page }) => {
+      await openBoard(page, '/hall-of-records?stables=players');
+      await expect(page.getByTestId('records-players-note')).toBeVisible();
+
+      const control = await page.getByTestId('stable-filter').boundingBox();
+      expect(control?.width ?? 0).toBeGreaterThanOrEqual(width - 32 - 1);
+      await expectNoHorizontalOverflow(page, ROOT);
+      await expectTouchTargets(page, ROOT);
     });
 
     test('shows the top 10 right below one row of chips', async ({ page }) => {

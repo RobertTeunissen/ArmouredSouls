@@ -32,6 +32,7 @@ import {
   listTeamInstances,
 } from '../services/team-battle/teamBattleQueryService';
 import { getTeamLeagueStandings } from '../services/league/leagueStandingsService';
+import { STABLE_FILTERS } from '../services/standings/playerStables';
 import { HEAD_TO_HEAD_LEAGUE_RULES } from '../services/league/league-rules';
 
 const router = express.Router();
@@ -177,6 +178,8 @@ const standingsQuerySchema = z.object({
   instance: leagueInstanceId.optional(),
   page: z.coerce.number().int().positive().default(1),
   perPage: z.coerce.number().int().positive().max(100).default(50),
+  /** 'players': human players' teams only, each with its place among all teams (#595). */
+  stables: z.enum(STABLE_FILTERS).default('all'),
 });
 
 /**
@@ -190,9 +193,9 @@ router.get(
   ...validated({ params: standingsParamsSchema, query: standingsQuerySchema }, async (req: AuthRequest, res: Response, { params, query }) => {
     const tier = params.tier;
     const teamSize = params.teamSize;
-    const { instance, page, perPage } = query;
+    const { instance, page, perPage, stables } = query;
 
-    const result = await getTeamLeagueStandings(teamSize === 2 ? 'league_2v2' : 'league_3v3', { tier, instance, page, perPage });
+    const result = await getTeamLeagueStandings(teamSize === 2 ? 'league_2v2' : 'league_3v3', { tier, instance, page, perPage, stables });
 
     res.json({
       standings: result.rows.map((row) => ({
@@ -270,9 +273,9 @@ router.get(
   authenticateToken,
   ...validated({ params: tagTeamTierParamsSchema, query: standingsQuerySchema }, async (req: AuthRequest, res: Response, { params, query }) => {
     const tier = params.tier;
-    const { instance, page, perPage } = query;
+    const { instance, page, perPage, stables } = query;
 
-    const result = await getTeamLeagueStandings('tag_team', { tier, instance, page, perPage });
+    const result = await getTeamLeagueStandings('tag_team', { tier, instance, page, perPage, stables });
 
     res.json({
       standings: result.rows.map((row) => ({

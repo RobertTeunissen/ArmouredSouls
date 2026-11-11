@@ -4,7 +4,7 @@ import { RecordStable } from '../hall-of-records/RecordNames';
 import { StatusChip } from './StatusChip';
 import { robotPath } from '../../utils/robotRoutes';
 import { getTierName } from '../../utils/tierHelpers';
-import type { LeagueModeInfo, ZoneMeta } from '../../utils/leagueStandings';
+import { instanceLabel, type LeagueModeInfo, type ZoneMeta } from '../../utils/leagueStandings';
 import type { StandingsRow } from '../../utils/leagueStandingsApi';
 
 export interface StandingsTableProps {
@@ -12,8 +12,10 @@ export interface StandingsTableProps {
   mode: LeagueModeInfo;
   tier: string;
   meta: ZoneMeta;
-  /** One instance on one page: draw the promotion and demotion bands. */
-  instanceView: boolean;
+  /** One instance on one page, every row shown: draw the promotion and demotion bands. */
+  bands: boolean;
+  /** Whole tier: show each row's instance. */
+  showGroup?: boolean;
   viewerId: number | null;
   caption: string;
 }
@@ -43,11 +45,11 @@ function Band({ tone, children, columns }: { tone: 'up' | 'down'; children: stri
  * and record underneath, chip below) and LP; md and up add the record, ELO
  * (1v1) and status columns.
  */
-export function StandingsTable({ rows, mode, tier, meta, instanceView, viewerId, caption }: StandingsTableProps) {
+export function StandingsTable({ rows, mode, tier, meta, bands, showGroup = false, viewerId, caption }: StandingsTableProps) {
   const showElo = mode.key === '1v1';
-  const columns = 4 + (showElo ? 1 : 0) + 1;
-  const promotionEnd = instanceView ? meta.promotionSlots : 0;
-  const demotionStart = instanceView && meta.demotionSlots > 0 ? meta.totalEntities - meta.demotionSlots + 1 : Infinity;
+  const columns = 4 + (showElo ? 1 : 0) + 1 + (showGroup ? 1 : 0);
+  const promotionEnd = bands ? meta.promotionSlots : 0;
+  const demotionStart = bands && meta.demotionSlots > 0 ? meta.totalEntities - meta.demotionSlots + 1 : Infinity;
   const tierName = getTierName(tier);
 
   return (
@@ -60,6 +62,7 @@ export function StandingsTable({ rows, mode, tier, meta, instanceView, viewerId,
           <tr>
             <th scope="col" className="w-12 px-3 py-2 text-left font-medium sm:w-16 sm:px-4">Place</th>
             <th scope="col" className="px-2 py-2 text-left font-medium">{mode.entity === 'robot' ? 'Robot' : 'Team'}</th>
+            {showGroup && <th scope="col" className="hidden w-28 px-2 py-2 text-left font-medium md:table-cell">Group</th>}
             <th scope="col" className="hidden w-32 px-2 py-2 text-right font-medium md:table-cell">{recordLabel(mode)}</th>
             {showElo && <th scope="col" className="hidden w-20 px-2 py-2 text-right font-medium md:table-cell">ELO</th>}
             <th scope="col" className="w-16 px-3 py-2 text-right font-medium sm:w-20">LP</th>
@@ -112,6 +115,7 @@ export function StandingsTable({ rows, mode, tier, meta, instanceView, viewerId,
                           ))}
                         </span>
                       )}
+                      {showGroup && row.instanceId && <span className="md:hidden">· {instanceLabel(row.instanceId)}</span>}
                       <span className="md:hidden">· {recordText(row, mode)}</span>
                     </div>
                     {newHere && (
@@ -119,6 +123,7 @@ export function StandingsTable({ rows, mode, tier, meta, instanceView, viewerId,
                     )}
                     {chip && <div className="mt-1.5 md:hidden">{chip}</div>}
                   </td>
+                  {showGroup && <td className="hidden px-2 py-3 text-secondary md:table-cell">{row.instanceId ? instanceLabel(row.instanceId) : ''}</td>}
                   <td className="hidden px-2 py-3 text-right font-mono md:table-cell">{recordText(row, mode)}</td>
                   {showElo && <td className="hidden px-2 py-3 text-right font-mono md:table-cell">{row.elo}</td>}
                   <td className="px-3 py-3 text-right font-bold text-warning">{row.leaguePoints}</td>

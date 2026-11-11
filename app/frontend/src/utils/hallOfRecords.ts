@@ -135,19 +135,21 @@ function stableHolder(owner: RecordOwner): RecordHolder {
   return { subjectName: null, stable: stableRef(owner) };
 }
 
-type UnrankedRow = Omit<RecordRow, 'rank'> & { sortValue: number };
+type UnrankedRow = Omit<RecordRow, 'rank'> & { sortValue: number; place?: number };
 
 /**
  * Assign shared ranks in list order: a row whose value equals the previous
  * row's gets the same rank ("1, 1, 3"). The API already sends rows best first.
+ * A players' list (#595) sends each row's place among every stable instead,
+ * and that place is the rank.
  */
 export function rankRows(rows: UnrankedRow[]): RecordRow[] {
   let rank = 0;
   let previous: number | null = null;
-  return rows.map(({ sortValue, ...row }, index) => {
+  return rows.map(({ sortValue, place, ...row }, index) => {
     if (previous === null || sortValue !== previous) rank = index + 1;
     previous = sortValue;
-    return { ...row, rank };
+    return { ...row, rank: place ?? rank };
   });
 }
 
@@ -209,7 +211,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'mostBattles', group: 'robots', title: 'Most battles', valueLabel: 'Battles',
       scope: `Battles in every mode, KotH and Grand Melee included. ${PLACEMENT_MODES_RECORD_NOTE}`,
       variants: single(rankRows(career.mostBattles.map((e) => ({
-        sortValue: e.allModesBattleCount, value: formatCount(e.allModesBattleCount), holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.allModesBattleCount, value: formatCount(e.allModesBattleCount), holder: robotEntryHolder(e),
         detail: `${e.wins}-${e.losses}-${e.draws} in win/loss modes`,
       })))),
     }),
@@ -217,7 +219,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'highestWinRate', group: 'robots', title: 'Highest win rate', valueLabel: 'Win rate',
       scope: `Wins in 1v1 League, 1v1 Tournament, Tag Team and 2v2/3v3 League, minimum ${WIN_RATE_MIN_BATTLES} battles. KotH and Grand Melee are placement events.`,
       variants: single(rankRows(career.highestWinRate.map((e) => ({
-        sortValue: e.winRate, value: `${e.winRate}%`, holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.winRate, value: `${e.winRate}%`, holder: robotEntryHolder(e),
         detail: `${formatCount(e.wins)} of ${plural(e.totalBattles, 'battle', 'battles')}`,
       })))),
     }),
@@ -225,7 +227,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'highestElo', group: 'robots', title: 'Highest ELO', valueLabel: 'ELO',
       scope: 'ELO is a 1v1 rating, earned in 1v1 League and 1v1 Tournament.',
       variants: single(rankRows(career.highestElo.map((e) => ({
-        sortValue: e.elo, value: formatCount(e.elo), holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.elo, value: formatCount(e.elo), holder: robotEntryHolder(e),
         detail: `${e.wins}-${e.losses}-${e.draws} record`,
       })))),
     }),
@@ -233,7 +235,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'mostLifetimeDamage', group: 'robots', title: 'Most lifetime damage', valueLabel: 'Damage',
       scope: 'Damage dealt in every mode, KotH and Grand Melee included.',
       variants: single(rankRows(career.mostLifetimeDamage.map((e) => ({
-        sortValue: e.damageDealt, value: formatCount(e.damageDealt), holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.damageDealt, value: formatCount(e.damageDealt), holder: robotEntryHolder(e),
         detail: `${formatCount(e.avgDamagePerBattle)} per battle`,
       })))),
     }),
@@ -242,7 +244,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       scope: 'Opponents destroyed in every mode, KotH and Grand Melee included.',
       leaderboard: { href: '/leaderboards/losses', label: 'Destructions Leaderboard' },
       variants: single(rankRows(career.mostKills.map((e) => ({
-        sortValue: e.kills, value: formatCount(e.kills), holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.kills, value: formatCount(e.kills), holder: robotEntryHolder(e),
         ...(e.killsPerBattle !== undefined ? { detail: `${e.killsPerBattle.toFixed(2)} per battle` } : {}),
       })))),
     }),
@@ -251,7 +253,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       scope: 'Robot fame.',
       leaderboard: { href: '/leaderboards/fame', label: 'Fame Leaderboard' },
       variants: single(rankRows(economic.highestFame.map((e) => ({
-        sortValue: e.fame, value: formatCount(e.fame), holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.fame, value: formatCount(e.fame), holder: robotEntryHolder(e),
         detail: `${formatCount(e.elo)} ELO`,
       })))),
     }),
@@ -264,7 +266,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
         key: mode,
         label: DAMAGE_MODE_LABELS[mode],
         rows: rankRows((damage[mode] ?? []).map((e) => ({
-          sortValue: e.damageDealt, value: formatCount(e.damageDealt), holder: robotHolder(e.robot),
+          place: e.place, sortValue: e.damageDealt, value: formatCount(e.damageDealt), holder: robotHolder(e.robot),
           detail: e.opponent ? `vs ${e.opponent.name}` : formatRecordDuration(e.durationSeconds),
           battleId: e.battleId,
         }))),
@@ -274,7 +276,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'biggestUpset', group: 'battles', title: 'Biggest upset', valueLabel: 'ELO overcome',
       scope: '1v1 tournaments only: league matchmaking pairs robots of similar standing, tournament brackets do not.',
       variants: single(rankRows(upsets.biggestUpset.map((e) => ({
-        sortValue: e.eloDifference, value: `+${formatCount(e.eloDifference)} ELO`, holder: robotHolder(e.underdog),
+        place: e.place, sortValue: e.eloDifference, value: `+${formatCount(e.eloDifference)} ELO`, holder: robotHolder(e.underdog),
         detail: `${formatCount(e.underdog.eloBefore)} beat ${e.favorite.name} (${formatCount(e.favorite.eloBefore)})`,
         battleId: e.battleId,
       })))),
@@ -283,7 +285,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'biggestTeamUpset', group: 'battles', title: 'Biggest team upset', valueLabel: 'ELO overcome',
       scope: '2v2 and 3v3 tournaments, from the summed ELO of each side.',
       variants: single(rankRows((upsets.biggestTeamUpset ?? []).map((e) => ({
-        sortValue: e.eloDifference, value: `+${formatCount(e.eloDifference)} ELO`, holder: lineUpHolder(e.underdog.robots),
+        place: e.place, sortValue: e.eloDifference, value: `+${formatCount(e.eloDifference)} ELO`, holder: lineUpHolder(e.underdog.robots),
         detail: `${TEAM_TOURNAMENT_LABELS[e.battleType] ?? 'Team tournament'} · beat ${e.favorite.robots[0]?.username || 'Unknown'}`,
         battleId: e.battleId,
       })))),
@@ -295,7 +297,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
         key: size,
         label: `${size} League`,
         rows: rankRows((data.teamBattle?.[size]?.mostDecisiveVictory ?? []).map((e) => ({
-          sortValue: e.hpDifference, value: `${formatCount(e.hpDifference)} HP`, holder: lineUpHolder(e.winners),
+          place: e.place, sortValue: e.hpDifference, value: `${formatCount(e.hpDifference)} HP`, holder: lineUpHolder(e.winners),
           detail: `beat ${e.losers[0]?.username || 'Unknown'}`,
           battleId: e.battleId,
         }))),
@@ -312,7 +314,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
         rows: rankRows((streaks[mode] ?? []).map((e) => {
           const running = e.isActive && e.currentWinStreak > 0;
           return {
-            sortValue: e.bestWinStreak, value: formatCount(e.bestWinStreak),
+            place: e.place, sortValue: e.bestWinStreak, value: formatCount(e.bestWinStreak),
             holder: {
               subjectName: e.entityName,
               ...(mode === 'league_1v1' ? { robotId: e.entityId } : {}),
@@ -330,7 +332,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       variants: single(rankRows(koth.longestWinStreak.map((e) => {
         const running = Boolean(e.isActive) && (e.currentWinStreak ?? 0) > 0;
         return {
-          sortValue: e.bestWinStreak, value: formatCount(e.bestWinStreak), holder: robotEntryHolder(e),
+          place: e.place, sortValue: e.bestWinStreak, value: formatCount(e.bestWinStreak), holder: robotEntryHolder(e),
           detail: running ? 'still running' : `${plural(e.kothWins, 'first place', 'first places')} in total`,
           running,
         };
@@ -342,7 +344,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'kothMostWins', group: 'koth-melee', title: 'Most KotH wins', valueLabel: 'First places',
       scope: 'First places in King of the Hill.',
       variants: single(rankRows(koth.mostWins.map((e) => ({
-        sortValue: e.kothWins, value: formatCount(e.kothWins), holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.kothWins, value: formatCount(e.kothWins), holder: robotEntryHolder(e),
         detail: `in ${plural(e.kothMatches, 'match', 'matches')}`,
       })))),
     }),
@@ -350,7 +352,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'kothAvgZoneScore', group: 'koth-melee', title: 'Highest avg zone score', valueLabel: 'Avg per match',
       scope: `Average zone score per King of the Hill match, minimum ${KOTH_AVG_ZONE_SCORE_MIN_MATCHES} matches.`,
       variants: single(rankRows(koth.highestAvgZoneScore.map((e) => ({
-        sortValue: e.avgZoneScore, value: e.avgZoneScore.toFixed(1), holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.avgZoneScore, value: e.avgZoneScore.toFixed(1), holder: robotEntryHolder(e),
         detail: plural(e.kothMatches, 'match', 'matches'),
       })))),
     }),
@@ -358,7 +360,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'kothZoneTime', group: 'koth-melee', title: 'Most zone time', valueLabel: 'Time in zone',
       scope: 'Total time held in the King of the Hill zone.',
       variants: single(rankRows(koth.mostZoneTime.map((e) => ({
-        sortValue: e.totalZoneTime, value: formatRecordDuration(e.totalZoneTime), holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.totalZoneTime, value: formatRecordDuration(e.totalZoneTime), holder: robotEntryHolder(e),
         detail: plural(e.kothMatches, 'match', 'matches'),
       })))),
     }),
@@ -366,7 +368,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'kothZoneDominator', group: 'koth-melee', title: 'Zone dominator', valueLabel: 'Zone score',
       scope: 'Total King of the Hill zone score.',
       variants: single(rankRows(koth.zoneDominator.map((e) => ({
-        sortValue: e.totalZoneScore, value: formatOneDecimal(e.totalZoneScore), holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.totalZoneScore, value: formatOneDecimal(e.totalZoneScore), holder: robotEntryHolder(e),
         detail: plural(e.kothMatches, 'match', 'matches'),
       })))),
     }),
@@ -374,7 +376,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'kothKills', group: 'koth-melee', title: 'KotH destructions', valueLabel: 'Destroyed',
       scope: 'Opponents destroyed in King of the Hill.',
       variants: single(rankRows(koth.mostKillsCareer.map((e) => ({
-        sortValue: e.kothKills, value: formatCount(e.kothKills), holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.kothKills, value: formatCount(e.kothKills), holder: robotEntryHolder(e),
         detail: `in ${plural(e.kothMatches, 'match', 'matches')}`,
       })))),
     }),
@@ -382,14 +384,14 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'meleeWins', group: 'koth-melee', title: 'Grand Melee wins', valueLabel: 'First places',
       scope: 'First places in Grand Melee.',
       variants: single(rankRows(melee.mostWins.map((e) => ({
-        sortValue: e.grandMeleeWins, value: formatCount(e.grandMeleeWins), holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.grandMeleeWins, value: formatCount(e.grandMeleeWins), holder: robotEntryHolder(e),
       })))),
     }),
     definition({
       key: 'meleeKills', group: 'koth-melee', title: 'Grand Melee destructions', valueLabel: 'Destroyed',
       scope: 'Opponents destroyed in Grand Melee.',
       variants: single(rankRows(melee.mostKillsCareer.map((e) => ({
-        sortValue: e.totalKills, value: formatCount(e.totalKills), holder: robotEntryHolder(e),
+        place: e.place, sortValue: e.totalKills, value: formatCount(e.totalKills), holder: robotEntryHolder(e),
         detail: `${e.killsPerMatch.toFixed(2)} per match`,
       })))),
     }),
@@ -400,7 +402,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       scope: 'Stable prestige.',
       leaderboard: { href: '/leaderboards/prestige', label: 'Prestige Leaderboard' },
       variants: single(rankRows(prestige.highestPrestige.map((e) => ({
-        sortValue: e.prestige, value: formatCount(e.prestige), holder: stableHolder(e),
+        place: e.place, sortValue: e.prestige, value: formatCount(e.prestige), holder: stableHolder(e),
         detail: plural(e.championshipTitles, 'championship title', 'championship titles'),
       })))),
     }),
@@ -408,7 +410,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'mostTitles', group: 'stables', title: 'Most championship titles', valueLabel: 'Titles',
       scope: 'Tournament championships won.',
       variants: single(rankRows(prestige.mostTitles.map((e) => ({
-        sortValue: e.championshipTitles, value: formatCount(e.championshipTitles), holder: stableHolder(e),
+        place: e.place, sortValue: e.championshipTitles, value: formatCount(e.championshipTitles), holder: stableHolder(e),
         detail: `${formatCount(e.prestige)} prestige`,
       })))),
     }),
@@ -416,7 +418,7 @@ export function buildRecordCatalogue(data: RecordsData): RecordDefinition[] {
       key: 'richestStable', group: 'stables', title: 'Richest stable', valueLabel: 'Credits',
       scope: 'Credits on hand. Generated bot stables are not ranked: they never spend.',
       variants: single(rankRows(economic.richestStables.map((e) => ({
-        sortValue: e.currency, value: formatCurrency(e.currency), holder: stableHolder(e),
+        place: e.place, sortValue: e.currency, value: formatCurrency(e.currency), holder: stableHolder(e),
         detail: plural(e.robotCount, 'robot', 'robots'),
       })))),
     }),

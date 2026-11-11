@@ -8,6 +8,7 @@
  */
 import { api } from './api';
 import type { StableType } from '../types/stable';
+import type { StableFilter } from './stableFilter';
 import { modeInfo, type LeagueModeKey, type MyStandingEntry, type StandingStatus, type ZoneMeta } from './leagueStandings';
 
 export interface StandingsRowMember {
@@ -32,6 +33,8 @@ export interface StandingsRow {
   /** 1v1 only (robot ELO). */
   elo: number | null;
   cyclesInTier: number;
+  /** The instance the entry plays in (shown in the whole-tier view). */
+  instanceId: string | null;
   isSubscribed: boolean;
   status: StandingStatus | null;
 }
@@ -52,6 +55,8 @@ export interface StandingsPage {
 export interface LeagueInstanceSummary {
   id: string;
   size: number;
+  /** Entries of human players' stables. */
+  players: number;
 }
 
 // ─── Raw response shapes ────────────────────────────────────────────
@@ -68,6 +73,7 @@ interface RobotRowResponse {
   totalBattles: number;
   userId: number;
   cyclesInCurrentLeague: number;
+  leagueInstanceId?: string;
   isSubscribed: boolean;
   user: { username: string; stableName: string | null; stableType: StableType };
   status: StandingStatus | null;
@@ -81,6 +87,7 @@ interface TeamRowResponse {
   stableName: string;
   stableType: StableType;
   teamLp: number;
+  teamLeagueId?: string;
   wins: number;
   losses: number;
   draws: number;
@@ -98,6 +105,7 @@ interface TagTeamRowResponse {
   stableName: string;
   stableType: StableType;
   tagTeamLp: number;
+  tagTeamLeagueId?: string;
   totalTagTeamWins: number;
   totalTagTeamLosses: number;
   totalTagTeamDraws: number;
@@ -131,6 +139,7 @@ function fromRobotRow(row: RobotRowResponse, withElo: boolean): StandingsRow {
     matches: row.totalBattles,
     elo: withElo ? row.elo : null,
     cyclesInTier: row.cyclesInCurrentLeague,
+    instanceId: row.leagueInstanceId ?? null,
     isSubscribed: row.isSubscribed,
     status: row.status ?? null,
   };
@@ -151,6 +160,7 @@ function fromTeamRow(row: TeamRowResponse): StandingsRow {
     matches: row.wins + row.draws + row.losses,
     elo: null,
     cyclesInTier: row.cyclesInLeague,
+    instanceId: row.teamLeagueId ?? null,
     isSubscribed: row.isSubscribed,
     status: row.status ?? null,
   };
@@ -174,6 +184,7 @@ function fromTagTeamRow(row: TagTeamRowResponse): StandingsRow {
     matches: wins + draws + losses,
     elo: null,
     cyclesInTier: row.cyclesInTagTeamLeague,
+    instanceId: row.tagTeamLeagueId ?? null,
     isSubscribed: row.isSubscribed,
     status: row.status ?? null,
   };
@@ -187,10 +198,12 @@ export interface StandingsPageRequest {
   instance: string | null;
   page: number;
   perPage: number;
+  /** 'players': human players' entries only, with their place among all. */
+  stables: StableFilter;
 }
 
-export async function fetchStandingsPage({ mode, tier, instance, page, perPage }: StandingsPageRequest): Promise<StandingsPage> {
-  const params = { page, perPage, ...(instance ? { instance } : {}) };
+export async function fetchStandingsPage({ mode, tier, instance, page, perPage, stables }: StandingsPageRequest): Promise<StandingsPage> {
+  const params = { page, perPage, ...(instance ? { instance } : {}), ...(stables === 'players' ? { stables } : {}) };
   const info = modeInfo(mode);
 
   if (info.entity === 'robot') {
@@ -211,14 +224,14 @@ export async function fetchInstances(mode: LeagueModeKey, tier: string): Promise
   const instanceNumber = (id: string): number => parseInt(id.split('_')[1] ?? '0', 10);
   let list: LeagueInstanceSummary[];
   if (info.entity === 'robot') {
-    const res = await api.get<Array<{ leagueId: string; currentRobots: number }>>(`/api/leagues/${tier}/instances`, { params: { mode: info.apiMode } });
-    list = res.map((i) => ({ id: i.leagueId, size: i.currentRobots }));
+    const res = await api.get<Array<{ leagueId: string; currentRobots: number; players?: number }>>(`/api/leagues/${tier}/instances`, { params: { mode: info.apiMode } });
+    list = res.map((i) => ({ id: i.leagueId, size: i.currentRobots, players: i.players ?? 0 }));
   } else {
     const path = mode === 'tag_team'
       ? `/api/team-battles/leagues/2/${tier}/tag-team-instances`
       : `/api/team-battles/leagues/${mode === '2v2' ? 2 : 3}/${tier}/instances`;
-    const res = await api.get<Array<{ leagueId: string; currentTeams: number }>>(path);
-    list = res.map((i) => ({ id: i.leagueId, size: i.currentTeams }));
+    const res = await api.get<Array<{ leagueId: string; currentTeams: number; players?: number }>>(path);
+    list = res.map((i) => ({ id: i.leagueId, size: i.currentTeams, players: i.players ?? 0 }));
   }
   return list.sort((a, b) => instanceNumber(a.id) - instanceNumber(b.id));
 }

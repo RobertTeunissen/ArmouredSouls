@@ -22,6 +22,8 @@ export interface RecordBoardProps {
   headingLevel?: 2 | 3;
   /** The one-line group notes describe the live season; the archive hides them. */
   showNotes?: boolean;
+  /** Players' lists (#595): tiles show the best player's place among every stable. */
+  showPlaces?: boolean;
 }
 
 /** Static class names, so Tailwind sees both. */
@@ -33,6 +35,7 @@ const XL_COLUMNS: Record<3 | 4, string> = { 3: 'xl:grid-cols-3', 4: 'xl:grid-col
  */
 export function RecordBoard({
   records, groups, viewerId, places, detailHref, collapseOnMobile = false, headingLevel = 2, showNotes = true,
+  showPlaces = false,
 }: RecordBoardProps) {
   const Heading = headingLevel === 3 ? 'h3' : 'h2';
   const [expanded, setExpanded] = useState<ReadonlySet<RecordGroupKey>>(new Set());
@@ -62,6 +65,7 @@ export function RecordBoard({
                   detailHref={detailHref(record)}
                   viewerId={viewerId}
                   myBest={bestPlaceIn(record, places)}
+                  showPlace={showPlaces}
                   className={collapsed && index >= MOBILE_COLLAPSED_TILES ? 'max-md:hidden' : ''}
                 />
               ))}

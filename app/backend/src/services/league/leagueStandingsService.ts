@@ -12,6 +12,7 @@ import { getLeagueTierPreview } from './league-rebalancing-preview';
 import { getLeagueRulesForMode } from './league-rules';
 import { buildLeagueZoneMeta, type LeagueZoneMeta } from './league-zone-meta';
 import { buildStandingStatuses, type StandingStatus } from './standing-status';
+import { playerOwnedEntityIds, type StableFilter } from '../standings/playerStables';
 
 export const ROBOT_LEAGUE_MODES = ['league_1v1', 'koth', 'grand_melee'] as const;
 export type RobotLeagueMode = typeof ROBOT_LEAGUE_MODES[number];
@@ -33,6 +34,8 @@ export interface StandingsPageQuery {
   instance?: string;
   page: number;
   perPage: number;
+  /** 'players': human players' entries only, each keeping its place among all (#595). Default 'all'. */
+  stables?: StableFilter;
 }
 
 export interface StandingsPagination {
@@ -57,6 +60,45 @@ interface RowContext {
   status: StandingStatus | null;
 }
 
+const STANDINGS_ORDER: Prisma.StandingOrderByWithRelationInput[] = [{ leaguePoints: 'desc' }, { entityId: 'asc' }];
+
+type StandingRecord = Awaited<ReturnType<typeof prisma.standing.findMany>>[number];
+
+interface RankedPage {
+  total: number;
+  standingRows: StandingRecord[];
+  /** Place among all entries of the tier or instance, by entity id. */
+  ranks: Map<number, number>;
+}
+
+/** One page of every entry: places follow from the page offset. */
+async function loadAllPage(where: Prisma.StandingWhereInput, query: StandingsPageQuery): Promise<RankedPage> {
+  const offset = (query.page - 1) * query.perPage;
+  const [total, standingRows] = await Promise.all([
+    prisma.standing.count({ where }),
+    prisma.standing.findMany({ where, orderBy: STANDINGS_ORDER, skip: offset, take: query.perPage }),
+  ]);
+  return { total, standingRows, ranks: new Map(standingRows.map((s, i) => [s.entityId, offset + i + 1])) };
+}
+
+/**
+ * One page of the players' entries only. The whole tier or instance is
+ * ordered first, so each entry keeps its place among all entries; the page is
+ * then cut from the players' entries.
+ */
+async function loadPlayersPage(where: Prisma.StandingWhereInput, query: StandingsPageQuery): Promise<RankedPage> {
+  const ordered = await prisma.standing.findMany({ where, orderBy: STANDINGS_ORDER, select: { entityId: true, entityType: true } });
+  const players = await playerOwnedEntityIds(ordered[0]?.entityType ?? 'robot', ordered.map((s) => s.entityId));
+  const ranked = ordered.flatMap((s, i) => (players.has(s.entityId) ? [{ entityId: s.entityId, rank: i + 1 }] : []));
+  const page = ranked.slice((query.page - 1) * query.perPage, query.page * query.perPage);
+  const ranks = new Map(page.map((r) => [r.entityId, r.rank]));
+  const rows = page.length > 0
+    ? await prisma.standing.findMany({ where: { ...where, entityId: { in: page.map((r) => r.entityId) } } })
+    : [];
+  rows.sort((a, b) => (ranks.get(a.entityId) ?? 0) - (ranks.get(b.entityId) ?? 0));
+  return { total: ranked.length, standingRows: rows, ranks };
+}
+
 /** Loads one page of standings rows plus the tier plan, and the per-row context. */
 async function loadStandingsPage(mode: StandingsMode, query: StandingsPageQuery) {
   const rules = getLeagueRulesForMode(mode);
@@ -65,20 +107,14 @@ async function loadStandingsPage(mode: StandingsMode, query: StandingsPageQuery)
     tier: query.tier,
     ...(query.instance ? { leagueInstanceId: query.instance } : {}),
   };
-  const [total, standingRows, preview] = await Promise.all([
-    prisma.standing.count({ where }),
-    prisma.standing.findMany({
-      where,
-      orderBy: [{ leaguePoints: 'desc' }, { entityId: 'asc' }],
-      skip: (query.page - 1) * query.perPage,
-      take: query.perPage,
-    }),
+  const [{ total, standingRows, ranks }, preview] = await Promise.all([
+    query.stables === 'players' ? loadPlayersPage(where, query) : loadAllPage(where, query),
     getLeagueTierPreview(mode, query.tier, rules, query.instance),
   ]);
   const statuses = buildStandingStatuses(preview, rules);
 
-  const contextFor = (entityId: number, cyclesInTier: number, index: number): RowContext => ({
-    rank: (query.page - 1) * query.perPage + index + 1,
+  const contextFor = (entityId: number, cyclesInTier: number): RowContext => ({
+    rank: ranks.get(entityId) ?? 0,
     eligible: cyclesInTier >= rules.minCyclesForRebalancing,
     zone: preview.effectivePromotionEntityIds.has(entityId)
       ? 'promotion'
@@ -114,6 +150,8 @@ export interface RobotStandingRow {
   fame: number;
   userId: number;
   cyclesInCurrentLeague: number;
+  /** The instance the robot plays in (shown in the whole-tier view). */
+  leagueInstanceId: string;
   eligible: boolean;
   isSubscribed: boolean;
   user: { username: string; stableName: string | null; stableType: StableType };
@@ -145,9 +183,9 @@ export async function getRobotLeagueStandings(
   const robotMap = new Map(robots.map((r) => [r.id, r]));
   const subscribed = new Set(activeSubscriptions.map((s) => s.robotId));
 
-  const rows = standingRows.map((s, index): RobotStandingRow => {
+  const rows = standingRows.map((s): RobotStandingRow => {
     const robot = robotMap.get(s.entityId);
-    const context = contextFor(s.entityId, s.cyclesInTier, index);
+    const context = contextFor(s.entityId, s.cyclesInTier);
     return {
       rank: context.rank,
       id: s.entityId,
@@ -163,6 +201,7 @@ export async function getRobotLeagueStandings(
       fame: robot?.fame ?? 0,
       userId: robot?.user?.id ?? 0,
       cyclesInCurrentLeague: s.cyclesInTier,
+      leagueInstanceId: s.leagueInstanceId,
       eligible: context.eligible,
       isSubscribed: subscribed.has(s.entityId),
       user: {
@@ -237,9 +276,9 @@ export async function getTeamLeagueStandings(
   });
   const subscribed = new Set(activeSubscriptions.map((s) => s.robotId));
 
-  const rows = standingRows.map((s, index): TeamStandingRow => {
+  const rows = standingRows.map((s): TeamStandingRow => {
     const team = teamMap.get(s.entityId);
-    const context = contextFor(s.entityId, s.cyclesInTier, index);
+    const context = contextFor(s.entityId, s.cyclesInTier);
     return {
       rank: context.rank,
       teamId: s.entityId,
