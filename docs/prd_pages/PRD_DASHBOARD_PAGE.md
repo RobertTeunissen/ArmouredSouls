@@ -94,7 +94,7 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
    - Unified component for all dashboard alerts
    - Color-coded by variant: success (green), warning (amber), danger (red), info (blue)
    - Consistent layout: border-l-4 accent, icon, message, optional detail line, optional action button, optional dismiss
-   - Ordered: tier changes → season countdown → robot readiness → team gaps → team creation suggestions
+   - Ordered: season phase (preparation, or the cycle 1 scheduling notice; `season/SeasonPhaseCard.tsx`, info variant) → tier changes → season countdown → robot readiness → team gaps → team creation suggestions
    - Priority cascade: one notification per tier for robot issues, naming the most urgent robot
    - Types: tier promotions/demotions, season ending, forfeit risk, no weapon, incomplete loadout, no subscriptions, subscription slots available, unallocated tuning, damaged, team mode gaps, team creation hints, onboarding/welcome
    - Robot readiness rungs, in order (`buildRobotReadinessNotifications`, #536). The first three use the same rule as the Robot Detail "Not Battle Ready" badge (`getOwnerBattleReadiness`), so the two views agree:
@@ -241,7 +241,8 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 │   └── Stable Name: "{username}'s Stable"
 ├── Notification System ✅
 │   ├── Tier change events (promotions/demotions)
-│   ├── Season ending countdown (≤5 cycles, dismissible)
+│   ├── Season phase notice (preparation, cycle 1 scheduling)
+│   ├── Season ending countdown (≤7 cycles, dismissible)
 │   ├── Robot readiness cascade (forfeit risk → no weapon → incomplete loadout → no subs → slots free → tuning → damaged)
 │   ├── Team mode subscription gaps
 │   ├── Team creation suggestions
@@ -288,8 +289,8 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 DashboardPage.tsx ✅
 ├── Navigation (global component)
 ├── Dashboard Header (inline)
-├── SeasonPhaseCard (preparation + cycle 1 only)
 ├── DashboardNotification (unified, repeated per notification)
+│   ├── SeasonPhaseCard first (preparation + cycle 1 only, info variant)
 │   └── Variants: success, warning, danger, info
 ├── dashboard/OverviewRow.tsx ✅  [Spec #48]
 │   │   grid-cols-1 lg:grid-cols-3 — fixed left-to-right tile order
