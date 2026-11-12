@@ -1,9 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { UnlockedAchievement } from '../utils/achievementUtils';
 import { useAuth } from '../contexts/AuthContext';
 import { api, subscribeResponse } from '../utils/api';
 
 const LAST_SEEN_KEY = 'achievementLastSeen';
+
+/** Whether any unlock pays credits or prestige (Trophies pay nothing). */
+function paysReward(unlocks: UnlockedAchievement[]): boolean {
+  return unlocks.some((u) => !u.trophy && ((u.rewardCredits ?? 0) > 0 || (u.rewardPrestige ?? 0) > 0));
+}
 
 /**
  * Surface achievement-unlock toasts. Two pathways feed `toasts`:
@@ -20,8 +25,12 @@ const LAST_SEEN_KEY = 'achievementLastSeen';
  */
 export function useAchievementToasts(enabled = true) {
   const [toasts, setToasts] = useState<UnlockedAchievement[]>([]);
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const isAuthenticated = !!user;
+  // `refreshUser` is recreated on every AuthProvider render; a ref keeps the
+  // subscription below from re-registering each time.
+  const refreshUserRef = useRef(refreshUser);
+  refreshUserRef.current = refreshUser;
 
   // Pathway 1: recap-on-auth fetch.
   useEffect(() => {
@@ -58,6 +67,12 @@ export function useAchievementToasts(enabled = true) {
       if (Array.isArray(unlocks) && unlocks.length > 0) {
         setToasts(prev => [...prev, ...unlocks]);
         localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString());
+        // The reward was credited server-side; the response that carried the
+        // unlock (an equip, an image change, …) doesn't return the balance, so
+        // re-read the user or screens keep the old credits (issue #601).
+        if (paysReward(unlocks)) {
+          refreshUserRef.current().catch(() => { /* a stale balance beats a failed request */ });
+        }
       }
     });
 

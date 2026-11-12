@@ -8,6 +8,7 @@ import { executeSettlement } from '../cycleScheduler';
 import { completeSerializedCycleCutover } from '../canonicalCycleIdentity';
 import { executeSeasonRollover } from '../../season/seasonRolloverService';
 import { runTurnStepNonFatal } from '../../automaton';
+import { redealLeagueInstances } from '../../league/leagueInstanceRedeal';
 
 const mockGetCurrentSeason = jest.fn();
 const mockAdvancePreparation = jest.fn();
@@ -19,6 +20,7 @@ jest.mock('../../season/seasonService', () => ({
 }));
 jest.mock('../../season/seasonRolloverService', () => ({ executeSeasonRollover: jest.fn(async () => ({})) }));
 jest.mock('../../automaton', () => ({ runTurnStepNonFatal: jest.fn(async () => ({ ok: true, summary: {} })) }));
+jest.mock('../../league/leagueInstanceRedeal', () => ({ redealLeagueInstances: jest.fn(async () => ({ moved: 0, failures: [] })) }));
 jest.mock('../canonicalCycleIdentity', () => ({
   beginSerializedCycleCutover: jest.fn(async () => 42),
   getSerializedCycleCutoverUserIdWatermark: jest.fn(async () => 100),
@@ -100,5 +102,42 @@ describe('executeSettlement — Automaton Turn_Steps', () => {
 
     // The closed cycle is reported for the scheduler run history.
     await expect(executeSettlement()).resolves.toEqual({ jobName: 'settlement', cycleNumber: 42 });
+  });
+});
+
+/**
+ * Issue #599: battle events (and their nightly instance re-deal) are suspended
+ * during preparation, so the preparation settlement re-deals the league
+ * instances itself, after the Automaton turn has placed its new robots.
+ */
+describe('executeSettlement — preparation league instance re-deal', () => {
+  const mockRedeal = redealLeagueInstances as jest.MockedFunction<typeof redealLeagueInstances>;
+
+  beforeEach(() => {
+    mockGetCurrentSeason.mockResolvedValue({ seasonNumber: 5, phase: 'preparation' });
+    mockAdvancePreparation.mockResolvedValue({
+      seasonNumber: 5, preparationCyclesCompleted: 1, remainingPreparationCycles: 1, transitionedToCompetitive: false,
+    });
+  });
+
+  it('re-deals the league instances after the preparation Automaton turn', async () => {
+    await executeSettlement();
+
+    expect(mockRedeal).toHaveBeenCalledTimes(1);
+    expect(mockTurnStep.mock.invocationCallOrder[0]).toBeLessThan(mockRedeal.mock.invocationCallOrder[0]);
+  });
+
+  it('does not re-deal in a competitive settlement (the battle events rebalance then)', async () => {
+    mockGetCurrentSeason.mockResolvedValue({ seasonNumber: 4, phase: 'competitive' });
+
+    await executeSettlement();
+
+    expect(mockRedeal).not.toHaveBeenCalled();
+  });
+
+  it('never fails the preparation settlement when the re-deal throws', async () => {
+    mockRedeal.mockRejectedValueOnce(new Error('module load failed'));
+
+    await expect(executeSettlement()).resolves.toEqual({ jobName: 'settlement' });
   });
 });

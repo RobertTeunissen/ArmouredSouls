@@ -44,7 +44,7 @@ One rule applies to every standing-backed mode (`league_1v1`, `koth`, `grand_mel
 - **When:** a `standings` row is created the first time the entity becomes matchable in that mode through a Booking Office subscription. Creating a robot or registering a team creates no standings.
   - Robot modes (`league_1v1`, `koth`, `grand_melee`): the robot subscribes to the mode.
   - Team modes: the team is complete and every member holds the mode's subscription. 2-robot teams can enter `league_2v2` and `tag_team`, independently of each other. 3-robot teams can enter `league_3v3`. The check runs on subscription gain, team registration and member swap, whichever completes the set.
-- **Where:** Bronze, 0 LP, in the least-full Bronze instance (ties go to the lowest instance number). When every Bronze instance holds 100 entities, a new instance is opened.
+- **Where:** Bronze, 0 LP, in the least-full Bronze instance (ties go to the lowest instance number). When every Bronze instance holds 100 entities, a new instance is opened. The instance is not permanent: tiers are redistributed after every rebalance, at the season rollover and on every preparation day (see "Instance Rebalancing").
 - **Kept:** unsubscribing or swapping a team member keeps the row, so the entity keeps its tier, LP and record and simply stops being matched. Resubscribing picks up where it left off.
 - **Deleted:** team disband deletes the team's rows (re-registering starts fresh in Bronze), account reset deletes the user's robot and team rows, and the season rollover wipes all rows.
 
@@ -171,16 +171,17 @@ After each promotion/demotion run, every tier is redistributed from its complete
 
 ### Algorithm
 
-1. Collect all robots in the tier
-2. Sort by LP (desc), then ELO (desc)
-3. Calculate target instance count: `ceil(totalRobots / 100)`
+1. Collect all entities in the tier
+2. Sort by LP (desc), then by standings row age (oldest first)
+3. Calculate target instance count: `ceil(totalEntities / 100)`
 4. Distribute round-robin across instances
 
-Round-robin ensures each instance gets a mix of high, medium, and low LP robots, maintaining competitive balance.
+Round-robin ensures each instance gets a mix of high, medium, and low LP entities, maintaining competitive balance. The age tie-break matters at season start, when every row has 0 LP: entities entered after a bulk placement are the newest rows, so they are dealt one per instance instead of staying together.
 
 ### When It Runs
 
-The cycle scheduler calls the shared league executor after each promotion/demotion cycle. It snapshots every tier before movement, executes those fixed plans, then redistributes every tier's post-movement population.
+- **Competitive cycles:** the cycle scheduler calls the shared league executor after each promotion/demotion cycle. It snapshots every tier before movement, executes those fixed plans, then redistributes every tier's post-movement population.
+- **Season rollover and preparation days** (`services/league/leagueInstanceRedeal.ts`, issue #599): battle events are suspended during preparation, so nothing would redistribute the tiers before the first competitive cycle. New rows join the least-full instance and a new instance opens only when all hold 100, so the Automatons' opening build fills the instances one after another and leaves a single part-filled one; at the Season 2 start on ACC every human robot then entered 1v1 Bronze 11 and the human 2v2 teams Bronze 5. The rollover therefore redistributes every tier of every tiered mode right after the Automatons' `season_open` turn, and every preparation settlement (scheduled or admin-run) does it again after the preparation Automaton turn. Only instances change; nobody is promoted or demoted. A failing mode/tier is logged and the rest still runs.
 
 ### What's Preserved
 
@@ -246,6 +247,7 @@ All paths relative to `app/backend/src/`.
 | `services/tag-team/tagTeamLeagueRebalancingService.ts` | Tag Team adapter and orchestration |
 | `services/league/leagueInstanceService.ts` | Instance management; re-exports the 100-entity capacity |
 | `services/league/leagueInstancePlacement.ts` | Canonical 100-entity capacity and the transaction-scoped least-full instance picker |
+| `services/league/leagueInstanceRedeal.ts` | `redealLeagueInstances`: redistributes every tier of every tiered mode at season rollover and on preparation days |
 | `services/standings/standingPlacement.ts` | The standings creation rule (`ensureStanding`, `ensureTeamStandings`, `ensureStandingsForSubscriptionGain`) |
 | `services/analytics/matchmakingService.ts` | LP-primary matchmaking, robot pairing, scheduled match creation |
 | `services/tag-team/tagTeamMatchmakingService.ts` | Tag team matchmaking |

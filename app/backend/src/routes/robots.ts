@@ -418,7 +418,20 @@ router.put('/:id/appearance', authenticateToken, ...validated({ params: robotIdP
   const appearanceRobot = await updateRobotAppearance(robotId, imageUrl);
   logger.info('Robot appearance updated', { userId, robotId });
 
-  res.json({ success: true, robot: appearanceRobot, message: 'Robot image updated successfully' });
+  // E32 "Ready for My Close-Up" counts any of the player's own images, so a
+  // returning player who reuses last season's upload from the Image_Library
+  // earns it too (issue #601). Presets don't count.
+  let achievementUnlocks: UnlockedAchievement[] = [];
+  if (imageUrl.startsWith('/uploads/')) {
+    try {
+      achievementUnlocks = await achievementService.checkAndAward(userId, robotId, {
+        type: 'robot_image_uploaded',
+        data: { robotId },
+      });
+    } catch { /* achievement failures don't block */ }
+  }
+
+  res.json({ success: true, robot: appearanceRobot, message: 'Robot image updated successfully', achievementUnlocks });
 }));
 
 // Get scheduling eligibility report for a robot

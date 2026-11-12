@@ -34,6 +34,7 @@ export type AchievementTriggerType =
   | 'attribute_max'
   | 'attribute_upgraded'
   | 'weapon_type'
+  | 'weapon_type_equipped'
   | 'loadout_wins'
   | 'stance_wins'
   | 'perfect_victory'
@@ -1519,7 +1520,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     rewardCredits: TIER_REWARDS.easy.credits,
     rewardPrestige: TIER_REWARDS.easy.prestige,
     hidden: false,
-    triggerType: 'weapon_type',
+    triggerType: 'weapon_type_equipped',
     triggerMeta: { weaponType: 'energy' },
     progressType: 'boolean',
     badgeIconFile: 'achievement-s1',
@@ -1535,7 +1536,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     rewardCredits: TIER_REWARDS.medium.credits,
     rewardPrestige: TIER_REWARDS.medium.prestige,
     hidden: false,
-    triggerType: 'weapon_type',
+    triggerType: 'weapon_type_equipped',
     triggerMeta: { weaponType: 'ballistic' },
     progressType: 'boolean',
     badgeIconFile: 'achievement-s2',
@@ -1551,7 +1552,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     rewardCredits: TIER_REWARDS.easy.credits,
     rewardPrestige: TIER_REWARDS.easy.prestige,
     hidden: false,
-    triggerType: 'weapon_type',
+    triggerType: 'weapon_type_equipped',
     triggerMeta: { weaponType: 'melee' },
     progressType: 'boolean',
     badgeIconFile: 'achievement-s3',
@@ -2274,7 +2275,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     id: 'E32',
     name: 'Ready for My Close-Up',
-    description: 'Upload a custom image for a robot',
+    description: 'Give a robot a custom image of your own',
     reference: 'Sunset Boulevard',
     category: 'economy',
     tier: 'easy',

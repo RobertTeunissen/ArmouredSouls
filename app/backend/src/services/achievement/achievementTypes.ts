@@ -184,7 +184,9 @@ export const EVENT_TRIGGER_MAP: Record<AchievementEventType, AchievementTriggerT
     'owns_legendary_starter_weapon',
     'owns_max_dps_weapon',
   ],
-  weapon_equipped: ['weapon_type', 'effective_stat'],
+  // `weapon_type` is "bought one" (E7 Mall Cop) and stays on weapon_purchased;
+  // `weapon_type_equipped` reads the robot's equipped slots (S1–S3, issue #601).
+  weapon_equipped: ['weapon_type_equipped', 'effective_stat'],
   attribute_upgraded: ['attribute_upgraded', 'effective_stat', 'attribute_upgrade_spend'],
   facility_upgraded: ['facility_count'],
   robot_created: ['robot_count'],

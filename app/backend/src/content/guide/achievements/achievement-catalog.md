@@ -2,7 +2,7 @@
 title: "Achievement Catalog"
 description: "All achievements organized by category — Combat, League & Competition, Economy & Stable, Prestige & Fame, and Style & Quirky — with how to earn them, tiers and Trophies."
 order: 2
-lastUpdated: "2026-11-11"
+lastUpdated: "2026-11-12"
 relatedArticles:
   - achievements/achievement-system
   - achievements/badges-and-showcase
@@ -146,7 +146,7 @@ Stable-wide economic activity, facilities, weapons, roster management and the Bo
 | **"SimCity"** | 🟠 Hard | Own every facility type at level 1 or higher |
 | **"To Infinity and Beyond"** | 🟠 Hard | Upgrade any facility to level 10 |
 | **"MacGyver"** | 🔵 Medium | Spend ₡10,000,000 on repairs |
-| **"Ready for My Close-Up"** | 🟢 Easy | Upload a custom image for a robot |
+| **"Ready for My Close-Up"** | 🟢 Easy | Give a robot a custom image of your own |
 | **"Merchandising!"** | 🟢 Easy | Earn ₡500,000 from the Merchandising Hub |
 | **"More Than Meets the Eye"** | 🔵 Medium | Win battles with all four loadout types (any robots) |
 | **"Ain't Nobody Got Time for That"** | 🟠 Hard | Subscribe one robot to every Booking Office event type at once |

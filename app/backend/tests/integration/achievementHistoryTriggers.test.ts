@@ -17,7 +17,7 @@ import {
   getAttributeUpgradeSpend,
   hasDippedBelow,
 } from '../../src/services/achievement/historyTriggers';
-import { checkYieldsForcedCumulative } from '../../src/services/achievement/triggerEvaluator';
+import { checkRobotEquippedWeaponType, checkYieldsForcedCumulative } from '../../src/services/achievement/triggerEvaluator';
 import { loadBattleTimeMaxHP } from '../../src/services/battle/combatBuildRecorder';
 import { maxHPFromHullIntegrity } from '../../src/shared/utils/robotStats';
 import { createTestBattle, createTestRobot, createTestUser, deleteTestUser } from '../testHelpers';
@@ -52,6 +52,30 @@ describe('Season 2 achievement history queries (database)', () => {
     battleIds.push(created.id);
     return created.id;
   };
+
+  // Issue #601: S1–S3 "Equip a robot with a … weapon" read the equipped slots.
+  it('finds a weapon type only in the robot\'s equipped slots, not in storage', async () => {
+    const [melee, energy] = await Promise.all([
+      prisma.weapon.findFirstOrThrow({ where: { weaponType: 'melee' }, select: { id: true } }),
+      prisma.weapon.findFirstOrThrow({ where: { weaponType: 'energy' }, select: { id: true } }),
+    ]);
+    const meleeItem = await prisma.weaponInventory.create({ data: { userId, weaponId: melee.id, pricePaid: 0 } });
+    const energyItem = await prisma.weaponInventory.create({ data: { userId, weaponId: energy.id, pricePaid: 0 } });
+    try {
+      // Both owned, neither equipped.
+      await expect(checkRobotEquippedWeaponType(userId, robotId, 'melee')).resolves.toBe(false);
+      await prisma.robot.update({ where: { id: robotId }, data: { offhandWeaponId: meleeItem.id } });
+      await expect(checkRobotEquippedWeaponType(userId, robotId, 'melee')).resolves.toBe(true);
+      await expect(checkRobotEquippedWeaponType(userId, robotId, 'energy')).resolves.toBe(false);
+      await prisma.robot.update({ where: { id: robotId }, data: { mainWeaponId: energyItem.id } });
+      await expect(checkRobotEquippedWeaponType(userId, robotId, 'energy')).resolves.toBe(true);
+      // Another stable's id never matches.
+      await expect(checkRobotEquippedWeaponType(rivalUserId, robotId, 'energy')).resolves.toBe(false);
+    } finally {
+      await prisma.robot.update({ where: { id: robotId }, data: { mainWeaponId: null, offhandWeaponId: null } });
+      await prisma.weaponInventory.deleteMany({ where: { id: { in: [meleeItem.id, energyItem.id] } } });
+    }
+  });
 
   it('counts a destruction only when the robot ended at 0 HP', async () => {
     // A real destruction, and an old-style Grand Melee yield stored as destroyed.

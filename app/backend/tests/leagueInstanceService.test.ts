@@ -389,6 +389,48 @@ describe('League Instance Service', () => {
       expect(instances[0].currentRobots).toBe(80);
       expect(instances[1].currentRobots).toBe(80);
     });
+
+    /**
+     * Issue #599, the Season 2 start on ACC: the Automatons' opening build filled
+     * Bronze 1–10 to 100 and left Bronze 11 part-filled, so every robot entered
+     * afterwards joined Bronze 11. Everyone has 0 LP, so only the tie-break
+     * decides where the late entrants go: oldest standing first deals them
+     * consecutively, one per instance.
+     */
+    it('spreads late entrants with equal LP over every instance', async () => {
+      const bulk = await prisma.user.create({ data: { username: 'test_bulk_user', passwordHash: 'hash' } });
+      await prisma.robot.createMany({
+        data: Array.from({ length: 220 }, (_, i) => ({
+          userId: bulk.id, name: `Bulk ${i}`, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2,
+        })),
+      });
+      // Filled one after another, as the least-full placement does for a bulk build.
+      await placeRobots(bulk.id, 'bronze', (index) => (index < 100 ? 1 : index < 200 ? 2 : 3));
+
+      const late = await prisma.user.create({ data: { username: 'test_late_user', passwordHash: 'hash' } });
+      await prisma.robot.createMany({
+        data: Array.from({ length: 6 }, (_, i) => ({
+          userId: late.id, name: `Late ${i}`, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2,
+        })),
+      });
+      await placeRobots(late.id, 'bronze', () => 3);
+
+      await rebalanceInstances('bronze');
+
+      const instances = await getInstancesForTier('bronze');
+      expect(instances.map((instance) => instance.currentRobots)).toEqual([76, 75, 75]);
+
+      const lateRobots = await prisma.robot.findMany({ where: { userId: late.id }, select: { id: true } });
+      const lateStandings = await prisma.standing.findMany({
+        where: { mode: 'league_1v1', entityType: 'robot', entityId: { in: lateRobots.map((r) => r.id) } },
+        select: { leagueInstanceId: true },
+      });
+      const perInstance = new Map<string, number>();
+      for (const standing of lateStandings) {
+        perInstance.set(standing.leagueInstanceId, (perInstance.get(standing.leagueInstanceId) ?? 0) + 1);
+      }
+      expect(Object.fromEntries(perInstance)).toEqual({ bronze_1: 2, bronze_2: 2, bronze_3: 2 });
+    });
   });
 
   describe('getRobotsInInstance', () => {

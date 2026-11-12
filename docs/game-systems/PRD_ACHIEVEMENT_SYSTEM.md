@@ -228,7 +228,7 @@ Stable-wide economic activity, facilities, weapons and roster management.
 | E29 | **"SimCity"** | SimCity | 🟠 Hard | Stable | Own every facility type at level 1 or higher |
 | E30 | **"To Infinity and Beyond"** | Toy Story | 🟠 Hard | Stable | Upgrade any facility to level 10 |
 | E31 | **"MacGyver"** | MacGyver | 🔵 Medium | Stable | Spend ₡10,000,000 on repairs |
-| E32 | **"Ready for My Close-Up"** | Sunset Boulevard | 🟢 Easy | Stable | Upload a custom image for a robot |
+| E32 | **"Ready for My Close-Up"** | Sunset Boulevard | 🟢 Easy | Stable | Give a robot a custom image of your own (a new upload, or one reused from the Image_Library; presets don't count) |
 | E33 | **"Merchandising!"** | Spaceballs | 🟢 Easy | Stable | Earn ₡500,000 from the Merchandising Hub |
 | E34 | **"More Than Meets the Eye"** | Transformers | 🔵 Medium | Stable | Win battles with all four loadout types (any robots) |
 | E35 | **"Ain't Nobody Got Time for That"** | Meme | 🟠 Hard | Stable | Subscribe one robot to every Booking Office event type at once |

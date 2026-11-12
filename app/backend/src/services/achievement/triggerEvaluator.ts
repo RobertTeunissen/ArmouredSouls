@@ -221,6 +221,28 @@ export async function checkWeaponType(
   return count > 0;
 }
 
+/**
+ * Whether the robot has a weapon of `weaponType` in its main or offhand slot.
+ * Owning one in storage doesn't count (issue #601).
+ */
+export async function checkRobotEquippedWeaponType(
+  userId: number,
+  robotId: number,
+  weaponType: string,
+): Promise<boolean> {
+  const count = await prisma.robot.count({
+    where: {
+      id: robotId,
+      userId,
+      OR: [
+        { mainWeapon: { weapon: { weaponType } } },
+        { offhandWeapon: { weapon: { weaponType } } },
+      ],
+    },
+  });
+  return count > 0;
+}
+
 export async function checkAllModesWin(userId: number): Promise<boolean> {
   const robots = await prisma.robot.findMany({
     where: { userId },
@@ -628,6 +650,12 @@ export async function evaluateTrigger(
         return String(data.weaponType) === targetType;
       }
       return checkWeaponType(userId, targetType);
+    }
+
+    // S1–S3: the robot the event names must have one equipped right now.
+    case 'weapon_type_equipped': {
+      if (!robotId) return false;
+      return checkRobotEquippedWeaponType(userId, robotId, String(triggerMeta?.weaponType ?? ''));
     }
 
     // ── Count-Based User Triggers (DB queries) ────────────────
