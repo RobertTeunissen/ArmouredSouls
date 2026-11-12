@@ -56,6 +56,26 @@ describe('SeasonProgressIndicator styling', () => {
     expect(screen.queryByTestId('season-preparation-dot')).toBeNull();
   });
 
+  // The desktop bar only fits the long label from 1440 px; below that the short
+  // one shows, or Logout is pushed off a 1280 px screen.
+  it('switches the desktop chip to the short label below 1440 px', () => {
+    seed({});
+    render(<SeasonProgressIndicator />);
+
+    const short = screen.getByText('S2 · 12/100');
+    const long = screen.getByText('Season 2 · Cycle 12 / 100');
+    expect(short.className).toContain('min-[1440px]:hidden');
+    expect(long.className).toMatch(/(?:^|\s)hidden(?:\s|$)/);
+    expect(long.className).toContain('min-[1440px]:inline');
+  });
+
+  it('shows only the short label in the compact chip', () => {
+    seed({});
+    render(<SeasonProgressIndicator compact />);
+
+    expect(screen.getByTestId('season-progress-indicator')).toHaveTextContent(/^S2 · 12\/100$/);
+  });
+
   it.each([
     ['preparation', { phase: 'preparation' as const, preparationDay: 1 }],
     ['competitive', {}],

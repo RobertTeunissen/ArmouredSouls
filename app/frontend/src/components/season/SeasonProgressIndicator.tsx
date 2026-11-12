@@ -29,17 +29,16 @@ export function SeasonProgressIndicator({
   const isPreparing = season.phase === 'preparation';
 
   // Season 0 has no fixed length, so it advertises no denominator.
-  const label = season.isLegacy
-    ? compact
-      ? `S0 · C${season.seasonCycle}`
-      : `Season 0 · Cycle ${season.seasonCycle}`
+  const shortLabel = season.isLegacy
+    ? `S0 · C${season.seasonCycle}`
     : isPreparing
-      ? compact
-        ? `S${season.seasonNumber} · Prep ${season.preparationDay}`
-        : `Season ${season.seasonNumber} · Preparation ${season.preparationDay}`
-      : compact
-        ? `S${season.seasonNumber} · ${season.seasonCycle}/${season.seasonLengthCycles}`
-        : `Season ${season.seasonNumber} · Cycle ${season.seasonCycle} / ${season.seasonLengthCycles}`;
+      ? `S${season.seasonNumber} · Prep ${season.preparationDay}`
+      : `S${season.seasonNumber} · ${season.seasonCycle}/${season.seasonLengthCycles}`;
+  const longLabel = season.isLegacy
+    ? `Season 0 · Cycle ${season.seasonCycle}`
+    : isPreparing
+      ? `Season ${season.seasonNumber} · Preparation ${season.preparationDay}`
+      : `Season ${season.seasonNumber} · Cycle ${season.seasonCycle} / ${season.seasonLengthCycles}`;
 
   const title = season.isLegacy
     ? 'Season 0 is the timeline that ran before seasons existed. It has no fixed length.'
@@ -64,7 +63,16 @@ export function SeasonProgressIndicator({
       {isPreparing && (
         <span aria-hidden="true" data-testid="season-preparation-dot" className="h-2 w-2 shrink-0 rounded-full bg-warning" />
       )}
-      <span className="truncate">{label}</span>
+      {compact ? (
+        <span className="truncate">{shortLabel}</span>
+      ) : (
+        // The desktop bar only has room for the long label from 1440 px: at
+        // 1280 px it pushed Logout off the screen (E2E overflow check).
+        <>
+          <span className="truncate min-[1440px]:hidden">{shortLabel}</span>
+          <span className="hidden truncate min-[1440px]:inline">{longLabel}</span>
+        </>
+      )}
     </span>
   );
 }
