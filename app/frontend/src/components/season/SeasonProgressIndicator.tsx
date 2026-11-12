@@ -47,18 +47,24 @@ export function SeasonProgressIndicator({
       ? `Preparation window — no battles are scheduled. ${season.remainingPreparationCycles} cycle(s) remaining.`
       : `${season.remainingCompetitiveCycles} competitive cycle(s) remaining this season.`;
 
+  // Same chip as the credits display next to it (surface fill, white/10 border,
+  // matching size per layout). Preparation is marked by a warning-token dot,
+  // not by recolouring the chip (issue #602: the raw amber/slate palette
+  // didn't match the rest of the site).
+  const size = compact ? 'gap-1.5 px-1.5 py-1 sm:px-2' : 'gap-2 px-3 py-2';
+
   return (
     <span
-      className={`inline-flex items-center whitespace-nowrap rounded px-2 py-1 text-xs font-medium ${
-        isPreparing
-          ? 'bg-amber-900/40 text-amber-200'
-          : 'bg-slate-800/60 text-slate-300'
-      } ${className}`}
+      className={`inline-flex min-w-0 items-center whitespace-nowrap rounded-md border border-white/10 bg-surface text-sm font-medium text-secondary ${size} ${className}`}
       title={title}
       data-testid="season-progress-indicator"
+      data-phase={isPreparing ? 'preparation' : 'competitive'}
       aria-label={title}
     >
-      {label}
+      {isPreparing && (
+        <span aria-hidden="true" data-testid="season-preparation-dot" className="h-2 w-2 shrink-0 rounded-full bg-warning" />
+      )}
+      <span className="truncate">{label}</span>
     </span>
   );
 }
