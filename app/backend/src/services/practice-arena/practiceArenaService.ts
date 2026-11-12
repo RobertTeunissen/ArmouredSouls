@@ -87,6 +87,12 @@ export interface PracticeBatchResult {
     avgRobot1DamageDealt: number;
     avgRobot2DamageDealt: number;
   };
+  /**
+   * Unlocks from the batch's counter update, at the top level like a single
+   * battle's: the frontend's toast subscriber only reads `achievementUnlocks`
+   * on the response body (#608).
+   */
+  achievementUnlocks: UnlockedAchievement[];
 }
 
 /** Sparring partner definition returned by GET /sparring-partners */
@@ -680,11 +686,6 @@ export async function executePracticeBatch(
     logger.error(`[PracticeArena] Achievement/counter update failed for user ${userId}: ${error}`);
   }
 
-  // Attach achievement unlocks to the last result
-  if (results.length > 0 && batchAchievementUnlocks.length > 0) {
-    results[results.length - 1].achievementUnlocks = batchAchievementUnlocks;
-  }
-
   // Compute aggregate stats
   let robot1Wins = 0;
   let robot2Wins = 0;
@@ -718,6 +719,7 @@ export async function executePracticeBatch(
       avgRobot1DamageDealt: count > 0 ? totalRobot1Damage / count : 0,
       avgRobot2DamageDealt: count > 0 ? totalRobot2Damage / count : 0,
     },
+    achievementUnlocks: batchAchievementUnlocks,
   };
 }
 
