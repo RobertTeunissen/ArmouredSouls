@@ -101,7 +101,7 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
      1. `readiness-forfeit-risk` (danger): no main weapon **and** booked matches (`heldSlots` from the subscription overview). "{robot} will forfeit its booked matches unless re-armed", detail lists the booked events by label; action Equip Weapon
      2. `readiness-no-weapon` (danger): no main weapon and nothing booked (or no overview). "{robot} has no weapon equipped"; action Equip Weapon
      3. `readiness-incomplete-loadout` (warning): main weapon present but the loadout is not ready (Weapon+Shield without a shield, Dual-Wield without an offhand). "{robot} is not battle ready", detail "{reason}. It won't be scheduled, and booked matches are fought with a single weapon"; action Fix Loadout
-     4. then no subscriptions → slots free → tuning → damaged, unchanged
+     4. then no subscriptions → slots free → tuning → damaged, unchanged. The two subscription rungs ("Manage Subscriptions", "View Subscriptions") open the Booking Office (`/booking-office`), where subscriptions are managed (#607; they used to open the robot's public profile)
    - Each rung names the first matching robot and adds "(+N more)" for the rest
 
 4. **Visual Robot Cards** - `RobotDashboardCard.tsx`
