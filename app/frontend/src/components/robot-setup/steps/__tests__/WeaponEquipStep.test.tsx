@@ -23,6 +23,14 @@ const SHOP = [
   weapon(5, 'Plasma Rifle', 900_000),
 ];
 
+type Holder = { id: number; name: string };
+/** A GET /api/weapon-inventory row (the real shape: holder arrays per slot). */
+const owned = (
+  id: number,
+  w: ReturnType<typeof weapon>,
+  holders: { robotsMain?: Holder[]; robotsOffhand?: Holder[] } = {},
+) => ({ id, weapon: w, robotsMain: holders.robotsMain ?? [], robotsOffhand: holders.robotsOffhand ?? [] });
+
 function setup({ inventory = [] as unknown[], currency = 2_500_000, isFull = false } = {}) {
   mocks.get.mockImplementation(async (url: string) => {
     if (url === '/api/weapon-inventory') return inventory;
@@ -68,7 +76,7 @@ describe('WeaponEquipStep', () => {
   });
 
   it('equips a spare weapon from storage instead of buying', async () => {
-    setup({ inventory: [{ id: 31, weapon: weapon(1, 'Practice Blaster', 50_000), equippedOnRobotMain: null, equippedOnRobotOffhand: null }] });
+    setup({ inventory: [owned(31, weapon(1, 'Practice Blaster', 50_000))] });
     const user = userEvent.setup();
     const onComplete = renderStep();
 
@@ -76,6 +84,34 @@ describe('WeaponEquipStep', () => {
     expect(mocks.equip).toHaveBeenCalledWith(9, 31);
     expect(mocks.post).not.toHaveBeenCalled();
     expect(onComplete).toHaveBeenCalled();
+  });
+
+  // #606: a weapon on another robot was offered as spare, then refused by the backend.
+  it('does not offer weapons another robot holds as spare', async () => {
+    setup({
+      inventory: [
+        owned(31, weapon(1, 'Practice Sword', 50_000), { robotsMain: [{ id: 4, name: 'Bob the Minion' }] }),
+        owned(32, weapon(2, 'Training Beam', 60_000), { robotsOffhand: [{ id: 4, name: 'Bob the Minion' }] }),
+      ],
+    });
+    renderStep();
+
+    expect(await screen.findAllByRole('button', { name: /^Buy and equip/ })).not.toHaveLength(0);
+    expect(screen.queryByText('Spare weapons in your storage:')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Equip / })).toBeNull();
+  });
+
+  it('lists only the unequipped weapons when storage holds both', async () => {
+    setup({
+      inventory: [
+        owned(31, weapon(1, 'Practice Sword', 50_000), { robotsMain: [{ id: 4, name: 'Bob the Minion' }] }),
+        owned(33, weapon(2, 'Training Beam', 60_000)),
+      ],
+    });
+    renderStep();
+
+    expect(await screen.findByRole('button', { name: 'Equip Training Beam' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Equip Practice Sword' })).toBeNull();
   });
 
   it('points to Facilities when storage is full', async () => {

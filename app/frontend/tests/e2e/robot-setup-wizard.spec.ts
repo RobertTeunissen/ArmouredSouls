@@ -1,5 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
+import { test, expect, type Page } from '@playwright/test';
 import { registerNewUser } from './helpers/register';
+import { API_URL } from './helpers/automaton';
 
 /**
  * Robot setup wizard against the real backend (Spec #47).
@@ -13,16 +15,31 @@ import { registerNewUser } from './helpers/register';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
+async function registerAndSkipTutorial(page: Page): Promise<void> {
+  await registerNewUser(page);
+  if (page.url().includes('/onboarding')) {
+    await page.getByRole('button', { name: 'Skip Tutorial' }).click();
+    await page.getByRole('button', { name: /Confirm skip tutorial/i }).click();
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
+  }
+}
+
+/** Authenticated API call as the logged-in player (economic writes need an Idempotency-Key). */
+async function playerApi<T>(page: Page, method: 'post' | 'put', path: string, data: unknown): Promise<T> {
+  const token = await page.evaluate(() => localStorage.getItem('token'));
+  const response = await page.request[method](`${API_URL}${path}`, {
+    headers: { Authorization: `Bearer ${token}`, 'Idempotency-Key': randomUUID() },
+    data,
+  });
+  expect(response.ok(), `${method.toUpperCase()} ${path} → ${response.status()}`).toBe(true);
+  return (await response.json()) as T;
+}
+
 test.describe('Robot setup wizard', () => {
   test('a new robot is battle-ready after the wizard: weapon bought and equipped, events entered', async ({ page }) => {
     test.setTimeout(120_000);
 
-    await registerNewUser(page);
-    if (page.url().includes('/onboarding')) {
-      await page.getByRole('button', { name: 'Skip Tutorial' }).click();
-      await page.getByRole('button', { name: /Confirm skip tutorial/i }).click();
-      await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
-    }
+    await registerAndSkipTutorial(page);
 
     // Create the robot; the wizard opens.
     await page.goto('/robots/create');
@@ -60,5 +77,38 @@ test.describe('Robot setup wizard', () => {
     const workshopUrl = page.url();
     await page.goto(workshopUrl.replace(/\/prepare$/, '/setup'));
     await expect(page).toHaveURL(/\/robots\/\d+\/prepare$/, { timeout: 15000 });
+  });
+
+  // #606: the Weapon step read holder fields the inventory API doesn't return
+  // (it returns `robotsMain`/`robotsOffhand`), so a second robot was offered
+  // the first robot's weapon as "spare" and the equip was refused.
+  test('a second robot is not offered the weapon the first robot holds', async ({ page }) => {
+    test.setTimeout(120_000);
+    await registerAndSkipTutorial(page);
+
+    // First robot with an equipped weapon, set up through the API.
+    await playerApi(page, 'post', '/api/facilities/upgrade', { facilityType: 'roster_expansion' });
+    const { robot } = await playerApi<{ robot: { id: number } }>(page, 'post', '/api/robots', { name: `Held-${Date.now().toString(36)}` });
+    const weapons = await (await page.request.get(`${API_URL}/api/weapons`, {
+      headers: { Authorization: `Bearer ${await page.evaluate(() => localStorage.getItem('token'))}` },
+    })).json() as Array<{ id: number; name: string; cost: number; handsRequired: string }>;
+    const held = weapons.filter((w) => w.handsRequired === 'one').sort((a, b) => a.cost - b.cost)[0];
+    const bought = await playerApi<{ weaponInventory: { id: number } }>(page, 'post', '/api/weapon-inventory/purchase', { weaponId: held.id });
+    await playerApi(page, 'put', `/api/robots/${robot.id}/equip-main-weapon`, { weaponInventoryId: bought.weaponInventory.id });
+
+    // Second robot through the wizard: the held weapon is not spare, so the step offers the shop.
+    await page.goto('/robots/create');
+    await page.getByLabel('Robot Name').fill(`Wiz2-${Date.now().toString(36)}`);
+    await page.getByRole('button', { name: /Create Robot/ }).click();
+    await expect(page).toHaveURL(/\/robots\/\d+\/setup$/, { timeout: 20000 });
+    // Escape skips the portrait: the achievement toasts from the setup above
+    // sit over the picker's Close button.
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.keyboard.press('Escape');
+
+    await expect(page.getByRole('heading', { name: 'Equip a weapon' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Buy and equip/ }).first()).toBeVisible();
+    await expect(page.getByText('Spare weapons in your storage:')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: `Equip ${held.name}`, exact: true })).toHaveCount(0);
   });
 });
