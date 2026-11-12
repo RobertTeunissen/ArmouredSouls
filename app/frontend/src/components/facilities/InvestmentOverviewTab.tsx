@@ -7,7 +7,7 @@
  * Created in Spec 30 (Fix Investment Advisor).
  */
 
-import type { UnifiedFacilityROI, FacilityRecommendation } from './types';
+import type { FacilityRecommendation, FacilityRecommendationPriority, UnifiedFacilityROI } from '@shared/types';
 
 export interface InvestmentOverviewTabProps {
   loading: boolean;
@@ -176,8 +176,8 @@ function StatusBadge({ roi }: { roi: UnifiedFacilityROI }) {
   );
 }
 
-function PriorityBadge({ priority }: { priority: string }) {
-  const styles: Record<string, string> = {
+function PriorityBadge({ priority }: { priority: FacilityRecommendationPriority }) {
+  const styles: Record<FacilityRecommendationPriority, string> = {
     high: 'bg-green-900 text-green-300',
     medium: 'bg-blue-900 text-blue-300',
     low: 'bg-surface-elevated text-secondary',

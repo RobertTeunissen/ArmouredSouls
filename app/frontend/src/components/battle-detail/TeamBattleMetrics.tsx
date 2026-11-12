@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import type { BattleLogResponse, BattleLogParticipant, TeamBattleLog } from '../../utils/matchmakingApi';
 import { isTeamBattleLog } from '../../utils/matchmakingApi';
 import AutomatonBadge from '../AutomatonBadge';
+import type { BattleLogParticipant, BattleLogResponse, TeamBattleLog } from '@shared/types';
 
 interface TeamBattleMetricsProps {
   battleLog: BattleLogResponse;

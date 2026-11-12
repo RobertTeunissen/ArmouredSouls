@@ -12,7 +12,13 @@ import { useStableStore } from '../../stores';
 import { api } from '../../utils/api';
 import { ApiError } from '../../utils/ApiError';
 import { FACILITY_CATEGORIES } from './constants';
-import type { TabType, Facility, UnifiedFacilityROI, FacilityRecommendation } from './types';
+import type { TabType, Facility } from './types';
+import type {
+  AllEconomicROIsResult,
+  FacilityRecommendation,
+  RecommendationSummary,
+  UnifiedFacilityROI,
+} from '@shared/types';
 import { createLogger } from '../../utils/logger';
 
 const log = createLogger('useFacilities');
@@ -111,8 +117,8 @@ export function useFacilities() {
 
       // Fetch all economic facility ROIs in a single call
       try {
-        const roiData = await api.get<{ facilities?: UnifiedFacilityROI[] }>(`/api/analytics/facility/${user.id}/roi/all-economic`);
-        setFacilityROIs(roiData.facilities || []);
+        const roiData = await api.get<AllEconomicROIsResult>(`/api/analytics/facility/${user.id}/roi/all-economic`);
+        setFacilityROIs(roiData.facilities);
       } catch (err) {
         log.error('Error fetching ROI data', { err });
         setFacilityROIs([]);
@@ -120,10 +126,10 @@ export function useFacilities() {
 
       // Fetch recommendations
       try {
-        const recData = await api.get<{ recommendations?: FacilityRecommendation[] }>(
+        const recData = await api.get<RecommendationSummary>(
           `/api/analytics/facility/${user.id}/recommendations`,
         );
-        setRecommendations(recData.recommendations || []);
+        setRecommendations(recData.recommendations);
       } catch (err) {
         log.error('Error fetching recommendations', { err });
         setRecommendations([]);

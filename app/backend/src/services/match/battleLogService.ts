@@ -6,6 +6,17 @@ import prisma from '../../lib/prisma';
 import { Prisma, BattleParticipant, type StableType } from '../../../generated/prisma';
 import { decodeBattleLog } from '../battle/battleLogCodec';
 import { PLAYER_LOG_HIDDEN_FIELDS, classifyForfeit } from './matchHistoryService';
+import type {
+  BattleLogPayload,
+  BattleLogResponse,
+  BattleLogRobot,
+  BattleSummaryView,
+  KothLogParticipant,
+  KothPlaybackMetadata,
+  TagTeamLogRobot,
+  TagTeamLogSide,
+  TagTeamLogSummary,
+} from '../../shared/types';
 
 // ─── Prisma Payload Types ────────────────────────────────────────────
 
@@ -19,7 +30,7 @@ type TagTeamRobot = Prisma.RobotGetPayload<{
  * Fetch and format a detailed battle log for a specific battle.
  * Returns the full response shape expected by the frontend.
  */
-export async function getBattleLog(battleId: number) {
+export async function getBattleLog(battleId: number): Promise<BattleLogResponse | null> {
   const battle = await prisma.battle.findUnique({
     where: { id: battleId },
     include: {
@@ -64,26 +75,16 @@ export async function getBattleLog(battleId: number) {
   const streamingRevenue1 = robot1Part?.streamingRevenue || 0;
   const streamingRevenue2 = robot2Part?.streamingRevenue || 0;
 
-  const baseResponse: Record<string, unknown> = {
-    battleId: battleData.id,
-    createdAt: battleData.createdAt,
-    battleType: battleData.battleType,
-    leagueType: battleData.leagueType,
-    leagueInstanceId: battleData.leagueInstanceId ?? null,
-    tournamentId: battleData.tournamentId ?? null,
-    duration: battleData.durationSeconds,
-    playbackAvailable: battleData.battleLog !== null,
-    // Admin-only debug fields (formula breakdowns with every roll) are stripped:
-    // no player view reads them, and they are the bulk of large logs.
-    battleLog:
-      battleData.battleLog !== null
-        ? JSON.parse(
-            JSON.stringify(battleData.battleLog, (key, value) =>
-              PLAYER_LOG_HIDDEN_FIELDS.has(key) ? undefined : typeof value === 'bigint' ? Number(value) : value,
-            ),
-          )
-        : null,
-  };
+  // Admin-only debug fields (formula breakdowns with every roll) are stripped:
+  // no player view reads them, and they are the bulk of large logs.
+  const playerLog: BattleLogPayload | null =
+    battleData.battleLog !== null
+      ? (JSON.parse(
+          JSON.stringify(battleData.battleLog, (key, value) =>
+            PLAYER_LOG_HIDDEN_FIELDS.has(key) ? undefined : typeof value === 'bigint' ? Number(value) : value,
+          ),
+        ) as BattleLogPayload)
+      : null;
 
   // Pre-computed summary (Spec #39) and the bracket forfeit marker, which the
   // forfeit classifier reads instead of the summary or battle_log.
@@ -95,18 +96,33 @@ export async function getBattleLog(battleId: number) {
     }),
   ]);
   const forfeit = classifyForfeit(battleData.battleType, battleParticipants, tournamentForfeit !== null);
-  baseResponse.isForfeit = forfeit.isForfeit;
-  baseResponse.forfeitedRobotIds = forfeit.forfeitedRobotIds;
+
+  const baseResponse: BattleLogResponse = {
+    battleId: battleData.id,
+    createdAt: battleData.createdAt.toISOString(),
+    battleType: battleData.battleType,
+    leagueType: battleData.leagueType,
+    leagueInstanceId: battleData.leagueInstanceId ?? null,
+    tournamentId: battleData.tournamentId ?? null,
+    duration: battleData.durationSeconds,
+    playbackAvailable: battleData.battleLog !== null,
+    battleLog: playerLog,
+    isForfeit: forfeit.isForfeit,
+    forfeitedRobotIds: forfeit.forfeitedRobotIds,
+    participants: [],
+    winner: null,
+  };
   if (summary) {
+    // Stored JSON written by battleSummaryComputer in these shapes.
     baseResponse.summary = {
-      perRobot: summary.perRobot,
-      perTeam: summary.perTeam,
-      damageFlows: summary.damageFlows,
-      participants: summary.participants,
-      kothPlacements: summary.kothPlacements,
-      kothData: summary.kothData,
-      startingPositions: summary.startingPositions,
-      endingPositions: summary.endingPositions,
+      perRobot: summary.perRobot as unknown as BattleSummaryView['perRobot'],
+      perTeam: summary.perTeam as unknown as BattleSummaryView['perTeam'],
+      damageFlows: summary.damageFlows as unknown as BattleSummaryView['damageFlows'],
+      participants: summary.participants as unknown as BattleSummaryView['participants'],
+      kothPlacements: summary.kothPlacements as unknown as BattleSummaryView['kothPlacements'],
+      kothData: summary.kothData as unknown as BattleSummaryView['kothData'],
+      startingPositions: summary.startingPositions as unknown as BattleSummaryView['startingPositions'],
+      endingPositions: summary.endingPositions as unknown as BattleSummaryView['endingPositions'],
       arenaRadius: summary.arenaRadius,
       battleDuration: summary.battleDuration,
       totalEvents: summary.totalEvents,
@@ -156,25 +172,23 @@ export async function getBattleLog(battleId: number) {
     const team1Active = battleParticipants.find(p => p.team === 1 && p.role === 'active');
     const team2Active = battleParticipants.find(p => p.team === 2 && p.role === 'active');
     if (team1Active && team2Active) {
-      await buildTagTeamLogResponse(baseResponse, battleData, battleParticipants);
+      Object.assign(baseResponse, await buildTagTeamLogResponse(battleData, battleParticipants));
     }
   } else if (battleData.battleType === 'koth' || battleData.battleType === 'grand_melee') {
-    await buildKothLogResponse(baseResponse, battleData, battleId, battleParticipants);
+    Object.assign(baseResponse, await buildKothLogResponse(battleData, battleId));
   } else {
-    buildStandardLogResponse(baseResponse, battleData, robot1Part, robot2Part, streamingRevenue1, streamingRevenue2);
+    baseResponse.robot1 = mapRobotForLog(battleData.robot1, robot1Part, streamingRevenue1);
+    baseResponse.robot2 = mapRobotForLog(battleData.robot2, robot2Part, streamingRevenue2);
   }
 
   // Determine winner
   const derivedRobot1Id = robot1Participant?.robotId ?? 0;
   const derivedRobot2Id = robot2Participant?.robotId ?? 0;
   if (battleData.battleType === 'koth' || battleData.battleType === 'grand_melee') {
-    if (baseResponse.winner === undefined) {
-      baseResponse.winner = battleData.winnerId === derivedRobot1Id ? 'robot1' : null;
-    }
+    // Set by buildKothLogResponse.
   } else if (battleData.battleType === 'tag_team' && baseResponse.tagTeam) {
-    const tagTeam = baseResponse.tagTeam as { team1: { teamId: number | null }; team2: { teamId: number | null } };
-    const team1Id = tagTeam.team1.teamId;
-    const team2Id = tagTeam.team2.teamId;
+    const team1Id = baseResponse.tagTeam.team1.teamId;
+    const team2Id = baseResponse.tagTeam.team2.teamId;
     baseResponse.winner = battleData.winnerId === team1Id ? 'robot1' : battleData.winnerId === team2Id ? 'robot2' : null;
   } else if (battleData.battleType === 'league_2v2' || battleData.battleType === 'league_3v3' || battleData.battleType === 'tournament_2v2' || battleData.battleType === 'tournament_3v3') {
     // For team battles, winnerId stores the winning team ID (not a robot ID).
@@ -194,7 +208,10 @@ export async function getBattleLog(battleId: number) {
   return baseResponse;
 }
 
-async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, battleData: { battleLog: unknown; winnerId: number | null }, battleParticipants: BattleParticipant[]) {
+async function buildTagTeamLogResponse(
+  battleData: { battleLog: unknown; winnerId: number | null },
+  battleParticipants: BattleParticipant[],
+): Promise<Pick<BattleLogResponse, 'tagTeam' | 'team1Summary' | 'team2Summary'>> {
   // Derive robot IDs from BattleParticipant records (replaces deprecated Battle columns)
   const team1ActivePart = battleParticipants.find(p => p.team === 1 && p.role === 'active');
   const team1ReservePart = battleParticipants.find(p => p.team === 1 && p.role === 'reserve');
@@ -235,7 +252,7 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
       : null,
   ]);
 
-  const formatTagRobot = (robot: TagTeamRobot, participant: typeof team1ActivePart) =>
+  const formatTagRobot = (robot: TagTeamRobot, participant: typeof team1ActivePart): TagTeamLogRobot | null =>
     robot
       ? {
           id: robot.id,
@@ -263,23 +280,21 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
     return null;
   };
 
-  baseResponse.tagTeam = {
-    team1: {
-      teamId: team1Details?.id || null,
-      stableName: team1Details?.stable?.stableName || null,
-      stableType: team1Details?.stable?.stableType ?? null,
-      activeRobot: formatTagRobot(team1Active, team1ActivePart),
-      reserveRobot: formatTagRobot(team1Reserve, team1ReservePart),
-      tagOutTime: getTagOutTime(team1ActivePart, 1),
-    },
-    team2: {
-      teamId: team2Details?.id || null,
-      stableName: team2Details?.stable?.stableName || null,
-      stableType: team2Details?.stable?.stableType ?? null,
-      activeRobot: formatTagRobot(team2Active, team2ActivePart),
-      reserveRobot: formatTagRobot(team2Reserve, team2ReservePart),
-      tagOutTime: getTagOutTime(team2ActivePart, 2),
-    },
+  const team1: TagTeamLogSide = {
+    teamId: team1Details?.id || null,
+    stableName: team1Details?.stable?.stableName || null,
+    stableType: team1Details?.stable?.stableType ?? null,
+    activeRobot: formatTagRobot(team1Active, team1ActivePart),
+    reserveRobot: formatTagRobot(team1Reserve, team1ReservePart),
+    tagOutTime: getTagOutTime(team1ActivePart, 1),
+  };
+  const team2: TagTeamLogSide = {
+    teamId: team2Details?.id || null,
+    stableName: team2Details?.stable?.stableName || null,
+    stableType: team2Details?.stable?.stableType ?? null,
+    activeRobot: formatTagRobot(team2Active, team2ActivePart),
+    reserveRobot: formatTagRobot(team2Reserve, team2ReservePart),
+    tagOutTime: getTagOutTime(team2ActivePart, 2),
   };
 
   // Team-level summaries from BattleParticipant
@@ -288,24 +303,25 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
 
   const sumField = (arr: BattleParticipant[], field: keyof BattleParticipant) => arr.reduce((sum, p) => sum + (Number(p[field]) || 0), 0);
 
-  baseResponse.team1Summary = {
-    reward: sumField(team1Participants, 'credits'),
-    prestige: sumField(team1Participants, 'prestigeAwarded'),
-    totalDamage: sumField(team1Participants, 'damageDealt'),
-    totalFame: sumField(team1Participants, 'fameAwarded'),
-    streamingRevenue: sumField(team1Participants, 'streamingRevenue'),
-  };
+  const teamSummary = (participants: BattleParticipant[]): TagTeamLogSummary => ({
+    reward: sumField(participants, 'credits'),
+    prestige: sumField(participants, 'prestigeAwarded'),
+    totalDamage: sumField(participants, 'damageDealt'),
+    totalFame: sumField(participants, 'fameAwarded'),
+    streamingRevenue: sumField(participants, 'streamingRevenue'),
+  });
 
-  baseResponse.team2Summary = {
-    reward: sumField(team2Participants, 'credits'),
-    prestige: sumField(team2Participants, 'prestigeAwarded'),
-    totalDamage: sumField(team2Participants, 'damageDealt'),
-    totalFame: sumField(team2Participants, 'fameAwarded'),
-    streamingRevenue: sumField(team2Participants, 'streamingRevenue'),
+  return {
+    tagTeam: { team1, team2 },
+    team1Summary: teamSummary(team1Participants),
+    team2Summary: teamSummary(team2Participants),
   };
 }
 
-async function buildKothLogResponse(baseResponse: Record<string, unknown>, battleData: { battleLog: unknown; winnerId: number | null }, battleId: number, _battleParticipants: BattleParticipant[]) {
+async function buildKothLogResponse(
+  battleData: { battleLog: unknown; winnerId: number | null },
+  battleId: number,
+): Promise<Pick<BattleLogResponse, 'kothParticipants' | 'kothData' | 'winner'>> {
   const allParticipants = await prisma.battleParticipant.findMany({
     where: { battleId },
     include: {
@@ -319,7 +335,7 @@ async function buildKothLogResponse(baseResponse: Record<string, unknown>, battl
   const battleLogData = (typeof battleData.battleLog === 'object' && battleData.battleLog !== null) ? battleData.battleLog as Record<string, unknown> : {};
   const logPlacements = (battleLogData.placements || []) as Array<{ robotId: number; zoneScore: number; zoneTime: number; kills: number; destroyed: boolean }>;
 
-  baseResponse.kothParticipants = allParticipants.map(p => {
+  const kothParticipants: KothLogParticipant[] = allParticipants.map(p => {
     const logEntry = logPlacements.find(lp => lp.robotId === p.robotId);
     return {
       robotId: p.robot.id,
@@ -342,11 +358,12 @@ async function buildKothLogResponse(baseResponse: Record<string, unknown>, battl
     };
   });
 
-  baseResponse.winner = battleData.winnerId === allParticipants[0]?.robotId ? 'robot1' : null;
-
-  if (battleLogData.kothData) {
-    baseResponse.kothData = battleLogData.kothData;
-  }
+  return {
+    kothParticipants,
+    winner: battleData.winnerId === allParticipants[0]?.robotId ? 'robot1' : null,
+    // Stored by the KotH event converter in this shape.
+    ...(battleLogData.kothData ? { kothData: battleLogData.kothData as KothPlaybackMetadata } : {}),
+  };
 }
 
 /** Robot data shape expected by buildStandardLogResponse */
@@ -383,7 +400,7 @@ function mapRobotForLog(
   robot: RobotForLog | null,
   participant: BattleParticipant | undefined,
   streamingRevenue: number,
-): Record<string, unknown> | null {
+): BattleLogRobot | null {
   if (!robot) return null;
   return {
     id: robot.id,
@@ -411,16 +428,4 @@ function mapRobotForLog(
     offhandWeaponName: robot.offhandWeapon?.weapon?.name ?? null,
     offhandRangeBand: robot.offhandWeapon?.weapon?.rangeBand ?? null,
   };
-}
-
-function buildStandardLogResponse(
-  baseResponse: Record<string, unknown>,
-  battleData: { robot1: RobotForLog | null; robot2: RobotForLog | null },
-  robot1Participant: BattleParticipant | undefined,
-  robot2Participant: BattleParticipant | undefined,
-  streamingRevenue1: number,
-  streamingRevenue2: number,
-) {
-  baseResponse.robot1 = mapRobotForLog(battleData.robot1, robot1Participant, streamingRevenue1);
-  baseResponse.robot2 = mapRobotForLog(battleData.robot2, robot2Participant, streamingRevenue2);
 }

@@ -6,7 +6,7 @@ import { isTeamBattleType } from '../../utils/matchmakingApi';
 import RobotImage from '../RobotImage';
 import AutomatonBadge from '../AutomatonBadge';
 import type { BattleResultBannerProps } from './types';
-import type { BattleLogResponse, BattleLogParticipant } from '../../utils/matchmakingApi';
+import type { BattleLogParticipant, BattleLogResponse } from '@shared/types';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -105,11 +105,13 @@ function BattleContextLine({ battleLog }: { battleLog: BattleLogResponse }) {
     const count = battleLog.participants?.length || battleLog.kothParticipants?.length || 0;
     return <span><Link to="/league-standings?mode=koth" className="text-primary hover:text-white transition-colors">⛰️ King of the Hill</Link>{` • ${count} Participants • Duration: ${duration}`}</span>;
   }
-  if (battleLog.battleType === 'tournament_1v1' || battleLog.battleLog.isTournament) {
-    const round = battleLog.battleLog.round;
-    const maxRounds = battleLog.battleLog.maxRounds;
+  // The round comes from the stored log, which is null once pruned.
+  const log = battleLog.battleLog;
+  if (battleLog.battleType === 'tournament_1v1' || log?.isTournament) {
+    const round = log?.round;
+    const maxRounds = log?.maxRounds;
     const roundText = round && maxRounds ? getTournamentRoundName(round, maxRounds) : `Round ${round || '?'}/${maxRounds || '?'}`;
-    const finals = battleLog.battleLog.isFinals ? ' (Finals)' : '';
+    const finals = log?.isFinals ? ' (Finals)' : '';
     const link = battleLog.tournamentId ? `/tournaments/${battleLog.tournamentId}` : '/tournaments';
     return <span><Link to={link} className="text-primary hover:text-white transition-colors">🏆 Tournament {roundText}{finals}</Link>{` • Duration: ${duration}`}</span>;
   }

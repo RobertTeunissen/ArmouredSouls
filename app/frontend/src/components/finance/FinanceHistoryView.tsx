@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { formatCurrency } from '../../utils/formatters';
 import { formatFinanceInstant } from '../../utils/financeTime';
-import type { FinanceHistoryResponse, FinanceHistoryPoint } from '../../utils/financeApi';
 import { ActionEffectTrend } from './ActionEffectTrend';
 import { FinanceStatement } from './FinanceStatement';
 import { RevenueGrowthForecast } from './RevenueGrowthForecast';
+import type { FinanceHistoryPoint, FinanceHistoryResponse } from '@shared/types';
 
 interface ChartPoint {
   point: FinanceHistoryPoint;

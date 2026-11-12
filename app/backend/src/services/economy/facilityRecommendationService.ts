@@ -1,7 +1,8 @@
 import prisma from '../../lib/prisma';
 import { readCycleRepairSpend } from './repairPayloadKeys';
 import { getFacilityConfig, FACILITY_TYPES } from '../../config/facilities';
-import { unifiedFacilityROIService, UnifiedFacilityROI } from './unifiedFacilityROIService';
+import { unifiedFacilityROIService } from './unifiedFacilityROIService';
+import type { FacilityRecommendation, RecommendationSummary, UnifiedFacilityROI } from '../../shared/types';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import type { User } from '../../../generated/prisma';
 import type { StableMetric } from '../../types/snapshotTypes';
@@ -12,30 +13,6 @@ import { calculateRepairBayDiscountPercent } from '../../shared/utils/repairCost
 import { computeStreamingRevenue } from './streamingRevenueService';
 import { calculateFacilityOperatingCost, getMerchandisingBaseRate } from '../../utils/economyFormulas';
 import { getAllModesBattleCounts } from '../robot/all-modes-battle-count';
-
-export interface FacilityRecommendation {
-  facilityType: string;
-  facilityName: string;
-  currentLevel: number;
-  recommendedLevel: number;
-  upgradeCost: number;
-  projectedROI: number;
-  projectedPayoffCycles: number | null;
-  reason: string;
-  priority: 'high' | 'medium' | 'low';
-}
-
-export interface RecommendationSummary {
-  recommendations: FacilityRecommendation[];
-  totalRecommendedInvestment: number;
-  userCurrency: number;
-  userPrestige: number;
-  analysisWindow: {
-    startCycle: number;
-    endCycle: number;
-    cycleCount: number;
-  };
-}
 
 export class FacilityRecommendationService {
   /**

@@ -16,6 +16,7 @@
  */
 
 import { SubscribableEventType, getRegisteredEvents } from './eventRegistry';
+import type { EligibleEvent } from '../../shared/types';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -27,12 +28,6 @@ interface EligibilityRule {
   reason: string;
 }
 
-export interface EligibleEvent {
-  type: SubscribableEventType;
-  label: string;
-  eligible: boolean;
-  reason?: string;
-}
 
 // ── Rules ────────────────────────────────────────────────────────────
 

@@ -6,10 +6,9 @@ import {
 } from '../utils/financeApi';
 import type {
   FinancePeriodSelection,
-  RobotDetailResponse,
-  RobotSummaryResponse,
 } from '../utils/financeApi';
 import type { FinanceResource } from './useFinanceReport';
+import type { RobotDetailResponse, RobotSummaryResponse } from '@shared/types';
 
 const DEFAULT_PAGE_SIZE = 20;
 

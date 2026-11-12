@@ -1,5 +1,4 @@
 import type { Prisma } from '../../../../generated/prisma';
-import type { ReportPeriodMetadata } from '../../../types';
 
 const mockNormalizeFinanceReportPeriod = jest.fn();
 const mockCreateReference = jest.fn((_userId: number, _seasonNumber: number, identity: string) => `FIN-${identity}`);
@@ -13,6 +12,7 @@ jest.mock('../playerSafeSourceReference', () => ({
 }));
 
 import { loadFinanceEvidenceView } from '../financeReportQueryService';
+import type { ReportPeriodMetadata } from '../../../shared/types';
 
 const AS_OF = new Date('2026-04-03T12:00:00.000Z');
 

@@ -1,5 +1,5 @@
-import type { SourceProvenance } from '../../../types';
 import { calculatePrestigeMilestoneForecast } from '../prestigeMilestoneForecastService';
+import type { SourceProvenance } from '../../../shared/types';
 
 const PROVENANCE: SourceProvenance = {
   evidenceKind: 'modelled',

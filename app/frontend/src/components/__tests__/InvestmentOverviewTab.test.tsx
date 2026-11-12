@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { InvestmentOverviewTab } from '../facilities/InvestmentOverviewTab';
-import type { UnifiedFacilityROI, FacilityRecommendation } from '../facilities/types';
+import type { UnifiedFacilityROI, FacilityRecommendation } from '@shared/types';
 
 const mockGetFacilityDisplayName = (type: string): string => {
   const names: Record<string, string> = {

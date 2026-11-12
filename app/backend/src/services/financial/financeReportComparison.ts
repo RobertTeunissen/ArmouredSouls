@@ -1,9 +1,7 @@
 import type {
   FinancialRecordProjection,
-  ReportLimitation,
-  ReportPeriodMetadata,
-  RevenueGrowth,
 } from '../../types';
+import type { ReportLimitation, ReportPeriodMetadata, RevenueGrowth } from '../../shared/types';
 
 const EARNED_TYPES = new Set([
   'battle_income',

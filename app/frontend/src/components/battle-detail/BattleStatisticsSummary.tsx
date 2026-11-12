@@ -3,7 +3,7 @@ import { AttributeTooltip } from './AttributeTooltip';
 import type { BattleStatisticsSummaryProps } from './types';
 import type { RobotCombatStats } from '../../utils/battleStatistics';
 import { createRobotStats } from '../../utils/battleStatistics';
-import type { BattleLogParticipant, BattleLogResponse } from '../../utils/matchmakingApi';
+import type { BattleLogParticipant, BattleLogResponse } from '@shared/types';
 
 /**
  * BattleStatisticsSummary — unified combat statistics table.

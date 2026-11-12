@@ -5,7 +5,7 @@ import {
   type BattleStatistics,
   type RobotCombatStats,
 } from '../battleStatistics';
-import type { BattleLogEvent } from '../matchmakingApi';
+import type { BattleLogEvent } from '@shared/types';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

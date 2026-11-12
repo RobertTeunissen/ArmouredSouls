@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { useBattlePlaybackData } from '../useBattlePlaybackData';
-import type { BattleLogEvent, BattleLogParticipant, BattleLogResponse } from '../../../utils/matchmakingApi';
+import type { BattleLogEvent, BattleLogParticipant, BattleLogResponse } from '@shared/types';
 
 // `useBattlePlaybackData` uses no React hooks: it maps a battle log to the
 // playback viewer's inputs, so it is called directly here.

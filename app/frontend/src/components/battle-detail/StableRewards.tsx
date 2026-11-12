@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { StableRewardsProps } from './types';
-import type { BattleLogParticipant, BattleLogResponse } from '../../utils/matchmakingApi';
+import type { BattleLogParticipant, BattleLogResponse } from '@shared/types';
 
 /**
  * StableRewards — "Battle Outcomes" section.

@@ -7,7 +7,7 @@ import type {
   ReconciliationProof,
   RepairStatementLine,
   ReportLimitation,
-} from '../../utils/financeApi';
+} from '@shared/types';
 
 interface FinanceStatementProps {
   statement: FinanceStatementData;

@@ -15,6 +15,7 @@
 - v2.2 (Jun 2026): Added moderation, image-upload dependencies, team-battle domains, and deployment details
 - v2.3 (Sep 21, 2026): Updated package versions, service inventory, unified scheduling/schema terminology, current player routes, Finance Center, and operational alerting
 - v2.4 (Nov 9, 2026): Added the Shared Code section (`app/shared/utils` formulas and `app/shared/types` API contract types)
+- v2.5 (Nov 12, 2026): Shared contracts for facilities ROI, Finance Center, battle log and subscriptions (#592)
 
 ---
 
@@ -230,7 +231,23 @@ Code used by both the backend and the frontend lives in `app/shared` and is depl
 | `utils/` | Game formulas (repair cost, discounts, prestige gates, attributes) | `src/shared/utils` (symlink) | `@shared/utils/*` |
 | `types/` | API contract types: the JSON shape of a response | `src/shared/types` (symlink) | `@shared/types` |
 
-Contract types describe the wire format, so dates are ISO 8601 strings. They are imported with `import type` and contain no runtime code. The backend service returns the shared type and the frontend API call uses it, so a field change on either side fails `tsc` on the other. Response shapes that only one app uses stay local. Current contracts: placement standing (`/api/robots/:id/koth-standing`, `/grand-melee-standing`), tier changes (`/api/leagues/tier-changes/unseen`) and the finance summary (`/api/finances/summary`); other endpoints move over when they are next changed.
+Contract types describe the wire format, so dates are ISO 8601 strings. They are imported with `import type` and contain no runtime code. The backend service returns the shared type and the frontend API call uses it, so a field change on either side fails `tsc` on the other. Response shapes that only one app uses stay local. Where a contract lists values the backend keeps in a runtime tuple (transaction types, subscribable events), the tuple is declared `as const satisfies readonly <SharedUnion>[]`, so the backend cannot send a value the contract lacks.
+
+Current contracts (#592 moved the facilities, finance, battle log and subscription ones):
+
+| File | Endpoints |
+|------|-----------|
+| `robot-standings.ts` | `/api/robots/:id/koth-standing`, `/grand-melee-standing` |
+| `league-notifications.ts` | `/api/leagues/tier-changes/unseen` |
+| `finances.ts` | `/api/finances/summary` |
+| `finance-report.ts` | Finance Center: `/api/finances/report`, `/history`, `/robots`, `/robots/:id/events` |
+| `facility-roi.ts` | `/api/analytics/facility/:userId/roi/all-economic`, `/recommendations` |
+| `battle-log.ts` | `/api/matches/battles/:id/log` (`battleLog` is null once the stored log is pruned) |
+| `subscriptions.ts` | `/api/subscriptions/overview`, `/registry`, subscribe/unsubscribe/replace |
+| `robot-setup.ts` | scheduling eligibility report |
+| `stable.ts` | `StableType`, used by the contracts above |
+
+Admin page response types are still declared in both apps; they move over area by area (tracked in #592).
 
 ## Database Schema
 

@@ -1,19 +1,21 @@
-import type { BattleLogEvent } from '../../utils/matchmakingApi';
 import { isTeamBattleLog, isTeamBattleType } from '../../utils/matchmakingApi';
 import type { CombatMessagesProps } from './types';
+import type { BattleLogEvent, BattleLogParticipant, TeamBattleLog, TeamBattleLogEvent } from '@shared/types';
 
 export function CombatMessages({ battleLog }: CombatMessagesProps) {
   // Team battle events use a different structured format
   if (isTeamBattleType(battleLog.battleType) && isTeamBattleLog(battleLog.battleLog)) {
-    return <TeamBattleCombatMessages battleLog={battleLog} />;
+    return <TeamBattleCombatMessages log={battleLog.battleLog} participants={battleLog.participants} />;
   }
+  // Empty once the stored log was pruned.
+  const events = battleLog.battleLog?.events ?? [];
 
   return (
     <div className="bg-surface rounded-lg mb-3 p-3">
       <h3 className="text-lg font-bold mb-3">Combat Messages</h3>
       <div className="space-y-2 max-h-[600px] overflow-y-auto">
-        {battleLog.battleLog.events && battleLog.battleLog.events.length > 0 ? (
-          battleLog.battleLog.events
+        {events.length > 0 ? (
+          events
             .filter((event: BattleLogEvent) => {
               if (event.type === 'tournament_reward' || event.type === 'reward_summary' ||
                   event.type === 'reward_detail' || event.type === 'reward_breakdown') {
@@ -119,24 +121,15 @@ function getEventStyle(event: BattleLogEvent): { bgColor: string; eventColor: st
 
 // ── Team Battle Combat Messages ──────────────────────────────────────
 
-interface TeamBattleEvent {
-  type: string;
-  tick: number;
-  timestamp: number;
-  [key: string]: unknown;
-}
-
 /**
  * Renders team battle events from the structured TeamBattleCombatEvent format.
  * Converts structured events into human-readable messages with appropriate styling.
  */
-function TeamBattleCombatMessages({ battleLog }: CombatMessagesProps) {
-  const log = battleLog.battleLog as unknown as { events?: TeamBattleEvent[]; detailedCombatEvents?: BattleLogEvent[] };
-  const teamEvents = log.events ?? [];
+function TeamBattleCombatMessages({ log, participants }: { log: TeamBattleLog; participants: BattleLogParticipant[] }) {
+  const teamEvents = log.events;
   const detailedEvents = log.detailedCombatEvents ?? [];
 
   // Build robot name lookup from participants
-  const participants = battleLog.participants ?? [];
   const robotNameMap = new Map(participants.map(p => [p.robotId, p.robotName]));
   const getRobotName = (id: number): string => robotNameMap.get(id) ?? `Robot #${id}`;
 
@@ -211,7 +204,7 @@ function TeamBattleCombatMessages({ battleLog }: CombatMessagesProps) {
 }
 
 function getTeamBattleEventStyle(
-  event: TeamBattleEvent,
+  event: TeamBattleLogEvent,
   getRobotName: (id: number) => string,
 ): { bgColor: string; eventColor: string; icon: string; message: string } {
   switch (event.type) {

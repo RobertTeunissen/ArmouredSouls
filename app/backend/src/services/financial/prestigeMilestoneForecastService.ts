@@ -1,5 +1,5 @@
 import { getNextPrestigeThreshold } from '../../shared/utils/prestigeGates';
-import type { PrestigeMilestoneForecast, SourceProvenance } from '../../types';
+import type { PrestigeMilestoneForecast, SourceProvenance } from '../../shared/types';
 
 export interface PrestigeCycleSample {
   cycleNumber: number;

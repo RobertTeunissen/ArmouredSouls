@@ -19,13 +19,8 @@ import {
   reportLimitationsForCycle,
 } from './financeReportComparison';
 import type {
-  FinanceOverviewResponse,
   FinancialRecordProjection,
-  FullDamageRepairReference,
-  ReportLimitation,
-  ReportPeriodMetadata,
   ReportPeriodSelection,
-  SourceProvenance,
   StableMetric,
 } from '../../types';
 import {
@@ -33,6 +28,13 @@ import {
   validateFinancialBreakdown,
 } from '../../types';
 import { readRepairChargedCredits } from '../economy/repairPayloadKeys';
+import type {
+  FinanceOverviewResponse,
+  FullDamageRepairReference,
+  ReportLimitation,
+  ReportPeriodMetadata,
+  SourceProvenance,
+} from '../../shared/types';
 
 export interface FinanceEvidenceView {
   period: ReportPeriodMetadata;

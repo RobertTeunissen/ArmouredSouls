@@ -5,8 +5,8 @@
  */
 
 import type { ReactNode } from 'react';
-import type { BattleLogResponse } from '../../utils/matchmakingApi';
 import type { BattleStatistics, DamageFlow } from '../../utils/battleStatistics';
+import type { BattleLogResponse } from '@shared/types';
 
 export type TabId = 'overview' | 'playback';
 

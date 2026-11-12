@@ -1,4 +1,4 @@
-import type { BattleLogParticipant } from '../../utils/matchmakingApi';
+import type { BattleLogParticipant } from '@shared/types';
 
 /**
  * RobotSelector — horizontal pill bar for selecting which robot to view on mobile.

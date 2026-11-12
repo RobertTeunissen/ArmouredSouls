@@ -15,34 +15,14 @@ import { useEffect, useCallback, useState } from 'react';
 import { api } from '../utils/api';
 import { ApiError } from '../utils/ApiError';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
-import type { StableOverview, StableOverviewRobot } from '../stores/subscriptionStore';
-
-export type { StableOverview, StableOverviewRobot };
+import type {
+  EligibleEvent,
+  RegistryResponse,
+  StableOverview,
+  SubscriptionChangeResponse,
+} from '@shared/types';
 
 // ── Types ────────────────────────────────────────────────────────────
-
-export interface EligibleEvent {
-  type: string;
-  label: string;
-  eligible: boolean;
-  reason?: string;
-}
-
-export interface RegistryResponse {
-  events: EligibleEvent[];
-}
-
-/** Outcome of any subscription change — single toggle or bulk save. */
-export interface SubscriptionChangeResult {
-  success: boolean;
-  message?: string;
-  added: string[];
-  removed: string[];
-  heldSlots: string[];
-  occupiedCount: number;
-  cap: number;
-  level: number;
-}
 
 /** Shape of the `details` payload on a SUBSCRIPTION_CAP_EXCEEDED error. */
 export interface CapExceededDetails {
@@ -80,8 +60,8 @@ export function useStableOverview(): UseStableOverviewReturn {
 export async function saveRobotSubscriptions(
   robotId: number,
   eventTypes: string[],
-): Promise<SubscriptionChangeResult> {
-  const result = await api.put<SubscriptionChangeResult>(
+): Promise<SubscriptionChangeResponse> {
+  const result = await api.put<SubscriptionChangeResponse>(
     `/api/subscriptions/robot/${robotId}`,
     { eventTypes },
   );

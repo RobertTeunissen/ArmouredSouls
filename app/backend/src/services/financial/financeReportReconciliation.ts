@@ -1,15 +1,17 @@
 import type {
+  FinancialRecordProjection,
+} from '../../types';
+import type { OperatingCostsBreakdown, RepairBreakdown } from '../../types';
+import type {
   CycleBoundaryProof,
   FinanceStatement,
-  FinancialRecordProjection,
   ItemisedStatementLine,
   ReconciliationProof,
   RepairStatementLine,
   ReportLimitation,
   ReportPeriodMetadata,
   SourceProvenance,
-} from '../../types';
-import type { OperatingCostsBreakdown, RepairBreakdown } from '../../types';
+} from '../../shared/types';
 
 export interface RepairDomainEvidence {
   sourceEventId: string;

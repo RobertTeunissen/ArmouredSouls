@@ -1,5 +1,5 @@
-import type { BattleLogResponse, BattleLogEvent } from '../../utils/matchmakingApi';
 import type { PlaybackCombatResult, PlaybackCombatEvent, PlaybackRobotInfo, KothPlaybackData } from '../BattlePlaybackViewer/types';
+import type { BattleLogEvent, BattleLogResponse } from '@shared/types';
 
 interface BattlePlaybackData {
   showPlaybackViewer: boolean;
@@ -14,7 +14,9 @@ interface BattlePlaybackData {
 }
 
 export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlaybackData {
-  const hasSpatialData = !!battleLog.battleLog.arenaRadius && battleLog.battleLog.arenaRadius > 0;
+  // Null once the stored log was pruned: no playback then.
+  const log = battleLog.battleLog;
+  const hasSpatialData = !!log?.arenaRadius && log.arenaRadius > 0;
   const isTagTeam = battleLog.battleType === 'tag_team';
   const isKoth = battleLog.battleType === 'koth';
   const isGrandMelee = battleLog.battleType === 'grand_melee';
@@ -23,7 +25,7 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
   const is1v1 = !isTagTeam && !isFFA && !isTeamBattle && !!battleLog.robot1 && !!battleLog.robot2;
   const showPlaybackViewer = hasSpatialData && (is1v1 || isTagTeam || isFFA || isTeamBattle);
 
-  const spatialEvents = battleLog.battleLog.detailedCombatEvents ?? battleLog.battleLog.events;
+  const spatialEvents = log?.detailedCombatEvents ?? log?.events ?? [];
 
   const playbackResult: PlaybackCombatResult | null = showPlaybackViewer ? {
     winnerId: battleLog.winner === 'robot1' ? 1 : battleLog.winner === 'robot2' ? 2 : null,
@@ -55,12 +57,12 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
       robotShield: e.robotShield,
       kpiData: e.kpiData,
     })),
-    arenaRadius: battleLog.battleLog.arenaRadius,
-    startingPositions: battleLog.battleLog.startingPositions,
-    endingPositions: battleLog.battleLog.endingPositions,
+    arenaRadius: log?.arenaRadius,
+    startingPositions: log?.startingPositions,
+    endingPositions: log?.endingPositions,
   } : null;
 
-  const narrativePlaybackEvents = showPlaybackViewer ? (battleLog.battleLog.detailedCombatEvents ?? battleLog.battleLog.events).map((e: BattleLogEvent) => ({
+  const narrativePlaybackEvents = showPlaybackViewer ? spatialEvents.map((e: BattleLogEvent) => ({
     timestamp: e.timestamp,
     type: e.type,
     attacker: e.attacker,
@@ -180,7 +182,7 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
   const kothPlaybackData: KothPlaybackData | undefined = (() => {
     if (!isKoth || !battleLog.kothData) return undefined;
     const robotIdToName: Record<string, string> = {};
-    const placements = battleLog.battleLog.placements as Array<{ robotId: number; robotName: string }> | undefined;
+    const placements = log?.placements;
     if (placements) {
       for (const p of placements) {
         robotIdToName[String(p.robotId)] = p.robotName;

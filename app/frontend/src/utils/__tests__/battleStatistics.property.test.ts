@@ -9,7 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { computeBattleStatistics } from '../battleStatistics';
-import type { BattleLogEvent } from '../matchmakingApi';
+import type { BattleLogEvent } from '@shared/types';
 
 // ─── Generators ──────────────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { PrestigeMilestoneForecast } from '../../utils/financeApi';
+import type { PrestigeMilestoneForecast } from '@shared/types';
 
 export function PrestigeEarningPower({ forecast }: { forecast: PrestigeMilestoneForecast }): React.ReactElement {
   return (

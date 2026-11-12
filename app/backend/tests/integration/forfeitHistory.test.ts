@@ -81,8 +81,8 @@ async function historyEntry(userId: number, battleId: number) {
 
 async function logEntry(battleId: number) {
   const log = await getBattleLog(battleId);
-  expect(log).not.toBeNull();
-  return log as unknown as { isForfeit: boolean; forfeitedRobotIds: number[] };
+  if (!log) throw new Error(`battle ${battleId} has no log`);
+  return log;
 }
 
 afterAll(async () => {

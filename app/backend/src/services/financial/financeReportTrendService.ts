@@ -1,11 +1,7 @@
 import { Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import type {
-  FinanceHistoryPoint,
-  FinanceHistoryResponse,
-  ReportPeriodMetadata,
   ReportPeriodSelection,
-  SourceProvenance,
 } from '../../types';
 import {
   calculateEvidenceAwareRevenueGrowth,
@@ -15,6 +11,12 @@ import {
 import { reconcileFinanceStatement } from './financeReportReconciliation';
 import { loadFinanceEvidenceView } from './financeReportQueryService';
 import { createPlayerSafeSourceReference } from './playerSafeSourceReference';
+import type {
+  FinanceHistoryPoint,
+  FinanceHistoryResponse,
+  ReportPeriodMetadata,
+  SourceProvenance,
+} from '../../shared/types';
 
 function actualProvenance(period: ReportPeriodMetadata, current: boolean): SourceProvenance {
   return {

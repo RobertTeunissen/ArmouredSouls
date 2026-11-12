@@ -1,7 +1,7 @@
 import React from 'react';
 import { formatCurrency } from '../../utils/formatters';
 import { formatFinanceInstant } from '../../utils/financeTime';
-import type { RecordedDriver } from '../../utils/financeApi';
+import type { RecordedDriver } from '@shared/types';
 
 export function ActionEffectTrend({ drivers }: { drivers: RecordedDriver[] }): React.ReactElement {
   return (

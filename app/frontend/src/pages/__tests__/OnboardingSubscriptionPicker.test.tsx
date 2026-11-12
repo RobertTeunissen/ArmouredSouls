@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SubscriptionPicker from '../../components/subscriptions/SubscriptionPicker';
 import * as useSubscriptionsModule from '../../hooks/useSubscriptions';
 import { api } from '../../utils/api';
+import type { EligibleEvent } from '@shared/types';
 
 // Mock the hooks and api
 vi.mock('../../hooks/useSubscriptions', () => ({
@@ -16,14 +17,14 @@ vi.mock('../../utils/api', () => ({
   },
 }));
 
-const defaultRegistryEvents: useSubscriptionsModule.EligibleEvent[] = [
+const defaultRegistryEvents: EligibleEvent[] = [
   { type: 'league_1v1', label: '1v1 League', eligible: true },
   { type: 'tournament_1v1', label: '1v1 Tournament', eligible: true },
   { type: 'koth', label: 'King of the Hill', eligible: true },
   { type: 'tag_team', label: 'Tag Team', eligible: false, reason: 'Tag Team requires 2 or more robots' },
 ];
 
-const multiRobotRegistryEvents: useSubscriptionsModule.EligibleEvent[] = [
+const multiRobotRegistryEvents: EligibleEvent[] = [
   { type: 'league_1v1', label: '1v1 League', eligible: true },
   { type: 'tournament_1v1', label: '1v1 Tournament', eligible: true },
   { type: 'koth', label: 'King of the Hill', eligible: true },

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { DamageFlow } from '../../utils/battleStatistics';
 import type { DamageFlowDiagramProps } from './types';
-import type { BattleLogParticipant } from '../../utils/matchmakingApi';
+import type { BattleLogParticipant } from '@shared/types';
 
 /**
  * DamageFlowDiagram — heatmap grid showing who damaged whom.

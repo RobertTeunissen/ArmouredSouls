@@ -1,11 +1,10 @@
 import type { Prisma } from '../../../generated/prisma';
 import { FinancialError, FinancialErrorCode } from '../../errors';
 import type {
-  ReportLimitation,
-  ReportPeriodMetadata,
   ReportPeriodSelection,
 } from '../../types';
 import { resolveCanonicalCycleIdentity } from '../cycle/canonicalCycleIdentity';
+import type { ReportLimitation, ReportPeriodMetadata } from '../../shared/types';
 
 interface NormalizedPeriodResult {
   period: ReportPeriodMetadata;

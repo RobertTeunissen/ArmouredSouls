@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatCurrency } from '../../utils/formatters';
 import { formatFinanceInstant } from '../../utils/financeTime';
-import type { RobotDetailResponse, RobotFinancialEvent } from '../../utils/financeApi';
+import type { RobotDetailResponse, RobotFinancialEvent } from '@shared/types';
 
 interface RobotDeploymentDetailProps {
   response: RobotDetailResponse;

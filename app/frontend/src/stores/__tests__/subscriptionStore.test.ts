@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useSubscriptionStore } from '../subscriptionStore';
-import type { StableOverview } from '../subscriptionStore';
+import type { StableOverview } from '@shared/types';
 
 /**
  * The store exists to collapse five independent `useStableOverview` calls into

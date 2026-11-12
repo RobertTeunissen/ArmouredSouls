@@ -5,10 +5,9 @@ import {
   getFinanceOverview,
 } from '../utils/financeApi';
 import type {
-  FinanceHistoryResponse,
-  FinanceOverviewResponse,
   FinancePeriodSelection,
 } from '../utils/financeApi';
+import type { FinanceHistoryResponse, FinanceOverviewResponse } from '@shared/types';
 
 export interface FinanceResource<T> {
   data: T | null;

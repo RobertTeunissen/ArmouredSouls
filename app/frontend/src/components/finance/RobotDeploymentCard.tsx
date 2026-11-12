@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatCurrency } from '../../utils/formatters';
-import type { RobotFinancialSummary } from '../../utils/financeApi';
+import type { RobotFinancialSummary } from '@shared/types';
 
 export interface RobotDeploymentCardProps {
   robot: RobotFinancialSummary;

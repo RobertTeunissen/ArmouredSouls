@@ -422,13 +422,13 @@ describe('Issue #294 — account reset with battle history', () => {
 
   it('team, KotH and Grand Melee battles keep their recorded winner (#549)', async () => {
     // Player battle log.
-    const logB = await getBattleLog(battleIds.b) as { winner: unknown; participants: unknown[] } | null;
+    const logB = await getBattleLog(battleIds.b);
     expect(logB?.winner).toBe('robot2'); // winning_side 2, never the team id read as a robot
     expect(logB?.participants).toHaveLength(2);
-    const logC = await getBattleLog(battleIds.c) as { winner: unknown; kothParticipants: Array<{ robotId: number }> } | null;
+    const logC = await getBattleLog(battleIds.c);
     expect(logC?.winner).toBe('robot1'); // O1, placement 1, still present
-    expect(logC?.kothParticipants.map((k) => k.robotId)).toEqual([o1, o3]);
-    const logD = await getBattleLog(battleIds.d) as { winner: unknown } | null;
+    expect(logC?.kothParticipants?.map((k) => k.robotId)).toEqual([o1, o3]);
+    const logD = await getBattleLog(battleIds.d);
     // The winner R1 was deleted: no winner is shown and the runner-up is not crowned.
     expect(logD?.winner).toBeNull();
 

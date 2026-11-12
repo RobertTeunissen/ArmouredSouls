@@ -13,8 +13,8 @@ import AutomatonBadge, { AUTOMATON_BADGE_BACKGROUND_CLASS } from '../AutomatonBa
 import OwnerNameLink from '../OwnerNameLink';
 import { BattleResultBanner } from '../battle-detail/BattleResultBanner';
 import { TeamBattleMetrics } from '../battle-detail/TeamBattleMetrics';
-import type { BattleLogParticipant, BattleLogResponse } from '../../utils/matchmakingApi';
 import type { StableType } from '../../types/stable';
+import type { BattleLogParticipant, BattleLogResponse } from '@shared/types';
 
 // ── Contrast helpers (WCAG 2.1 relative luminance) ───────────────────
 
