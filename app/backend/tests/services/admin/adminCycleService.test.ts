@@ -35,6 +35,10 @@ jest.mock('../../../src/services/koth/kothBattleOrchestrator', () => ({
   executeScheduledKothBattles: jest.fn().mockResolvedValue({ totalMatches: 0, successfulMatches: 0, failedMatches: 0 }),
 }));
 
+jest.mock('../../../src/services/league/leagueInstanceRedeal', () => ({
+  redealLeagueInstances: jest.fn().mockResolvedValue({ moved: 0, failures: [] }),
+}));
+
 jest.mock('../../../src/services/league/leagueRebalancingService', () => ({
   rebalanceLeagues: jest.fn().mockResolvedValue({ totalPromoted: 0, totalDemoted: 0 }),
   rebalanceKothLeagues: jest.fn().mockResolvedValue({ totalPromoted: 0, totalDemoted: 0 }),
@@ -339,6 +343,27 @@ describe('Admin Cycle Service — executeBulkCycles', () => {
         { ok: true, summary: { processed: 0 } },
         { ok: true, summary: { processed: 0 } },
       ]);
+    });
+
+    // Issue #599: no battle event re-deals the instances during preparation.
+    it('re-deals the league instances after each preparation turn, and not in a competitive cycle', async () => {
+      const { redealLeagueInstances } = jest.requireMock('../../../src/services/league/leagueInstanceRedeal') as {
+        redealLeagueInstances: jest.Mock;
+      };
+      seasonService.getCurrentSeason.mockResolvedValueOnce({ phase: 'preparation', seasonNumber: 5 });
+      seasonService.advancePreparationCycle
+        .mockResolvedValueOnce({ seasonNumber: 5, preparationCyclesCompleted: 1 })
+        .mockResolvedValueOnce({ seasonNumber: 5, preparationCyclesCompleted: 2 });
+
+      await executeBulkCycles({ cycles: 2 });
+
+      expect(redealLeagueInstances).toHaveBeenCalledTimes(2);
+      expect(runTurnStepNonFatal.mock.invocationCallOrder[1]).toBeLessThan(redealLeagueInstances.mock.invocationCallOrder[1]);
+
+      redealLeagueInstances.mockClear();
+      seasonService.getCurrentSeason.mockResolvedValueOnce({ phase: 'competitive', seasonNumber: 4 });
+      await executeBulkCycles({ cycles: 1 });
+      expect(redealLeagueInstances).not.toHaveBeenCalled();
     });
   });
 

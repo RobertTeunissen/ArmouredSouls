@@ -2,7 +2,7 @@
 title: "League Tiers & Instances"
 description: "The six competitive tiers in Armoured Souls — from Bronze to Champion — and how the instance system keeps leagues balanced and competitive."
 order: 1
-lastUpdated: "2026-11-11"
+lastUpdated: "2026-11-12"
 relatedArticles:
   - leagues/matchmaking
   - leagues/league-points
@@ -54,9 +54,10 @@ Instances serve two purposes:
 
 ### How Robots Are Placed
 
-- **Newly subscribed robots** are placed in the Bronze instance with the most free spots, keeping populations balanced naturally.
+- **Newly subscribed robots** are placed in the Bronze instance with the most free spots.
 - **Promoted/demoted robots** are also placed in the instance with the most available space in their new tier.
-- **Rebalancing** occurs when any instance exceeds 100 robots. All robots in that tier are sorted by LP and ELO, then redistributed round-robin across instances to maintain competitive balance.
+- **Rebalancing** happens after every league's daily promotions and demotions. All robots in a tier are sorted by LP, then spread round-robin over as many instances as the tier needs (one per 100 robots), so the instances stay even.
+- **At the start of a season** the tiers are also rebalanced at the rollover and on each preparation day, when no battles run. Everyone starts on 0 LP then, so robots that entered late are dealt over all the instances instead of ending up together in one.
 
 ```callout-info
 Rebalancing preserves your League Points and ELO — only your instance assignment changes. Each instance ends up with a healthy mix of high, medium, and low performers, so no single instance becomes a "death group."

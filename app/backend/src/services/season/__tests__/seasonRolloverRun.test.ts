@@ -43,9 +43,12 @@ jest.mock('../../moderation/imageLibraryService', () => ({ __esModule: true, cle
 jest.mock('../../achievement/preservedStateAchievements', () => ({ __esModule: true, reawardPreservedStateAchievements: jest.fn(async () => ({ achievementsAwarded: 0, stablesChecked: 0 })) }));
 jest.mock('../../achievement', () => ({ __esModule: true, achievementService: { refreshRarityCache: jest.fn(async () => undefined) } }));
 jest.mock('../../automaton', () => ({ __esModule: true, runTurnStepNonFatal: jest.fn() }));
+jest.mock('../../league/leagueInstanceRedeal', () => ({ __esModule: true, redealLeagueInstances: jest.fn(async () => ({ moved: 0, failures: [] })) }));
 jest.mock('../../records/hallOfRecordsService', () => ({ __esModule: true, invalidateHallOfRecords: jest.fn() }));
 
 import { invalidateHallOfRecords } from '../../records/hallOfRecordsService';
+import { runTurnStepNonFatal } from '../../automaton';
+import { redealLeagueInstances } from '../../league/leagueInstanceRedeal';
 import { reawardPreservedStateAchievements } from '../../achievement/preservedStateAchievements';
 import { achievementService } from '../../achievement';
 import { getCurrentSeason, completeSeasonAndOpenNext } from '../seasonService';
@@ -123,6 +126,26 @@ describe('executeSeasonRollover run recording', () => {
     expect(progressSeen[0]).toMatchObject({ runId: 77, trigger: 'settlement', progress: { stages: expect.arrayContaining([expect.objectContaining({ stage: 'purge', status: 'running' })]) } });
     expect(getActiveRolloverProgress()).toBeNull();
     expect(isRolloverInProgress()).toBe(false);
+  });
+
+  // Issue #599: the opening build fills the instances one after another, so the
+  // rollover re-deals them right after the Automatons' season_open turn.
+  it('re-deals the league instances after the Automaton season_open turn', async () => {
+    await executeSeasonRollover({ trigger: 'settlement' });
+
+    expect(redealLeagueInstances).toHaveBeenCalledTimes(1);
+    expect(mocked(runTurnStepNonFatal).mock.invocationCallOrder[0])
+      .toBeLessThan(mocked(redealLeagueInstances).mock.invocationCallOrder[0]);
+    expect(finishedSummary().stages[4]).toMatchObject({ status: 'done', detail: 'Season 2 opening turn' });
+  });
+
+  it('finishes with a warning, not a failure, when a league re-deal fails', async () => {
+    mocked(redealLeagueInstances).mockResolvedValueOnce({ moved: 10, failures: ['league_1v1/bronze'] });
+
+    await executeSeasonRollover({ trigger: 'settlement' });
+
+    expect(mocked(markFinished).mock.calls.at(-1)?.[1]).toMatchObject({ status: 'success' });
+    expect(finishedSummary().stages[4].detail).toBe('Done with warnings: league instances not re-dealt');
   });
 
   it('uses the run an admin caller recorded and records a manual run otherwise', async () => {

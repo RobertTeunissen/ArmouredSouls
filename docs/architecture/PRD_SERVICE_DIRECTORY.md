@@ -269,6 +269,7 @@ King of the Hill mode — orchestration and matchmaking.
 | `leagueBattleOrchestrator` | League match execution (LP, prestige, fame, streaming, ELO, bye matches) |
 | `leagueInstanceService` | League instance management (max 100 robots per instance, assignment, rebalancing); `assignLeagueInstanceWithLock` delegates to `leagueInstancePlacement` |
 | `leagueInstancePlacement` | Prisma-free, transaction-scoped instance picker: `MAX_ENTITIES_PER_INSTANCE` (100), `leagueInstanceLockKey`, `pickLeagueInstanceInTransaction` (mode/tier advisory lock, least-full instance, lowest number on ties, opens a new instance when all are full) |
+| `leagueInstanceRedeal` | `redealLeagueInstances`: round-robin redistribution of every tier of every tiered mode outside the nightly rebalance (season rollover, preparation days; issue #599). Never throws |
 | `leagueRebalancingService` | Instance-based promotions/demotions (top/bottom 10%, LP retention) |
 | `league-rebalancing-preview` | Read-only tier plan of the executor: `getLeagueTierPreview` (loads the tier) and the pure `buildLeagueTierPreview` (rows already loaded) |
 | `standing-status` | Status of every zone place from a tier plan: promotes, demotes, or held by LP, residency or the new-tier cohort (League Standings chip) |

@@ -308,6 +308,10 @@ export async function executeSettlement(): Promise<JobContext> {
       slot: advanced.preparationCyclesCompleted,
       source: 'scheduler',
     });
+    // Battle events (and their nightly rebalance) are suspended, so re-deal the
+    // league instances here: robots and teams entered since the last re-deal
+    // all joined the least-full instance (issue #599). Never throws.
+    await redealLeagueInstancesStep('Daily Settlement (preparation)');
     // Global_Cycle_Counter deliberately untouched (R2.6).
     return { jobName: 'settlement' };
   }
@@ -493,6 +497,20 @@ async function runAutomatonTurnStep(input: TurnStepInput): Promise<void> {
     await runTurnStepNonFatal(input);
   } catch (error) {
     logger.error(`Daily Settlement: Automaton Turn_Step failed (non-fatal) — ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * Re-deal every tiered league's instances without ever failing settlement:
+ * `redealLeagueInstances` logs per-tier failures itself; this guard also
+ * covers the module load.
+ */
+async function redealLeagueInstancesStep(label: string): Promise<void> {
+  try {
+    const { redealLeagueInstances } = await import('../league/leagueInstanceRedeal');
+    await redealLeagueInstances(label);
+  } catch (error) {
+    logger.error(`${label}: league instance re-deal failed (non-fatal) — ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

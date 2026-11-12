@@ -2,7 +2,7 @@
 title: "The Daily Cycle"
 description: "How the daily cycle works, what gets processed, and when your battles happen."
 order: 2
-lastUpdated: "2026-10-28"
+lastUpdated: "2026-11-12"
 relatedArticles:
   - getting-started/core-game-loop
   - economy/credits-and-income
@@ -45,7 +45,7 @@ This is the main event — your 1v1 league battles.
 
 1. **Repair all robots** — Full repair pass with costs deducted, so every robot enters league battles at full health.
 2. **Execute league battles** — All 1v1 matches that were scheduled during the previous cycle's matchmaking are fought. Results include ELO changes, LP gains/losses, credits earned, and streaming revenue.
-3. **Rebalance leagues** — Robots in the top 10% of their league instance (meeting the per-tier LP threshold and ≥5 cycles in the tier) are promoted. Bottom 10% (with ≥5 cycles) are demoted. Instances are rebalanced if they exceed the 100-robot cap.
+3. **Rebalance leagues** — Robots in the top 10% of their league instance (meeting the per-tier LP threshold and ≥5 cycles in the tier) are promoted. Bottom 10% (with ≥5 cycles) are demoted. Each tier's robots are then spread evenly over its instances (one per 100 robots).
 4. **League matchmaking** — New 1v1 matches are scheduled for the next cycle (24-hour lead time). Robots are paired primarily by LP (±10 ideal, ±20 fallback), with ELO as a secondary quality check.
 
 ```callout-tip

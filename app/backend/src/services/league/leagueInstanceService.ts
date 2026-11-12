@@ -142,10 +142,16 @@ export async function assignLeagueInstanceWithLock(tier: LeagueTier, options: In
 /**
  * Rebalance entities across instances in a tier.
  * Always redistributes entities evenly using round-robin (sorted by LP desc for competitive balance).
- * Called after promotions/demotions during league rebalancing.
+ * Called after promotions/demotions during league rebalancing, and by
+ * `redealLeagueInstances` after bulk placements (season start).
  * Mode-aware: defaults to league_1v1 for backward compatibility.
+ *
+ * Equal LP is broken by standings id (oldest row first). At season start every
+ * row has 0 LP, and the rows created after the bulk Automaton placement (the
+ * human players, issue #599) are the newest: dealing them consecutively puts each
+ * one in a different instance instead of leaving the order to Postgres.
  */
-export async function rebalanceInstances(tier: LeagueTier, options: InstanceOptions = DEFAULT_OPTIONS): Promise<void> {
+export async function rebalanceInstances(tier: LeagueTier, options: InstanceOptions = DEFAULT_OPTIONS): Promise<number> {
   const { mode, maxPerInstance } = options;
   const logLabel = mode === 'league_1v1' ? 'LeagueInstance' : `LeagueInstance:${mode}`;
 
@@ -157,12 +163,13 @@ export async function rebalanceInstances(tier: LeagueTier, options: InstanceOpti
     },
     orderBy: [
       { leaguePoints: 'desc' },
+      { id: 'asc' },
     ],
   });
 
   if (allStandings.length === 0) {
     logger.info(`[${logLabel}] ${tier}: No entities, skipping`);
-    return;
+    return 0;
   }
 
   // Calculate how many instances we need
@@ -194,6 +201,7 @@ export async function rebalanceInstances(tier: LeagueTier, options: InstanceOpti
   } else {
     logger.info(`[${logLabel}] ${tier}: Already balanced`);
   }
+  return updates.length;
 }
 
 type RobotWithUser = Prisma.RobotGetPayload<{

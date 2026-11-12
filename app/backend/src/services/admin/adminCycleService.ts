@@ -3,6 +3,7 @@ import { executeScheduledKothBattles } from '../koth/kothBattleOrchestrator';
 import { runMatchmaking } from '../analytics/matchmakingService';
 import { runKothMatchmaking } from '../koth/kothMatchmakingService';
 import { rebalanceLeagues } from '../league/leagueRebalancingService';
+import { redealLeagueInstances } from '../league/leagueInstanceRedeal';
 import { rebalanceTagTeamLeagues } from '../tag-team/tagTeamLeagueRebalancingService';
 import { runTagTeamMatchmaking } from '../tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../tag-team/tagTeamBattleOrchestrator';
@@ -269,6 +270,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         slot: advanced.preparationCyclesCompleted,
         source: 'admin_bulk',
       });
+      // As in scheduled settlement: re-deal the league instances (issue #599).
+      // Never throws; failures are logged per mode/tier.
+      await redealLeagueInstances('[Admin] Preparation day');
       preparationResults.push({
         cycle: cycleMetadata.totalCycles + 1,
         reservedSlotsFired: [],

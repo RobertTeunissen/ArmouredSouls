@@ -92,7 +92,7 @@ export const STAGE_DESCRIPTIONS: Readonly<Record<RolloverStageName, string>> = {
   verify: 'Archive counts must match, or the rollover stops with all data intact.',
   purge: 'Delete generated stables, reset every other stable, empty season history, open the next season.',
   post: 'Image orphan sweep, preserved-state achievements, space reclamation. Failures here are warnings.',
-  automaton: 'Automatons take their season-opening turn. Failures here are warnings.',
+  automaton: 'Automatons take their season-opening turn, then every league tier is re-dealt evenly over its instances. Failures here are warnings.',
 };
 
 export interface PurgeGroup {

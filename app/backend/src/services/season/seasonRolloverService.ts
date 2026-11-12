@@ -375,8 +375,32 @@ export async function executeSeasonRollover(options: RolloverOptions): Promise<R
         `[season-rollover] Automaton season_open turn failed (non-fatal) — ${describeError(error)}`,
       );
     }
+    // The opening build fills each league tier's instances one after another,
+    // leaving one part-filled instance that would take every later entrant
+    // (issue #599). Spread the tiers evenly before players start subscribing.
+    tracker.setDetail('automaton', 'Re-dealing league instances');
+    let redealProblem = false;
+    try {
+      const { redealLeagueInstances } = await import('../league/leagueInstanceRedeal');
+      const redeal = await redealLeagueInstances('[season-rollover]');
+      redealProblem = redeal.failures.length > 0;
+    } catch (error) {
+      redealProblem = true;
+      logger.error(
+        `[season-rollover] League instance re-deal failed (non-fatal) — ${describeError(error)}`,
+      );
+    }
     const postMs = Date.now() - postStart;
-    await tracker.finish('automaton', automatonProblem ? 'Done with warnings: the turn could not start' : `Season ${newSeasonNumber} opening turn`);
+    const automatonWarnings = [
+      ...(automatonProblem ? ['the turn could not start'] : []),
+      ...(redealProblem ? ['league instances not re-dealt'] : []),
+    ];
+    await tracker.finish(
+      'automaton',
+      automatonWarnings.length > 0
+        ? `Done with warnings: ${automatonWarnings.join(', ')}`
+        : `Season ${newSeasonNumber} opening turn`,
+    );
 
     const totalMs = Date.now() - totalStart;
 
