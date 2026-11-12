@@ -69,6 +69,8 @@ describe('PUT /api/robots/:id/appearance image ownership', () => {
   afterAll(async () => {
     for (const file of files) await fs.unlink(file).catch(() => undefined);
     for (const id of userIds) await fs.rmdir(path.join(UPLOAD_BASE_DIR, String(id))).catch(() => undefined);
+    await prisma.userAchievement.deleteMany({ where: { userId: { in: userIds } } });
+    await prisma.financialLedger.deleteMany({ where: { userId: { in: userIds } } });
     await prisma.robot.deleteMany({ where: { id: robotId } });
     await prisma.user.deleteMany({ where: { id: { in: userIds } } });
     await new Promise<void>((resolve) => server.close(() => resolve()));
@@ -79,10 +81,23 @@ describe('PUT /api/robots/:id/appearance image ownership', () => {
     .set('Authorization', `Bearer ${ownerToken}`)
     .send({ imageUrl });
 
-  it('applies the caller\'s own upload', async () => {
+  const holdsE32 = async (): Promise<boolean> =>
+    (await prisma.userAchievement.count({ where: { userId: userIds[0], achievementId: 'E32' } })) > 0;
+
+  // Issue #601: E32 "Ready for My Close-Up" counts the player's own images only.
+  it('does not award Ready for My Close-Up for a preset', async () => {
+    const res = await put('/assets/robots/robot-chassis-humanoid-dual_red_blade_mech.webp');
+    expect(res.status).toBe(200);
+    expect(res.body.achievementUnlocks).toEqual([]);
+    expect(await holdsE32()).toBe(false);
+  });
+
+  it('applies the caller\'s own upload and awards Ready for My Close-Up for reusing it', async () => {
     const res = await put(ownUpload);
     expect(res.status).toBe(200);
     expect(res.body.robot.imageUrl).toBe(ownUpload);
+    expect(res.body.achievementUnlocks.map((a: { id: string }) => a.id)).toContain('E32');
+    expect(await holdsE32()).toBe(true);
   });
 
   it('rejects another stable\'s upload with a generic 403 and leaves the robot unchanged', async () => {
