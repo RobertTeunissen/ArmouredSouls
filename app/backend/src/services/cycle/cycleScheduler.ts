@@ -29,7 +29,7 @@ import prisma from '../../lib/prisma';
 import { EventLogger } from '../common/eventLogger';
 import { JobContext } from '../notifications/integration';
 import { buildSuccessMessage, buildErrorMessage, getActiveIntegrations, dispatchNotification } from '../notifications/notification-service';
-import { SCHEDULER_JOB_NAMES, type SchedulerJobName } from './schedulerJobNames';
+import { SCHEDULER_JOB_NAMES } from './schedulerJobNames';
 import { settlementService } from '../financial/settlementService';
 import { formatProcessMemoryUsage } from '../../utils/process-memory';
 import {
@@ -43,7 +43,7 @@ import { logCycleEndBalances } from './cycle-closing-evidence';
 import type { TurnStepInput } from '../automaton/automatonTurnService';
 import { markFinished, markRunning, recordQueued } from './schedulerRunStore';
 import { SchedulerError, SchedulerErrorCode } from '../../errors/schedulerErrors';
-import type { SchedulerRunSummary, SchedulerRunTrigger } from '../../types/schedulerTypes';
+import type { SchedulerJobName, SchedulerRunSummary, SchedulerRunTrigger } from '../../shared/types';
 
 const eventLogger = new EventLogger();
 

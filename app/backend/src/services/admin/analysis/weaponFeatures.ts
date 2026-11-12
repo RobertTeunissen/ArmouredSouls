@@ -17,11 +17,12 @@
  * - matchups: single-robot comparisons only, one antisymmetric feature per
  *   pair of categories (+1 when A is the first, −1 when A is the second).
  */
-import { ARCHETYPES, LOADOUTS, RANGE_BANDS, TOP_STRENGTH_SHARE, type ArchetypeKey } from './analysisOptions';
+import { ARCHETYPES, LOADOUTS, RANGE_BANDS, TOP_STRENGTH_SHARE } from './analysisOptions';
 import type { LayeredBuild } from './attributeLayers';
 import type { Appearance, Comparison, ModeColumn } from './comparisons';
 import type { DesignMatrix } from './logisticFit';
-import type { CatalogueWeapon } from './weaponCatalogue';
+import type { WeaponCatalogueEntry } from './weaponCatalogue';
+import type { ArchetypeKey } from '../../../shared/types';
 
 /** log points invested, offensive share, defensive share. */
 export const CONTROL_FEATURES = 3;
@@ -36,11 +37,11 @@ const yieldToEventLoop = (): Promise<void> => new Promise((resolve) => setImmedi
 
 /** Catalogue lookups for builds: weapon index, range band, loadout and archetype. */
 export class WeaponIndex {
-  readonly weapons: readonly CatalogueWeapon[];
+  readonly weapons: readonly WeaponCatalogueEntry[];
   private readonly indexById = new Map<number, number>();
   private readonly bandById = new Map<number, number>();
 
-  constructor(catalogue: readonly CatalogueWeapon[]) {
+  constructor(catalogue: readonly WeaponCatalogueEntry[]) {
     this.weapons = catalogue;
     catalogue.forEach((weapon, i) => {
       this.indexById.set(weapon.id, i);

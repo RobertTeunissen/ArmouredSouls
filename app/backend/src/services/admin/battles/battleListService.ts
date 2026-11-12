@@ -8,7 +8,7 @@ import { Prisma } from '../../../../generated/prisma';
 import { BATTLE_MODES, MODE_TIME_LIMIT_SECONDS, type BattleMode } from './battleModes';
 import type { BattleOutcomeFilter, BattleRangeFilter, BattleStableFilter } from './battleFilters';
 import { loadBattleFacts, outcomeOf, summariseSides, swingOf, type BattleCoreRow } from './battleFacts';
-import type { BattleListResponse, BattleListRow, StableKind } from './battleTypes';
+import type { BattleListResponse, BattleListRow, StableType } from '../../../shared/types';
 
 export interface BattleListParams {
   page: number;
@@ -104,7 +104,7 @@ export function buildBattleWhere(params: BattleListParams): Prisma.Sql {
   if (params.mode !== 'all') conditions.push(Prisma.sql`b.battle_type = ${params.mode}`);
 
   if (params.stable !== 'all') {
-    const kind: StableKind = params.stable;
+    const kind: StableType = params.stable;
     conditions.push(Prisma.sql`EXISTS (
       SELECT 1 FROM battle_participants p
       JOIN robots r ON r.id = p.robot_id

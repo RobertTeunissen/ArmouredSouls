@@ -16,7 +16,7 @@ import {
   modeLabel,
   TIME,
 } from '../adminDashboardFormat';
-import type { DashboardStatus } from '../adminDashboardApi';
+import type { DashboardStatus } from '@shared/types';
 
 const NOW = new Date('2026-10-22T14:00:00.000Z');
 

@@ -7,8 +7,8 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { LeagueSeasonOverview } from '../../../utils/adminLeagueHealthApi';
 import { formatCount, joinList } from '../../../utils/adminLeagueHealthFormat';
+import type { LeagueSeasonOverview } from '@shared/types';
 
 export interface SeasonTrendProps {
   season: LeagueSeasonOverview;

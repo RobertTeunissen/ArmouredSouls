@@ -9,13 +9,12 @@ import {
   downloadJson,
   exportCatalogue,
   getSyncStatus,
-  type CatalogueSyncSummary,
-  type ProfileListItem,
 } from '../../../utils/automatonAdminApi';
 import { ActionButton, Field, Notice } from './ui';
 import { StablePicker } from './StablePicker';
 import { errorText } from './requestErrors';
 import { formatDateTime } from './automatonText';
+import type { CatalogueSyncSummary, ProfileListItem } from '@shared/types';
 
 export interface CatalogueTabProps {
   profiles: ProfileListItem[];

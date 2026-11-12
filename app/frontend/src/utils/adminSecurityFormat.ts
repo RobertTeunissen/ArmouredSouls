@@ -5,11 +5,8 @@ import { formatAgo, formatCount } from './adminDashboardFormat';
 import {
   DEFAULT_SECURITY_WINDOW,
   SECURITY_WINDOWS,
-  type SecuritySignal,
-  type SecurityWindow,
-  type SignalCard,
-  type SignalSummary,
 } from './adminSecurityApi';
+import type { SecuritySignal, SecurityWindow, SignalCard, SignalSummary } from '@shared/types';
 
 export const WINDOW_LABELS: Readonly<Record<SecurityWindow, string>> = {
   '24h': 'Last 24 hours',

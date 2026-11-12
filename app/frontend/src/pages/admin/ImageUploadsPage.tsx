@@ -19,9 +19,10 @@ import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton } from '..
 import { ImageDetailPanel, ImageGrid, ImageStatCards, ModerationSummary, StoragePanel, UploadsPerWeek } from '../../components/admin/images';
 import { ApiError } from '../../utils/ApiError';
 import { isAbortError } from '../../utils/abort';
-import { getImagesInUse, getImagesOverview, type ImagesOverview, type ImagesPage } from '../../utils/adminImagesApi';
+import { getImagesInUse, getImagesOverview } from '../../utils/adminImagesApi';
 import { readImagesView, writeImagesView, type ImagesViewState } from '../../utils/adminImagesFormat';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
+import type { ImagesOverview, ImagesPage } from '@shared/types';
 
 /** Search is debounced so typing does not fire a request per key. */
 const SEARCH_DEBOUNCE_MS = 300;

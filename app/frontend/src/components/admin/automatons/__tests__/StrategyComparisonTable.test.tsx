@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { StrategyComparisonTable } from '../StrategyComparisonTable';
 import { COMPARISON } from './fixtures';
-import type { StrategyComparison } from '../../../../utils/automatonAdminApi';
+import type { StrategyComparison } from '@shared/types';
 
 function renderTable(comparison: StrategyComparison | null = COMPARISON, error: string | null = null): { onOpenStrategy: ReturnType<typeof vi.fn> } {
   const onOpenStrategy = vi.fn();

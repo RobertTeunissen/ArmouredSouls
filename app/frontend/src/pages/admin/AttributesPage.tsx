@@ -20,7 +20,7 @@ import {
   LayerFitTable,
   MethodNote,
 } from '../../components/admin/attributes';
-import type { AttributeAnalysisCollecting, AttributeAnalysisReady, AttributeFilters } from '../../components/admin/attributes';
+import type { AttributeFilters } from '../../components/admin/attributes';
 import { ADMIN_FOCUS_RING, AdminPanel, PanelError, PanelSkeleton } from '../../components/admin/shared';
 import { useAttributeAnalysis } from '../../hooks/useAttributeAnalysis';
 import {
@@ -31,6 +31,7 @@ import {
   readAttributeFilters,
   writeAttributeFilters,
 } from '../../utils/adminAttributesFormat';
+import type { AttributeAnalysisCollecting, AttributeAnalysisReady } from '@shared/types';
 
 function CollectingState({ data }: { data: AttributeAnalysisCollecting }): React.ReactElement {
   return (

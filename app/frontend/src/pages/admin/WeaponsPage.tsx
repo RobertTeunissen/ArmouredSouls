@@ -20,11 +20,12 @@ import {
   WeaponsControls,
   WeaponsTable,
 } from '../../components/admin/weapons';
-import type { WeaponAnalysisCollecting, WeaponAnalysisReady, WeaponFilters } from '../../components/admin/weapons';
+import type { WeaponFilters } from '../../components/admin/weapons';
 import { ADMIN_FOCUS_RING, AdminPanel, PanelError, PanelSkeleton } from '../../components/admin/shared';
 import { useWeaponAnalysis } from '../../hooks/useWeaponAnalysis';
 import { RANGE_OPTIONS, columnLabel, formatCount, formatEffect, formatUtcDate } from '../../utils/adminAttributesFormat';
 import { readWeaponFilters, writeWeaponFilters } from '../../utils/adminWeaponsFormat';
+import type { WeaponAnalysisCollecting, WeaponAnalysisReady } from '@shared/types';
 
 function CollectingState({ data }: { data: WeaponAnalysisCollecting }): React.ReactElement {
   return (

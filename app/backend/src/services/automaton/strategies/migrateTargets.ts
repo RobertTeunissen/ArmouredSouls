@@ -11,9 +11,8 @@
 import type { StrategyParametersV1 } from '../../../types/automaton';
 import type { FacilityType } from '../stableFacts';
 import { resolveGoalTarget } from './strategyParameters';
-import type { GoalSpec, GoalType } from './strategyTypes';
-
-export type TargetChangeStatus = 'kept' | 'clamped' | 'new' | 'removed';
+import type { GoalSpec } from './strategyTypes';
+import type { GoalType, TargetChangeStatus } from '../../../shared/types';
 
 export interface TargetChange {
   status: TargetChangeStatus;

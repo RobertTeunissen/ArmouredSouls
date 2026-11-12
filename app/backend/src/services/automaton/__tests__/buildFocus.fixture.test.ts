@@ -6,7 +6,7 @@
  * priority order, description and the closest guide archetype.
  */
 import { BUILD_FOCUS_PRESETS, BUILD_FOCUS_WEIGHTS, priorityOrder } from '../buildFocus';
-import type { AttributeGroup } from '../../../types/automaton';
+import type { AcademyGroup } from '../../../shared/types';
 
 const APPROVED_TABLE = `
 | **Bruiser** | 1.0 | 0.8 | 0.7 | 0.4 | Combat → Defense → Mobility → AI | A heavy hitter that wades in and trades blows. Built to deal damage first and survive the return fire second. | Glass Cannon / melee brawler |
@@ -17,7 +17,7 @@ const APPROVED_TABLE = `
 | **Versatile** | 1.0 | 1.0 | 1.0 | 1.0 | Combat → Defense → Mobility → AI (all equal) | No weak spots and no spikes. Every system upgraded evenly. | All-rounder |
 `;
 
-const GROUP_NAMES: Readonly<Record<string, AttributeGroup>> = { Combat: 'combat', Defense: 'defense', Mobility: 'mobility', AI: 'ai' };
+const GROUP_NAMES: Readonly<Record<string, AcademyGroup>> = { Combat: 'combat', Defense: 'defense', Mobility: 'mobility', AI: 'ai' };
 
 const approved = APPROVED_TABLE.trim().split('\n').map((line) => {
   const [name, combat, defense, mobility, ai, priority, description] = line.split('|').slice(1).map((cell) => cell.trim());

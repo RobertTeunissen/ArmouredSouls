@@ -3,14 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useApiQuery } from '../hooks/useApiQuery';
 import { ApiError } from '../utils/ApiError';
-import AchievementBadge from '../components/AchievementBadge';
-import AchievementReward from '../components/AchievementReward';
 import {
   getBattleLog,
   formatDateTime,
   isTeamBattleType,
 } from '../utils/matchmakingApi';
-import type { BattleLogResponse, BattleLogParticipant } from '../utils/matchmakingApi';
 import { BattlePlaybackViewer } from '../components/BattlePlaybackViewer/BattlePlaybackViewer';
 import { computeBattleStatistics } from '../utils/battleStatistics';
 import { useMediaQuery } from '../hooks/useMediaQuery';
@@ -28,6 +25,7 @@ import {
 } from '../components/battle-detail';
 import { PlaybackUnavailableNotice } from '../components/battle-detail/PlaybackUnavailableNotice';
 import { RobotSelector } from '../components/battle-detail/RobotSelector';
+import type { BattleLogParticipant, BattleLogResponse } from '@shared/types';
 
 /** The API wrapper rejects with an `ApiError` carrying the HTTP status. */
 function battleLoadErrorMessage(error: unknown): string {
@@ -302,30 +300,6 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
         <TeamBattleMetrics battleLog={battleLog} isMobile={isMobile} />
       )}
       <StableRewards battleLog={battleLog} selectedRobotIndex={isMobile ? selectedRobotIndex : undefined} />
-      {/* Achievement unlocks from this battle */}
-      {battleLog.achievementUnlocks && battleLog.achievementUnlocks.length > 0 && (
-        <div className="bg-surface rounded-lg mb-3 p-3">
-          <h3 className="text-lg font-bold mb-3">🏆 Achievements Earned</h3>
-          <div className="flex flex-wrap gap-3">
-            {battleLog.achievementUnlocks.map(unlock => (
-              <div key={unlock.id} className="flex items-center gap-2 bg-surface-elevated rounded-lg px-3 py-2">
-                <AchievementBadge tier={unlock.tier} badgeIconFile={unlock.badgeIconFile} size={48} />
-                <div>
-                  <p className="text-sm font-bold text-white">{unlock.name}</p>
-                  <p className="text-xs">
-                    <AchievementReward
-                      rewardCredits={unlock.rewardCredits}
-                      rewardPrestige={unlock.rewardPrestige}
-                      trophy={unlock.trophy}
-                      variant="gain"
-                    />
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
       <DamageFlowDiagram
         damageFlows={statistics.damageFlows}
         battleType={battleLog.battleType}

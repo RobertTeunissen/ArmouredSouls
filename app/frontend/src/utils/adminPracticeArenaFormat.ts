@@ -2,9 +2,9 @@
  * Pure helpers of the admin Practice Arena page: day labels, shares and the
  * "Refused" / "Unavailable" lines. Unit-tested without rendering.
  */
-import type { PracticeDayStats, PracticeMatchup } from './adminPracticeArenaApi';
 import { formatDuration } from './adminCycleFormat';
 import { formatCount } from './adminFormat';
+import type { PracticeDayStats, PracticeMatchup } from '@shared/types';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 

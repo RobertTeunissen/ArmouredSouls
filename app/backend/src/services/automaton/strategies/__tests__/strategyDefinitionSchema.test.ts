@@ -5,10 +5,9 @@ import {
   deriveGoalSpecs,
   goalIdFor,
   validateStrategyDefinition,
-  type StrategyRule,
 } from '../strategyDefinitionSchema';
-import type { FileBuildOrderEntry, StrategyDefinitionFile } from '../strategyTypes';
 import { FIXTURE_STRATEGY_DIRECTORY } from './helpers/strategyTestSupport';
+import type { FileBuildOrderEntry, StrategyDefinitionFile, StrategyRule } from '../../../../shared/types';
 
 const FIXTURE: StrategyDefinitionFile = JSON.parse(
   fs.readFileSync(path.join(FIXTURE_STRATEGY_DIRECTORY, 'fixture.v1.json'), 'utf8'),

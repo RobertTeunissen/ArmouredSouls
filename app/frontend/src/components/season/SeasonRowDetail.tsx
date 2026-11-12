@@ -8,7 +8,6 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ModeStrip } from '../stable-view/ModeStrip';
 import { TierChip } from '../stable-view/TierChip';
-import type { StableSeasonDetail } from '../../utils/seasonApi';
 import { categoryLabel, rankBadge } from '../../utils/seasonFormat';
 import { getTierName } from '../../utils/tierHelpers';
 import {
@@ -20,6 +19,7 @@ import {
   tierSummary,
   tournamentWins,
 } from '../../utils/stableViewFormat';
+import type { StableSeasonDetail } from '@shared/types';
 
 /** Placements shown before "more". */
 const RECORD_CHIP_LIMIT = 4;

@@ -4,9 +4,9 @@
  * their share, so colour is never the only signal.
  */
 import type { ReactNode } from 'react';
-import type { PracticeMatchup, PracticeUsage as Usage } from '../../../utils/adminPracticeArenaApi';
 import { MATCHUP_LABELS, formatCount, share } from '../../../utils/adminPracticeArenaFormat';
 import { AdminPanel } from '../shared';
+import type { PracticeMatchup, PracticeUsage as Usage } from '@shared/types';
 
 export interface PracticeUsageProps {
   usage: Usage | null;

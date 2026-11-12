@@ -30,7 +30,7 @@ export {
   getProgramSwitch,
   isProgramEnabled,
   setProgramSwitch,
-  type ProgramSwitchChange,
+  type ProgramSwitchResult,
   type ProgramSwitchState,
 } from './programSwitch';
 export { getLastCatalogueSyncSummary, syncCatalogue, type CatalogueSyncResult } from './catalogueSync';

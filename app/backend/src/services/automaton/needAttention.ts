@@ -15,14 +15,10 @@
  */
 import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
+import type { NeedAttentionReason } from '../../shared/types';
 
 /** Completed zero-spend Turn_Records that make a stable need attention. */
 export const NOTHING_BOUGHT_WINDOW = 14;
-
-export type NeedAttentionReason =
-  | { code: 'last_cycle_failed'; errorCode: string; label: string }
-  | { code: 'balance_negative'; label: string }
-  | { code: 'nothing_bought'; cycles: number; label: string };
 
 export type NeedAttentionCode = NeedAttentionReason['code'];
 

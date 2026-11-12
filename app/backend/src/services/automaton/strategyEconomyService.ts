@@ -20,36 +20,12 @@ import { describeBuildOrder, resolveGoalTarget } from './strategies/strategyPara
 import { storedParameters } from './automatonProfileRules';
 import { savingGoalOf } from './turnRecords';
 import { AutomatonError, AutomatonErrorCode } from '../../errors/automatonErrors';
-import { readStableCashflow, type StableCashflow } from '../admin/stableCashflow';
+import { readStableCashflow } from '../admin/stableCashflow';
+import type { StableCashflow, StrategyEconomy, StrategyEconomyRow } from '../../shared/types';
 
 /** Closed cycles the per-cycle flows cover. */
 export const STRATEGY_ECONOMY_WINDOW_CYCLES = 7;
 const CACHE_TTL_MS = 60_000;
-
-export interface StrategyEconomyRow {
-  strategyKey: string;
-  displayName: string;
-  stables: number;
-  /** Balance below ₡0 now. */
-  inDeficit: number;
-  medianBalance: number;
-  /** Per stable per cycle with ledger rows in the window; null without any. */
-  earnedPerCycle: number | null;
-  runningCostsPerCycle: number | null;
-  /** The Goal most stables' latest completed turn ended Saving on. */
-  topSavingGoal: { label: string; target: number | null; stables: number } | null;
-}
-
-export interface StrategyEconomy {
-  window: { fromCycle: number; toCycle: number };
-  /** Activation days (UTC) with their stable counts, oldest first. */
-  batches: { date: string; stables: number }[];
-  /** The batch filter applied: an activation day, or null for all. */
-  activated: string | null;
-  rows: StrategyEconomyRow[];
-  totals: { stables: number; inDeficit: number };
-  generatedAt: string;
-}
 
 interface FlowRow {
   user_id: number;

@@ -14,27 +14,7 @@
 import { create } from 'zustand';
 import { api } from '../utils/api';
 import { ApiError } from '../utils/ApiError';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-export interface StableOverviewRobot {
-  robotId: number;
-  robotName: string;
-  subscriptions: { eventType: string; status: string }[];
-  /** Events with a match already booked — the slot is not free yet. */
-  heldSlots: string[];
-  cap: number;
-}
-
-export interface StableOverview {
-  robots: StableOverviewRobot[];
-  registeredEvents: { type: string; label: string }[];
-  bookingOfficeLevel: number;
-  /** Next moment each event books matches, ISO-8601 UTC, keyed by event type. */
-  nextSchedulingMoments: Record<string, string>;
-}
+import type { StableOverview } from '@shared/types';
 
 const TTL_MS = 30_000;
 

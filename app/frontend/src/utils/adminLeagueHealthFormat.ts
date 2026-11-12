@@ -5,26 +5,26 @@
  * (`services/admin/league-health/leagueHealthStatus.ts`); this module only
  * words them.
  */
+import { formatCount, formatPartShare as formatShare } from './adminFormat';
 import type {
   AttentionEntry,
   LeagueHealthAttentionItem,
-  LeagueHealthMode,
   LeagueHealthModeSummary,
   LeagueHealthTier,
   LeagueSeasonOverview,
   SeasonBoundary,
-} from './adminLeagueHealthApi';
-import { formatCount, formatPartShare as formatShare } from './adminFormat';
+  TieredLeagueMode,
+} from '@shared/types';
 
-export const LEAGUE_HEALTH_MODES: readonly LeagueHealthMode[] = [
+export const LEAGUE_HEALTH_MODES: readonly TieredLeagueMode[] = [
   'league_1v1', 'league_2v2', 'league_3v3', 'tag_team', 'koth', 'grand_melee',
 ];
 
-export const DEFAULT_LEAGUE_HEALTH_MODE: LeagueHealthMode = 'league_1v1';
+export const DEFAULT_LEAGUE_HEALTH_MODE: TieredLeagueMode = 'league_1v1';
 
 export const LEAGUE_TIER_ORDER: readonly string[] = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 
-const MODE_LABELS: Readonly<Record<LeagueHealthMode, string>> = {
+const MODE_LABELS: Readonly<Record<TieredLeagueMode, string>> = {
   league_1v1: '1v1 League',
   league_2v2: '2v2 League',
   league_3v3: '3v3 League',
@@ -33,7 +33,7 @@ const MODE_LABELS: Readonly<Record<LeagueHealthMode, string>> = {
   grand_melee: 'Grand Melee',
 };
 
-const MODE_SHORT_LABELS: Readonly<Record<LeagueHealthMode, string>> = {
+const MODE_SHORT_LABELS: Readonly<Record<TieredLeagueMode, string>> = {
   league_1v1: '1v1',
   league_2v2: '2v2',
   league_3v3: '3v3',
@@ -43,7 +43,7 @@ const MODE_SHORT_LABELS: Readonly<Record<LeagueHealthMode, string>> = {
 };
 
 /** `?mode=` values of the player League Standings page (`/league-standings`). */
-const STANDINGS_MODE: Readonly<Record<LeagueHealthMode, string>> = {
+const STANDINGS_MODE: Readonly<Record<TieredLeagueMode, string>> = {
   league_1v1: '1v1',
   league_2v2: '2v2',
   league_3v3: '3v3',
@@ -52,16 +52,16 @@ const STANDINGS_MODE: Readonly<Record<LeagueHealthMode, string>> = {
   grand_melee: 'grand_melee',
 };
 
-export function modeLabel(mode: LeagueHealthMode): string {
+export function modeLabel(mode: TieredLeagueMode): string {
   return MODE_LABELS[mode];
 }
 
-export function modeShortLabel(mode: LeagueHealthMode): string {
+export function modeShortLabel(mode: TieredLeagueMode): string {
   return MODE_SHORT_LABELS[mode];
 }
 
 /** Label of the narrow mobile grid strips ("Melee", as the player standings tabs say). */
-export function modeStripLabel(mode: LeagueHealthMode): string {
+export function modeStripLabel(mode: TieredLeagueMode): string {
   return mode === 'grand_melee' ? 'Melee' : MODE_SHORT_LABELS[mode];
 }
 
@@ -70,8 +70,8 @@ export function tierLabel(tier: string): string {
 }
 
 /** The mode in `?mode=`, or the default for a missing or unknown value. */
-export function readLeagueHealthMode(value: string | null): LeagueHealthMode {
-  return LEAGUE_HEALTH_MODES.includes(value as LeagueHealthMode) ? value as LeagueHealthMode : DEFAULT_LEAGUE_HEALTH_MODE;
+export function readLeagueHealthMode(value: string | null): TieredLeagueMode {
+  return LEAGUE_HEALTH_MODES.includes(value as TieredLeagueMode) ? value as TieredLeagueMode : DEFAULT_LEAGUE_HEALTH_MODE;
 }
 
 /** The expanded tier in `?tier=`, or null. */
@@ -80,7 +80,7 @@ export function readLeagueHealthTier(value: string | null): string | null {
 }
 
 /** Page URL of one mode, optionally with a tier expanded. */
-export function leagueHealthHref(mode: LeagueHealthMode, tier: string | null = null): string {
+export function leagueHealthHref(mode: TieredLeagueMode, tier: string | null = null): string {
   const params = new URLSearchParams();
   if (mode !== DEFAULT_LEAGUE_HEALTH_MODE) params.set('mode', mode);
   if (tier) params.set('tier', tier);
@@ -89,7 +89,7 @@ export function leagueHealthHref(mode: LeagueHealthMode, tier: string | null = n
 }
 
 /** Player standings of one instance (`/league-standings?mode=&tier=&instance=`). */
-export function standingsHref(mode: LeagueHealthMode, tier: string, instance?: string): string {
+export function standingsHref(mode: TieredLeagueMode, tier: string, instance?: string): string {
   const params = new URLSearchParams({ mode: STANDINGS_MODE[mode], tier });
   if (instance) params.set('instance', instance);
   return `/league-standings?${params.toString()}`;

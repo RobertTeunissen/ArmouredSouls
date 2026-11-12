@@ -13,10 +13,15 @@
 import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import type { SecuritySignal } from '../../types';
+import type {
+  SecurityOverview,
+  SecurityWindow,
+  SignalCard,
+  SignalSourceRow,
+  SignalStableRow,
+} from '../../shared/types';
 
-export const SECURITY_WINDOWS = ['24h', '7d', '30d'] as const;
-export type SecurityWindow = (typeof SECURITY_WINDOWS)[number];
-
+export const SECURITY_WINDOWS = ['24h', '7d', '30d'] as const satisfies readonly SecurityWindow[];
 /** Kept by the nightly retention job. */
 export const SECURITY_EVENT_RETENTION_DAYS = 90;
 /** A failed-login burst: this many failures from one IP within BURST_WINDOW_MS (the login limiter's window). */
@@ -28,55 +33,7 @@ const TABLE_LIMIT = 50;
 const BURST_SCAN_LIMIT = 20_000;
 
 /** The six signal cards, in page order. `nsfw_block` comes from the audit log. */
-export const SIGNAL_CARDS = ['failed_login', 'rate_limit', 'ownership_violation', 'race_condition_burst', 'robot_creation_burst', 'nsfw_block'] as const;
-export type SignalCard = (typeof SIGNAL_CARDS)[number];
-
-export interface SignalSummary {
-  signal: SignalCard;
-  total: number;
-  /** One count per bucket of `buckets`. */
-  perBucket: number[];
-  /** Last occurrence ever recorded (not limited to the window). */
-  lastSeenAt: string | null;
-}
-
-export interface SignalStableRow {
-  userId: number;
-  stableName: string | null;
-  username: string | null;
-  stableType: 'human' | 'generated' | 'automaton' | null;
-  /** Failed logins count attempts on this account; the rest are the player's own. */
-  counts: Partial<Record<SecuritySignal, number>>;
-  lastSeenAt: string;
-}
-
-export interface SignalSourceRow {
-  sourceIp: string;
-  failedLogins: number;
-  /** Distinct existing accounts named in those attempts. */
-  accountsTried: number;
-  malformedRequests: number;
-  rateLimitHits: number;
-  endpoints: string[];
-  lastSeenAt: string;
-  /** Largest number of failed logins inside one burst window, when it reached the burst count. */
-  burst: { count: number; at: string } | null;
-}
-
-export interface SecurityOverview {
-  window: SecurityWindow;
-  generatedAt: string;
-  bucket: 'hour' | 'day';
-  /** Start of every bucket, oldest first (ISO, UTC). */
-  buckets: string[];
-  signals: SignalSummary[];
-  stables: SignalStableRow[];
-  sources: SignalSourceRow[];
-  /** Oldest stored signal, so the page can say how far back it can see. */
-  recordingSince: string | null;
-  thresholds: { retentionDays: number; burstCount: number; burstWindowMinutes: number };
-}
-
+export const SIGNAL_CARDS = ['failed_login', 'rate_limit', 'ownership_violation', 'race_condition_burst', 'robot_creation_burst', 'nsfw_block'] as const satisfies readonly SignalCard[];
 export interface SecurityAttention {
   /** Signals of any kind in the last 24 hours. */
   signals: number;

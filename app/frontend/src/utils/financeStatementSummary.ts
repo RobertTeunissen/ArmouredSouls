@@ -1,4 +1,4 @@
-import type { FinanceTaxonomy, ItemisedStatementLine, RepairStatementLine } from './financeApi';
+import type { FinanceTaxonomy, ItemisedStatementLine, RepairStatementLine } from '@shared/types';
 
 export interface StatementCategorySummary {
   key: string;

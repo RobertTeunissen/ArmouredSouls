@@ -4,10 +4,10 @@
  * stable below. The highest tier is shown with its mode ("Gold · 3v3 League").
  */
 import type { ReactNode } from 'react';
-import type { ProfileListItem } from '../../../utils/automatonAdminApi';
 import { FOCUS_RING, Pill } from './ui';
 import { formatCredits, formatNumber, highestTierText, lastCycleText, needAttentionText } from './automatonText';
 import { nextSort, strategyName, type StableSort, type StableSortKey } from './stablesView';
+import type { ProfileListItem } from '@shared/types';
 
 export interface StablesListProps {
   rows: ProfileListItem[];

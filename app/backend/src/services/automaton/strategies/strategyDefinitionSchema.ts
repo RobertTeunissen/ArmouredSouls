@@ -17,12 +17,16 @@ import { getFacilityConfig } from '../../../config/facilities';
 import { ATTRIBUTE_MAX_LEVEL } from '../buildFocus';
 import { AUTOMATON_FACILITY_TYPES, type FacilityType } from '../stableFacts';
 import {
-  type FileBuildOrderEntry,
-  type FileTargetValue,
   type GoalSpec,
-  type GoalType,
-  type StrategyDefinitionFile,
 } from './strategyTypes';
+import type {
+  FileBuildOrderEntry,
+  FileTargetValue,
+  GoalType,
+  StrategyDefinitionFile,
+  StrategyRule,
+  StrategyRuleIssue,
+} from '../../../shared/types';
 
 /** Lowercase letters, digits and hyphens (approved help text, §6.4b). */
 export const STRATEGY_KEY_PATTERN = /^[a-z0-9-]+$/;
@@ -64,31 +68,6 @@ export const REQUIRED_FACILITY_TYPES: readonly FacilityType[] = [
 
 /** Non-facility Goal types every strategy needs, with a default above 0. */
 export const REQUIRED_GOAL_TYPES: readonly Exclude<GoalType, 'facility'>[] = ['robots', 'attributes', 'weapons', 'refine'];
-
-export type StrategyRule =
-  | 'schema'
-  | 'goal_count'
-  | 'position_sequence'
-  | 'bounds_limit'
-  | 'bounds_order'
-  | 'max_target_type'
-  | 'default_out_of_bounds'
-  | 'academy_facility_goal'
-  | 'robots_goal_first'
-  | 'required_goal_type'
-  | 'last_goal_attributes_max'
-  | 'key_exists'
-  | 'version_not_next'
-  | 'file_name'
-  | 'duplicate_version';
-
-export interface StrategyRuleIssue {
-  rule: StrategyRule;
-  message: string;
-  /** Build_Order position of the Goal the issue belongs to; absent for Build_Order-level issues. */
-  position?: number;
-  path: (string | number)[];
-}
 
 // ── Structure ────────────────────────────────────────────────────────
 

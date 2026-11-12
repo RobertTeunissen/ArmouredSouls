@@ -5,11 +5,11 @@
  */
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import type { AutomatonStatusBar as StatusBarData } from '../../../utils/automatonAdminApi';
 import { ConfirmDialog, FOCUS_RING, Notice } from './ui';
 import { errorText } from './requestErrors';
 import { formatSeconds, formatShortDateTime } from './automatonText';
 import { NEED_ATTENTION_CODES, NEED_ATTENTION_LABELS, type NeedAttentionCode } from './stablesView';
+import type { AutomatonStatusBar as StatusBarData } from '@shared/types';
 
 export interface AutomatonStatusBarProps {
   status: StatusBarData | null;

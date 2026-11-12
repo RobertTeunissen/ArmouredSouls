@@ -1,5 +1,6 @@
-import type { FinancialRecordProjection, ReportPeriodMetadata } from '../../../types';
+import type { FinancialRecordProjection } from '../../../types';
 import { reconcileFinanceStatement } from '../financeReportReconciliation';
+import type { ReportPeriodMetadata } from '../../../shared/types';
 
 const PERIOD: ReportPeriodMetadata = {
   seasonNumber: 1,

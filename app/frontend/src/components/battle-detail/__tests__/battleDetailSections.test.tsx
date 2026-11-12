@@ -9,7 +9,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { CombatMessages } from '../CombatMessages';
 import { ArenaSummary } from '../ArenaSummary';
 import { StableRewards } from '../StableRewards';
-import type { BattleLogEvent, BattleLogParticipant, BattleLogResponse } from '../../../utils/matchmakingApi';
+import { BattleResultBanner } from '../BattleResultBanner';
+import type { BattleLogEvent, BattleLogParticipant, BattleLogResponse } from '@shared/types';
 
 function participant(overrides: Partial<BattleLogParticipant> = {}): BattleLogParticipant {
   return {
@@ -26,9 +27,10 @@ function participant(overrides: Partial<BattleLogParticipant> = {}): BattleLogPa
 function battleLog(overrides: Partial<BattleLogResponse> = {}, events: BattleLogEvent[] = []): BattleLogResponse {
   return {
     battleId: 7, createdAt: '2026-11-01T00:00:00Z', battleType: 'league', leagueType: 'bronze', duration: 42,
-    winner: 'robot1', battleLog: { events },
+    leagueInstanceId: null, tournamentId: null, playbackAvailable: true, isForfeit: false, forfeitedRobotIds: [],
+    participants: [], winner: 'robot1', battleLog: { events },
     ...overrides,
-  } as BattleLogResponse;
+  };
 }
 
 function event(type: string, message: string, timestamp = 1, extra: Record<string, unknown> = {}): BattleLogEvent {
@@ -100,6 +102,35 @@ describe('CombatMessages', () => {
     expect(screen.getByText('Alpha strikes Bravo')).toBeInTheDocument();
     expect(screen.queryByText(/credits/)).not.toBeInTheDocument();
     expect(screen.queryByText(/was eliminated/)).not.toBeInTheDocument();
+  });
+});
+
+// The backend sends `battleLog: null` once the stored log is pruned (7 days,
+// #592: the contract says so now). The report must still render.
+describe('a battle whose stored log was pruned', () => {
+  const pruned = (overrides: Partial<BattleLogResponse> = {}): BattleLogResponse =>
+    battleLog({ battleLog: null, playbackAvailable: false, ...overrides });
+
+  it('shows no combat messages instead of failing', () => {
+    render(<CombatMessages battleLog={pruned()} />);
+    expect(screen.getByText('No combat messages available for this battle.')).toBeInTheDocument();
+  });
+
+  it('still names the tournament in the banner, without the round', () => {
+    render(
+      <MemoryRouter>
+        <BattleResultBanner
+          battleLog={pruned({
+            battleType: 'tournament_1v1',
+            tournamentId: 4,
+            participants: [participant({ robotId: 1, team: 1 }), participant({ robotId: 2, robotName: 'Bravo', team: 2, teamIndex: 1 })],
+          })}
+          userId={1}
+          isMobile={false}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('link', { name: /Tournament Round \?\/\?/ })).toHaveAttribute('href', '/tournaments/4');
   });
 });
 

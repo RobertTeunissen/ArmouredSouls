@@ -3,8 +3,8 @@
  * unlocked by someone, how many by nobody, and unlocks per stable.
  */
 import type { ReactNode } from 'react';
-import type { AchievementAnalytics } from '../../../utils/adminAchievementsApi';
 import { formatCount } from '../../../utils/adminDashboardFormat';
+import type { AchievementAnalytics } from '@shared/types';
 
 function Card({ label, value, detail }: { label: string; value: string; detail: string }): ReactNode {
   return (

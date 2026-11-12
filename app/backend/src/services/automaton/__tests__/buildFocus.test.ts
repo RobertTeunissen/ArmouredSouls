@@ -14,10 +14,10 @@ import {
   type GroupWeights,
 } from '../buildFocus';
 import { ROBOT_ATTRIBUTES, type RobotAttribute } from '../../../shared/utils/robotAttributes';
-import type { AttributeGroup } from '../../../types/automaton';
 import { TEST_WEIGHTS, attributesAt } from './helpers/automatonFixtures';
+import type { AcademyGroup } from '../../../shared/types';
 
-const NO_ACADEMIES: Record<AttributeGroup, number> = { combat: 0, defense: 0, mobility: 0, ai: 0 };
+const NO_ACADEMIES: Record<AcademyGroup, number> = { combat: 0, defense: 0, mobility: 0, ai: 0 };
 const open = (): AcademyQuote => ({ kind: 'available', cost: 100_000 });
 
 function input(robots: AttributePlanRobot[], overrides: Partial<AttributePlanInput> = {}): AttributePlanInput {
@@ -151,7 +151,7 @@ describe('buildFocus mathematics (R4.2–R4.5)', () => {
     });
 
     it('raises a gated group to its current cap and moves on to the next group', () => {
-      const quoteAcademy = (group: AttributeGroup): AcademyQuote => (group === 'combat'
+      const quoteAcademy = (group: AcademyGroup): AcademyQuote => (group === 'combat'
         ? { kind: 'unavailable', detail: { facilityType: 'combat_training_academy', level: 1 } }
         : { kind: 'available', cost: 100_000 });
       const plan = planAttributeStep(input(
@@ -165,7 +165,7 @@ describe('buildFocus mathematics (R4.2–R4.5)', () => {
     });
 
     it('is Blocked only when all remaining work is behind gated academies', () => {
-      const gatedAll = (group: AttributeGroup): AcademyQuote => ({ kind: 'unavailable', detail: { group, level: 1 } });
+      const gatedAll = (group: AcademyGroup): AcademyQuote => ({ kind: 'unavailable', detail: { group, level: 1 } });
       const plan = planAttributeStep(input([r(1, TEST_WEIGHTS.versatile, attributesAt(10))], { milestone: 12, quoteAcademy: gatedAll }));
       expect(plan).toEqual({ kind: 'blocked', group: 'combat', detail: { group: 'combat', level: 1 } });
     });

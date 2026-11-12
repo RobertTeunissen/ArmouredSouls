@@ -25,6 +25,7 @@ import {
   calculateMerchandisingIncome,
   getRosterCapacity,
 } from '../../utils/economyCalculations';
+import type { AllEconomicROIsResult, UnifiedFacilityROI } from '../../shared/types';
 
 /**
  * The 5 economic facility types that have direct financial returns (income or savings).
@@ -39,29 +40,6 @@ const ECONOMIC_FACILITY_TYPES = [
 ] as const;
 
 type EconomicFacilityType = (typeof ECONOMIC_FACILITY_TYPES)[number];
-
-export interface UnifiedFacilityROI {
-  facilityType: string;
-  currentLevel: number;
-  totalInvestment: number;
-  totalReturns: number;
-  totalOperatingCosts: number;
-  netROI: number;
-  paidOff: boolean;
-  projectedPayoffCycles: number | null; // null if already paid off
-  cyclesSincePurchase: number;
-  dataSource: 'snapshot' | 'estimate';
-}
-
-export interface AllEconomicROIsResult {
-  facilities: UnifiedFacilityROI[];
-  totals: {
-    totalInvestment: number;
-    totalReturns: number;
-    totalOperatingCosts: number;
-    overallNetROI: number;
-  };
-}
 
 export class UnifiedFacilityROIService {
 

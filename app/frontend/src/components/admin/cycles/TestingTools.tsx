@@ -6,23 +6,24 @@
  */
 import { useId, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
-import type { BulkCycleOptions, SchedulerRun } from '../../../utils/adminCycleApi';
+import type { BulkCycleRequest } from '../../../utils/adminCycleApi';
 import { elapsedSince, formatDuration } from '../../../utils/adminCycleFormat';
 import { ADMIN_FOCUS_RING } from '../shared';
+import type { SchedulerRunView } from '@shared/types';
 
 export interface TestingToolsProps {
   /** Sum of the last run of every slot, or null when unknown. */
   estimatedCycleMs: number | null;
   /** The active bulk run (queued or running), if any. */
-  activeBulkRun: SchedulerRun | null;
+  activeBulkRun: SchedulerRunView | null;
   now: Date;
   /** The page confirms and starts the run, and reports the outcome. */
-  onStart: (options: BulkCycleOptions) => void;
+  onStart: (options: BulkCycleRequest) => void;
 }
 
 const MAX_CYCLES = 100;
 
-const OPTIONS: ReadonlyArray<{ key: keyof Omit<BulkCycleOptions, 'cycles'>; label: string; help: string }> = [
+const OPTIONS: ReadonlyArray<{ key: keyof Omit<BulkCycleRequest, 'cycles'>; label: string; help: string }> = [
   { key: 'generateUsersPerCycle', label: 'Top up generated stables', help: 'Creates generated stables up to the target (GENERATED_STABLE_TARGET, default 150).' },
   { key: 'includeTournaments', label: 'Tournaments', help: 'Run the tournament slots.' },
   { key: 'includeKoth', label: 'King of the Hill', help: 'Run the KotH slot.' },
@@ -32,7 +33,7 @@ const OPTIONS: ReadonlyArray<{ key: keyof Omit<BulkCycleOptions, 'cycles'>; labe
 export function TestingTools({ estimatedCycleMs, activeBulkRun, now, onStart }: TestingToolsProps): ReactNode {
   const [open, setOpen] = useState(false);
   const [cycles, setCycles] = useState('1');
-  const [options, setOptions] = useState<Omit<BulkCycleOptions, 'cycles'>>({
+  const [options, setOptions] = useState<Omit<BulkCycleRequest, 'cycles'>>({
     generateUsersPerCycle: false,
     includeTournaments: true,
     includeKoth: true,

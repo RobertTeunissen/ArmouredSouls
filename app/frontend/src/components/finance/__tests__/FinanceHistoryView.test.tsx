@@ -2,8 +2,8 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { FinanceHistoryView } from '../FinanceHistoryView';
-import type { FinanceHistoryPoint, FinanceHistoryResponse } from '../../../utils/financeApi';
 import { HISTORY_RESPONSE, RECONCILIATION, STATEMENT } from './fixtures';
+import type { FinanceHistoryPoint, FinanceHistoryResponse } from '@shared/types';
 
 function historyResponse(): FinanceHistoryResponse {
   const completedProvenance = {

@@ -7,27 +7,28 @@ import { useId, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
 import { ApiError } from '../../../utils/ApiError';
-import { searchStables, type StableKind, type StableSearchResult } from '../../../utils/adminPlayersApi';
+import { searchStables } from '../../../utils/adminPlayersApi';
 import { STABLE_KIND_LABELS, displayName } from '../../../utils/adminPlayersFormat';
+import type { AdminStableSearchResult, StableType } from '@shared/types';
 
 export interface StableSearchProps {
   onOpen: (userId: number) => void;
 }
 
-const KIND_TONE: Readonly<Record<StableKind, string>> = {
+const KIND_TONE: Readonly<Record<StableType, string>> = {
   human: 'bg-primary/15 text-primary',
   automaton: 'bg-info/15 text-info',
   generated: 'bg-white/10 text-secondary',
 };
 
-export function StableKindTag({ kind }: { kind: StableKind }): ReactNode {
+export function StableKindTag({ kind }: { kind: StableType }): ReactNode {
   return <span className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs ${KIND_TONE[kind]}`}>{STABLE_KIND_LABELS[kind]}</span>;
 }
 
 export function StableSearch({ onOpen }: StableSearchProps): ReactNode {
   const inputId = useId();
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<StableSearchResult[] | null>(null);
+  const [results, setResults] = useState<AdminStableSearchResult[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const controller = useRef<AbortController | null>(null);

@@ -26,11 +26,12 @@ interface WeaponSummary {
   rangeBand: string;
 }
 
+/** A row of GET /api/weapon-inventory: the robots holding it in each slot. */
 interface WeaponInventoryItem {
   id: number;
   weapon: WeaponSummary;
-  equippedOnRobotMain?: number | null;
-  equippedOnRobotOffhand?: number | null;
+  robotsMain: Array<{ id: number; name: string }>;
+  robotsOffhand: Array<{ id: number; name: string }>;
 }
 
 interface StorageStatus {
@@ -58,6 +59,11 @@ function isCompatible(weapon: { handsRequired: string }, loadoutType: string): b
   return false;
 }
 
+/** In storage and on no robot (the backend refuses a weapon another robot holds). */
+function isSpare(item: WeaponInventoryItem): boolean {
+  return item.robotsMain.length === 0 && item.robotsOffhand.length === 0;
+}
+
 function weaponMeta(weapon: WeaponSummary): string {
   return `${weapon.weaponType} · ${weapon.baseDamage} damage · ${weapon.rangeBand} range`;
 }
@@ -79,7 +85,7 @@ function WeaponEquipStep({ robotId, loadoutType, onComplete, onSkip }: StepProps
           api.get<WeaponSummary[]>('/api/weapons'),
         ]);
         if (cancelled) return;
-        const spare = inventory.filter((w) => !w.equippedOnRobotMain && !w.equippedOnRobotOffhand && isCompatible(w.weapon, loadoutType));
+        const spare = inventory.filter((w) => isSpare(w) && isCompatible(w.weapon, loadoutType));
         const affordable = shop
           .filter((w) => isCompatible(w, loadoutType) && w.cost <= profile.currency)
           .sort((a, b) => a.cost - b.cost)

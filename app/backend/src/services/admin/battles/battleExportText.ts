@@ -4,7 +4,13 @@
  * verbatim; every stored event is included, movement too.
  */
 import type { LedgerEntry } from './battlePayoutCheck';
-import type { AdminCombatEvent, BattleDetailResponse, BattleParticipantDetail, PlacementPayoutComponent, StableRef } from './battleTypes';
+import type {
+  AdminBattleDetail,
+  AdminCombatEvent,
+  BattleParticipantDetail,
+  PlacementPayoutComponent,
+  StableRef,
+} from '../../../shared/types';
 
 const MODE_LABELS: Record<string, string> = {
   league_1v1: 'League 1v1',
@@ -53,7 +59,7 @@ function stableText(stable: StableRef | null): string {
   return stable ? `${stable.name} (${STABLE_TYPE_LABELS[stable.stableType] ?? stable.stableType})` : 'Unknown stable';
 }
 
-function headerLines(d: BattleDetailResponse): string[] {
+function headerLines(d: AdminBattleDetail): string[] {
   const mode = MODE_LABELS[d.battleType] ?? d.battleType;
   const where = d.tournament
     ? `${d.tournament.name}${d.tournament.round !== null ? ` · round ${d.tournament.round}` : ''}`
@@ -119,7 +125,7 @@ function table(rows: string[][]): string[] {
   return rows.map(r => r.map((c, i) => c.padEnd(widths[i])).join(' | ').trimEnd());
 }
 
-function resultLines(d: BattleDetailResponse): string[] {
+function resultLines(d: AdminBattleDetail): string[] {
   if (d.participants.length === 0) return ['No participant rows (robots deleted).'];
   const header = ['Robot', 'Side', 'Stable', 'End HP', 'Damage', 'Received', 'ELO', 'Credits', 'Streaming', 'Prestige', 'Fame', 'Notes'];
   const rows = d.participants.map(p => [
@@ -139,7 +145,7 @@ function resultLines(d: BattleDetailResponse): string[] {
   return table([header, ...rows]);
 }
 
-function payoutLines(d: BattleDetailResponse): string[] {
+function payoutLines(d: AdminBattleDetail): string[] {
   if (d.payout.status === 'unavailable') return ['No ledger entries found for this battle.'];
   return d.payout.stables.flatMap((s) => {
     const lines = [
@@ -214,7 +220,7 @@ export function eventLines(e: AdminCombatEvent): string[] {
 }
 
 export function buildBattleExportText(
-  detail: BattleDetailResponse,
+  detail: AdminBattleDetail,
   events: readonly AdminCombatEvent[],
   ledgerEntries: readonly LedgerEntry[],
 ): string {

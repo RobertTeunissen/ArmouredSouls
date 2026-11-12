@@ -1,5 +1,5 @@
 import { PROGRESS_WRITE_INTERVAL_MS, RolloverTracker } from '../rolloverProgress';
-import type { RolloverRunSummary } from '../../../types/schedulerTypes';
+import type { RolloverRunSummary } from '../../../shared/types';
 
 describe('RolloverTracker', () => {
   let clock: number;

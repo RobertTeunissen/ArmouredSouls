@@ -16,24 +16,10 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { loadEnvConfig } from '../../config/env';
 import { SeasonError, SeasonErrorCode } from '../../errors';
+import type { SeasonState } from '../../shared/types';
 
 /** The three permitted values of `seasons.phase`. */
 export type SeasonPhase = 'preparation' | 'competitive' | 'completed';
-
-/** Everything a caller needs to know about the current season in one read. */
-export interface SeasonState {
-  seasonNumber: number;
-  phase: SeasonPhase;
-  /** 1-based cycle within the Competitive_Phase; 0 while preparing. */
-  seasonCycle: number;
-  seasonLengthCycles: number;
-  remainingCompetitiveCycles: number;
-  /** 1-based preparation day; 0 while competitive. */
-  preparationDay: number;
-  remainingPreparationCycles: number;
-  /** True only for Season_Number 0 — derived, never stored. */
-  isLegacy: boolean;
-}
 
 /** Result of advancing a competitive cycle at settlement. */
 export interface CompetitiveAdvanceResult {

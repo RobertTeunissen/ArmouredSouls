@@ -5,9 +5,9 @@
  */
 import type { CSSProperties, ReactNode } from 'react';
 import { AdminPanel } from '../shared';
-import type { MetaChoices } from '../../../utils/adminMetaApi';
 import { formatCount, formatDecimal } from '../../../utils/adminDashboardFormat';
 import { humanizeKey } from '../../../utils/adminMetaFormat';
+import type { MetaChoices } from '@shared/types';
 
 export interface FacilitiesCardProps {
   facilities: MetaChoices['facilities'] | null;

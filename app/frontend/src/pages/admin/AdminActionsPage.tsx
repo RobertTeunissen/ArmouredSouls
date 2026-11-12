@@ -17,9 +17,10 @@ import { ADMIN_FOCUS_RING, AdminPageHeader, AdminPagination, PanelError, PanelSk
 import { AdminActionsList } from '../../components/admin/actions/AdminActionsList';
 import { ApiError } from '../../utils/ApiError';
 import { isAbortError } from '../../utils/abort';
-import { ADMIN_ACTION_AREAS, ADMIN_ACTION_AREA_LABELS, getAdminActions, type AdminActionsPage as ActionsPage, type AdminActionsQuery } from '../../utils/adminActionsApi';
+import { ADMIN_ACTION_AREAS, ADMIN_ACTION_AREA_LABELS, getAdminActions, type AdminActionsFilters } from '../../utils/adminActionsApi';
 import { formatActionDate, readActionsView, writeActionsView } from '../../utils/adminActionsFormat';
 import { formatCount as count } from '../../utils/adminFormat';
+import type { AdminActionsPage as ActionsPage } from '@shared/types';
 
 
 function AdminActionsPage(): React.ReactElement {
@@ -54,7 +55,7 @@ function AdminActionsPage(): React.ReactElement {
     return () => controller.abort();
   }, [area, result, page, token, setParams]);
 
-  const update = (patch: Partial<AdminActionsQuery>): void => {
+  const update = (patch: Partial<AdminActionsFilters>): void => {
     setParams((current) => writeActionsView(current, patch), { replace: true });
   };
 

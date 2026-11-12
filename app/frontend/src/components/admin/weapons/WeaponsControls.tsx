@@ -5,9 +5,10 @@
 import { useId } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
 import { ANALYSIS_COLUMNS } from '../attributes/types';
-import type { AnalysisColumn, AnalysisRange, WeaponFilters } from './types';
+import type { WeaponFilters } from './types';
 import { RANGE_OPTIONS, columnDetail, columnLabel } from '../../../utils/adminAttributesFormat';
 import { DEFAULT_WEAPON_FILTERS, STRENGTH_OPTIONS, isDefaultWeaponFilters } from '../../../utils/adminWeaponsFormat';
+import type { AnalysisColumn, AnalysisRange } from '@shared/types';
 
 export interface WeaponsControlsProps {
   filters: WeaponFilters;

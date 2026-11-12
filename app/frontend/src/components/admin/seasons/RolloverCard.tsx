@@ -5,13 +5,13 @@
  * stages as they progress.
  */
 import type { ReactNode } from 'react';
-import type { AdminActiveRollover, AdminSeasonState, RolloverPreview } from '../../../utils/seasonApi';
 import { elapsedSince, formatClock } from '../../../utils/adminCycleFormat';
 import type { Section } from '../../../hooks/useCycleControls';
 import { ActionButton } from '../automatons/ui';
 import { AdminPanel, PanelError, PanelSkeleton } from '../shared';
 import { RolloverPreviewView } from './RolloverPreviewView';
 import { RolloverStages } from './RolloverStages';
+import type { AdminActiveRollover, AdminSeasonState, RolloverPreview } from '@shared/types';
 
 export interface RolloverCardProps {
   state: AdminSeasonState | null;

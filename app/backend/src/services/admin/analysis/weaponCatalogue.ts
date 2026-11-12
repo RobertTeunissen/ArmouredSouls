@@ -5,7 +5,7 @@
 import prisma from '../../../lib/prisma';
 import { Prisma } from '../../../../generated/prisma';
 
-export interface CatalogueWeapon {
+export interface WeaponCatalogueEntry {
   id: number;
   name: string;
   weaponType: string;
@@ -14,7 +14,7 @@ export interface CatalogueWeapon {
   cost: number;
 }
 
-export async function loadWeaponCatalogue(): Promise<CatalogueWeapon[]> {
+export async function loadWeaponCatalogue(): Promise<WeaponCatalogueEntry[]> {
   return prisma.weapon.findMany({
     select: { id: true, name: true, weaponType: true, handsRequired: true, rangeBand: true, cost: true },
     orderBy: { id: 'asc' },

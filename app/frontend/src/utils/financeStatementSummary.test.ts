@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { FinanceTaxonomy, ItemisedStatementLine, RepairStatementLine } from './financeApi';
 import { summarizeStatementLines } from './financeStatementSummary';
+import type { FinanceTaxonomy, ItemisedStatementLine, RepairStatementLine } from '@shared/types';
 
 const provenance = {
   evidenceKind: 'actual' as const,

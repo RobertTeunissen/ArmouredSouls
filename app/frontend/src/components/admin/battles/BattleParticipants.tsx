@@ -4,8 +4,8 @@
  */
 import { StableTag } from './BattleBadges';
 import { StableLink } from './StableLink';
-import type { BattleDetail, BattleParticipantDetail } from './types';
 import { formatCredits, formatEventTime, formatNumber } from '../../../utils/adminBattlesFormat';
+import type { AdminBattleDetail, BattleParticipantDetail } from '@shared/types';
 
 function fate(p: BattleParticipantDetail): { text: string; tone: string } {
   // Battle time of the exit; survival is the active duration (a tag-team reserve enters mid-battle).
@@ -53,7 +53,7 @@ function Row({ p, placement }: { p: BattleParticipantDetail; placement: boolean 
   );
 }
 
-export function BattleParticipants({ battle }: { battle: BattleDetail }): React.ReactElement {
+export function BattleParticipants({ battle }: { battle: AdminBattleDetail }): React.ReactElement {
   const placement = battle.sides.length === 0;
   if (battle.participants.length === 0) {
     return <p className="rounded-lg bg-surface-elevated px-4 py-3 text-sm text-secondary">No participant rows: the robots were deleted (account reset or bot purge).</p>;

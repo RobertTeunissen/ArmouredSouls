@@ -7,9 +7,9 @@
 import { useMemo, useState } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
 import { EffectBar } from './EffectBar';
-import type { AnalysisColumn, WeaponRow } from './types';
 import { formatEffect, formatSe } from '../../../utils/adminAttributesFormat';
 import { WEAPONS_COLLAPSED, bandLabel, formatCost, formatUsage, formatWinRate, handsLabel, sortWeapons } from '../../../utils/adminWeaponsFormat';
+import type { AnalysisColumn, WeaponRow } from '@shared/types';
 
 export interface WeaponsTableProps {
   weapons: WeaponRow[];

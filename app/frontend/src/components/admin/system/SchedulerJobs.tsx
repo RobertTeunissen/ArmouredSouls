@@ -5,12 +5,12 @@
  * job holds the lock, so long runs matter to players too.
  */
 import type { ReactNode } from 'react';
-import type { SystemOverview } from '../../../utils/adminSystemApi';
 import { formatDuration, jobLabel } from '../../../utils/adminCycleFormat';
 import { shortDate } from '../../../utils/adminPracticeArenaFormat';
 import { isSlowOutlier, jobNote, summarizeLock } from '../../../utils/adminSystemFormat';
 import { AdminPanel } from '../shared';
 import { MiniBars } from './MiniBars';
+import type { SystemOverview } from '@shared/types';
 
 export interface SchedulerJobsProps {
   jobs: SystemOverview['jobs'] | null;

@@ -7,7 +7,7 @@ import type {
   RobotFinancialSummary,
   RobotSummaryResponse,
   SourceProvenance,
-} from '../../../utils/financeApi';
+} from '@shared/types';
 
 export const PROVENANCE: SourceProvenance = {
   evidenceKind: 'actual',

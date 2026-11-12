@@ -6,4 +6,3 @@ export {
   useSubscriptionStore,
   selectOverview,
 } from './subscriptionStore';
-export type { StableOverview, StableOverviewRobot } from './subscriptionStore';

@@ -8,7 +8,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import SeasonProgressIndicator from '../SeasonProgressIndicator';
 import { useSeasonStore } from '../../../stores/seasonStore';
-import type { SeasonState } from '../../../utils/seasonApi';
+import type { SeasonState } from '@shared/types';
 
 function seed(overrides: Partial<SeasonState>): void {
   const season: SeasonState = {

@@ -9,7 +9,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import AdminActionsPage from '../AdminActionsPage';
-import type { AdminActionEntry, AdminActionsPage as ActionsPage } from '../../../utils/adminActionsApi';
+import type { AdminActionEntry, AdminActionsPage as ActionsPage } from '@shared/types';
 
 const mockGet = vi.fn();
 vi.mock('../../../utils/apiClient', () => ({

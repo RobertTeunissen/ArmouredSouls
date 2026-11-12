@@ -1,9 +1,16 @@
+import type {
+  SystemJob,
+  SystemJobRun,
+  SystemRequestError,
+  SystemSlowRequest,
+  SystemStart,
+} from '../../../shared/types';
+
 /**
  * Pure rules of the admin System page: which backend starts were deploys,
  * job duration statistics, request-metric summaries and the page a route
  * belongs to. Exported for tests.
  */
-import type { SystemJob, SystemJobRun, SystemRequestError, SystemSlowRequest, SystemStart } from './systemTypes';
 
 export interface ProcessRow {
   startedAt: Date;

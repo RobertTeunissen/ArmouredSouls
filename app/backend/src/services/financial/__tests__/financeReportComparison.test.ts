@@ -1,9 +1,10 @@
-import type { FinancialRecordProjection, ReportLimitation, ReportPeriodMetadata } from '../../../types';
+import type { FinancialRecordProjection } from '../../../types';
 import {
   calculateEvidenceAwareRevenueGrowth,
   mergeReportLimitations,
   reportLimitationsForCycle,
 } from '../financeReportComparison';
+import type { ReportLimitation, ReportPeriodMetadata } from '../../../shared/types';
 
 function period(): ReportPeriodMetadata {
   return {

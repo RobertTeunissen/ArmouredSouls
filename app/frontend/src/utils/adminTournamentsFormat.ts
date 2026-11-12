@@ -1,14 +1,14 @@
 /**
  * Labels, links and sentences of the admin Tournaments page.
  */
+import { formatCount, formatPartShare as formatShare } from './adminFormat';
 import type {
   ChampionStable,
   CurrentTournament,
   StableType,
   TournamentType,
   TournamentTypeOverview,
-} from './adminTournamentsApi';
-import { formatCount, formatPartShare as formatShare } from './adminFormat';
+} from '@shared/types';
 
 const TYPE_LABELS: Readonly<Record<TournamentType, string>> = { robot: '1v1', team_2v2: '2v2', team_3v3: '3v3' };
 const BATTLE_MODES: Readonly<Record<TournamentType, string>> = {

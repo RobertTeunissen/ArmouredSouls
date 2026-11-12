@@ -5,8 +5,9 @@
  * times, trend colours, "Needs attention" severities) is derived here so it can
  * be unit-tested without rendering.
  */
-import type { DashboardStatus } from './adminDashboardApi';
 import { errorCodeLabel, formatCount } from './adminFormat';
+import type { DashboardStatus } from '@shared/types';
+
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;

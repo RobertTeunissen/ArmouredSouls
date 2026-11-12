@@ -3,12 +3,12 @@
  * (usually a deploy) when the backend was down at the slot.
  */
 import type { ReactNode } from 'react';
-import type { MissedRun } from '../../../utils/adminCycleApi';
 import { describeMissed } from '../../../utils/adminCycleFormat';
 import { ADMIN_FOCUS_RING } from '../shared';
+import type { MissedRunView } from '@shared/types';
 
 export interface MissedRunsBannerProps {
-  missed: MissedRun[];
+  missed: MissedRunView[];
   windowDays: number;
   now: Date;
   onShowInHistory: () => void;

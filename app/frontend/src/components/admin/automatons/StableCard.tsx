@@ -6,9 +6,9 @@
  */
 import { useId } from 'react';
 import type { ReactNode } from 'react';
-import type { LibraryStrategy } from '../../../utils/automatonAdminApi';
 import { Card, Field, FieldHelp, INPUT_CLASS } from './ui';
 import { EventOrderList } from './EventOrderList';
+import type { LibraryStrategy } from '@shared/types';
 
 export const BACKSTORY_MAX_LENGTH = 400;
 

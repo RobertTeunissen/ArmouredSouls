@@ -5,7 +5,7 @@
  */
 import { EVENT_LABELS } from '../components/admin/automatons/automatonText';
 import { FORGE_EFFECT_LABEL, SHARPEN_EFFECT_LABEL } from '../components/weapon-refinement/refinementCopy';
-import type { RefinementKind } from './adminMetaApi';
+import type { RefinementKind } from '@shared/types';
 
 export interface ShareItem {
   label: string;

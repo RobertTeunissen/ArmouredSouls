@@ -13,7 +13,7 @@ import { ALL_LAYERS_ON } from '../analysisOptions';
 import { layerBuild, type LayeredBuild } from '../attributeLayers';
 import { addBattle, emptyComparisonSet, type ComparisonSet } from '../comparisons';
 import { clearAttributeAnalysisCache, getAttributeAnalysis } from '../attributeAnalysisService';
-import type { AttributeAnalysisReady } from '../analysisTypes';
+import type { AttributeAnalysisReady } from '../../../../shared/types';
 
 const mocked = data as jest.Mocked<typeof data>;
 const NOW = new Date('2026-11-10T12:00:00Z');

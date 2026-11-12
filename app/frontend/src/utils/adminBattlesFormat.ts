@@ -4,16 +4,13 @@
 import {
   BATTLE_MODES,
   type BattleFilters,
-  type BattleListRow,
   type BattleModeFilter,
   type BattleOutcomeFilter,
   type BattleRangeFilter,
-  type BattleResult,
   type BattleStableFilter,
-  type EndedBy,
-  type StableKind,
 } from '../components/admin/battles/types';
 import { modeLabel } from './adminDashboardFormat';
+import type { BattleListRow, BattleResult, EndedBy, StableType } from '@shared/types';
 
 export { modeLabel };
 
@@ -47,9 +44,9 @@ export const RANGE_OPTIONS: ReadonlyArray<{ key: BattleRangeFilter; label: strin
   { key: 'season', label: 'This season' },
 ];
 
-const STABLE_LABELS: Record<StableKind, string> = { human: 'Player', generated: 'Generated', automaton: 'Automaton' };
+const STABLE_LABELS: Record<StableType, string> = { human: 'Player', generated: 'Generated', automaton: 'Automaton' };
 
-export function stableTypeLabel(kind: StableKind): string {
+export function stableTypeLabel(kind: StableType): string {
   return STABLE_LABELS[kind];
 }
 
@@ -134,7 +131,7 @@ export function modeDetail(row: Pick<BattleListRow, 'battleType' | 'leagueType' 
 }
 
 /** "3 Player, 2 Generated" for the rest of a placement field. */
-export function fieldBreakdown(byType: Record<StableKind, number>): string {
+export function fieldBreakdown(byType: Record<StableType, number>): string {
   return (['human', 'generated', 'automaton'] as const)
     .filter((k) => byType[k] > 0)
     .map((k) => `${byType[k]} ${STABLE_LABELS[k]}`)

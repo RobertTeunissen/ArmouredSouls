@@ -31,7 +31,8 @@ import { getCurrentSeason } from '../season/seasonService';
 import logger from '../../config/logger';
 import { robotNameCandidates } from './robotNaming';
 import { loadStableHistory, type StableHistoryFacts } from './stableHistory';
-import type { BuildFocusKey, RefinementStep, WeaponStage } from '../../types/automaton';
+import type { BuildFocusKey, LoadoutType, RefinementStep, Stance, WeaponStage } from '../../shared/types';
+import type { AutomatonFacilityType as FacilityType } from '../../shared/types';
 
 /** Facility types in the order of `FACILITY_TYPES` (`config/facilities.ts`); a unit test keeps them equal. */
 export const AUTOMATON_FACILITY_TYPES = [
@@ -49,13 +50,10 @@ export const AUTOMATON_FACILITY_TYPES = [
   'merchandising_hub',
   'streaming_studio',
   'tuning_bay',
-] as const;
+] as const satisfies readonly FacilityType[];
 
-export type FacilityType = (typeof AUTOMATON_FACILITY_TYPES)[number];
-
-export type LoadoutType = 'single' | 'weapon_shield' | 'dual_wield' | 'two_handed';
-export type Stance = 'offensive' | 'defensive' | 'balanced';
-export type Hand = 'main' | 'offhand';
+// The facility union is a wire contract (shared admin-automatons.ts).
+export type { FacilityType };
 
 /** One `weapon_inventory` row of the stable. */
 export interface InventoryFacts {

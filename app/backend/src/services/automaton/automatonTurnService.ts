@@ -50,7 +50,7 @@ import { resolveCanonicalCycleIdentity } from '../cycle/canonicalCycleIdentity';
 import { nextScheduledJobRunAt } from '../cycle/schedulerWindow';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
 import type { AutomatonTurnTrigger, Prisma } from '../../../generated/prisma';
-import type { EventOrder, StrategyParametersV1, TeamNames } from '../../types/automaton';
+import type { EventOrder, StrategyParametersV1 } from '../../types/automaton';
 import { createExecutionCursor, executeAction, type ExecutionContext } from './actionExecutor';
 import { chargedStepCount } from './factProjector';
 import { planNextStep, type PlanResult } from './turnPlanner';
@@ -107,6 +107,7 @@ import {
   type ClaimedTurnRecord,
   type TurnRecordClaimInput,
 } from './turnRecords';
+import type { TeamNames } from '../../shared/types';
 
 export {
   TURN_ACTION_LIMIT,

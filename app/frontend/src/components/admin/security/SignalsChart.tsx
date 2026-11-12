@@ -3,10 +3,10 @@
  * same numbers are available to screen readers as a table.
  */
 import type { ReactNode } from 'react';
-import type { SecurityOverview } from '../../../utils/adminSecurityApi';
 import { SIGNAL_LABELS, bucketLabel } from '../../../utils/adminSecurityFormat';
 import { formatCount } from '../../../utils/adminDashboardFormat';
 import { SIGNAL_TONES } from './signalTones';
+import type { SecurityOverview } from '@shared/types';
 
 export interface SignalsChartProps {
   overview: SecurityOverview;

@@ -8,13 +8,12 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { AdminPanel, ADMIN_FOCUS_RING, PanelError } from '../shared';
-import type { MetaChoices } from '../../../utils/adminMetaApi';
-import type { MetaRefinements } from '../../../utils/adminMetaApi';
 import { attributeLabel } from '../../../utils/adminAttributesFormat';
 import { formatCount } from '../../../utils/adminDashboardFormat';
 import { formatCost } from '../../../utils/adminWeaponsFormat';
 import { formatPercentOf, refinementKindEffect, refinementKindLabel } from '../../../utils/adminMetaFormat';
 import { MetaStat, SectionLabel } from './metaParts';
+import type { MetaChoices, MetaRefinements } from '@shared/types';
 
 export interface WeaponsCardProps {
   weapons: MetaChoices['weapons'] | null;

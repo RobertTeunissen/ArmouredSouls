@@ -16,10 +16,6 @@ import {
   ATTRIBUTE_GROUP_OF,
   LAYER_KEYS,
   MIN_COMPARISONS,
-  type AnalysisColumn,
-  type AnalysisRange,
-  type AttributeGroup,
-  type LayerToggles,
 } from './analysisOptions';
 import { ATTRIBUTE_COUNT } from './attributeLayers';
 import { clearDatasetCache, fresh, getDataset, getReadiness, remember, type CacheEntry, type Dataset } from './analysisDataset';
@@ -40,9 +36,12 @@ import {
 import { evaluate, fitLogistic, type FitResult } from './logisticFit';
 import type { Comparison, ComparisonSet } from './comparisons';
 import type {
+  AnalysisColumn,
   AnalysisColumnSummary,
+  AnalysisRange,
   AttributeAnalysisResponse,
   AttributeEffectRow,
+  AttributeGroup,
   BuildProfileRow,
   EffectEstimate,
   EffectsByColumn,
@@ -51,8 +50,9 @@ import type {
   LayerFitRow,
   LayerFitSummary,
   LayerStep,
+  LayerToggles,
   ProfileResult,
-} from './analysisTypes';
+} from '../../../shared/types';
 
 const MAX_RESULTS = 32;
 /** Profiles need this many comparisons in a column before a win rate is shown. */

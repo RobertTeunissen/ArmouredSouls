@@ -4,13 +4,13 @@
  * validation) are left out. Counted per hour in `request_metrics`.
  */
 import type { ReactNode } from 'react';
-import type { SystemOverview } from '../../../utils/adminSystemApi';
 import { formatDayTime } from '../../../utils/adminCycleFormat';
 import { formatCount } from '../../../utils/adminFormat';
 import { shortDate } from '../../../utils/adminPracticeArenaFormat';
 import { errorCodeLabel } from '../../../utils/adminSystemFormat';
 import { AdminPanel } from '../shared';
 import { MiniBars } from './MiniBars';
+import type { SystemOverview } from '@shared/types';
 
 export interface FailingRequestsProps {
   requests: SystemOverview['requests'] | null;

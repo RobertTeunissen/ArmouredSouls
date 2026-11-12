@@ -16,52 +16,14 @@ import { Prisma } from '../../../../generated/prisma';
 import { LEAGUE_TIERS } from '../../league/leagueInstanceService';
 import type { TieredLeagueMode } from '../../league/league-rules';
 import { LEAGUE_BOUNCE_MIN_SAMPLE, LEAGUE_BOUNCE_NOTE_SHARE, LEAGUE_BOUNCE_WINDOW_CYCLES } from '../adminThresholds';
+import type {
+  LeagueSeasonOverview,
+  LeagueSeasonStableFilter,
+  SeasonBoundary,
+  SeasonCycleMoves,
+} from '../../../shared/types';
 
-export const LEAGUE_SEASON_STABLE_FILTERS = ['all', 'human', 'automaton', 'generated'] as const;
-export type LeagueSeasonStableFilter = typeof LEAGUE_SEASON_STABLE_FILTERS[number];
-
-export interface SeasonCycleMoves {
-  cycle: number;
-  promoted: number;
-  demoted: number;
-}
-
-export interface SeasonBoundary {
-  lower: string;
-  upper: string;
-  /** Promotions lower → upper this season. */
-  promoted: number;
-  /** Demotions upper → lower this season. */
-  demoted: number;
-  /** Promotions old enough to judge (at most `judgedThroughCycle`). */
-  judged: number;
-  /** Of those, demoted back across the boundary within the window. */
-  back: number;
-  /** back / judged, or null with nothing to judge. */
-  share: number | null;
-  /** Share above the note threshold, with at least the minimum sample. */
-  noted: boolean;
-}
-
-export interface LeagueSeasonOverview {
-  mode: TieredLeagueMode;
-  stable: LeagueSeasonStableFilter;
-  window: number;
-  noteShare: number;
-  minSample: number;
-  /** First and last cycle with moves in this mode (any stable); null when none. */
-  firstCycle: number | null;
-  lastCycle: number | null;
-  /** Promotions judged for bounce-back are at or before this cycle; null when none can be. */
-  judgedThroughCycle: number | null;
-  /** Every cycle from firstCycle to lastCycle, zeros included. */
-  cycles: SeasonCycleMoves[];
-  /** Cycles between first and last in which the mode recorded no moves at all. */
-  quietCycles: number[];
-  totals: { promoted: number; demoted: number };
-  boundaries: SeasonBoundary[];
-}
-
+export const LEAGUE_SEASON_STABLE_FILTERS = ['all', 'human', 'automaton', 'generated'] as const satisfies readonly LeagueSeasonStableFilter[];
 interface RawMove {
   cycle_number: number;
   change_type: string;

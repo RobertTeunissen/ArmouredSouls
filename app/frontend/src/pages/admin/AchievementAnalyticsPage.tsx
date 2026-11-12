@@ -20,7 +20,6 @@ import { isAbortError } from '../../utils/abort';
 import {
   ACHIEVEMENT_STABLES,
   getAchievementAnalytics,
-  type AchievementAnalytics,
 } from '../../utils/adminAchievementsApi';
 import {
   easierThanTier,
@@ -31,6 +30,7 @@ import {
 } from '../../utils/adminAchievementsFormat';
 import { formatCount, formatUtcTime } from '../../utils/adminDashboardFormat';
 import { dayMonth } from '../../utils/adminImagesFormat';
+import type { AchievementAnalytics } from '@shared/types';
 
 /** Who the rates are out of, in the page's words. */
 function populationWords(data: AchievementAnalytics): { who: string; scope: string } {

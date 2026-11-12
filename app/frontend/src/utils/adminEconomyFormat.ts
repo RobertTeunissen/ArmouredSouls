@@ -1,6 +1,6 @@
 /** Labels of the admin Economy page's stable scopes. */
-import type { EconomyStableScope } from './adminEconomyApi';
 import { STABLE_SCOPE_LABELS } from './adminStableScope';
+import type { EconomyStableScope } from '@shared/types';
 
 export const SCOPE_LABELS: Readonly<Record<EconomyStableScope, string>> = STABLE_SCOPE_LABELS;
 

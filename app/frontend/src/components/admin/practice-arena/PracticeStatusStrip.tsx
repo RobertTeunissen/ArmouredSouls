@@ -3,9 +3,9 @@
  * refusals and how long the arena was unavailable yesterday.
  */
 import type { ReactNode } from 'react';
-import type { PracticeArenaOverview } from '../../../utils/adminPracticeArenaApi';
 import { formatCount, formatUnavailable, refusedCaption } from '../../../utils/adminPracticeArenaFormat';
 import { PanelError } from '../shared';
+import type { PracticeArenaOverview } from '@shared/types';
 
 export interface PracticeStatusStripProps {
   overview: PracticeArenaOverview | null;

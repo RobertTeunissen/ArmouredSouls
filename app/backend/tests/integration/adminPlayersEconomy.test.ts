@@ -10,9 +10,10 @@
 
 import prisma from '../../src/lib/prisma';
 import { assertHumanStable, getPlayerDetail, getPlayersOverview, searchStables } from '../../src/services/admin/adminPlayersService';
-import { getEconomyOverview, invalidateEconomyCache, type EconomyOverview, type EconomyStableScope, type EconomyWindow } from '../../src/services/admin/adminEconomyService';
+import { getEconomyOverview, invalidateEconomyCache } from '../../src/services/admin/adminEconomyService';
 import { clearEconomyRollups, loadCycleTotals, waitForEconomyRollups } from '../../src/services/admin/economyCycleRollups';
 import { getCurrentSeason, invalidateSeasonCache } from '../../src/services/season/seasonService';
+import type { EconomyOverview, EconomyStableScope, EconomyWindow } from '../../src/shared/types';
 
 const TAG = `apeit${Date.now() % 1_000_000}`;
 const createdUsers: number[] = [];

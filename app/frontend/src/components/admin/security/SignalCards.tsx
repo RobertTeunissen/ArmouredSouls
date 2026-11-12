@@ -6,10 +6,10 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { SignalSummary } from '../../../utils/adminSecurityApi';
 import { SIGNAL_HINTS, SIGNAL_LABELS, lastSeenLabel } from '../../../utils/adminSecurityFormat';
 import { formatCount } from '../../../utils/adminDashboardFormat';
 import { SIGNAL_TONES } from './signalTones';
+import type { SignalSummary } from '@shared/types';
 
 export interface SignalCardsProps {
   signals: readonly SignalSummary[];

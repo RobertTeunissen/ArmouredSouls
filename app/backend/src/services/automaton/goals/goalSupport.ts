@@ -12,13 +12,12 @@ import {
   storageCapacityOf,
   type BlueprintFacts,
   type FacilityType,
-  type Hand,
   type InventoryFacts,
   type StableFacts,
   type WeaponFacts,
 } from '../stableFacts';
-import type { WeaponStage } from '../../../types/automaton';
-import type { BlockedReason, FacilityLevelStep, GoalContext, GoalDetail, WeaponSaleStep } from './goalTypes';
+import type { FacilityLevelStep, GoalContext, WeaponSaleStep } from './goalTypes';
+import type { BlockedReason, GoalDetail, Hand, WeaponStage } from '../../../shared/types';
 
 export type ChainResult<TStep> =
   | { kind: 'ok'; steps: TStep[]; cost: number }

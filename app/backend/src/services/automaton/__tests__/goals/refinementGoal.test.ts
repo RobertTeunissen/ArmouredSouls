@@ -1,9 +1,9 @@
 import { createRefinementGoal } from '../../goals/refinementGoal';
 import type { GoalOutcome } from '../../goals/goalTypes';
-import type { RefinementStep } from '../../../../types/automaton';
 import type { RefinementRow } from '../../../../shared/utils/weaponRefinement';
 import type { StableFacts } from '../../stableFacts';
 import { blueprint, context, facilities, item, refinements, robot, stable } from '../helpers/automatonFixtures';
+import type { RefinementStep } from '../../../../shared/types';
 
 const goal = createRefinementGoal('test.v1.23.refine');
 const S: RefinementStep = { tier: 'sharpen', hand: 'main', magnitude: 1 };

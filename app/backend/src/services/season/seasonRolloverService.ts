@@ -47,7 +47,8 @@ import { seasonStartedAt } from './dormantStables';
 import { invalidateHallOfRecords } from '../records/hallOfRecordsService';
 import { RolloverTracker, pendingRolloverSummary } from './rolloverProgress';
 import { markFinished, markRunning, recordQueued, updateRunSummary } from '../cycle/schedulerRunStore';
-import { SEASON_ROLLOVER_JOB_NAME, type RolloverRunSummary } from '../../types/schedulerTypes';
+import { SEASON_ROLLOVER_JOB_NAME } from '../../types/schedulerTypes';
+import type { RolloverResult, RolloverRunSummary } from '../../shared/types';
 
 export interface RolloverOptions {
   /** Who started this rollover — recorded in logs and notifications. */
@@ -75,20 +76,6 @@ export interface ActiveRolloverProgress {
   adminUserId: number | null;
   startedAt: string;
   progress: RolloverRunSummary;
-}
-
-export interface RolloverResult {
-  completedSeasonNumber: number;
-  newSeasonNumber: number;
-  stablesArchived: number;
-  robotsArchived: number;
-  snapshotRows: number;
-  accoladeRows: number;
-  generatedStablesDeleted: number;
-  /** Human stables without a login all season (archived, then deleted). */
-  dormantStablesDeleted: number;
-  totalRowsPurged: number;
-  durations: { archiveMs: number; purgeMs: number; postMs: number; totalMs: number };
 }
 
 /**

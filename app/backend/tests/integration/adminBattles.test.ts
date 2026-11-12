@@ -274,7 +274,7 @@ describe('battle detail', () => {
 
   it('the player battle report no longer sends formula breakdowns', async () => {
     const report = await getBattleLog(battleIds.team);
-    const events = (report as unknown as { battleLog: { detailedCombatEvents: Array<Record<string, unknown>> } }).battleLog.detailedCombatEvents;
+    const events = report?.battleLog?.detailedCombatEvents ?? [];
     expect(events).toHaveLength(3);
     expect(events.some(e => 'formulaBreakdown' in e)).toBe(false);
   });
@@ -450,11 +450,12 @@ describe('combat log storage', () => {
     expect(fromLegacy.events).toEqual(fromZst.events);
     expect(fromLegacy.status).toEqual(fromZst.status);
 
-    const playerZst = await getBattleLog(stored.zst) as Record<string, unknown>;
-    const playerLegacy = await getBattleLog(stored.legacy) as Record<string, unknown>;
-    expect(playerZst.playbackAvailable).toBe(true);
-    expect(playerZst.battleLog).toEqual(playerLegacy.battleLog);
-    const events = (playerZst.battleLog as { detailedCombatEvents: Array<Record<string, unknown>> }).detailedCombatEvents;
+    const playerZst = await getBattleLog(stored.zst);
+    const playerLegacy = await getBattleLog(stored.legacy);
+    expect(playerZst?.playbackAvailable).toBe(true);
+    expect(playerZst?.battleLog).toEqual(playerLegacy?.battleLog);
+    const events = playerZst?.battleLog?.detailedCombatEvents ?? [];
+    expect(events.length).toBeGreaterThan(0);
     expect(events.some(e => 'formulaBreakdown' in e)).toBe(false);
   });
 

@@ -24,9 +24,10 @@ import { createRefinementGoal } from '../goals/refinementGoal';
 import { createRobotCountGoal } from '../goals/robotCountGoal';
 import { createWeaponStageGoal } from '../goals/weaponStageGoal';
 import type { Goal } from '../goals/goalTypes';
-import { deriveGoalSpecs, validateStrategyDefinition, type StrategyRuleIssue } from './strategyDefinitionSchema';
+import { deriveGoalSpecs, validateStrategyDefinition } from './strategyDefinitionSchema';
 import { buildParameterSchema } from './strategyParameters';
-import type { GoalDefinition, GoalSpec, StrategyDefinitionFile, UpgradeStrategy } from './strategyTypes';
+import type { GoalDefinition, GoalSpec, UpgradeStrategy } from './strategyTypes';
+import type { StrategyDefinitionFile, StrategyRuleIssue } from '../../../shared/types';
 
 /** `src/config/automaton-strategies` (and `dist/config/automaton-strategies` after `pnpm run build`). */
 export const STRATEGY_DIRECTORY = path.resolve(__dirname, '..', '..', '..', 'config', 'automaton-strategies');

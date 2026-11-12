@@ -22,7 +22,8 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useStableOverview, saveRobotSubscriptions } from '../../hooks/useSubscriptions';
-import type { StableOverviewRobot, CapExceededDetails } from '../../hooks/useSubscriptions';
+import type { CapExceededDetails } from '../../hooks/useSubscriptions';
+import type { StableOverviewRobot } from '@shared/types';
 import { ApiError } from '../../utils/ApiError';
 import EventBadge from './EventBadge';
 

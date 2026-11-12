@@ -11,15 +11,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   getStableSeasonHistory,
   getStableSeasonDetail,
-  type SeasonState,
-  type StableSeasonSummary,
-  type StableSeasonDetail,
 } from '../../utils/seasonApi';
 import { modeShortLabel } from '../../utils/stableViewFormat';
 import { getTierName } from '../../utils/tierHelpers';
 import { useSeasonStore } from '../../stores/seasonStore';
 import { createLogger } from '../../utils/logger';
 import { SeasonRowDetail } from './SeasonRowDetail';
+import type { SeasonState, StableSeasonDetail, StableSeasonSummary } from '@shared/types';
 
 const log = createLogger('SeasonHistoryBlock');
 

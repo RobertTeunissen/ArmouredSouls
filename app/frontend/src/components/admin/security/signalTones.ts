@@ -1,8 +1,9 @@
+import type { SignalCard } from '@shared/types';
+
 /**
  * Theme-token classes per signal: card outline, number colour and the bar
  * colour used in the sparklines and the per-day chart.
  */
-import type { SignalCard } from '../../../utils/adminSecurityApi';
 
 export interface SignalTone {
   border: string;

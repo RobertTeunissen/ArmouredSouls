@@ -13,6 +13,8 @@
  * @module services/subscription/eventRegistry
  */
 
+import type { SubscribableEventType as SharedSubscribableEventType } from '../../shared/types';
+
 // ── Types ────────────────────────────────────────────────────────────
 
 /**
@@ -32,7 +34,8 @@ export const SUBSCRIBABLE_EVENT_TYPES = [
   'tournament_1v1',
   'tournament_2v2',
   'tournament_3v3',
-] as const;
+  // The shared wire contract must list every one (#592).
+] as const satisfies readonly SharedSubscribableEventType[];
 
 /** Stable string identifiers for all subscribable events. */
 export type SubscribableEventType = (typeof SUBSCRIBABLE_EVENT_TYPES)[number];

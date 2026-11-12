@@ -1,5 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
+import { test, expect, type Page } from '@playwright/test';
 import { navigateToProtectedPage } from './helpers/navigate';
+import { registerNewUser } from './helpers/register';
+import { API_URL } from './helpers/automaton';
 
 /**
  * E2E tests for the Practice Arena (Combat Simulation Lab).
@@ -137,5 +140,59 @@ test.describe('Practice Arena', () => {
     // Without selecting any robot, the Run Simulation button should be disabled
     const runButton = page.getByRole('button', { name: /Run Simulation/i });
     await expect(runButton).toBeDisabled();
+  });
+});
+
+/** Authenticated API call as the logged-in player (economic writes need an Idempotency-Key). */
+async function playerApi<T>(page: Page, method: 'get' | 'post' | 'put', path: string, data?: unknown): Promise<T> {
+  const token = await page.evaluate(() => localStorage.getItem('token'));
+  const response = await page.request[method](`${API_URL}${path}`, {
+    headers: { Authorization: `Bearer ${token}`, 'Idempotency-Key': randomUUID() },
+    data,
+  });
+  expect(response.ok(), `${method.toUpperCase()} ${path} → ${response.status()}`).toBe(true);
+  return (await response.json()) as T;
+}
+
+test.describe('Practice Arena achievement toast', () => {
+  // A fresh player, so the practice counter and the per-user rate limit
+  // (30 battles per 15 minutes) start at zero.
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  // #608: a batch returned its unlocks nested in the last result, where the
+  // toast subscriber (top-level `achievementUnlocks`) never saw them; the
+  // toast only appeared after a reload, from the recap of recent unlocks.
+  test('a batch that reaches 25 practice battles shows the Wax On, Wax Off toast', async ({ page }) => {
+    test.setTimeout(120_000);
+    await registerNewUser(page);
+    if (page.url().includes('/onboarding')) {
+      await page.getByRole('button', { name: 'Skip Tutorial' }).click();
+      await page.getByRole('button', { name: /Confirm skip tutorial/i }).click();
+      await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
+    }
+
+    // A battle-ready robot and 20 practice battles, through the API.
+    const robotName = `Wax-${Date.now().toString(36)}`;
+    const { robot } = await playerApi<{ robot: { id: number } }>(page, 'post', '/api/robots', { name: robotName });
+    const weapons = await playerApi<Array<{ id: number; cost: number; handsRequired: string }>>(page, 'get', '/api/weapons');
+    const cheapest = weapons.filter((w) => w.handsRequired === 'one').sort((a, b) => a.cost - b.cost)[0];
+    const bought = await playerApi<{ weaponInventory: { id: number } }>(page, 'post', '/api/weapon-inventory/purchase', { weaponId: cheapest.id });
+    await playerApi(page, 'put', `/api/robots/${robot.id}/equip-main-weapon`, { weaponInventoryId: bought.weaponInventory.id });
+    const sparring = { type: 'sparring', config: { botTier: 'WimpBot', loadoutType: 'single', rangeBand: 'melee', stance: 'balanced', yieldThreshold: 20 } };
+    for (let i = 0; i < 2; i++) {
+      await playerApi(page, 'post', '/api/practice-arena/battle', { robot1: { type: 'owned', robotId: robot.id }, robot2: sparring, count: 10 });
+    }
+
+    // Battles 21–30 as one batch in the UI.
+    await page.goto('/practice-arena');
+    await expect(page.getByText('Loading simulation lab...')).toBeHidden({ timeout: 15000 });
+    await page.getByText(robotName).first().click();
+    await page.getByRole('combobox').filter({ has: page.locator('option[value="1"]') }).selectOption('10');
+    const runButton = page.getByRole('button', { name: /Run Simulation/i });
+    await expect(runButton).toBeEnabled();
+    await runButton.click();
+    await expect(page.getByText(/Batch Results/i)).toBeVisible({ timeout: 60000 });
+
+    await expect(page.getByRole('alert').filter({ hasText: 'Wax On, Wax Off' })).toBeVisible({ timeout: 10000 });
   });
 });

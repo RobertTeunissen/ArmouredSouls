@@ -35,7 +35,7 @@ import type {
   LeagueHealthTier,
   TierStatusCode,
   TierStatusLevel,
-} from './leagueHealthTypes';
+} from '../../../shared/types';
 
 type TierFacts = Omit<LeagueHealthTier, 'status'>;
 

@@ -3,6 +3,11 @@
  * ProfileDetail starts from, the Build_Order the form shows, the Team_Rule
  * size and the save plan (which endpoints a Save changes calls, in order).
  */
+import { buildableBlueprintCount, MAX_AUTOMATON_BLUEPRINTS, teamNameMaxRobots } from '@shared/utils/automatonTeamRule';
+import type { BuildOrderRow } from './BuildOrderPanel';
+import type { BlueprintEditorItem } from './blueprintState';
+import type { StableCardValues } from './StableCard';
+import { sizeTeamNames } from './teamState';
 import type {
   BlueprintFields,
   BlueprintView,
@@ -10,12 +15,7 @@ import type {
   ProfileDetail,
   TeamNames,
   UpdateProfileInput,
-} from '../../../utils/automatonAdminApi';
-import { buildableBlueprintCount, MAX_AUTOMATON_BLUEPRINTS, teamNameMaxRobots } from '@shared/utils/automatonTeamRule';
-import type { BuildOrderRow } from './BuildOrderPanel';
-import type { BlueprintEditorItem } from './blueprintState';
-import type { StableCardValues } from './StableCard';
-import { sizeTeamNames } from './teamState';
+} from '@shared/types';
 
 export interface EditorForm extends StableCardValues {
   targets: Record<string, number>;

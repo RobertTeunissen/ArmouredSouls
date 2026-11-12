@@ -1,6 +1,6 @@
 import React, { useId } from 'react';
 import { formatCurrency } from '../../utils/formatters';
-import type { RevenueGrowth } from '../../utils/financeApi';
+import type { RevenueGrowth } from '@shared/types';
 
 export interface RevenueGrowthForecastProps {
   growth: RevenueGrowth;

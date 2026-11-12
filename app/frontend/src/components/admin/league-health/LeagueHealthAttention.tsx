@@ -5,9 +5,9 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING, AdminPanel } from '../shared';
-import type { LeagueHealthAttentionItem } from '../../../utils/adminLeagueHealthApi';
 import { attentionText } from '../../../utils/adminLeagueHealthFormat';
 import { SEVERITY_DOT, SEVERITY_WORD } from './leagueHealthTones';
+import type { LeagueHealthAttentionItem } from '@shared/types';
 
 export interface LeagueHealthAttentionProps {
   items: readonly LeagueHealthAttentionItem[] | null;

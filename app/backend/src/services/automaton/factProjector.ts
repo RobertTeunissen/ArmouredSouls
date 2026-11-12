@@ -26,14 +26,13 @@ import {
   blueprintForSlot,
   matchedStageIndex,
   type BlueprintFacts,
-  type Hand,
   type InventoryFacts,
   type RobotFacts,
   type StableFacts,
 } from './stableFacts';
 import type { ChainStep, EquipSource, PlannedAction, StageStep } from './goals/goalTypes';
 import { teamsDue } from './upkeep/teamUpkeep';
-import type { TeamNames } from '../../types/automaton';
+import type { Hand, TeamNames } from '../../shared/types';
 
 /** Attribute level of a newly bought robot. */
 const NEW_ROBOT_ATTRIBUTE_LEVEL = 1;

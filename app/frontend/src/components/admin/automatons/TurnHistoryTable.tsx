@@ -5,9 +5,9 @@
  * cards below.
  */
 import type { ReactNode } from 'react';
-import type { TurnRecord } from '../../../utils/automatonAdminApi';
 import { Card } from './ui';
 import { cycleColumnLabel, formatCredits, savingGoalText, turnStatusLabel } from './automatonText';
+import type { TurnRecord } from '@shared/types';
 
 function endedOn(record: TurnRecord): string {
   if (record.status === 'skipped') return record.reason === 'program_off' || record.reason === null ? 'Automatons stopped' : record.reason;

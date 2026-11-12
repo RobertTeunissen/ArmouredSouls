@@ -6,8 +6,8 @@
  */
 import { draftIssues } from '../strategyDraftService';
 import { getStrategyRegistry } from '../defaultRegistry';
-import type { FileBuildOrderEntry, StrategyDefinitionFile } from '../strategyTypes';
 import { duoV1Definition } from './helpers/upgradeFixtures';
+import type { FileBuildOrderEntry, StrategyDefinitionFile } from '../../../../shared/types';
 
 const latest = getStrategyRegistry().latestVersions();
 

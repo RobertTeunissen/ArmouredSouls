@@ -7,7 +7,8 @@
  */
 import prisma from '../../src/lib/prisma';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../../src/services/subscription/eventRegistry';
-import type { EventOrder, RefinementStep, TeamNames, WeaponStage } from '../../src/types/automaton';
+import type { EventOrder } from '../../src/types/automaton';
+import type { RefinementStep, TeamNames, WeaponStage } from '../../src/shared/types';
 
 export interface BlueprintFixture {
   slotIndex: number;

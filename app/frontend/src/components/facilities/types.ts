@@ -2,7 +2,8 @@
  * Shared types for Facilities page components.
  *
  * Extracted from FacilitiesPage.tsx during component splitting (Spec 18).
- * Updated in Spec 30 to use UnifiedFacilityROI and consolidated tabs.
+ * Updated in Spec 30 to use UnifiedFacilityROI and consolidated tabs. The
+ * ROI and recommendation response types are wire contracts in `@shared/types`.
  */
 
 export type TabType = 'facilities' | 'investment-overview';
@@ -25,31 +26,6 @@ export interface Facility {
   canAfford?: boolean;
   currentOperatingCost?: number;
   nextOperatingCost?: number;
-}
-
-export interface UnifiedFacilityROI {
-  facilityType: string;
-  currentLevel: number;
-  totalInvestment: number;
-  totalReturns: number;
-  totalOperatingCosts: number;
-  netROI: number;
-  paidOff: boolean;
-  projectedPayoffCycles: number | null;
-  cyclesSincePurchase: number;
-  dataSource: 'snapshot' | 'estimate';
-}
-
-export interface FacilityRecommendation {
-  facilityType: string;
-  facilityName: string;
-  currentLevel: number;
-  recommendedLevel: number;
-  upgradeCost: number;
-  projectedROI: number;
-  projectedPayoffCycles: number | null;
-  reason: string;
-  priority: string;
 }
 
 export interface CategoryInfo {

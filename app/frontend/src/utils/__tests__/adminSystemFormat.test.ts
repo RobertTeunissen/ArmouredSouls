@@ -16,7 +16,7 @@ import {
   jobNote,
   summarizeLock,
 } from '../adminSystemFormat';
-import type { SystemJob, SystemOverview } from '../adminSystemApi';
+import type { SystemJob, SystemOverview } from '@shared/types';
 
 const NOW = new Date('2026-11-02T18:08:12.000Z');
 const GB = 1024 ** 3;

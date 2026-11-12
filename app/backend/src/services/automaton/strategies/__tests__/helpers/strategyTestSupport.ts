@@ -13,9 +13,15 @@ import path from 'path';
 import fc from 'fast-check';
 import { WEAPON_DEFINITIONS } from '../../../../../../prisma/seed';
 import { ROBOT_ATTRIBUTES, type RobotAttribute } from '../../../../../shared/utils/robotAttributes';
-import type { BuildFocusKey, RefinementStep, WeaponStage } from '../../../../../types/automaton';
-import type { BlueprintFacts, LoadoutType, Stance, WeaponFacts } from '../../../stableFacts';
+import type { BlueprintFacts, WeaponFacts } from '../../../stableFacts';
 import { STRATEGY_DIRECTORY } from '../../registry';
+import type {
+  BuildFocusKey,
+  LoadoutType,
+  RefinementStep,
+  Stance,
+  WeaponStage,
+} from '../../../../../shared/types';
 
 export const FIXTURE_STRATEGY_DIRECTORY = path.join(__dirname, '..', 'fixtures');
 

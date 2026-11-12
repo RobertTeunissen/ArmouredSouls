@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 import { TeamBattleMetrics } from '../TeamBattleMetrics';
-import type { BattleLogResponse } from '../../../utils/matchmakingApi';
+import type { BattleLogResponse } from '@shared/types';
 
 function createTeamBattleLog(overrides?: Partial<BattleLogResponse>): BattleLogResponse {
   return {

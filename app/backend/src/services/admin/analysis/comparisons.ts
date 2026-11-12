@@ -15,8 +15,9 @@
  */
 import { classifyBattleOutcome } from '../battles/battleOutcome';
 import { modeShape } from '../battles/battleModes';
-import { MODE_COLUMN, type AnalysisColumn } from './analysisOptions';
+import { MODE_COLUMN } from './analysisOptions';
 import type { LayeredBuild } from './attributeLayers';
+import type { AnalysisColumn } from '../../../shared/types';
 
 export const PLACEMENT_PAIR_CAP = 30;
 

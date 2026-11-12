@@ -10,7 +10,7 @@
  */
 import { teamsForSlots } from '../teamRule';
 import type { StableFacts } from '../stableFacts';
-import type { TeamNames } from '../../../types/automaton';
+import type { TeamNames } from '../../../shared/types';
 
 export interface TeamDue {
   size: 2 | 3;

@@ -14,20 +14,9 @@
  * inventory item and carries the Refinement Lab levels of its Goal_Chain.
  */
 import type { StrategyParametersV1 } from '../../../types/automaton';
-import type { RefinementStep } from '../../../types/automaton';
-import type { BlueprintFacts, FacilityType, Hand, LoadoutType, StableFacts, WeaponFacts } from '../stableFacts';
+import type { BlueprintFacts, FacilityType, StableFacts, WeaponFacts } from '../stableFacts';
 import type { RobotAttribute } from '../../../shared/utils/robotAttributes';
-
-export type BlockedReason =
-  | 'prestige_gate'
-  | 'max_level'
-  | 'roster_limit'
-  | 'no_blueprint'
-  | 'awaiting_final_weapon'
-  | 'storage_limit'
-  | 'name_unavailable';
-
-export type GoalDetail = Record<string, number | string>;
+import type { BlockedReason, GoalDetail, Hand, LoadoutType, RefinementStep } from '../../../shared/types';
 
 /** A facility level bought as part of a Goal_Chain or as a facility Goal. */
 export interface FacilityLevelStep {

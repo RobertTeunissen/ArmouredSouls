@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatCurrency } from '../../utils/formatters';
-import type { FullDamageRepairReference as RepairReference } from '../../utils/financeApi';
+import type { FullDamageRepairReference as RepairReference } from '@shared/types';
 
 export function FullDamageRepairReference({ reference }: { reference: RepairReference }): React.ReactElement {
   return (

@@ -4,8 +4,8 @@
  * label is always written out.
  */
 import type { ReactNode } from 'react';
-import type { SchedulerRunStatus } from '../../../utils/adminCycleApi';
 import { STATUS_LABELS } from '../../../utils/adminCycleFormat';
+import type { SchedulerRunStatus } from '@shared/types';
 
 const TONE: Readonly<Record<SchedulerRunStatus | 'missed', { text: string; icon: string }>> = {
   queued: { text: 'text-warning', icon: '◌' },

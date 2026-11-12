@@ -16,7 +16,7 @@ import SeasonProgressIndicator from '../SeasonProgressIndicator';
 import SeasonCountdownBanner from '../SeasonCountdownBanner';
 import SeasonPhaseCard from '../SeasonPhaseCard';
 import { useSeasonStore } from '../../../stores/seasonStore';
-import type { SeasonState } from '../../../utils/seasonApi';
+import type { SeasonState } from '@shared/types';
 
 const VIEWPORTS = [320, 375, 1024] as const;
 

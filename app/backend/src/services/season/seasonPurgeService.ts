@@ -19,6 +19,7 @@ import { deleteRobotBattleReferences } from '../robot/robotReferenceCleanup';
 import type { Prisma } from '../../../generated/prisma';
 import { findDormantHumanStableIds, previewDormantHumanStables, seasonStartedAt } from './dormantStables';
 import { getCurrentSeason } from './seasonService';
+import type { RolloverPreview } from '../../shared/types';
 
 /** Starting credits granted at the beginning of a Competitive_Phase. */
 export const STARTING_CREDITS = 3_000_000;
@@ -330,35 +331,6 @@ const STABLE_TYPE_WHERE: Readonly<Record<StableType, Prisma.UserWhereInput>> = {
   automaton: { stableType: 'automaton' },
   generated: { isGenerated: true, stableType: { not: 'automaton' } },
 };
-
-/** Stables and robots of one Stable_Type. */
-export interface StableTypeCounts {
-  stables: number;
-  robots: number;
-}
-
-export interface RolloverPreview {
-  /** Every non-generated stable: human players and Automatons (archived and reset). */
-  humanStables: number;
-  humanRobots: number;
-  generatedStables: number;
-  generatedRobots: number;
-  /**
-   * The same population split by Stable_Type (Season Control): human and
-   * automaton stables are archived and reset, generated stables are deleted.
-   */
-  breakdown: { human: StableTypeCounts; automaton: StableTypeCounts; generated: StableTypeCounts };
-  /** Rows every table the rollover empties holds now, by table name. */
-  rowsToPurge: Record<string, number>;
-  imagesRetained: number;
-  imagesDeleted: number;
-  /**
-   * Human stables the rollover deletes: no login since the current season
-   * started (`dormantStables.ts`). Archived first, then deleted. `names` holds
-   * at most the first 50.
-   */
-  dormantHumanStables: { count: number; names: string[] };
-}
 
 /** Read-only report of what a rollover would do. Modifies nothing. */
 export async function previewRollover(): Promise<RolloverPreview> {

@@ -5,7 +5,7 @@ import { createAttributeGoal } from '../goals/attributeGoal';
 import type { Goal, GoalOutcome } from '../goals/goalTypes';
 import { quoteFacilityLevel } from '../pricing';
 import type { FacilityType, StableFacts } from '../stableFacts';
-import type { GoalDefinition, GoalType } from '../strategies/strategyTypes';
+import type { GoalDefinition } from '../strategies/strategyTypes';
 import { planNextStep, simulateTurn, type SimulationContext } from '../turnPlanner';
 import { TURN_ACTION_LIMIT, TURN_BUDGET_EXHAUSTED } from '../turnBudget';
 import { ProjectionError } from '../factProjector';
@@ -19,6 +19,7 @@ import {
   stable,
   weaponMap,
 } from './helpers/automatonFixtures';
+import type { GoalType } from '../../../shared/types';
 
 const blueprints = Array.from({ length: 11 }, (_, i) => blueprint(i + 1));
 

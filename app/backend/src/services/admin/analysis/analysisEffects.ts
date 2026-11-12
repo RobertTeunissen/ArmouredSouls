@@ -4,7 +4,7 @@
  * its standard error. Shared by the Attributes and Weapons analyses.
  */
 import { combinationVariance, type FitResult } from './logisticFit';
-import type { EffectEstimate } from './analysisTypes';
+import type { EffectEstimate } from '../../../shared/types';
 
 /** Percentage points of win chance per unit of logit at even odds (slope of the logistic at p = 0.5). */
 export const PP_PER_LOGIT = 100 / 4;

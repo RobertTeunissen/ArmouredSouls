@@ -1,11 +1,12 @@
+import type { AchievementCategory, AchievementTier } from '../shared/types';
 // Achievement configuration for the Achievement & Milestone System
 // Follows the facilities.ts config pattern (exported const array with typed interface)
 
 // --- Types ---
 
-export type AchievementTier = 'easy' | 'medium' | 'hard' | 'very_hard' | 'secret';
+// AchievementTier and AchievementCategory are wire contracts (shared achievements.ts).
+export type { AchievementCategory, AchievementTier };
 export type AchievementScope = 'user' | 'robot';
-export type AchievementCategory = 'combat' | 'league' | 'economy' | 'prestige' | 'style';
 export type AchievementProgressType = 'numeric' | 'boolean';
 
 export type AchievementTriggerType =

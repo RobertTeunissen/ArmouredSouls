@@ -16,6 +16,7 @@
  *
  * A tuple rather than a bare union so `z.enum` can consume it.
  */
+import type { SchedulerJobName } from '../../shared/types';
 export const SCHEDULER_JOB_NAMES = [
   'league',
   'tournament',
@@ -27,6 +28,5 @@ export const SCHEDULER_JOB_NAMES = [
   'team2v2Tournament',
   'team3v3Tournament',
   'grandMelee',
-] as const;
+] as const satisfies readonly SchedulerJobName[];
 
-export type SchedulerJobName = (typeof SCHEDULER_JOB_NAMES)[number];

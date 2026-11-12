@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SubscriptionMatrix from '../SubscriptionMatrix';
 import * as useSubscriptionsModule from '../../../hooks/useSubscriptions';
+import type { StableOverview, StableOverviewRobot } from '@shared/types';
 
 /**
  * The matrix edits locally and saves once. These tests cover that flow, the
@@ -18,8 +19,8 @@ vi.mock('../../../hooks/useSubscriptions', () => ({
 const mockRefetch = vi.fn().mockResolvedValue(undefined);
 
 function overview(
-  robots: useSubscriptionsModule.StableOverviewRobot[],
-): useSubscriptionsModule.StableOverview {
+  robots: StableOverviewRobot[],
+): StableOverview {
   return {
     robots,
     registeredEvents: [
@@ -38,7 +39,7 @@ function overview(
   };
 }
 
-const ironFist: useSubscriptionsModule.StableOverviewRobot = {
+const ironFist: StableOverviewRobot = {
   robotId: 1,
   robotName: 'Iron Fist',
   subscriptions: [
@@ -49,7 +50,7 @@ const ironFist: useSubscriptionsModule.StableOverviewRobot = {
   cap: 3,
 };
 
-const steelClaw: useSubscriptionsModule.StableOverviewRobot = {
+const steelClaw: StableOverviewRobot = {
   robotId: 2,
   robotName: 'Steel Claw',
   subscriptions: [
@@ -61,7 +62,7 @@ const steelClaw: useSubscriptionsModule.StableOverviewRobot = {
   cap: 3,
 };
 
-function setOverview(data: useSubscriptionsModule.StableOverview | null, extra = {}): void {
+function setOverview(data: StableOverview | null, extra = {}): void {
   vi.mocked(useSubscriptionsModule.useStableOverview).mockReturnValue({
     data,
     loading: false,

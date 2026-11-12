@@ -6,10 +6,10 @@
  */
 import { useId, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
-import type { AdminSeasonState } from '../../../utils/seasonApi';
 import { extendEffect } from '../../../utils/adminSeasonFormat';
 import { ActionButton, NARROW_INPUT_CLASS } from '../automatons/ui';
 import { ADMIN_FOCUS_RING } from '../shared';
+import type { AdminSeasonState } from '@shared/types';
 
 export interface SeasonTestingToolsProps {
   state: AdminSeasonState;

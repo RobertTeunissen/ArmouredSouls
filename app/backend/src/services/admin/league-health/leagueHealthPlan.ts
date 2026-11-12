@@ -28,7 +28,7 @@ import type {
   LeagueHealthTier,
   ModeRebalanceHistory,
   TierFlow,
-} from './leagueHealthTypes';
+} from '../../../shared/types';
 
 const ROW_SELECTORS: LeaguePlanSelectors<LeagueHealthRow> = {
   getEntityId: (row) => row.entityId,

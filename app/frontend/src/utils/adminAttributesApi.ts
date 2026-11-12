@@ -2,7 +2,8 @@
  * Admin Attributes API (`/admin/attributes`): which attributes win.
  */
 import { api } from './api';
-import { LAYER_KEYS, type AnalysisRange, type AttributeAnalysisResponse, type LayerToggles } from '../components/admin/attributes/types';
+import { LAYER_KEYS } from '../components/admin/attributes/types';
+import type { AnalysisRange, AttributeAnalysisResponse, LayerToggles } from '@shared/types';
 
 export function getAttributeAnalysis(range: AnalysisRange, toggles: LayerToggles, signal?: AbortSignal): Promise<AttributeAnalysisResponse> {
   const params: Record<string, string> = { range };

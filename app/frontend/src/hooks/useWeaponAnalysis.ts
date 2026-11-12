@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../utils/ApiError';
 import { isAbortError } from '../utils/abort';
 import { getWeaponAnalysis } from '../utils/adminWeaponsApi';
-import type { AnalysisRange, AnalysisStrength, WeaponAnalysisResponse } from '../components/admin/weapons/types';
+import type { AnalysisRange, AnalysisStrength, WeaponAnalysisResponse } from '@shared/types';
 
 export interface WeaponAnalysisState {
   data: WeaponAnalysisResponse | null;

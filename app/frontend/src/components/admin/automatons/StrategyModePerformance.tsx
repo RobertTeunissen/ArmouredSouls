@@ -10,7 +10,7 @@
  */
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { ComparisonRow, ModePerformance, TieredStandingsMode } from '../../../utils/automatonAdminApi';
+import type { TieredStandingsMode } from '../../../utils/automatonAdminApi';
 import {
   LOW_SAMPLE_MIN_MATCHES,
   LOW_SAMPLE_MIN_STABLES,
@@ -20,6 +20,7 @@ import {
 } from '@shared/utils/automatonStandingsTier';
 import { Pill, ToggleChip } from './ui';
 import { EVENT_LABELS, formatNumber, ordinal } from './automatonText';
+import type { ComparisonRow, ModePerformance } from '@shared/types';
 
 export interface StrategyModePerformanceProps {
   rows: ComparisonRow[];

@@ -12,7 +12,11 @@ import { ACHIEVEMENTS, type AchievementDefinition } from '../../../config/achiev
 import { buildStableScopeFilter } from '../../../utils/stableScope';
 import { getCurrentSeason } from '../../season/seasonService';
 import { isDormant, seasonStartedAt } from '../../season/dormantStables';
-import type { AchievementAnalytics, AchievementAnalyticsRow, AchievementStableScope } from './achievementAnalyticsTypes';
+import type {
+  AchievementAnalytics,
+  AchievementAnalyticsRow,
+  AchievementStableScope,
+} from '../../../shared/types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

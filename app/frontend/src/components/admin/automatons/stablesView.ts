@@ -13,7 +13,7 @@
  *   tier the catalogue key decides, ascending in both directions.
  */
 import { compareHighestTier, type HighestTier } from '@shared/utils/automatonStandingsTier';
-import type { LibraryStrategy, NeedAttentionReason, ProfileListItem } from '../../../utils/automatonAdminApi';
+import type { LibraryStrategy, NeedAttentionReason, ProfileListItem } from '@shared/types';
 
 export type NeedAttentionCode = NeedAttentionReason['code'];
 export const NEED_ATTENTION_CODES: readonly NeedAttentionCode[] = ['balance_negative', 'last_cycle_failed', 'nothing_bought'];

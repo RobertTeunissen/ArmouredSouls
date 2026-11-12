@@ -1,6 +1,6 @@
 import { teamsDue } from '../upkeep/teamUpkeep';
-import type { TeamNames } from '../../../types/automaton';
 import { robot, stable, team } from './helpers/automatonFixtures';
+import type { TeamNames } from '../../../shared/types';
 
 const NAMES: TeamNames = {
   twoVsTwo: ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo'],

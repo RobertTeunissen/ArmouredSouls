@@ -4,9 +4,9 @@
  * the season configuration this environment runs with.
  */
 import type { ReactNode } from 'react';
-import type { AdminSeasonState } from '../../../utils/seasonApi';
 import { formatDate, formatDateTime, timelineDates } from '../../../utils/adminSeasonFormat';
 import { AdminPanel } from '../shared';
+import type { AdminSeasonState } from '@shared/types';
 
 export interface SeasonTimelineProps {
   state: AdminSeasonState | null;

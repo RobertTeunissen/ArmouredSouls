@@ -25,10 +25,10 @@ import prisma from '../../../lib/prisma';
 import { Prisma } from '../../../../generated/prisma';
 import { AutomatonError, AutomatonErrorCode } from '../../../errors/automatonErrors';
 import { BUILD_FOCUS_WEIGHTS } from '../buildFocus';
-import { buildTurnPreview, loadPreviewSubject, type TurnPreviewResult } from '../turnPreview';
+import { buildTurnPreview, loadPreviewSubject } from '../turnPreview';
 import { getStrategyRegistry } from './defaultRegistry';
 import { interpretStrategy, type StrategyRegistry } from './registry';
-import { projectOpeningBuild, SCENARIO_STARTING_BALANCE, type ScenarioPurchase } from './scenarioProjector';
+import { projectOpeningBuild, SCENARIO_STARTING_BALANCE } from './scenarioProjector';
 import {
   buildOrderEntrySchema,
   builderRuleIssues,
@@ -37,11 +37,24 @@ import {
   STRATEGY_DISPLAY_NAME_MAX_LENGTH,
   strategyDefinitionShape,
   strategyKeySchema,
-  type StrategyRuleIssue,
 } from './strategyDefinitionSchema';
 import { defaultParameters } from './strategyParameters';
-import type { FileBuildOrderEntry, StrategyDefinitionFile, UpgradeStrategy } from './strategyTypes';
-import { upgradeWarningFor, type UpgradeWarningEntry } from './strategyUpgradeService';
+import type { UpgradeStrategy } from './strategyTypes';
+import { upgradeWarningFor } from './strategyUpgradeService';
+import type {
+  CreateStrategyDraftInput,
+  DraftExport,
+  DraftPreview,
+  DraftSummary,
+  DraftValidation,
+  DraftView,
+  FileBuildOrderEntry,
+  ScenarioPurchase,
+  StrategyDefinitionFile,
+  StrategyRuleIssue,
+  TurnPreviewResult,
+  UpgradeWarningEntry,
+} from '../../../shared/types';
 
 // ── Shapes ───────────────────────────────────────────────────────────
 
@@ -69,61 +82,11 @@ const storedDefinitionSchema = z.object({
 /** `key.vN` of an existing Strategy_Version. */
 export const BASED_ON_PATTERN = /^([a-z0-9-]+)\.v([1-9]\d*)$/;
 
-export type CreateDraftInput =
-  | { basedOn: string }
-  | { key: string; displayName?: string; description?: string };
-
 export interface UpdateDraftInput {
   key?: string;
   displayName?: string;
   description?: string;
   buildOrder?: FileBuildOrderEntry[];
-}
-
-export interface DraftValidation {
-  issues: StrategyRuleIssue[];
-  errorCount: number;
-  ready: boolean;
-  /** New version of an existing strategy: profiles the upgrade would reject (empty = none); null otherwise. */
-  upgradeWarning: UpgradeWarningEntry[] | null;
-}
-
-export interface DraftSummary {
-  id: number;
-  key: string;
-  version: number;
-  basedOn: string | null;
-  displayName: string;
-  goalCount: number;
-  errorCount: number;
-  ready: boolean;
-  createdBy: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DraftView extends DraftValidation {
-  id: number;
-  basedOn: string | null;
-  definition: StrategyDefinitionFile;
-  createdBy: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DraftExport {
-  fileName: string;
-  definition: StrategyDefinitionFile;
-  upgradeWarning: UpgradeWarningEntry[] | null;
-}
-
-export interface DraftPreview {
-  draftId: number;
-  catalogueKey: string;
-  /** (a) the chosen profile: Turn_Preview statuses with the draft's Build_Order and default targets. */
-  profile: TurnPreviewResult;
-  /** (b) a fresh ₡3,000,000 stable with the profile's blueprints: the opening purchases in order. */
-  freshStable: { startBalance: number; endBalance: number; purchases: ScenarioPurchase[] };
 }
 
 export interface StrategyDraftDeps {
@@ -253,7 +216,7 @@ export async function getDraft(id: number, deps: StrategyDraftDeps = {}): Promis
 }
 
 /** Create a blank draft (new strategy, v1) or a new version from `key.vN` (R6.10). */
-export async function createDraft(input: CreateDraftInput, adminUserId: number, deps: StrategyDraftDeps = {}): Promise<DraftView> {
+export async function createDraft(input: CreateStrategyDraftInput, adminUserId: number, deps: StrategyDraftDeps = {}): Promise<DraftView> {
   const registry = registryOf(deps);
   let definition: StrategyDefinitionFile;
   let basedOn: string | null = null;

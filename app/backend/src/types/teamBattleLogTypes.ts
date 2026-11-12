@@ -14,23 +14,11 @@
  */
 
 import { ArenaPosition } from './battleLogTypes';
+import type { TeamBattleParticipantResult, TeamMetricPair } from '../shared/types';
 
-// ---------------------------------------------------------------------------
-// Per-participant result
-// ---------------------------------------------------------------------------
-
-/**
- * Individual robot performance within a Team Battle.
- * One entry per robot (2N total across both teams).
- */
-export interface TeamBattleParticipantResult {
-  robotId: number;
-  team: 1 | 2;
-  damageDealt: number;
-  damageTaken: number;
-  finalHP: number;
-  survivalSeconds: number;
-}
+// The per-robot result and the per-team metric are part of the battle report
+// wire contract (shared `battle-log.ts`); the stored log uses the same shapes.
+export type { TeamBattleParticipantResult, TeamMetricPair };
 
 // ---------------------------------------------------------------------------
 // Combat event discriminated union
@@ -116,16 +104,6 @@ export interface FocusFireEvent {
   contributorRobotIds: number[];
   contributorCount: number;
   bonusApplied: number;
-}
-
-// ---------------------------------------------------------------------------
-// Team-level coordination metrics
-// ---------------------------------------------------------------------------
-
-/** Per-team aggregated metric (team1 vs team2). */
-export interface TeamMetricPair {
-  team1: number;
-  team2: number;
 }
 
 // ---------------------------------------------------------------------------

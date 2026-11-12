@@ -24,80 +24,24 @@ import prisma from '../../lib/prisma';
 import { buildUserFilter } from '../../utils/buildUserFilter';
 import { getCurrentSeason } from '../season/seasonService';
 import { loadCycleTotals } from './economyCycleRollups';
+import type {
+  EconomyFlow,
+  EconomyOverview,
+  EconomyRepairs,
+  EconomyResponse,
+  EconomyStableScope,
+  EconomyWindow,
+  RepairTotals,
+  EconomyStableKind,
+} from '../../shared/types';
 
-export const ECONOMY_STABLE_SCOPES = ['players', 'automatons', 'generated', 'all'] as const;
-export type EconomyStableScope = (typeof ECONOMY_STABLE_SCOPES)[number];
-export const ECONOMY_WINDOWS = ['7', '14', '30', 'season'] as const;
-export type EconomyWindow = (typeof ECONOMY_WINDOWS)[number];
-
-type StableKind = Exclude<EconomyStableScope, 'all'>;
-const STABLE_KINDS: readonly StableKind[] = ['players', 'automatons', 'generated'];
+export const ECONOMY_STABLE_SCOPES = ['players', 'automatons', 'generated', 'all'] as const satisfies readonly EconomyStableScope[];
+export const ECONOMY_WINDOWS = ['7', '14', '30', 'season'] as const satisfies readonly EconomyWindow[];
+const STABLE_KINDS: readonly EconomyStableKind[] = ['players', 'automatons', 'generated'];
 
 /** The per-cycle chart shows at least this many cycles, whatever the window. */
 export const ECONOMY_CHART_MIN_CYCLES = 15;
 const CACHE_TTL_MS = 60_000;
-
-export interface EconomyFlow {
-  key: string;
-  label: string;
-  amount: number;
-}
-
-/** Repairs of one kind (or all) in the window. full − repairBayDiscount − manualDiscount = paid. */
-export interface RepairTotals {
-  repairs: number;
-  /** The shared repair formula's quote before any discount. */
-  fullPrice: number;
-  repairBayDiscount: number;
-  manualDiscount: number;
-  paid: number;
-}
-
-export interface EconomyRepairs {
-  automatic: RepairTotals;
-  manual: RepairTotals;
-  total: RepairTotals;
-  /** Player stables in scope that repaired, and that used Manual Repair; null when the scope has no players. */
-  playerStables: { repairing: number; manual: number } | null;
-  /** Every stable type in the same window, whatever the scope. Shares are one-decimal percentages. */
-  byStableType: { stables: StableKind; repairs: number; paid: number; repairBayShare: number | null; manualShare: number | null }[];
-}
-
-export interface EconomyOverview {
-  status: 'ready';
-  scope: { stables: EconomyStableScope; window: EconomyWindow; fromCycle: number; toCycle: number; cycles: number };
-  kpis: {
-    earned: number;
-    spent: number;
-    net: number;
-    earnedPerCycle: number;
-    spentPerCycle: number;
-    /** Repair costs ÷ battle income, one decimal percent; null without battle income. */
-    repairsShareOfBattleIncome: number | null;
-    heldNow: number;
-    medianBalance: number;
-    stables: number;
-  };
-  sources: EconomyFlow[];
-  sinks: EconomyFlow[];
-  perCycle: { cycle: number; earned: number; spent: number }[];
-  balanceBands: { label: string; count: number; negative: boolean }[];
-  byStableType: { stables: StableKind; count: number; earned: number; spent: number; net: number; heldNow: number }[];
-  repairs: EconomyRepairs;
-  timestamp: string;
-}
-
-/** The cycles this window needs are still being summed (first visit after a deploy). */
-export interface EconomyPreparing {
-  status: 'preparing';
-  scope: EconomyOverview['scope'];
-  /** Cycles of the window and chart summed so far, and how many they need. */
-  cyclesReady: number;
-  cyclesNeeded: number;
-  timestamp: string;
-}
-
-export type EconomyResponse = EconomyOverview | EconomyPreparing;
 
 /** Ledger transaction types that bring credits in, with their labels, in display order. */
 const SOURCE_LABELS: ReadonlyArray<readonly [string, string]> = [
@@ -130,7 +74,7 @@ const BANDS: ReadonlyArray<{ label: string; min: number; max: number }> = [
 ];
 
 interface LedgerGroup {
-  kind: StableKind | 'other';
+  kind: EconomyStableKind | 'other';
   transactionType: string;
   cycle: number;
   income: number;
@@ -140,7 +84,7 @@ interface LedgerGroup {
 export type RepairKind = 'automatic' | 'manual';
 
 export interface RepairGroup {
-  kind: StableKind | 'other';
+  kind: EconomyStableKind | 'other';
   cycle: number;
   repairType: RepairKind;
   repairs: number;
@@ -162,7 +106,7 @@ interface Dataset {
   completeFrom: number;
   /** Cycles present (summed), for progress. */
   present: Set<number>;
-  balances: Record<StableKind | 'all', number[]>;
+  balances: Record<EconomyStableKind | 'all', number[]>;
   groups: LedgerGroup[];
   repairGroups: RepairGroup[];
   playerRepairs: PlayerRepairRow[];
@@ -184,7 +128,7 @@ async function loadDataset(): Promise<Dataset> {
   ]);
   const totalCycles = meta?.totalCycles ?? 0;
   const playerIds = new Set(players.map((u) => u.id));
-  const kindOf = (u: { id: number; stableType: string; isGenerated: boolean }): StableKind | 'other' => {
+  const kindOf = (u: { id: number; stableType: string; isGenerated: boolean }): EconomyStableKind | 'other' => {
     if (u.stableType === 'automaton') return 'automatons';
     if (u.isGenerated) return 'generated';
     return playerIds.has(u.id) ? 'players' : 'other';

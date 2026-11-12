@@ -17,12 +17,14 @@ import {
   getSchedulerOverview,
   startBulkCycles,
   startSchedulerRun,
-  type BulkCycleOptions,
-  type SchedulerHistoryPage,
-  type SchedulerHistoryQuery,
-  type SchedulerJobName,
-  type SchedulerOverview,
+  type BulkCycleRequest,
 } from '../utils/adminCycleApi';
+import type {
+  SchedulerHistoryPage,
+  SchedulerHistoryQuery,
+  SchedulerJobName,
+  SchedulerOverview,
+} from '@shared/types';
 
 export const BUSY_POLL_MS = 10_000;
 export const IDLE_POLL_MS = 60_000;
@@ -49,7 +51,7 @@ export interface CycleControlsData {
   now: Date;
   refresh: () => void;
   startRun: (jobName: SchedulerJobName) => Promise<StartResult>;
-  startBulk: (options: BulkCycleOptions) => Promise<StartResult>;
+  startBulk: (options: BulkCycleRequest) => Promise<StartResult>;
 }
 
 function errorMessage(error: unknown, fallback: string): string {
@@ -149,7 +151,7 @@ export function useCycleControls(): CycleControlsData {
     }
   }, [refresh]);
 
-  const startBulk = useCallback(async (options: BulkCycleOptions): Promise<StartResult> => {
+  const startBulk = useCallback(async (options: BulkCycleRequest): Promise<StartResult> => {
     try {
       await startBulkCycles(options);
       refresh();

@@ -7,7 +7,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../utils/ApiError';
 import { isAbortError } from '../utils/abort';
 import { getBattleDetail, getBattleList, getBattleLog } from '../utils/adminBattlesApi';
-import type { BattleDetail, BattleFilters, BattleListResponse, BattleLogResponse } from '../components/admin/battles/types';
+import type { BattleFilters } from '../components/admin/battles/types';
+import type { AdminBattleDetail, AdminBattleLogResponse, BattleListResponse } from '@shared/types';
 
 export interface Loadable<T> {
   data: T | null;
@@ -65,7 +66,7 @@ export function useBattleList(filters: BattleFilters): Loadable<BattleListRespon
   );
 }
 
-export function useBattleDetail(battleId: number | null): Loadable<BattleDetail> & { reload: () => void } {
+export function useBattleDetail(battleId: number | null): Loadable<AdminBattleDetail> & { reload: () => void } {
   return useLoader(
     battleId === null ? null : (signal) => getBattleDetail(battleId, signal),
     [battleId],
@@ -74,7 +75,7 @@ export function useBattleDetail(battleId: number | null): Loadable<BattleDetail>
 }
 
 /** The combat log loads only when asked for (and when the battle still has one). */
-export function useBattleLog(battleId: number | null, enabled: boolean): Loadable<BattleLogResponse> & { reload: () => void } {
+export function useBattleLog(battleId: number | null, enabled: boolean): Loadable<AdminBattleLogResponse> & { reload: () => void } {
   return useLoader(
     battleId === null || !enabled ? null : (signal) => getBattleLog(battleId, signal),
     [battleId, enabled],

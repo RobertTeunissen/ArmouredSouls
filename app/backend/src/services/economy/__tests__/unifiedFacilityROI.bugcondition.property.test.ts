@@ -11,7 +11,8 @@
  */
 import fc from 'fast-check';
 import prisma from '../../../lib/prisma';
-import { unifiedFacilityROIService, type UnifiedFacilityROI } from '../unifiedFacilityROIService';
+import { unifiedFacilityROIService } from '../unifiedFacilityROIService';
+import type { UnifiedFacilityROI } from '../../../shared/types';
 
 /** One facility's ROI through the production entry point, or null when it is not listed. */
 async function roiOf(userId: number, facilityType: string): Promise<UnifiedFacilityROI | null> {

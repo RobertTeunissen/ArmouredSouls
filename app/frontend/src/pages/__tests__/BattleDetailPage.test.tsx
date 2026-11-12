@@ -69,7 +69,6 @@ vi.mock('../../components/battle-detail', async (importOriginal) => {
 });
 
 import { getBattleLog } from '../../utils/matchmakingApi';
-import type { BattleLogParticipant, BattleLogResponse } from '../../utils/matchmakingApi';
 import { ApiError } from '../../utils/ApiError';
 
 // Since BattleDetailPage has complex internal state, we test the page shell behavior
@@ -77,6 +76,7 @@ import { ApiError } from '../../utils/ApiError';
 
 // For error/loading tests, we import the real page but catch the error
 import BattleDetailPage from '../BattleDetailPage';
+import type { BattleLogParticipant, BattleLogResponse } from '@shared/types';
 
 function renderPage(battleId = '1') {
   return render(

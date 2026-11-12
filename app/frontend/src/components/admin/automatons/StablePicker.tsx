@@ -6,9 +6,9 @@
  */
 import { useId, useMemo, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
-import type { ProfileListItem } from '../../../utils/automatonAdminApi';
 import { INPUT_CLASS } from './ui';
 import { matchesSearch } from './stablesView';
+import type { ProfileListItem } from '@shared/types';
 
 export const STABLE_PICKER_LIMIT = 50;
 

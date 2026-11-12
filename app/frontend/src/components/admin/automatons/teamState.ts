@@ -3,8 +3,8 @@
  * teams over slots 1…maxRobots with names, members and state, the Team_Names
  * sized to the count the rule needs, and the collapsed one-line summary.
  */
-import type { TeamNames } from '../../../utils/automatonAdminApi';
 import { requiredTeamNameCounts, teamsForSlots } from '@shared/utils/automatonTeamRule';
+import type { TeamNames } from '@shared/types';
 
 export interface TeamRow {
   size: 2 | 3;

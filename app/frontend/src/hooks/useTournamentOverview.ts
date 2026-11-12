@@ -5,7 +5,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../utils/ApiError';
 import { isAbortError } from '../utils/abort';
-import { getTournamentOverview, type TournamentOverview } from '../utils/adminTournamentsApi';
+import { getTournamentOverview } from '../utils/adminTournamentsApi';
+import type { TournamentOverview } from '@shared/types';
 
 export interface TournamentOverviewState {
   data: TournamentOverview | null;

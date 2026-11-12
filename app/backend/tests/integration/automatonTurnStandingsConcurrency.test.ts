@@ -40,7 +40,7 @@ import { SUBSCRIBABLE_EVENT_TYPES, isRegisteredEvent, registerSubscribableEvent 
 import { STANDING_BACKED_EVENTS, isTeamMatchable } from '../../src/services/standings/standingPlacement';
 import { MAX_ENTITIES_PER_INSTANCE, leagueInstanceLockKey } from '../../src/services/league/leagueInstancePlacement';
 import { deleteAutomatonStables } from '../helpers/automatonStable';
-import type { TeamNames } from '../../src/types/automaton';
+import type { TeamNames } from '../../src/shared/types';
 
 jest.setTimeout(240_000);
 

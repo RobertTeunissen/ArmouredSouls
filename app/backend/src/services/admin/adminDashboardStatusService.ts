@@ -26,45 +26,9 @@ import {
   SETTLEMENT_OVERDUE_AFTER_MS,
   STUCK_MATCH_GRACE_MS,
 } from './adminThresholds';
+import type { DashboardCycleHealth, DashboardSchedulerSummary, DashboardStatus } from '../../shared/types';
 
 const SETTLEMENT_JOB = 'settlement';
-
-export interface DashboardSchedulerSummary {
-  active: boolean;
-  runningJob: string | null;
-  queueLength: number;
-  jobsTotal: number;
-  jobsSucceeded: number;
-  jobsFailed: string[];
-  /** Jobs with no recorded run since the process started. */
-  jobsNotYetReported: number;
-  processStartedAt: string;
-}
-
-export interface DashboardCycleHealth {
-  /** Scheduler active and the last settlement is missing or older than 26 h. */
-  settlementOverdue: boolean;
-  failedJobs: string[];
-  /** Matches still `scheduled` more than 2 h after their slot. */
-  stuckMatches: number;
-}
-
-export interface DashboardStatus {
-  cycle: { number: number; lastSettlementAt: string | null; nextSettlementAt: string | null };
-  season: { number: number; phase: string; seasonCycle: number } | null;
-  scheduler: DashboardSchedulerSummary;
-  queuedMatches: number | null;
-  attention: {
-    bankruptcyRisk: { count: number; threshold: number } | null;
-    /** Last 24 hours: every signal, and the bursts and violations among them. */
-    security: { signals: number; alerts: number } | null;
-    automatons: { needAttention: number; failed: number } | null;
-    /** Server errors (5xx) of the last 24 hours, from the System page's request counts. */
-    requests: { failures24h: number; topRoute: string | null; topCode: string | null } | null;
-    cycleHealth: DashboardCycleHealth;
-  };
-  timestamp: string;
-}
 
 /** Summarise the in-memory scheduler state. Pure. */
 export function summarizeScheduler(state: SchedulerState, processStartedAt: Date): DashboardSchedulerSummary {

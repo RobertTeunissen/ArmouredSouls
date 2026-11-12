@@ -19,15 +19,15 @@ import { clearDatasetCache } from '../analysisDataset';
 import { layerBuild, type LayeredBuild } from '../attributeLayers';
 import { addBattle, emptyComparisonSet, type AnalysisParticipant, type ComparisonSet } from '../comparisons';
 import { clearWeaponAnalysisCache, getWeaponAnalysis } from '../weaponAnalysisService';
-import type { WeaponAnalysisReady } from '../weaponAnalysisTypes';
-import type { CatalogueWeapon } from '../weaponCatalogue';
+import type { WeaponCatalogueEntry } from '../weaponCatalogue';
+import type { WeaponAnalysisReady } from '../../../../shared/types';
 
 const mocked = data as jest.Mocked<typeof data>;
 const mockedCatalogue = catalogueModule as jest.Mocked<typeof catalogueModule>;
 const NOW = new Date('2026-11-10T12:00:00Z');
 const DAY = 24 * 3600 * 1000;
 
-const CATALOGUE: CatalogueWeapon[] = [
+const CATALOGUE: WeaponCatalogueEntry[] = [
   { id: 1, name: 'Mace', weaponType: 'melee', handsRequired: 'one', rangeBand: 'melee', cost: 300_000 },
   { id: 2, name: 'Pistol', weaponType: 'energy', handsRequired: 'one', rangeBand: 'short', cost: 100_000 },
   { id: 3, name: 'Rifle', weaponType: 'ballistic', handsRequired: 'two', rangeBand: 'long', cost: 150_000 },

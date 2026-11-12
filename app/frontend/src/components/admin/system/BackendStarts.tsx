@@ -4,9 +4,9 @@
  * restart, host reboot, or a start before deploy tags existed) is a Restart.
  */
 import type { ReactNode } from 'react';
-import type { SystemStart } from '../../../utils/adminSystemApi';
 import { formatDayTime } from '../../../utils/adminCycleFormat';
 import { AdminPanel } from '../shared';
+import type { SystemStart } from '@shared/types';
 
 export interface BackendStartsProps {
   starts: SystemStart[] | null;

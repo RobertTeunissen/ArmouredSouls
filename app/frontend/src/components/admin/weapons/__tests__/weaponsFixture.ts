@@ -6,16 +6,18 @@ import { ANALYSIS_COLUMNS } from '../../attributes/types';
 import {
   LOADOUTS,
   RANGE_BANDS,
-  type AnalysisColumn,
-  type ArchetypeKey,
-  type ChoiceResult,
-  type ColumnMatchups,
-  type EffectEstimate,
-  type MatchupGrid,
-  type WeaponAnalysisCollecting,
-  type WeaponAnalysisReady,
-  type WeaponRow,
 } from '../types';
+import type {
+  AnalysisColumn,
+  ArchetypeKey,
+  ChoiceResult,
+  ColumnMatchups,
+  EffectEstimate,
+  MatchupGrid,
+  WeaponAnalysisCollecting,
+  WeaponAnalysisReady,
+  WeaponRow,
+} from '@shared/types';
 
 const NONE: EffectEstimate = { effect: null, se: null, significant: false };
 

@@ -6,7 +6,8 @@
  *
  * Uses Jest mocking for prisma.
  */
-import { UnifiedFacilityROIService, type UnifiedFacilityROI } from '../unifiedFacilityROIService';
+import { UnifiedFacilityROIService } from '../unifiedFacilityROIService';
+import type { UnifiedFacilityROI } from '../../../shared/types';
 import { getFacilityConfig } from '../../../config/facilities';
 
 // Mock prisma

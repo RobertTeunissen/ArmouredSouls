@@ -7,9 +7,9 @@ import { useId } from 'react';
 import type { ReactNode } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
 import { AdminPagination } from '../shared';
-import type { ImagesFilter, ImagesPage } from '../../../utils/adminImagesApi';
 import { dayMonth, ownerLabel, robotsText } from '../../../utils/adminImagesFormat';
 import { formatCount } from '../../../utils/adminDashboardFormat';
+import type { ImagesFilter, ImagesPage } from '@shared/types';
 
 export interface ImageGridProps {
   data: ImagesPage | null;

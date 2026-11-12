@@ -7,8 +7,8 @@ import {
   describeBuildOrder,
   resolveGoalTarget,
 } from '../strategyParameters';
-import type { StrategyDefinitionFile } from '../strategyTypes';
 import { FIXTURE_STRATEGY_DIRECTORY } from './helpers/strategyTestSupport';
+import type { StrategyDefinitionFile } from '../../../../shared/types';
 
 const FIXTURE: StrategyDefinitionFile = JSON.parse(
   fs.readFileSync(path.join(FIXTURE_STRATEGY_DIRECTORY, 'fixture.v1.json'), 'utf8'),

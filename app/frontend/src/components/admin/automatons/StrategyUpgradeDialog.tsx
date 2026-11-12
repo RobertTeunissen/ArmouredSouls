@@ -10,14 +10,16 @@ import type { ReactNode } from 'react';
 import {
   confirmUpgrade,
   dryRunUpgrade,
-  type LabelledTargetChange,
-  type LibraryStrategy,
-  type UpgradeConfirmation,
-  type UpgradeEvaluation,
 } from '../../../utils/automatonAdminApi';
 import { ActionButton, Dialog, Notice } from './ui';
 import { errorText } from './requestErrors';
 import { targetText, upgradeResultText } from './automatonText';
+import type {
+  LabelledTargetChange,
+  LibraryStrategy,
+  UpgradeConfirmation,
+  UpgradeEvaluation,
+} from '@shared/types';
 
 export interface StrategyUpgradeDialogProps {
   strategy: LibraryStrategy;

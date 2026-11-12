@@ -8,7 +8,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import PlayersPage from '../PlayersPage';
-import type { PlayerDetail, PlayerRow, PlayersOverview } from '../../../utils/adminPlayersApi';
+import type { PlayerDetail, PlayerRow, PlayersOverview } from '@shared/types';
 
 const mockGet = vi.fn();
 const mockPost = vi.fn();

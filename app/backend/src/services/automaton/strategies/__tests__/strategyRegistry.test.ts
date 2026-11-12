@@ -8,10 +8,10 @@ import {
   readStrategyDirectory,
   runStrategyStartupCheck,
 } from '../registry';
-import type { StrategyDefinitionFile } from '../strategyTypes';
 import { TEST_WEIGHTS } from '../../__tests__/helpers/automatonFixtures';
 import { BUILD_FOCUS_WEIGHTS } from '../../buildFocus';
 import { FIXTURE_STRATEGY_DIRECTORY } from './helpers/strategyTestSupport';
+import type { StrategyDefinitionFile } from '../../../../shared/types';
 
 jest.mock('../../../../config/logger', () => ({ __esModule: true, default: { info: jest.fn(), warn: jest.fn(), error: jest.fn() } }));
 

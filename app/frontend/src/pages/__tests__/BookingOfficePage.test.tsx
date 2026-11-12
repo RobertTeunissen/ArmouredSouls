@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import BookingOfficePage from '../BookingOfficePage';
 import * as useSubscriptionsModule from '../../hooks/useSubscriptions';
+import type { StableOverview } from '@shared/types';
 
 // Mock Navigation to avoid complex auth/routing dependencies
 vi.mock('../../components/Navigation', () => ({
@@ -25,7 +26,7 @@ vi.mock('../../stores/subscriptionStore', () => ({
 
 const mockRefetch = vi.fn().mockResolvedValue(undefined);
 
-const defaultOverviewData: useSubscriptionsModule.StableOverview = {
+const defaultOverviewData: StableOverview = {
   robots: [
     { robotId: 1, robotName: 'Iron Fist', subscriptions: [{ eventType: 'league_1v1', status: 'active' }, { eventType: 'tournament_1v1', status: 'active' }], heldSlots: [], cap: 3 },
     { robotId: 2, robotName: 'Steel Claw', subscriptions: [{ eventType: 'league_1v1', status: 'active' }, { eventType: 'koth', status: 'active' }, { eventType: 'tag_team', status: 'active' }], heldSlots: [], cap: 3 },

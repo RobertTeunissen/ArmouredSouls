@@ -9,7 +9,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import AchievementAnalyticsPage from '../AchievementAnalyticsPage';
-import type { AchievementAnalytics, AchievementRow } from '../../../utils/adminAchievementsApi';
+import type { AchievementAnalytics, AchievementAnalyticsRow } from '@shared/types';
 
 type Config = { params?: Record<string, unknown>; signal?: AbortSignal };
 const mockGet = vi.fn<(url: string, config?: Config) => Promise<{ data: unknown }>>();
@@ -18,12 +18,12 @@ vi.mock('../../../utils/apiClient', () => ({
   default: { get: (url: string, config?: Config) => mockGet(url, config) },
 }));
 
-const row = (over: Partial<AchievementRow>): AchievementRow => ({
+const row = (over: Partial<AchievementAnalyticsRow>): AchievementAnalyticsRow => ({
   achievementId: 'C1', name: 'First win', description: 'Win a battle', category: 'combat', tier: 'easy', hidden: false,
   unlocked: 0, rate: 0, medianDay: null, unlockedAll: 0, ...over,
 });
 
-const ROWS: AchievementRow[] = [
+const ROWS: AchievementAnalyticsRow[] = [
   row({ achievementId: 'E1', name: 'Welcome', category: 'economy', tier: 'easy', unlocked: 26, rate: 100, medianDay: 0, unlockedAll: 68 }),
   row({ achievementId: 'C6', name: 'Iron Man', category: 'combat', tier: 'hard', unlocked: 24, rate: 92.3, medianDay: 12, unlockedAll: 30 }),
   row({ achievementId: 'C1', name: 'First win', category: 'combat', tier: 'easy', unlocked: 20, rate: 76.9, medianDay: 2, unlockedAll: 25 }),

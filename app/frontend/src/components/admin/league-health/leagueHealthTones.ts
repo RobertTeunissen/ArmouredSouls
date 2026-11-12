@@ -1,5 +1,6 @@
+import type { AttentionSeverity, TierStatusLevel } from '@shared/types';
+
 /** Status colours of the League Health page (theme tokens only). */
-import type { AttentionSeverity, TierStatusLevel } from '../../../utils/adminLeagueHealthApi';
 
 export const STATUS_TEXT: Readonly<Record<TierStatusLevel, string>> = {
   ok: 'text-success',

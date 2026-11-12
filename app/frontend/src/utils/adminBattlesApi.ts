@@ -3,11 +3,9 @@
  */
 import { api } from './api';
 import type {
-  BattleDetail,
   BattleFilters,
-  BattleListResponse,
-  BattleLogResponse,
 } from '../components/admin/battles/types';
+import type { AdminBattleDetail, AdminBattleLogResponse, BattleListResponse } from '@shared/types';
 
 export const BATTLES_PAGE_SIZE = 25;
 
@@ -24,12 +22,12 @@ export function getBattleList(filters: BattleFilters, signal?: AbortSignal): Pro
   return api.get<BattleListResponse>('/api/admin/battles', { params, signal });
 }
 
-export function getBattleDetail(battleId: number, signal?: AbortSignal): Promise<BattleDetail> {
-  return api.get<BattleDetail>(`/api/admin/battles/${battleId}`, { signal });
+export function getBattleDetail(battleId: number, signal?: AbortSignal): Promise<AdminBattleDetail> {
+  return api.get<AdminBattleDetail>(`/api/admin/battles/${battleId}`, { signal });
 }
 
-export function getBattleLog(battleId: number, signal?: AbortSignal): Promise<BattleLogResponse> {
-  return api.get<BattleLogResponse>(`/api/admin/battles/${battleId}/log`, { signal });
+export function getBattleLog(battleId: number, signal?: AbortSignal): Promise<AdminBattleLogResponse> {
+  return api.get<AdminBattleLogResponse>(`/api/admin/battles/${battleId}/log`, { signal });
 }
 
 export function getBattleExportText(battleId: number): Promise<string> {

@@ -12,7 +12,7 @@ import { LEAGUE_HISTORY_WINDOW, LEAGUE_LOW_MOVEMENT_SHARE, LEAGUE_UNSUBSCRIBED_N
 import { loadLeagueHealthRows, loadRebalanceHistory } from './leagueHealthData';
 import { summariseMode } from './leagueHealthPlan';
 import { buildAttention } from './leagueHealthStatus';
-import type { LeagueHealthOverview, LeagueHealthRow, ModeRebalanceHistory } from './leagueHealthTypes';
+import type { LeagueHealthOverview, LeagueHealthRow, ModeRebalanceHistory } from '../../../shared/types';
 
 /** Pure assembly of the overview from loaded rows and rebalance history. */
 export function buildLeagueHealthOverview(

@@ -16,6 +16,7 @@ import {
   getStableSeasonHistory,
   getStableSeasonDetail,
   listSeasonsForBrowsing,
+  toSeasonListEntry,
   getSeasonDetail,
   getUnseenSeasonSummary,
   markSeasonSummarySeen,
@@ -54,7 +55,7 @@ router.get(
   authenticateToken,
   validateRequest({}),
   async (_req: AuthRequest, res: Response) => {
-    return res.json(await listSeasonsForBrowsing());
+    return res.json((await listSeasonsForBrowsing()).map(toSeasonListEntry));
   },
 );
 

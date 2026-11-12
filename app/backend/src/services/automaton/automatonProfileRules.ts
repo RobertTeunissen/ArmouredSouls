@@ -9,7 +9,7 @@
  * returns.
  */
 import { AutomatonError, AutomatonErrorCode, type AutomatonErrorCodeType } from '../../errors/automatonErrors';
-import type { StrategyParametersV1, TeamNames } from '../../types/automaton';
+import type { StrategyParametersV1 } from '../../types/automaton';
 import {
   blueprintFieldsSchema,
   blueprintRuleIssues,
@@ -26,6 +26,7 @@ import {
 import { defaultParameters } from './strategies/strategyParameters';
 import { facilityLabel } from './strategies/strategyDefinitionSchema';
 import type { UpgradeStrategy } from './strategies/strategyTypes';
+import type { TeamNames } from '../../shared/types';
 
 /** A stored blueprint in the shape the rules read. */
 export interface BlueprintRecord extends BlueprintFields {

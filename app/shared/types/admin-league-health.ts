@@ -1,19 +1,10 @@
 /**
- * Response shape of `GET /api/admin/league-health`.
- *
- * Two kinds of numbers:
- * - Structure (now): entities, instances, promotion and demotion places, and who
- *   qualifies at this moment, from the rebalancer's own planner
- *   (`league-rebalancing-planner.ts`) on the current standings.
- * - Flow (history): how many actually moved in the mode's last rebalances, from
- *   `league_history`. Each league rebalances right after its event's battles, so
- *   a snapshot taken after a rebalance always shows almost nobody qualifying;
- *   whether promotion and demotion work is judged from history.
- *
- * @module services/admin/league-health/leagueHealthTypes
+ * Wire contracts for the admin League Health page: `GET /api/admin/league-health`
+ * (backend `services/admin/league-health`) and `/league-health/season`.
  */
 
-import type { TieredLeagueMode } from '../../league/league-rules';
+/** The tiered standings modes (`TIERED_LEAGUE_MODES` in backend `services/league/league-rules.ts` satisfies it). */
+export type TieredLeagueMode = 'league_1v1' | 'league_2v2' | 'league_3v3' | 'tag_team' | 'koth' | 'grand_melee';
 
 export type LeagueHealthEntityType = 'robot' | 'team';
 
@@ -192,4 +183,48 @@ export interface LeagueHealthOverview {
   thresholds: { historyWindow: number; lowMovementShare: number; unsubscribedNoticeShare: number };
   modes: LeagueHealthModeSummary[];
   attention: LeagueHealthAttentionItem[];
+}
+
+export type LeagueSeasonStableFilter = 'all' | 'human' | 'automaton' | 'generated';
+
+export interface SeasonCycleMoves {
+  cycle: number;
+  promoted: number;
+  demoted: number;
+}
+
+export interface SeasonBoundary {
+  lower: string;
+  upper: string;
+  /** Promotions lower → upper this season. */
+  promoted: number;
+  /** Demotions upper → lower this season. */
+  demoted: number;
+  /** Promotions old enough to judge (at most `judgedThroughCycle`). */
+  judged: number;
+  /** Of those, demoted back across the boundary within the window. */
+  back: number;
+  /** back / judged, or null with nothing to judge. */
+  share: number | null;
+  /** Share above the note threshold, with at least the minimum sample. */
+  noted: boolean;
+}
+
+export interface LeagueSeasonOverview {
+  mode: TieredLeagueMode;
+  stable: LeagueSeasonStableFilter;
+  window: number;
+  noteShare: number;
+  minSample: number;
+  /** First and last cycle with moves in this mode (any stable); null when none. */
+  firstCycle: number | null;
+  lastCycle: number | null;
+  /** Promotions judged for bounce-back are at or before this cycle; null when none can be. */
+  judgedThroughCycle: number | null;
+  /** Every cycle from firstCycle to lastCycle, zeros included. */
+  cycles: SeasonCycleMoves[];
+  /** Cycles between first and last in which the mode recorded no moves at all. */
+  quietCycles: number[];
+  totals: { promoted: number; demoted: number };
+  boundaries: SeasonBoundary[];
 }

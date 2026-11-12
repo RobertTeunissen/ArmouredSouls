@@ -4,12 +4,12 @@
  */
 import type { ReactNode } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { LeagueHealthMode } from '../../../utils/adminLeagueHealthApi';
 import { LEAGUE_HEALTH_MODES, modeLabel } from '../../../utils/adminLeagueHealthFormat';
+import type { TieredLeagueMode } from '@shared/types';
 
 export interface LeagueModeTabsProps {
-  selected: LeagueHealthMode;
-  onSelect: (mode: LeagueHealthMode) => void;
+  selected: TieredLeagueMode;
+  onSelect: (mode: TieredLeagueMode) => void;
 }
 
 export function LeagueModeTabs({ selected, onSelect }: LeagueModeTabsProps): ReactNode {

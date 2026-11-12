@@ -3,9 +3,9 @@
  * strong (underpriced), bottom right = pricey and weak (overpriced). Green or
  * red only when significant; the strongest and weakest are labelled.
  */
-import type { AnalysisColumn, WeaponRow } from './types';
 import { formatEffect } from '../../../utils/adminAttributesFormat';
 import { formatCost } from '../../../utils/adminWeaponsFormat';
+import type { AnalysisColumn, WeaponRow } from '@shared/types';
 
 export interface PriceEffectScatterProps {
   weapons: WeaponRow[];

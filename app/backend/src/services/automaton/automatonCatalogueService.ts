@@ -34,8 +34,8 @@ import {
   type RefinementRow,
 } from '../../shared/utils/weaponRefinement';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
-import type { BuildFocusKey, StrategyParametersV1, TeamNames } from '../../types/automaton';
-import type { Hand, LoadoutType, Stance, WeaponFacts } from './stableFacts';
+import type { StrategyParametersV1 } from '../../types/automaton';
+import type { WeaponFacts } from './stableFacts';
 import { requiredTeamNameCounts } from './teamRule';
 import {
   buildableBlueprintCount,
@@ -47,6 +47,7 @@ import { facilityLabel } from './strategies/strategyDefinitionSchema';
 import { defaultParameters } from './strategies/strategyParameters';
 import type { StrategyRegistry } from './strategies/registry';
 import type { GoalSpec, UpgradeStrategy } from './strategies/strategyTypes';
+import type { BuildFocusKey, Hand, LoadoutType, Stance, TeamNames } from '../../shared/types';
 
 // ── Constants ────────────────────────────────────────────────────────
 

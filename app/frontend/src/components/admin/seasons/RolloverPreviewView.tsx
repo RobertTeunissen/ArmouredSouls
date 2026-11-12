@@ -4,9 +4,9 @@
  * per-table counts.
  */
 import type { ReactNode } from 'react';
-import type { RolloverPreview, StableTypeCounts } from '../../../utils/seasonApi';
 import { formatCount, groupPurgeTables } from '../../../utils/adminSeasonFormat';
 import { ADMIN_FOCUS_RING } from '../shared';
+import type { RolloverPreview, StableTypeCounts } from '@shared/types';
 
 function StableTile({ label, counts, effect, tone }: { label: string; counts: StableTypeCounts; effect: string; tone: 'keep' | 'delete' }): ReactNode {
   return (

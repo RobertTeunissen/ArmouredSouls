@@ -2,8 +2,8 @@
  * One effect value: colour band by size and sign (only when significant),
  * the number with its sign, and the standard error. Never colour alone.
  */
-import type { EffectEstimate } from './types';
 import { TONE_CLASSES, effectTone, formatEffect, formatSe } from '../../../utils/adminAttributesFormat';
+import type { EffectEstimate } from '@shared/types';
 
 export interface EffectCellProps {
   estimate: EffectEstimate;

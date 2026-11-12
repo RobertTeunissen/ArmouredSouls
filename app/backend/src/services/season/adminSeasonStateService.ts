@@ -10,40 +10,15 @@
 import prisma from '../../lib/prisma';
 import { loadEnvConfig } from '../../config/env';
 import { getSchedulerState } from '../cycle/cycleScheduler';
-import type { RolloverRunSummary } from '../../types/schedulerTypes';
-import { getCurrentSeason, type SeasonState } from './seasonService';
+import { getCurrentSeason } from './seasonService';
 import { getActiveRolloverProgress } from './seasonRolloverService';
 import { getQueuedAdminRollover, isRolloverActive } from './adminSeasonRolloverRunService';
-
-export interface AdminActiveRollover {
-  runId: number | null;
-  status: 'queued' | 'running';
-  /** `manual` (admin) or `cron` (settlement). */
-  trigger: 'manual' | 'cron';
-  triggeredBy: { userId: number; username: string | null } | null;
-  queuedAt: string | null;
-  startedAt: string | null;
-  /** Stage progress once it executes; null while queued. */
-  progress: RolloverRunSummary | null;
-}
-
-export interface AdminSeasonState extends SeasonState {
-  /** A rollover is queued or executing; the trigger stays disabled. */
-  rolloverInProgress: boolean;
-  balanceChangesAppropriate: boolean;
-  config: {
-    seasonLengthCycles: number;
-    preparationLengthCycles: number;
-    countdownCycles: number;
-    accoladeDepth: number;
-    retainedImagesPerStable: number;
-  };
-  /** When the current season opened (its preparation phase began). */
-  startedAt: string | null;
-  /** The scheduler's next settlement, or null when automated scheduling is off. */
-  nextSettlementAt: string | null;
-  activeRollover: AdminActiveRollover | null;
-}
+import type {
+  AdminActiveRollover,
+  AdminSeasonState,
+  RolloverRunSummary,
+  SeasonState,
+} from '../../shared/types';
 
 async function usernameOf(userId: number | null): Promise<AdminActiveRollover['triggeredBy']> {
   if (userId === null) return null;

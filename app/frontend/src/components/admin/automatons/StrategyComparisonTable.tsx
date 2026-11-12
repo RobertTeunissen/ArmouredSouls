@@ -6,10 +6,10 @@
  * card per strategy below. "Performance by mode" follows the table.
  */
 import type { ReactNode } from 'react';
-import type { ComparisonRow, StrategyComparison } from '../../../utils/automatonAdminApi';
 import { FOCUS_RING } from './ui';
 import { formatCredits, formatNumber, tierLabel } from './automatonText';
 import { StrategyModePerformance } from './StrategyModePerformance';
+import type { ComparisonRow, StrategyComparison } from '@shared/types';
 
 export interface StrategyComparisonTableProps {
   comparison: StrategyComparison | null;

@@ -9,14 +9,16 @@ import {
 } from '../src/services/financial/robotDeploymentQueryService';
 import type {
   BattleIncomeBreakdown,
-  FinanceOverviewResponse,
   RepairBreakdown,
   ReportPeriodSelection,
-  RobotDetailResponse,
-  RobotSummaryResponse,
   StableMetric,
   StreamingRevenueBreakdown,
 } from '../src/types';
+import type {
+  FinanceOverviewResponse,
+  RobotDetailResponse,
+  RobotSummaryResponse,
+} from '../src/shared/types';
 
 const CYCLE_COUNT = 100;
 const RECORDS_PER_STABLE = 300;

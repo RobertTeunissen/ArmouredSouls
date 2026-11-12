@@ -28,7 +28,7 @@ import {
 } from '../components/hall-of-records';
 import type { RecordDefinition, RecordGroupKey } from '../components/hall-of-records';
 import { buildRecordCatalogue, findMyPlaces, summariseMyPlaces } from '../utils/hallOfRecords';
-import type { SeasonState } from '../utils/seasonApi';
+import type { SeasonState } from '@shared/types';
 
 function isGroup(value: string | null): value is RecordGroupKey {
   return value !== null && (RECORD_GROUPS as readonly string[]).includes(value);

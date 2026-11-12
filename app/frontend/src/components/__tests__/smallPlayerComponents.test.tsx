@@ -11,7 +11,8 @@ import KothMatchCard from '../match-cards/KothMatchCard';
 import { RobotSelector } from '../battle-detail/RobotSelector';
 import { PlaybackUnavailableNotice } from '../battle-detail/PlaybackUnavailableNotice';
 import type { UnlockedAchievement } from '../../utils/achievementUtils';
-import type { BattleLogParticipant, ScheduledMatch } from '../../utils/matchmakingApi';
+import type { ScheduledMatch } from '../../utils/matchmakingApi';
+import type { BattleLogParticipant } from '@shared/types';
 
 afterEach(() => {
   vi.useRealTimers();

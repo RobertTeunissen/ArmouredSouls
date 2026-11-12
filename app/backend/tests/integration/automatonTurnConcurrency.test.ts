@@ -32,7 +32,8 @@ import { requiredTeamNameCountsFor } from '../../src/services/automaton/automato
 import { getStrategyRegistry } from '../../src/services/automaton/strategies/defaultRegistry';
 import { SUBSCRIBABLE_EVENT_TYPES, isRegisteredEvent, registerSubscribableEvent } from '../../src/services/subscription/eventRegistry';
 import { deleteAutomatonStables } from '../helpers/automatonStable';
-import type { TeamNames, TurnActionRecord } from '../../src/types/automaton';
+import type { TurnActionRecord } from '../../src/types/automaton';
+import type { TeamNames } from '../../src/shared/types';
 
 jest.setTimeout(240_000);
 

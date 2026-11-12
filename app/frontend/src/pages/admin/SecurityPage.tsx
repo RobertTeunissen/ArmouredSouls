@@ -17,10 +17,11 @@ import { ADMIN_FOCUS_RING, AdminPageHeader, AdminPanel, PanelError, PanelSkeleto
 import { SignalCards, SignalSourcesTable, SignalStablesTable, SignalsChart } from '../../components/admin/security';
 import { ApiError } from '../../utils/ApiError';
 import { isAbortError } from '../../utils/abort';
-import { getSecurityOverview, SECURITY_WINDOWS, type SecurityOverview } from '../../utils/adminSecurityApi';
+import { getSecurityOverview, SECURITY_WINDOWS } from '../../utils/adminSecurityApi';
 import { WINDOW_LABELS, firedSummary, readSecurityWindow, writeSecurityWindow } from '../../utils/adminSecurityFormat';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
 import { dayMonth } from '../../utils/adminImagesFormat';
+import type { SecurityOverview } from '@shared/types';
 
 function SecurityPage(): React.ReactElement {
   const [params, setParams] = useSearchParams();

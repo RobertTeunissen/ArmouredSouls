@@ -295,7 +295,8 @@ export function buildRobotReadinessNotifications(input: RobotReadinessInput): No
         icon: '📋',
         message: `${first.name} has no event subscriptions${moreSuffix(noSubRobots.length)}`,
         detail: 'Subscribe to at least one event to enter battles',
-        action: { label: 'Manage Subscriptions', to: `/robots/${first.id}` },
+        // Subscriptions are managed in the Booking Office; /robots/:id is the public profile (#607).
+        action: { label: 'Manage Subscriptions', to: '/booking-office' },
       });
     }
 
@@ -319,7 +320,7 @@ export function buildRobotReadinessNotifications(input: RobotReadinessInput): No
         icon: '📬',
         message: `${first.name} has ${free} subscription slot${free > 1 ? 's' : ''} available${moreSuffix(slotsAvailable.length)}`,
         detail: 'Subscribe to more events to fight more often',
-        action: { label: 'View Subscriptions', to: `/robots/${first.id}` },
+        action: { label: 'View Subscriptions', to: '/booking-office' },
       });
     }
   }

@@ -5,7 +5,6 @@
 import { Fragment, useId } from 'react';
 import type { ReactNode } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { LeagueHealthModeSummary } from '../../../utils/adminLeagueHealthApi';
 import {
   activeOfTotal,
   demotionText,
@@ -19,6 +18,7 @@ import {
 import { StableMixBar, StableMixLegend } from './StableMixBar';
 import { TierInstances } from './TierInstances';
 import { STATUS_TEXT } from './leagueHealthTones';
+import type { LeagueHealthModeSummary } from '@shared/types';
 
 export interface TierTableProps {
   mode: LeagueHealthModeSummary;

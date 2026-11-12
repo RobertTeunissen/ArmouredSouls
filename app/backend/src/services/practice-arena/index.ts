@@ -29,8 +29,4 @@ export {
   classifyRequest,
   getPracticeArenaOverview,
   type PracticeOutcome,
-  type PracticeMatchup,
-  type PracticeArenaOverview,
-  type PracticeDayStats,
-  type PracticeUsage,
 } from './practiceArenaUsageService';

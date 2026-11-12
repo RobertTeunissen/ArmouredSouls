@@ -5,7 +5,6 @@
 import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING } from '../shared';
 import { ResultPill, StableTag } from './BattleBadges';
-import type { BattleListRow, BattleSideSummary } from './types';
 import {
   endedByLabel,
   fieldBreakdown,
@@ -14,6 +13,7 @@ import {
   modeDetail,
   modeLabel,
 } from '../../../utils/adminBattlesFormat';
+import type { BattleListRow, BattleSideSummary } from '@shared/types';
 
 export interface BattlesTableProps {
   battles: BattleListRow[];

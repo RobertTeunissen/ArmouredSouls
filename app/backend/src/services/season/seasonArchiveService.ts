@@ -25,8 +25,6 @@ import logger from '../../config/logger';
 import { loadEnvConfig } from '../../config/env';
 import type { StableType } from '../../../generated/prisma';
 import type {
-  ArchivedStanding,
-  ArchivedTeamMembership,
   ArchivedTeamStanding,
   ArchivedFacility,
 } from '../../types';
@@ -40,6 +38,7 @@ import {
   type RankKey,
 } from './instanceRank';
 import { getStableBattleOverlapsByUser } from '../auth/stable-battle-overlap';
+import type { ArchivedStanding, ArchivedTeamMembership } from '../../shared/types';
 
 /** Batch size for archive writes — small enough that a crash loses little. */
 const ARCHIVE_BATCH_SIZE = 50;

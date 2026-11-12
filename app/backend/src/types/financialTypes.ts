@@ -6,6 +6,7 @@
  * time of a mutation; readers must not re-derive historical amounts from live
  * facilities, prestige, fame, quotes, or current formula code.
  */
+import type { FinanceTaxonomy } from '../shared/types';
 
 export const TRANSACTION_TYPES = [
   'battle_income',
@@ -20,7 +21,9 @@ export const TRANSACTION_TYPES = [
   'achievement_reward',
   'passive_income',
   'operating_costs',
-] as const;
+  // The Finance Center statement labels lines with these; the shared
+  // contract must list every one (#592).
+] as const satisfies readonly FinanceTaxonomy[];
 
 export type TransactionType = (typeof TRANSACTION_TYPES)[number];
 

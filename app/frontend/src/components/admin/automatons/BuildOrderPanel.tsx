@@ -8,7 +8,6 @@
  */
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import type { AttributePlanView, BuildOrderDescriptor, PreviewAction, PreviewGoal } from '../../../utils/automatonAdminApi';
 import { ActionButton, Card, FOCUS_RING, NARROW_INPUT_CLASS, Pill } from './ui';
 import {
   BUILD_FOCUS_NAMES,
@@ -19,6 +18,7 @@ import {
   targetError,
   targetText,
 } from './automatonText';
+import type { AttributePlanView, BuildOrderDescriptor, PreviewAction, PreviewGoal } from '@shared/types';
 
 export type BuildOrderRow = BuildOrderDescriptor & { target: number };
 

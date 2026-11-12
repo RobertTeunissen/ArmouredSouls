@@ -11,9 +11,9 @@ import prisma from '../../src/lib/prisma';
 import { runCatalogueSyncCli, type CatalogueCliIo } from '../../src/services/automaton/catalogueSync';
 import { getStrategyRegistry } from '../../src/services/automaton/strategies/defaultRegistry';
 import { compareCatalogueKeys, type CatalogueEntry } from '../../src/services/automaton/automatonCatalogueService';
-import type { CatalogueSyncSummary } from '../../src/types/automaton';
 import { validEntry } from '../../src/services/automaton/__tests__/helpers/catalogueTestSupport';
 import { createAutomatonStable, deleteAutomatonStables } from '../helpers/automatonStable';
+import type { CatalogueSyncSummary } from '../../src/shared/types';
 
 const suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 const SCRATCH = path.join(__dirname, `.t55sync-${suffix}`);

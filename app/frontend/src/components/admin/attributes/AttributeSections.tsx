@@ -7,14 +7,6 @@ import { EffectValue } from './EffectCell';
 import {
   ANALYSIS_COLUMNS,
   ATTRIBUTE_GROUPS,
-  type AnalysisColumn,
-  type AnalysisColumnSummary,
-  type AttributeEffectRow,
-  type AttributeGroup,
-  type BuildProfileRow,
-  type GroupEffectRow,
-  type GroupPairRow,
-  type LayerFitSummary,
 } from './types';
 import {
   attributeLabel,
@@ -28,6 +20,16 @@ import {
   layerStepLabel,
   profileLabel,
 } from '../../../utils/adminAttributesFormat';
+import type {
+  AnalysisColumn,
+  AnalysisColumnSummary,
+  AttributeEffectRow,
+  AttributeGroup,
+  BuildProfileRow,
+  GroupEffectRow,
+  GroupPairRow,
+  LayerFitSummary,
+} from '@shared/types';
 
 // ── Column summary ───────────────────────────────────────────────────
 

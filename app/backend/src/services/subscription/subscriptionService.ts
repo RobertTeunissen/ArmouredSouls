@@ -54,6 +54,7 @@ import {
   ensureStandingsForSubscriptionGain,
   lockRobotTeamMembership,
 } from '../standings/standingPlacement';
+import type { StableOverview, SubscriptionChangeResult } from '../../shared/types';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -74,34 +75,6 @@ export interface RobotSubscriptionInfo {
   heldSlots: string[];
   /** Next moment each event books matches, ISO-8601 UTC, keyed by event type. */
   nextSchedulingMoments: Record<string, string>;
-}
-
-export interface StableOverviewRobot {
-  robotId: number;
-  robotName: string;
-  subscriptions: { eventType: string; status: string }[];
-  /** Events this robot still owes a match to — the slot is not free yet. */
-  heldSlots: string[];
-  cap: number;
-}
-
-export interface StableOverview {
-  robots: StableOverviewRobot[];
-  registeredEvents: { type: string; label: string }[];
-  bookingOfficeLevel: number;
-  nextSchedulingMoments: Record<string, string>;
-}
-
-/** Outcome of a subscription change, single or bulk. */
-export interface SubscriptionChangeResult {
-  added: string[];
-  removed: string[];
-  /** Slots still occupied by a booked match after the change. */
-  heldSlots: string[];
-  /** Slots occupied afterwards: subscriptions plus held slots. */
-  occupiedCount: number;
-  cap: number;
-  level: number;
 }
 
 // ── Slot accounting ──────────────────────────────────────────────────

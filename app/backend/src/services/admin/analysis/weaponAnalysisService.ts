@@ -20,13 +20,8 @@ import {
   TIER_MIN_ROBOTS,
   TIER_SEGMENTS,
   USAGE_TIERS,
-  type AnalysisColumn,
-  type AnalysisRange,
-  type AnalysisStrength,
-  type MatchupView,
-  type UsageTier,
 } from './analysisOptions';
-import { REFINEMENT_TIERS, REFINEMENT_TIER_BITS, type LayeredBuild, type RefinementTier } from './attributeLayers';
+import { REFINEMENT_TIERS, REFINEMENT_TIER_BITS, type LayeredBuild } from './attributeLayers';
 import { fresh, getDataset, getReadiness, remember, type CacheEntry } from './analysisDataset';
 import { INVESTMENT_STEP, NO_ESTIMATE, PP_PER_LOGIT, estimate, round, unitContrast, weightedContrast } from './analysisEffects';
 import { fitLogistic, sigmoid, type FitResult } from './logisticFit';
@@ -52,19 +47,25 @@ import {
   type RawTallies,
 } from './weaponFeatures';
 import type {
+  AnalysisColumn,
+  AnalysisRange,
+  AnalysisStrength,
   ArchetypeRow,
   ChoiceResult,
   ColumnMatchups,
   CoverageSummary,
   MatchupCell,
   MatchupGrid,
+  MatchupView,
   RefinementSummary,
+  RefinementTier,
   TierUsage,
+  UsageTier,
   WeaponAnalysisReady,
   WeaponAnalysisResponse,
   WeaponColumnSummary,
   WeaponRow,
-} from './weaponAnalysisTypes';
+} from '../../../shared/types';
 
 const MAX_RESULTS = 8;
 

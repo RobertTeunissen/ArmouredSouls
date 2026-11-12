@@ -9,28 +9,10 @@
 
 import prisma from '../../lib/prisma';
 import { BANKRUPTCY_RISK_THRESHOLD } from './adminThresholds';
+import type { StableCashflow, StableCashflowCycle } from '../../shared/types';
 
 /** Cycles the cashflow covers, including the ledger's cycle in progress. */
 export const STABLE_CASHFLOW_CYCLES = 10;
-
-export interface StableCashflowCycle {
-  cycle: number;
-  /** Balance after the cycle's last ledger row. */
-  balance: number;
-  earned: number;
-  runningCosts: number;
-  bought: number;
-}
-
-export interface StableCashflow {
-  /** Cycles with ledger rows, oldest first. */
-  points: StableCashflowCycle[];
-  earned: number;
-  runningCosts: number;
-  bought: number;
-  /** Cycles that ended below the low-balance threshold. */
-  lowBalanceCycles: number;
-}
 
 interface CashflowRow {
   cycle_number: number;

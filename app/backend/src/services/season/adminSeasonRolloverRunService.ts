@@ -21,8 +21,9 @@ import { recordAction } from '../admin/adminAuditLogService';
 import { getActiveJobNames, runExclusive } from '../cycle/cycleScheduler';
 import { recordQueued } from '../cycle/schedulerRunStore';
 import { SEASON_ROLLOVER_JOB_NAME } from '../../types/schedulerTypes';
-import { executeSeasonRollover, isRolloverInProgress, type RolloverResult } from './seasonRolloverService';
+import { executeSeasonRollover, isRolloverInProgress } from './seasonRolloverService';
 import { pendingRolloverSummary } from './rolloverProgress';
+import type { RolloverResult } from '../../shared/types';
 
 /** A queued admin rollover, until it starts executing. */
 export interface QueuedAdminRollover {

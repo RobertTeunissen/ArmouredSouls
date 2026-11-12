@@ -4,7 +4,6 @@
  * A table from `md`, a list below it; Run buttons are at least 44 × 44 px.
  */
 import type { ReactNode } from 'react';
-import type { SchedulerSlot } from '../../../utils/adminCycleApi';
 import {
   elapsedSince,
   formatDayTime,
@@ -15,15 +14,16 @@ import {
 } from '../../../utils/adminCycleFormat';
 import { AdminPanel, ADMIN_FOCUS_RING } from '../shared';
 import { RunStatus } from './RunStatus';
+import type { SchedulerSlotView } from '@shared/types';
 
 export interface DailyScheduleProps {
-  slots: SchedulerSlot[] | null;
+  slots: SchedulerSlotView[] | null;
   loading: boolean;
   now: Date;
-  onRun: (slot: SchedulerSlot) => void;
+  onRun: (slot: SchedulerSlotView) => void;
 }
 
-function RunButton({ slot, onRun }: { slot: SchedulerSlot; onRun: (slot: SchedulerSlot) => void }): ReactNode {
+function RunButton({ slot, onRun }: { slot: SchedulerSlotView; onRun: (slot: SchedulerSlotView) => void }): ReactNode {
   if (slot.activeRun) {
     return <span className="inline-flex min-h-11 items-center text-xs text-warning">{slot.activeRun.status === 'running' ? 'Running' : 'Queued'}</span>;
   }
@@ -40,7 +40,7 @@ function RunButton({ slot, onRun }: { slot: SchedulerSlot; onRun: (slot: Schedul
 }
 
 /** What the row shows: the active run when there is one, else the last finished one. */
-function shownRun(slot: SchedulerSlot) {
+function shownRun(slot: SchedulerSlotView) {
   return slot.activeRun ?? slot.lastRun;
 }
 

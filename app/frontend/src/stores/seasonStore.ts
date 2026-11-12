@@ -8,8 +8,9 @@
  */
 
 import { create } from 'zustand';
-import { getCurrentSeason, type SeasonState as SeasonStateDto } from '../utils/seasonApi';
+import { getCurrentSeason } from '../utils/seasonApi';
 import { createLogger } from '../utils/logger';
+import type { SeasonState as SeasonStateDto } from '@shared/types';
 
 const log = createLogger('seasonStore');
 

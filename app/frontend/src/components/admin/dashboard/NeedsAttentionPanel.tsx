@@ -5,7 +5,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { DashboardStatus } from '../../../utils/adminDashboardApi';
 import {
   countOpenItems,
   deriveAttentionItems,
@@ -14,6 +13,7 @@ import {
   type AttentionSeverity,
 } from '../../../utils/adminDashboardFormat';
 import { AdminPanel } from '../shared/AdminPanel';
+import type { DashboardStatus } from '@shared/types';
 
 export interface NeedsAttentionPanelProps {
   status: DashboardStatus | null;

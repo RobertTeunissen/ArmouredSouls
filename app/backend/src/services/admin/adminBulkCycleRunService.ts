@@ -15,7 +15,8 @@ import { executeBulkCycles, type BulkCycleOptions, type BulkCycleResult } from '
 import { getActiveJobNames, runExclusive } from '../cycle/cycleScheduler';
 import { markFinished, markRunning, recordQueued } from '../cycle/schedulerRunStore';
 import { SchedulerError, SchedulerErrorCode } from '../../errors/schedulerErrors';
-import { BULK_CYCLES_JOB_NAME, type SchedulerRunSummary } from '../../types/schedulerTypes';
+import { BULK_CYCLES_JOB_NAME } from '../../types/schedulerTypes';
+import type { SchedulerRunSummary } from '../../shared/types';
 
 /** A bulk start that has not reached the lock yet (closes the double-click gap). */
 let pendingStart = false;

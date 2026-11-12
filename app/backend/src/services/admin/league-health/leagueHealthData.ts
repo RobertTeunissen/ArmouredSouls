@@ -18,7 +18,7 @@
 import prisma from '../../../lib/prisma';
 import { Prisma } from '../../../../generated/prisma';
 import { TIERED_LEAGUE_MODES, TieredLeagueMode } from '../../league/league-rules';
-import type { LeagueHealthRow, ModeRebalanceHistory } from './leagueHealthTypes';
+import type { LeagueHealthRow, ModeRebalanceHistory } from '../../../shared/types';
 
 interface RawRow {
   entity_id: number;

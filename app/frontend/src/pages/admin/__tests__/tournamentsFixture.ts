@@ -1,10 +1,11 @@
-/** Admin Tournaments overview for page and format tests (shape of ACC, 30 Oct 2026). */
 import type {
   CurrentTournament,
   TournamentOverview,
   TournamentType,
   TournamentTypeOverview,
-} from '../../../utils/adminTournamentsApi';
+} from '@shared/types';
+
+/** Admin Tournaments overview for page and format tests (shape of ACC, 30 Oct 2026). */
 
 export function current(overrides: Partial<CurrentTournament> = {}): CurrentTournament {
   return {

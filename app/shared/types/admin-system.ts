@@ -1,5 +1,10 @@
-/** Response of `GET /api/admin/system/overview` (the admin System page). */
-import type { BackupStatus } from '../../monitoring/backupStatus';
+/**
+ * Wire contract for the admin System page: `GET /api/admin/system/overview`
+ * (backend `services/admin/system`).
+ */
+
+/** Newest database backup state (backend `services/monitoring/backupStatus.ts`). */
+export type BackupStatus = 'ok' | 'stale' | 'missing' | 'not_applicable';
 
 export interface SystemDisk {
   usagePercent: number;

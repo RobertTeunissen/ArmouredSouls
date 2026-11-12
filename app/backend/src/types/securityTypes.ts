@@ -6,6 +6,7 @@
  * A signal either fired or it did not: there are no severity levels. Admin
  * page views and routine purchases are not signals and are not stored.
  */
+import type { SecuritySignal } from '../shared/types';
 
 export const SECURITY_SIGNALS = [
   /** Wrong password, unknown account, or an Automaton name at login. */
@@ -20,8 +21,9 @@ export const SECURITY_SIGNALS = [
   'robot_creation_burst',
   /** A request without a logged-in user failed schema validation. */
   'malformed_request',
-] as const;
-export type SecuritySignal = (typeof SECURITY_SIGNALS)[number];
+] as const satisfies readonly SecuritySignal[];
+// The signal union is a wire contract (shared admin-security.ts).
+export type { SecuritySignal };
 
 /** Why a login failed. Never the submitted name or password. */
 export type FailedLoginReason = 'unknown_account' | 'wrong_password' | 'automaton';
@@ -40,11 +42,3 @@ export interface SecurityEventDetails {
   violationType?: string;
 }
 
-/** `uploaded_images.moderation_scores`: the nsfwjs class scores at upload. */
-export interface ModerationScores {
-  drawing: number;
-  hentai: number;
-  neutral: number;
-  porn: number;
-  sexy: number;
-}

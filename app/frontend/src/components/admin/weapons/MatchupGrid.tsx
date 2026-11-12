@@ -4,9 +4,9 @@
  * comparisons only (1v1 and Free-for-all), so team modes have none.
  */
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { ColumnMatchups, MatchupView } from './types';
 import { MATCHUP_VIEW_OPTIONS, effectCellClass, formatWinRate, matchupEstimate, matchupLabel } from '../../../utils/adminWeaponsFormat';
 import { formatCount } from '../../../utils/adminAttributesFormat';
+import type { ColumnMatchups, MatchupView } from '@shared/types';
 
 export interface MatchupGridProps {
   matchups: ColumnMatchups | null;

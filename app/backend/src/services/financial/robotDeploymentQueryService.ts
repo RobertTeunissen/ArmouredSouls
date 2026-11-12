@@ -2,18 +2,20 @@ import { Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { AppError } from '../../errors/AppError';
 import type {
+  ReportPeriodSelection,
+} from '../../types';
+import { normalizeFinanceReportPeriod } from './financeReportPeriod';
+import { getFinanceReportReferenceSecret } from './playerSafeSourceReference';
+import type {
   ReportLimitation,
   ReportPeriodMetadata,
-  ReportPeriodSelection,
   RobotDetailResponse,
   RobotEventExposure,
   RobotFinancialEvent,
   RobotFinancialSummary,
   RobotSummaryResponse,
   SourceProvenance,
-} from '../../types';
-import { normalizeFinanceReportPeriod } from './financeReportPeriod';
-import { getFinanceReportReferenceSecret } from './playerSafeSourceReference';
+} from '../../shared/types';
 
 interface RobotEventMetricsRow {
   totalItems: number;

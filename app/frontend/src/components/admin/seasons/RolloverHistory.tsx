@@ -4,11 +4,11 @@
  * failed before it. Attempts on the current season that failed come first.
  */
 import type { ReactNode } from 'react';
-import type { RolloverAttempt, SeasonHistoryEntry, SeasonRolloverHistory } from '../../../utils/seasonApi';
 import { formatDuration } from '../../../utils/adminCycleFormat';
 import { attemptProblemText, attemptTriggerLabel, formatCount, formatDate, formatDateTime } from '../../../utils/adminSeasonFormat';
 import { ADMIN_FOCUS_RING, AdminPanel } from '../shared';
 import { RolloverStages } from './RolloverStages';
+import type { RolloverAttempt, SeasonHistoryEntry, SeasonRolloverHistory } from '@shared/types';
 
 export interface RolloverHistoryProps {
   history: SeasonRolloverHistory | null;

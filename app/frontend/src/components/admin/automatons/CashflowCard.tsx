@@ -6,10 +6,11 @@
  */
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { getProfileCashflow, type ProfileCashflow } from '../../../utils/automatonAdminApi';
+import { getProfileCashflow } from '../../../utils/automatonAdminApi';
 import { Card } from './ui';
 import { errorText } from './requestErrors';
 import { formatCredits } from './automatonText';
+import type { ProfileCashflow } from '@shared/types';
 
 export interface CashflowCardProps {
   catalogueKey: string;

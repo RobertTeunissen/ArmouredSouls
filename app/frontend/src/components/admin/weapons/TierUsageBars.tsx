@@ -3,9 +3,9 @@
  * archetypes that peak in some tier as segments and the rest as "Other".
  * Shows where the meta converges (usage, not win rate).
  */
-import type { TierUsage } from './types';
 import { archetypeLabel, formatUsage, tierLabel } from '../../../utils/adminWeaponsFormat';
 import { formatCount } from '../../../utils/adminAttributesFormat';
+import type { TierUsage } from '@shared/types';
 
 export interface TierUsageBarsProps {
   usage: TierUsage;

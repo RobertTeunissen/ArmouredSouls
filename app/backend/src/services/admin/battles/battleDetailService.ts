@@ -13,7 +13,7 @@ import { loadBattleFacts, outcomeOf, sideLabel, type BattleCoreRow, type BattleF
 import { queryBattleRows } from './battleListService';
 import { comparePayouts, cycleFromEntries, loadBattleLedgerEntries, type LedgerEntry } from './battlePayoutCheck';
 import { loadCombatLogStatus } from './battleLogAccess';
-import type { BattleDetailResponse, BattleParticipantDetail, BattleSideDetail } from './battleTypes';
+import type { AdminBattleDetail, BattleParticipantDetail, BattleSideDetail } from '../../../shared/types';
 
 interface SummaryFacts {
   perRobot: Map<string, RobotCombatStats>;
@@ -66,7 +66,7 @@ export async function loadBattleCore(battleId: number): Promise<BattleCoreRow> {
 }
 
 export interface BattleDetailBundle {
-  detail: BattleDetailResponse;
+  detail: AdminBattleDetail;
   ledgerEntries: LedgerEntry[];
 }
 
@@ -129,7 +129,7 @@ export async function loadBattleDetailBundle(battleId: number): Promise<BattleDe
     }
   }
 
-  const detail: BattleDetailResponse = {
+  const detail: AdminBattleDetail = {
     id: row.id,
     battleType: row.battleType,
     leagueType: row.leagueType,
@@ -155,6 +155,6 @@ export async function loadBattleDetailBundle(battleId: number): Promise<BattleDe
   return { detail, ledgerEntries };
 }
 
-export async function getAdminBattleDetail(battleId: number): Promise<BattleDetailResponse> {
+export async function getAdminBattleDetail(battleId: number): Promise<AdminBattleDetail> {
   return (await loadBattleDetailBundle(battleId)).detail;
 }

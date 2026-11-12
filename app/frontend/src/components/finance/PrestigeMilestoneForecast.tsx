@@ -1,5 +1,5 @@
 import React from 'react';
-import type { PrestigeMilestoneForecast as Forecast } from '../../utils/financeApi';
+import type { PrestigeMilestoneForecast as Forecast } from '@shared/types';
 
 const STATUS_COPY: Record<Exclude<Forecast['status'], 'available'>, string> = {
   insufficient_history: 'Not enough completed-cycle history is available for an estimate.',

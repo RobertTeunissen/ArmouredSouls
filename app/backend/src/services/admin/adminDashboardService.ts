@@ -2,46 +2,7 @@ import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
 import { countHumanPlayerActivity } from './adminPlayerActivityService';
 import { findPreviousKpiSnapshot } from './adminKpiSnapshotService';
-
-/** Human-player activity block of the dashboard KPIs (always human stables). */
-export interface DashboardHumanPlayers {
-  total: number;
-  active7d: number;
-  new7d: number;
-  inactive3d: number;
-  /**
-   * The same counts about seven days ago. `new7d` is exact (from `createdAt`);
-   * `active7d`/`inactive3d` come from the settlement snapshot and are null until
-   * one exists for that day.
-   */
-  previous: { active7d: number | null; new7d: number; inactive3d: number | null };
-}
-
-/** Robot block of the dashboard KPIs (respects the dashboard filter). */
-export interface DashboardRobots {
-  total: number;
-  battleReady: number;
-  /** One decimal. */
-  battleReadyPercentage: number;
-}
-
-export interface DashboardKpis {
-  totalUsers: number;
-  newUsersLast7d: number;
-  totalRobots: number;
-  battlesLast24h: number;
-  totalBattles: number;
-  /**
-   * @deprecated Counts users with a robot updated in 7 days, which battles do
-   * for nearly every stable. Use `humanPlayers.active7d` (login-based).
-   */
-  activeUsersLast7d: number;
-  currentCycle: number;
-  lastCycleAt: string | null;
-  humanPlayers: DashboardHumanPlayers;
-  robots: DashboardRobots;
-  timestamp: string;
-}
+import type { DashboardKpis } from '../../shared/types';
 
 /** Percentage with one decimal; 0 for an empty population. */
 export function percentageOneDecimal(part: number, whole: number): number {

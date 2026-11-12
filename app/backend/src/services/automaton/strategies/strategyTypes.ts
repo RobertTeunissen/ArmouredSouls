@@ -10,46 +10,10 @@ import type { z } from 'zod';
 import type { StrategyParametersV1 } from '../../../types/automaton';
 import type { Goal } from '../goals/goalTypes';
 import type { FacilityType } from '../stableFacts';
+import type { GoalType, StrategyDefinitionFile, TargetBounds } from '../../../shared/types';
 
 /** Goal_Library types a Build_Order entry can reference. */
 export const GOAL_TYPES = ['robots', 'facility', 'attributes', 'weapons', 'refine', 'economy'] as const;
-export type GoalType = (typeof GOAL_TYPES)[number];
-
-/** A target as written in a Strategy_Definition_File: a number, or `"max"` (attributes only). */
-export type FileTargetValue = number | 'max';
-
-/** The `goal` of a Build_Order entry. */
-export type FileGoalReference =
-  | { type: 'robots' }
-  | { type: 'facility'; facilityType: FacilityType }
-  | { type: 'attributes' }
-  | { type: 'weapons' }
-  | { type: 'refine' }
-  | { type: 'economy' };
-
-export interface FileBuildOrderEntry {
-  position: number;
-  goal: FileGoalReference;
-  defaultTarget: FileTargetValue;
-  bounds: { min: FileTargetValue; max: FileTargetValue };
-}
-
-/** One Strategy_Definition_File (`config/automaton-strategies/{key}.v{version}.json`). */
-export interface StrategyDefinitionFile {
-  schemaVersion: 1;
-  key: string;
-  version: number;
-  displayName: string;
-  description: string;
-  buildOrder: FileBuildOrderEntry[];
-}
-
-/** Numeric Goal_Target bounds; a `Max` attributes Goal stores 50..50. */
-export interface TargetBounds {
-  min: number;
-  max: number;
-}
-
 /** A Build_Order entry with its derived id and numeric targets (no Goal instance). */
 export interface GoalSpec {
   /** `{key}.v{version}.{position:02}.{type}[.{facilityType}]`. */

@@ -10,8 +10,9 @@
 import { z } from 'zod';
 import type { StrategyParametersV1 } from '../../../types/automaton';
 import { facilityLabel } from './strategyDefinitionSchema';
-import type { GoalSpec, GoalType, TargetBounds } from './strategyTypes';
+import type { GoalSpec } from './strategyTypes';
 import type { FacilityType } from '../stableFacts';
+import type { BuildOrderDescriptor, GoalType, TargetBounds } from '../../../shared/types';
 
 function targetSchema(spec: GoalSpec): z.ZodNumber {
   const message = spec.isMax ? 'Allowed: Max' : `Allowed ${spec.bounds.min}–${spec.bounds.max}`;
@@ -72,20 +73,6 @@ function buysText(type: GoalType, facilityType: FacilityType | undefined, isMax:
         : `${label} levels up to the target`;
     }
   }
-}
-
-export interface BuildOrderDescriptor {
-  position: number;
-  goalId: string;
-  type: GoalType;
-  facilityType?: FacilityType;
-  /** "Robots", "Booking Office", "Attributes", "Weapons", "Refine". */
-  label: string;
-  defaultTarget: number;
-  bounds: TargetBounds;
-  isMax: boolean;
-  /** What the Goal buys, including its Goal_Chain. */
-  buys: string;
 }
 
 /** Numbered Build_Order descriptors for the admin panels (R6.3, R6.9). */

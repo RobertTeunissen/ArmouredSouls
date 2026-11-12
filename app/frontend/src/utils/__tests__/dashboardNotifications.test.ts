@@ -218,6 +218,19 @@ describe('buildRobotReadinessNotifications', () => {
     });
     expect(result).toHaveLength(1);
     expect(result[0].message).toBe('TwoFree has 2 subscription slots available (+1 more)');
+    // #607: subscriptions live in the Booking Office, not on the robot profile.
+    expect(result[0].action).toEqual({ label: 'View Subscriptions', to: '/booking-office' });
+  });
+
+  it('should send a robot without subscriptions to the Booking Office', () => {
+    const result = readiness({
+      robots: [robot({ id: 1, name: 'NoSubs' })],
+      subscriptionOverview: overviewFor([{ robotId: 1, subs: [] }]),
+    });
+    expect(result[0]).toMatchObject({
+      key: 'readiness-no-subscriptions',
+      action: { label: 'Manage Subscriptions', to: '/booking-office' },
+    });
   });
 
   it('should not report free slots for a robot at its cap', () => {

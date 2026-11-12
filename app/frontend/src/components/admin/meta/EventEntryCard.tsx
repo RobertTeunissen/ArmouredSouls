@@ -5,10 +5,10 @@
  */
 import type { ReactNode } from 'react';
 import { AdminPanel } from '../shared';
-import type { MetaEventEntry } from '../../../utils/adminMetaApi';
 import { formatCount, formatDecimal } from '../../../utils/adminDashboardFormat';
 import { eventLabel, formatPercentOf } from '../../../utils/adminMetaFormat';
 import { BarRow, MetaStat, SectionLabel } from './metaParts';
+import type { MetaEventEntry } from '@shared/types';
 
 export interface EventEntryCardProps {
   eventEntry: MetaEventEntry | null;

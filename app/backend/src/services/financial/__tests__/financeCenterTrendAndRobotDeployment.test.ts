@@ -1,4 +1,4 @@
-import type { FinancialRecordProjection, ReportPeriodMetadata } from '../../../types';
+import type { FinancialRecordProjection } from '../../../types';
 import type { FinanceEvidenceView } from '../financeReportQueryService';
 
 const mockTransaction = jest.fn();
@@ -24,6 +24,7 @@ jest.mock('../financeReportPeriod', () => ({
 
 import { getFinanceHistory } from '../financeReportTrendService';
 import { getRobotFinancialEvents, getRobotFinancialSummaries } from '../robotDeploymentQueryService';
+import type { ReportPeriodMetadata } from '../../../shared/types';
 
 const AS_OF = new Date('2026-02-04T12:00:00.000Z');
 

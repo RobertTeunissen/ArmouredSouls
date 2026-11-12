@@ -91,12 +91,14 @@ import {
   buildOwnedRobot,
   buildSparringPartner,
   executePracticeBattle,
+  executePracticeBatch,
   getSparringPartnerDefinitions,
   resetSyntheticIdCounter,
   resetFullWeaponCache,
   ULTIMATE_BOT_CONFIG,
 } from '../../src/services/practice-arena/practiceArenaService';
 import type { SparringPartnerConfig } from '../../src/services/practice-arena/practiceArenaService';
+import { achievementService, type UnlockedAchievement } from '../../src/services/achievement';
 import { AppError } from '../../src/errors';
 import { TIER_CONFIGS } from '../../src/utils/tierConfig';
 import type { WeaponRecord } from '../../src/utils/weaponSelection';
@@ -687,6 +689,48 @@ describe('Practice Arena Service', () => {
         expect.objectContaining({ name: expect.stringContaining('WimpBot') }),
         expect.objectContaining({ name: expect.stringContaining('ExpertBot') }),
       );
+    });
+  });
+
+  // =========================================================================
+  // #608: a batch that crosses 25 practice battles must surface the unlock
+  // where the frontend's toast subscriber looks (top-level achievementUnlocks)
+  // =========================================================================
+  describe('executePracticeBatch achievement unlocks', () => {
+    const sparring = (botTier: 'WimpBot' | 'ExpertBot') => ({
+      type: 'sparring' as const,
+      config: { botTier, loadoutType: 'single' as const, rangeBand: 'melee' as const, stance: 'balanced' as const, yieldThreshold: 20 },
+    });
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('returns the batch unlocks at the top level of the response', async () => {
+      mockSimulateBattle.mockReturnValue(buildMockCombatResult());
+      mockConvertSimulatorEvents.mockReturnValue([]);
+      mockPrisma.weapon.findMany.mockResolvedValue(buildWeaponCatalog());
+      mockPrisma.user.update.mockResolvedValue({});
+      const waxOn = { id: 'C16', name: 'Wax On, Wax Off', rewardCredits: 25_000, rewardPrestige: 25 } as UnlockedAchievement;
+      const award = jest.spyOn(achievementService, 'checkAndAward').mockResolvedValue([waxOn]);
+
+      const result = await executePracticeBatch(1, { robot1: sparring('WimpBot'), robot2: sparring('ExpertBot') }, 5);
+
+      expect(mockPrisma.user.update).toHaveBeenCalledWith(expect.objectContaining({ data: { totalPracticeBattles: { increment: 5 } } }));
+      expect(award).toHaveBeenCalledWith(1, null, { type: 'practice_battle', data: {} });
+      expect(result.achievementUnlocks).toEqual([waxOn]);
+      expect(result.results).toHaveLength(5);
+      expect(result.results.every((r) => r.achievementUnlocks === undefined)).toBe(true);
+    });
+
+    it('returns an empty list when nothing unlocked', async () => {
+      mockSimulateBattle.mockReturnValue(buildMockCombatResult());
+      mockConvertSimulatorEvents.mockReturnValue([]);
+      mockPrisma.weapon.findMany.mockResolvedValue(buildWeaponCatalog());
+      mockPrisma.user.update.mockResolvedValue({});
+      jest.spyOn(achievementService, 'checkAndAward').mockResolvedValue([]);
+
+      const result = await executePracticeBatch(1, { robot1: sparring('WimpBot'), robot2: sparring('ExpertBot') }, 2);
+
+      expect(result.achievementUnlocks).toEqual([]);
     });
   });
 
