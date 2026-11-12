@@ -7,9 +7,14 @@
  *
  * Fits a 320×568 viewport with its own scroll area and a dismiss control that
  * stays reachable without scrolling.
+ *
+ * Follows the site's modal pattern (docs/design_ux, Modal Component): theme
+ * surface and borders, scale-in, close button top-right and Escape. Labels come
+ * from the same formatters as the stable page's Season History, and the
+ * preparation notice is the site's `DashboardNotification`.
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type JSX } from 'react';
 import { Link } from 'react-router-dom';
 import {
   getSeasonSummary,
@@ -17,11 +22,43 @@ import {
   type SeasonSummary,
 } from '../../utils/seasonApi';
 import { useSeasonStore, selectSeason } from '../../stores/seasonStore';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { createLogger } from '../../utils/logger';
+import { getTierName } from '../../utils/tierHelpers';
+import { MODE_LONG_LABELS } from '../../utils/stableViewFormat';
+import { categoryLabel, modeLabel, rankBadge } from '../../utils/seasonFormat';
+import { formatCount } from '../../utils/hallOfRecords';
+import DashboardNotification from '../DashboardNotification';
 
 const log = createLogger('SeasonSummaryModal');
 
-export function SeasonSummaryModal() {
+/** "King of the Hill", "League 1v1"; unknown modes fall back to a title-cased form. */
+function bestTierLabel(bestTier: SeasonSummary['bestTier']): string {
+  if (!bestTier) return '—';
+  const mode = (MODE_LONG_LABELS as Readonly<Record<string, string>>)[bestTier.mode] ?? modeLabel(bestTier.mode);
+  return `${getTierName(bestTier.tier)} · ${mode}`;
+}
+
+/** "27,339 prestige"; tournament wins carry their name in the label and a 0 value. */
+function accoladeValue(accolade: SeasonSummary['accolades'][number]): string {
+  return accolade.value !== 0 ? `${formatCount(accolade.value)} ${accolade.valueLabel}` : accolade.valueLabel;
+}
+
+function preparationText(remaining: number): string {
+  if (remaining === 0) return 'Competitive battles resume at the next settlement.';
+  return `Competitive battles resume in ${remaining} ${remaining === 1 ? 'cycle' : 'cycles'}.`;
+}
+
+function Figure({ label, value }: { label: string; value: string }): JSX.Element {
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-wide text-secondary">{label}</dt>
+      <dd className="font-semibold tabular-nums text-white">{value}</dd>
+    </div>
+  );
+}
+
+export function SeasonSummaryModal(): JSX.Element | null {
   const [summary, setSummary] = useState<SeasonSummary | null>(null);
   const [open, setOpen] = useState(false);
   const season = useSeasonStore(selectSeason);
@@ -50,40 +87,42 @@ export function SeasonSummaryModal() {
     };
   }, []);
 
-  const dismiss = async (): Promise<void> => {
+  const dismiss = useCallback((): void => {
     setOpen(false);
     if (!summary) return;
-    try {
-      await markSeasonSummarySeen(summary.seasonNumber);
-    } catch (error) {
+    markSeasonSummarySeen(summary.seasonNumber).catch((error: unknown) => {
       log.error('Failed to record season summary as seen', error);
-    }
-  };
+    });
+  }, [summary]);
+
+  useEscapeKey(dismiss, open);
 
   if (!open || !summary) return null;
 
-  const record = `${summary.wins}W / ${summary.losses}L / ${summary.draws}D`;
+  const record = `${formatCount(summary.wins)}W / ${formatCount(summary.losses)}L / ${formatCount(summary.draws)}D`;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="season-summary-title"
+      // Above the fixed navigation (z-[1000]), on the overlay layer the mobile
+      // drawer and search palette use, or the header and tab bar cover it.
+      className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-2 sm:p-4"
       data-testid="season-summary-modal"
     >
-      <div className="flex max-h-[95vh] w-full max-w-lg flex-col rounded-lg border border-slate-700 bg-slate-900 shadow-xl">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="season-summary-title"
+        className="flex max-h-[95vh] w-full max-w-lg flex-col rounded-lg border border-white/10 bg-surface shadow-2xl animate-scale-in"
+      >
         {/* Header stays fixed so the dismiss control is always reachable. */}
-        <div className="flex items-start justify-between gap-2 border-b border-slate-700 p-4">
-          <h2 id="season-summary-title" className="text-lg font-semibold text-white">
-            {summary.isLegacy
-              ? 'Season 0 archived'
-              : `Season ${summary.seasonNumber} archived`}
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 px-4 py-3 sm:px-6">
+          <h2 id="season-summary-title" className="text-xl font-semibold text-white">
+            {summary.isLegacy ? 'Season 0 archived' : `Season ${summary.seasonNumber} archived`}
           </h2>
           <button
             type="button"
-            onClick={() => void dismiss()}
-            className="min-h-[44px] min-w-[44px] shrink-0 rounded text-slate-400 hover:bg-slate-800 hover:text-white"
+            onClick={dismiss}
+            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg text-secondary transition-colors hover:bg-white/10 hover:text-white"
             aria-label="Close season summary"
           >
             ✕
@@ -91,55 +130,36 @@ export function SeasonSummaryModal() {
         </div>
 
         {/* Body scrolls, so a 568px-tall viewport never clips the footer. */}
-        <div className="flex-1 overflow-y-auto p-4 text-sm text-slate-300">
+        <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 text-sm sm:px-6">
           {summary.isLegacy && (
-            <p className="mb-3 rounded bg-slate-800/60 p-2 text-xs text-slate-400">
+            <p className="rounded-lg bg-surface-elevated p-3 text-xs text-secondary">
               Season 0 covers everything before the season system existed, so these are
               career totals rather than one season&apos;s figures.
             </p>
           )}
 
-          <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <div>
-              <dt className="text-xs uppercase tracking-wide text-slate-500">Final credits</dt>
-              <dd className="text-white">₡{summary.finalCredits.toLocaleString()}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-wide text-slate-500">Prestige</dt>
-              <dd className="text-white">{summary.prestigeEarned.toLocaleString()}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-wide text-slate-500">Record</dt>
-              <dd className="text-white">{record}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-wide text-slate-500">Best tier</dt>
-              <dd className="capitalize text-white">
-                {summary.bestTier
-                  ? `${summary.bestTier.tier} (${summary.bestTier.mode.replace(/_/g, ' ')})`
-                  : '—'}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-wide text-slate-500">Achievements</dt>
-              <dd className="text-white">
-                {summary.achievementsUnlocked} / {summary.achievementsAvailable}
-              </dd>
-            </div>
+          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Figure label="Final credits" value={`₡${formatCount(summary.finalCredits)}`} />
+            <Figure label="Prestige" value={formatCount(summary.prestigeEarned)} />
+            <Figure label="Record" value={record} />
+            <Figure label="Best tier" value={bestTierLabel(summary.bestTier)} />
+            <Figure
+              label="Achievements"
+              value={`${formatCount(summary.achievementsUnlocked)} / ${formatCount(summary.achievementsAvailable)}`}
+            />
           </dl>
 
           {summary.accolades.length > 0 && (
-            <div className="mt-4">
-              <h3 className="mb-1 text-xs uppercase tracking-wide text-slate-500">
-                Notable placements
-              </h3>
-              <ul className="space-y-1">
+            <div>
+              <h3 className="mb-2 text-xs uppercase tracking-wide text-secondary">Notable placements</h3>
+              <ul className="space-y-1.5">
                 {summary.accolades.map((a) => (
-                  <li key={`${a.category}-${a.rank}`} className="text-slate-300">
-                    #{a.rank} {a.category.replace(/([A-Z])/g, ' $1').toLowerCase()} —{' '}
-                    <span className="text-white">{a.subjectName}</span> (
-                    {a.value !== 0 ? `${a.value} ` : ''}
-                    {a.valueLabel})
+                  <li key={`${a.category}-${a.rank}-${a.subjectName}`} className="text-secondary">
+                    <span className="text-white">
+                      {rankBadge(a.rank)} {categoryLabel(a.category).label}
+                    </span>
+                    {' · '}
+                    {a.subjectName} · <span className="tabular-nums">{accoladeValue(a)}</span>
                   </li>
                 ))}
               </ul>
@@ -147,25 +167,30 @@ export function SeasonSummaryModal() {
           )}
 
           {season?.phase === 'preparation' && (
-            <p className="mt-4 rounded bg-amber-950/50 p-2 text-amber-100">
-              A new season is being prepared. Competitive battles resume in{' '}
-              {season.remainingPreparationCycles} cycle(s) — build your stable now.
-            </p>
+            <DashboardNotification
+              variant="info"
+              icon="🛠️"
+              message={`Season ${season.seasonNumber} is being prepared`}
+              detail={`${preparationText(season.remainingPreparationCycles)} Build your stable now.`}
+            />
           )}
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-slate-700 p-4 sm:flex-row sm:justify-between">
+        <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-white/10 px-4 py-3 sm:flex-row sm:justify-end sm:px-6">
           <Link
             to="/changelog"
-            onClick={() => void dismiss()}
-            className="flex min-h-[44px] items-center justify-center rounded border border-slate-600 px-4 text-slate-200 hover:bg-slate-800"
+            onClick={dismiss}
+            className="flex min-h-[44px] items-center justify-center rounded-lg bg-surface-elevated px-4 font-medium text-secondary transition-colors hover:text-white"
           >
             What changed this season
           </Link>
           <button
             type="button"
-            onClick={() => void dismiss()}
-            className="min-h-[44px] rounded bg-cyan-700 px-4 font-medium text-white hover:bg-cyan-600"
+            onClick={dismiss}
+            // Moving focus into an opened dialog is required, so this autoFocus is deliberate.
+            // eslint-disable-next-line jsx-a11y-x/no-autofocus
+            autoFocus
+            className="min-h-[44px] rounded-lg bg-primary px-4 font-medium text-white transition-colors hover:bg-primary-dark"
           >
             Start building
           </button>
