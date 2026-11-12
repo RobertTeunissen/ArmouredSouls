@@ -2,7 +2,7 @@ jest.mock('../../../../lib/prisma', () => ({ __esModule: true, default: {} }));
 
 import { comparePayouts, cycleFromEntries, payoutInputs, type LedgerEntry } from '../battlePayoutCheck';
 import type { ParticipantFact } from '../battleFacts';
-import type { StableRef } from '../battleTypes';
+import type { StableRef } from '../../../../shared/types';
 
 const playerStable: StableRef = { userId: 1, name: 'Rustbucket Co.', stableType: 'human' };
 const automatonStable: StableRef = { userId: 2, name: 'Ferrum Works', stableType: 'automaton' };

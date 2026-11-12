@@ -2,7 +2,7 @@
  * View rules of the admin Players page: URL state (segment, search, sort,
  * page), filtering and sorting the human stables, and display text.
  */
-import type { PlayerRow, PlayerSegment, StableKind } from './adminPlayersApi';
+import type { PlayerRow, PlayerSegment, StableType } from '@shared/types';
 
 export type PlayersSegmentFilter = 'all' | PlayerSegment | 'onboarding' | 'low-balance';
 export const PLAYER_SEGMENT_FILTERS: readonly PlayersSegmentFilter[] = ['all', 'active', 'inactive', 'dormant', 'onboarding', 'low-balance'];
@@ -158,7 +158,7 @@ export const SEGMENT_LABELS: Readonly<Record<PlayersSegmentFilter, string>> = {
   'low-balance': 'Low balance',
 };
 
-export const STABLE_KIND_LABELS: Readonly<Record<StableKind, string>> = {
+export const STABLE_KIND_LABELS: Readonly<Record<StableType, string>> = {
   human: 'Player',
   automaton: 'Automaton',
   generated: 'Generated',

@@ -10,16 +10,10 @@
  */
 import { classifyForfeit } from '../../match/matchHistoryService';
 import { modeShape, timeLimitFor } from './battleModes';
+import type { BattleResult, EndedBy } from '../../../shared/types';
 
-export type BattleResult = 'win' | 'draw' | 'bye' | 'forfeit';
-
-export type EndedBy =
-  | 'destroyed'
-  | 'yield'
-  | 'team_eliminated'
-  | 'time_limit'
-  | 'score_reached'
-  | 'last_standing';
+// BattleResult and EndedBy are wire contracts (shared admin-battles.ts).
+export type { BattleResult, EndedBy };
 
 export interface OutcomeParticipant {
   robotId: number;

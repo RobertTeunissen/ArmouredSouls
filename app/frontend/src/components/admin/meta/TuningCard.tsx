@@ -6,11 +6,11 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { AdminPanel, ADMIN_FOCUS_RING } from '../shared';
-import type { AttributeGroup, MetaTuning } from '../../../utils/adminMetaApi';
 import { attributeLabel, groupLabel } from '../../../utils/adminAttributesFormat';
 import { formatCount } from '../../../utils/adminDashboardFormat';
 import { formatPercentOf } from '../../../utils/adminMetaFormat';
 import { BarRow, MetaStat, SectionLabel } from './metaParts';
+import type { AttributeGroup, MetaTuning } from '@shared/types';
 
 export interface TuningCardProps {
   tuning: MetaTuning | null;

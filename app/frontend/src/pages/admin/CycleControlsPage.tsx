@@ -22,13 +22,14 @@ import {
 import { ConfirmDialog } from '../../components/admin/automatons/ui';
 import { ADMIN_FOCUS_RING } from '../../components/admin/shared';
 import { useCycleControls } from '../../hooks/useCycleControls';
-import { BULK_CYCLES_JOB_NAME, type BulkCycleOptions, type SchedulerJobName, type SchedulerOverview } from '../../utils/adminCycleApi';
+import { BULK_CYCLES_JOB_NAME, type BulkCycleRequest } from '../../utils/adminCycleApi';
 import { JOB_DESCRIPTIONS, formatDuration, jobLabel } from '../../utils/adminCycleFormat';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
+import type { SchedulerJobName, SchedulerOverview } from '@shared/types';
 
 type PendingAction =
   | { kind: 'job'; jobName: SchedulerJobName }
-  | { kind: 'bulk'; options: BulkCycleOptions };
+  | { kind: 'bulk'; options: BulkCycleRequest };
 
 interface Message {
   tone: 'success' | 'error';
@@ -46,7 +47,7 @@ function estimateCycleMs(overview: SchedulerOverview | null): number | null {
   return total;
 }
 
-function bulkDescription(options: BulkCycleOptions, estimate: number | null): ReactNode {
+function bulkDescription(options: BulkCycleRequest, estimate: number | null): ReactNode {
   const parts = [
     options.generateUsersPerCycle ? 'tops up generated stables' : 'no stable generation',
     options.includeTournaments ? 'tournaments' : 'no tournaments',

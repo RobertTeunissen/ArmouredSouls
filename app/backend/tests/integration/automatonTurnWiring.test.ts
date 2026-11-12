@@ -39,7 +39,7 @@ import { setAlertSender } from '../../src/services/automaton/automatonObservabil
 import { getProgramSwitch, setProgramSwitch } from '../../src/services/automaton/programSwitch';
 import { activateProfile, addBlueprint, createDraft } from '../../src/services/automaton/automatonProfileService';
 import { deleteAutomatonStables } from '../helpers/automatonStable';
-import type { TeamNames } from '../../src/types/automaton';
+import type { TeamNames } from '../../src/shared/types';
 
 jest.setTimeout(240_000);
 

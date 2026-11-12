@@ -1,8 +1,9 @@
+import type { EffectEstimate } from '@shared/types';
+
 /**
  * A small horizontal effect bar around zero with a ±1 SE whisker. Green or red
  * only when significant. Decorative: the number next to it carries the value.
  */
-import type { EffectEstimate } from './types';
 
 export interface EffectBarProps {
   estimate: EffectEstimate;

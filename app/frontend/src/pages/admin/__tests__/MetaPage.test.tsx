@@ -10,8 +10,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MetaPage from '../MetaPage';
-import type { MetaChoices } from '../../../utils/adminMetaApi';
-import type { MetaBuilds } from '../../../utils/adminMetaApi';
+import type { MetaBuilds, MetaChoices } from '@shared/types';
 
 type Config = { params?: Record<string, unknown>; signal?: AbortSignal };
 const mockGet = vi.fn<(url: string, config?: Config) => Promise<{ data: unknown }>>();

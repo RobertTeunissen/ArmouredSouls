@@ -54,7 +54,7 @@ import { activateProfile } from '../../src/services/automaton/automatonProfileSe
 import { CATALOGUE_DIRECTORY, validateCatalogueEntry, BUILD_FOCUS_KEYS } from '../../src/services/automaton/automatonCatalogueService';
 import { getStrategyRegistry } from '../../src/services/automaton/strategies/defaultRegistry';
 import { loadWeaponCatalogue } from '../../src/services/automaton/stableFacts';
-import { clearStrategyComparisonCache, type StrategyComparison } from '../../src/services/automaton/strategyComparisonService';
+import { clearStrategyComparisonCache } from '../../src/services/automaton/strategyComparisonService';
 import {
   TURN_ACTION_LIMIT,
   STEP_BUDGET_EXHAUSTED,
@@ -79,6 +79,7 @@ import {
   type BulkBattleResult,
 } from '../helpers/automatonHeavyFixture';
 import { runTag, startAdminApi, type AdminApiHarness } from '../helpers/automatonAdminApi';
+import type { StrategyComparison } from '../../src/shared/types';
 
 /** Every repository Catalogue_Entry: all are synced as drafts. */
 const REPOSITORY = loadRepositoryEntries();

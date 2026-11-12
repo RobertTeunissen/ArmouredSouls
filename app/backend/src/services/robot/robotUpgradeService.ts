@@ -24,7 +24,7 @@ export const VALID_ATTRIBUTES = [
 
 // ── Types ────────────────────────────────────────────────────────────
 
-export interface UpgradeRequest {
+export interface RobotUpgradeRequest {
   currentLevel: number;
   plannedLevel: number;
 }
@@ -96,7 +96,7 @@ export const ATTRIBUTE_TO_ACADEMY: Record<string, string> = {
  * @param verifyCurrentLevel  If true, verify currentLevel matches robot data
  */
 export function validateAndCalculateUpgrades(
-  upgrades: Record<string, UpgradeRequest>,
+  upgrades: Record<string, RobotUpgradeRequest>,
   robot: Record<string, unknown>,
   trainingLevel: number,
   academyLevels: AcademyLevels,
@@ -174,7 +174,7 @@ export function validateAndCalculateUpgrades(
  * and facility data. Throws on concurrent-upgrade conflicts (409).
  */
 export function validateUpgradesFresh(
-  upgrades: Record<string, UpgradeRequest>,
+  upgrades: Record<string, RobotUpgradeRequest>,
   freshRobot: Record<string, unknown>,
   freshTrainingLevel: number,
   freshAcademyLevels: AcademyLevels,
@@ -279,7 +279,7 @@ export interface UpgradeTransactionResult {
 export async function executeUpgradeTransaction(
   userId: number,
   robotId: number,
-  upgrades: Record<string, UpgradeRequest>,
+  upgrades: Record<string, RobotUpgradeRequest>,
   requestKey: string,
   options: EconomicServiceOptions = {},
 ): Promise<UpgradeTransactionResult & { replayed: boolean }> {

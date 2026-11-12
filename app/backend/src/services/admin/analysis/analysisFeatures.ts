@@ -13,10 +13,11 @@
  * A team side is the average of its robots.
  */
 import { ROBOT_ATTRIBUTES } from '../../../shared/utils/robotAttributes';
-import { ATTRIBUTE_GROUPS, ATTRIBUTE_GROUP_OF, type AnalysisColumn, type AttributeGroup, type LayerToggles } from './analysisOptions';
+import { ATTRIBUTE_GROUPS, ATTRIBUTE_GROUP_OF } from './analysisOptions';
 import { ATTRIBUTE_COUNT, layeredValues, type LayeredBuild } from './attributeLayers';
 import type { Appearance, Comparison } from './comparisons';
 import type { DesignMatrix } from './logisticFit';
+import type { AnalysisColumn, AttributeGroup, LayerToggles } from '../../../shared/types';
 
 export type ModelKind = 'attributes' | 'groups' | 'groupPairs';
 

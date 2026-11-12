@@ -9,28 +9,9 @@
  */
 import prisma from '../../../lib/prisma';
 import { getStrategyRegistry } from './defaultRegistry';
-import { describeBuildOrder, type BuildOrderDescriptor } from './strategyParameters';
+import { describeBuildOrder } from './strategyParameters';
 import type { StrategyRegistry } from './registry';
-
-export interface LibraryVersion {
-  version: number;
-  displayName: string;
-  description: string;
-  latest: boolean;
-  /** Automaton_Profiles (drafts and active) on this version. */
-  profileCount: number;
-  buildOrder: BuildOrderDescriptor[];
-}
-
-export interface LibraryStrategy {
-  key: string;
-  /** Display name and description of the latest version. */
-  displayName: string;
-  description: string;
-  latestVersion: number;
-  profileCount: number;
-  versions: LibraryVersion[];
-}
+import type { BuildOrderDescriptor, LibraryStrategy, LibraryVersion } from '../../../shared/types';
 
 export interface StrategyLibrary {
   strategies: LibraryStrategy[];

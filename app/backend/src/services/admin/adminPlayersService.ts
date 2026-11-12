@@ -18,107 +18,21 @@ import { getStableBattleOverlapsByUser } from '../auth/stable-battle-overlap';
 import { BANKRUPTCY_RISK_THRESHOLD, INACTIVE_PLAYER_AFTER_MS } from './adminThresholds';
 import { getCurrentSeason } from '../season/seasonService';
 import { isDormant, seasonStartedAt } from '../season/dormantStables';
-import { readStableCashflow, type StableCashflow } from './stableCashflow';
-
-export type PlayerSegment = 'active' | 'inactive' | 'dormant';
-export type PlayerIssueCode =
-  | 'onboarding_stuck'
-  | 'no_robots'
-  | 'no_battle_ready_robots'
-  | 'no_weapons'
-  | 'no_battles'
-  | 'low_balance';
-export type StableKind = 'human' | 'automaton' | 'generated';
-
-export interface PlayerIssue {
-  code: PlayerIssueCode;
-  label: string;
-}
-
-export interface PlayerRow {
-  userId: number;
-  username: string;
-  stableName: string | null;
-  robots: number;
-  /** This season (robots are rebuilt every season), each battle once per stable. */
-  battles: number;
-  wins: number;
-  /** Whole percent; null without battles. */
-  winRate: number | null;
-  currency: number;
-  lastLoginAt: string | null;
-  createdAt: string;
-  segment: PlayerSegment;
-  issues: PlayerIssue[];
-}
-
-export interface PlayersOverview {
-  seasonNumber: number;
-  seasonStartedAt: string | null;
-  thresholds: { lowBalance: number; inactiveAfterDays: number };
-  counts: { all: number; active: number; inactive: number; dormant: number; onboardingStuck: number; lowBalance: number };
-  players: PlayerRow[];
-  timestamp: string;
-}
+import { readStableCashflow } from './stableCashflow';
+import type {
+  AdminStableSearchResult,
+  PlayerDetail,
+  PlayerDetailRobot,
+  PlayerDetailTeam,
+  PlayerIssue,
+  PlayerRow,
+  PlayerSegment,
+  PlayersOverview,
+  StableCashflow,
+  StableType,
+} from '../../shared/types';
 
 /** A robot the panel shows. */
-export interface PlayerDetailRobot {
-  id: number;
-  name: string;
-  elo: number;
-  hpPercent: number;
-  battleReady: boolean;
-  mainWeapon: string | null;
-  offhandWeapon: string | null;
-  loadout: string;
-  stance: string;
-  wins: number;
-  losses: number;
-  draws: number;
-  /** Robot-mode tiers (1v1 League, KotH, Grand Melee); absent = no row. */
-  tiers: Partial<Record<'league_1v1' | 'koth' | 'grand_melee', string>>;
-  subscriptions: string[];
-}
-
-export interface PlayerDetailTeam {
-  id: number;
-  name: string;
-  size: number;
-  /** Team-mode tiers (2v2/3v3 League, Tag Team). */
-  tiers: Partial<Record<'league_2v2' | 'league_3v3' | 'tag_team', string>>;
-}
-
-export interface PlayerDetail {
-  id: number;
-  username: string;
-  stableName: string | null;
-  stableKind: StableKind;
-  /** Automaton catalogue key (opens its Editor), else null. */
-  automatonKey: string | null;
-  role: string;
-  currency: number;
-  createdAt: string;
-  lastLoginAt: string | null;
-  segment: PlayerSegment | null;
-  onboarding: { completed: boolean; skipped: boolean; currentStep: number };
-  battles: number;
-  wins: number;
-  winRate: number | null;
-  issues: PlayerIssue[];
-  /** Last 10 cycles with ledger rows, oldest first, and the window totals. */
-  cashflow: StableCashflow;
-  robots: PlayerDetailRobot[];
-  teams: PlayerDetailTeam[];
-  facilities: { type: string; level: number }[];
-}
-
-export interface StableSearchResult {
-  id: number;
-  username: string;
-  stableName: string | null;
-  stableKind: StableKind;
-}
-
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SEARCH_LIMIT = 10;
 
@@ -165,7 +79,7 @@ export function playerIssues(facts: IssueFacts): PlayerIssue[] {
 
 const winRateOf = (wins: number, battles: number): number | null => (battles > 0 ? Math.round((wins / battles) * 100) : null);
 
-function stableKindOf(user: { stableType: string; isGenerated: boolean }): StableKind {
+function stableKindOf(user: { stableType: string; isGenerated: boolean }): StableType {
   if (user.stableType === 'automaton') return 'automaton';
   if (user.isGenerated || user.stableType === 'generated') return 'generated';
   return 'human';
@@ -332,7 +246,7 @@ export async function getPlayerDetail(userId: number, now: Date = new Date()): P
 }
 
 /** Find any stable (player, Automaton or generated) by #id, username, email, stable or robot name. */
-export async function searchStables(query: string): Promise<StableSearchResult[]> {
+export async function searchStables(query: string): Promise<AdminStableSearchResult[]> {
   const q = query.trim().replace(/^#/, '');
   const id = /^\d+$/.test(q) ? Number(q) : null;
   const contains = { contains: q, mode: 'insensitive' as const };

@@ -20,17 +20,17 @@
 import { ATTRIBUTE_TO_ACADEMY } from '../robot/robotUpgradeService';
 import { getCapForLevel } from '../../shared/utils/academyCaps';
 import { ROBOT_ATTRIBUTES, type RobotAttribute } from '../../shared/utils/robotAttributes';
-import type { AttributeGroup, BuildFocusKey } from '../../types/automaton';
 import type { FacilityType } from './stableFacts';
+import type { AcademyGroup, BuildFocusKey } from '../../shared/types';
 
-export type GroupWeights = Readonly<Record<AttributeGroup, number>>;
+export type GroupWeights = Readonly<Record<AcademyGroup, number>>;
 export type BuildFocusWeightTable = Readonly<Record<BuildFocusKey, GroupWeights>>;
 
 /** Group order used for ties: Combat, Defense, Mobility, AI/Team. */
-export const ATTRIBUTE_GROUPS: readonly AttributeGroup[] = ['combat', 'defense', 'mobility', 'ai'];
+export const ATTRIBUTE_GROUPS: readonly AcademyGroup[] = ['combat', 'defense', 'mobility', 'ai'];
 
 /** Academy of each Attribute_Group. */
-export const GROUP_ACADEMY: Readonly<Record<AttributeGroup, FacilityType>> = {
+export const GROUP_ACADEMY: Readonly<Record<AcademyGroup, FacilityType>> = {
   combat: 'combat_training_academy',
   defense: 'defense_training_academy',
   mobility: 'mobility_training_academy',
@@ -97,7 +97,7 @@ export const ATTRIBUTE_MAX_LEVEL = 50;
 /** Highest academy level. */
 const ACADEMY_MAX_LEVEL = 10;
 
-const ACADEMY_TO_GROUP: Readonly<Record<string, AttributeGroup>> = Object.fromEntries(
+const ACADEMY_TO_GROUP: Readonly<Record<string, AcademyGroup>> = Object.fromEntries(
   ATTRIBUTE_GROUPS.map((group) => [GROUP_ACADEMY[group], group]),
 );
 
@@ -106,17 +106,17 @@ const ATTRIBUTE_ORDER: readonly RobotAttribute[] = ROBOT_ATTRIBUTES.filter((a) =
 const ATTRIBUTE_ORDER_INDEX: ReadonlyMap<RobotAttribute, number> = new Map(ATTRIBUTE_ORDER.map((a, i) => [a, i]));
 
 /** Attribute_Group of an attribute. */
-export function groupOfAttribute(attribute: RobotAttribute): AttributeGroup {
+export function groupOfAttribute(attribute: RobotAttribute): AcademyGroup {
   return ACADEMY_TO_GROUP[ATTRIBUTE_TO_ACADEMY[attribute]];
 }
 
 /** The attributes of a group, in tie-break order. */
-export function attributesOfGroup(group: AttributeGroup): RobotAttribute[] {
+export function attributesOfGroup(group: AcademyGroup): RobotAttribute[] {
   return ATTRIBUTE_ORDER.filter((a) => groupOfAttribute(a) === group);
 }
 
 /** Groups by weight descending, ties Combat → Defense → Mobility → AI/Team. */
-export function priorityOrder(weights: GroupWeights): AttributeGroup[] {
+export function priorityOrder(weights: GroupWeights): AcademyGroup[] {
   return [...ATTRIBUTE_GROUPS].sort((a, b) =>
     weights[b] - weights[a] || ATTRIBUTE_GROUPS.indexOf(a) - ATTRIBUTE_GROUPS.indexOf(b));
 }
@@ -133,7 +133,7 @@ export function attributeTarget(weight: number, milestone: number, isMax: boolea
 }
 
 /** Target per group for one robot. */
-export function groupTargets(weights: GroupWeights, milestone: number, isMax: boolean): Record<AttributeGroup, number> {
+export function groupTargets(weights: GroupWeights, milestone: number, isMax: boolean): Record<AcademyGroup, number> {
   return {
     combat: attributeTarget(weights.combat, milestone, isMax),
     defense: attributeTarget(weights.defense, milestone, isMax),
@@ -169,9 +169,9 @@ export interface AttributePlanInput {
   milestone: number;
   isMax: boolean;
   /** Current academy level per group. */
-  academyLevels: Readonly<Record<AttributeGroup, number>>;
+  academyLevels: Readonly<Record<AcademyGroup, number>>;
   /** Price and gate of the academy level after `currentLevel`. */
-  quoteAcademy(group: AttributeGroup, currentLevel: number): AcademyQuote;
+  quoteAcademy(group: AcademyGroup, currentLevel: number): AcademyQuote;
   /** Price of raising one attribute from whole level `fromLevel` by one level. */
   incrementCost(fromLevel: number): number;
   balance: number;
@@ -180,15 +180,15 @@ export interface AttributePlanInput {
 export type AttributePlan =
   | { kind: 'satisfied' }
   | { kind: 'increments'; robotSlot: number; increments: Partial<Record<RobotAttribute, number>>; cost: number }
-  | { kind: 'academy'; group: AttributeGroup; toLevel: number; cost: number }
-  | { kind: 'saving'; cost: number; next: 'increment' | 'academy'; robotSlot?: number; attribute?: RobotAttribute; group?: AttributeGroup }
-  | { kind: 'blocked'; group: AttributeGroup; detail: Record<string, number | string> };
+  | { kind: 'academy'; group: AcademyGroup; toLevel: number; cost: number }
+  | { kind: 'saving'; cost: number; next: 'increment' | 'academy'; robotSlot?: number; attribute?: RobotAttribute; group?: AcademyGroup }
+  | { kind: 'blocked'; group: AcademyGroup; detail: Record<string, number | string> };
 
 interface Candidate {
   robotIndex: number;
   attribute: RobotAttribute;
   level: number;
-  group: AttributeGroup;
+  group: AcademyGroup;
 }
 
 /**
@@ -206,7 +206,7 @@ export function planAttributeStep(input: AttributePlanInput): AttributePlan {
   });
   const targets = input.robots.map((robot) => groupTargets(robot.weights, input.milestone, input.isMax));
   const priorities = input.robots.map((robot) => priorityOrder(robot.weights));
-  const gated = new Map<AttributeGroup, Record<string, number | string>>();
+  const gated = new Map<AcademyGroup, Record<string, number | string>>();
 
   let spent = 0;
   let batchRobot = -1;

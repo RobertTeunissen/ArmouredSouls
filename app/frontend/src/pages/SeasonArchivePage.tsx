@@ -20,14 +20,12 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   listSeasons,
   getSeasonDetail,
-  type SeasonListEntry,
-  type SeasonDetail,
-  type SnapshotEntry,
 } from '../utils/seasonApi';
 import AutomatonBadge from '../components/AutomatonBadge';
 import { SeasonArchiveRecords } from '../components/season/SeasonArchiveRecords';
 import { createLogger } from '../utils/logger';
 import { modeLabel, rankBadge, formatDate } from '../utils/seasonFormat';
+import type { SeasonDetail, SeasonListEntry, SnapshotEntry } from '@shared/types';
 
 const log = createLogger('SeasonArchivePage');
 

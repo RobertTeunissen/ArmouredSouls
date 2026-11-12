@@ -5,8 +5,8 @@
  */
 import type { ReactNode } from 'react';
 import { AdminPanel } from '../shared';
-import type { AchievementTier } from '../../../utils/adminAchievementsApi';
 import { formatRate, tierLabel, type TierStrip } from '../../../utils/adminAchievementsFormat';
+import type { AchievementTier } from '@shared/types';
 
 const TIER_DOT: Record<AchievementTier, string> = {
   easy: 'bg-success',

@@ -6,8 +6,8 @@
  */
 import type { ReactNode } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { PlayersOverview } from '../../../utils/adminPlayersApi';
 import { SEGMENT_LABELS, creditsText, type PlayersSegmentFilter } from '../../../utils/adminPlayersFormat';
+import type { PlayersOverview } from '@shared/types';
 
 export interface PlayerSegmentCardsProps {
   overview: PlayersOverview;

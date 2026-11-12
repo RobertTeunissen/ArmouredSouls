@@ -12,7 +12,7 @@
  * the hands that change, change loadout) → equip main → equip offhand.
  */
 import { discountedWeaponPrice } from '../pricing';
-import type { Hand, RobotFacts, StableFacts } from '../stableFacts';
+import type { RobotFacts, StableFacts } from '../stableFacts';
 import type { BlueprintFacts } from '../stableFacts';
 import {
   handHoldsWeapon,
@@ -23,6 +23,7 @@ import {
   weaponByName,
 } from './goalSupport';
 import { savingOrActionable, type Goal, type GoalContext, type GoalOutcome, type StageStep } from './goalTypes';
+import type { Hand } from '../../../shared/types';
 
 function currentInventoryId(robot: RobotFacts, hand: Hand): number | null {
   return hand === 'main' ? robot.mainInventoryId : robot.offhandInventoryId;

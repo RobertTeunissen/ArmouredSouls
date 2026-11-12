@@ -5,16 +5,18 @@ import {
   ANALYSIS_COLUMNS,
   ANALYSIS_RANGES,
   LAYER_KEYS,
-  type AnalysisColumn,
-  type AnalysisRange,
   type AttributeFilters,
-  type AttributeGroup,
-  type EffectEstimate,
-  type LayerKey,
-  type LayerStep,
-  type LayerToggles,
 } from '../components/admin/attributes/types';
 import { formatCount } from './adminFormat';
+import type {
+  AnalysisColumn,
+  AnalysisRange,
+  AttributeGroup,
+  EffectEstimate,
+  LayerKey,
+  LayerStep,
+  LayerToggles,
+} from '@shared/types';
 
 export const ALL_LAYERS_ON: LayerToggles = { tuning: true, weapons: true, refinements: true, loadout: true, stance: true };
 

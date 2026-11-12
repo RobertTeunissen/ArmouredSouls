@@ -39,8 +39,9 @@ import { awardQuietly } from './upkeep/freeUpkeep';
 import { buildAutomatonRequestKey } from './requestKeys';
 import { weaponByName } from './goals/goalSupport';
 import type { BuildFocusWeightTable } from './buildFocus';
-import type { BlueprintFacts, FacilityType, Hand, LoadoutType, WeaponFacts } from './stableFacts';
-import type { EventOrder, TeamNames } from '../../types/automaton';
+import type { BlueprintFacts, FacilityType, WeaponFacts } from './stableFacts';
+import type { EventOrder } from '../../types/automaton';
+import type { Hand, LoadoutType, TeamNames } from '../../shared/types';
 
 /** Identity of the Automaton_Turn attempt the actions belong to. */
 export interface AutomatonTurnIdentity {

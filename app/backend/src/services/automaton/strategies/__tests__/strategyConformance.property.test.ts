@@ -43,9 +43,7 @@ import {
   storageCapacityOf,
   type BlueprintFacts,
   type FacilityType,
-  type Hand,
   type InventoryFacts,
-  type LoadoutType,
   type RobotFacts,
   type StableFacts,
   type TeamFacts,
@@ -64,6 +62,7 @@ import {
   starterBlueprintSets,
 } from './helpers/strategyTestSupport';
 import { loadCatalogueDirectory } from '../../automatonCatalogueService';
+import type { Hand, LoadoutType } from '../../../../shared/types';
 
 const STRATEGIES: UpgradeStrategy[] = STRATEGY_TEST_DIRECTORIES.flatMap((directory) =>
   loadStrategyRegistry({ directory, weightTable: BUILD_FOCUS_WEIGHTS }).all());

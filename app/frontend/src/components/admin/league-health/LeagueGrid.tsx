@@ -7,7 +7,6 @@
  */
 import type { ReactNode } from 'react';
 import { ADMIN_FOCUS_RING, AdminPanel } from '../shared';
-import type { LeagueHealthMode, LeagueHealthModeSummary } from '../../../utils/adminLeagueHealthApi';
 import {
   LEAGUE_TIER_ORDER,
   activeOfTotal,
@@ -18,12 +17,13 @@ import {
   tierLabel,
 } from '../../../utils/adminLeagueHealthFormat';
 import { STATUS_BAR, STATUS_TEXT, STATUS_TINT, STATUS_WORD } from './leagueHealthTones';
+import type { LeagueHealthModeSummary, TieredLeagueMode } from '@shared/types';
 
 export interface LeagueGridProps {
   modes: readonly LeagueHealthModeSummary[] | null;
-  selectedMode: LeagueHealthMode;
+  selectedMode: TieredLeagueMode;
   loading: boolean;
-  onSelect: (mode: LeagueHealthMode, tier: string | null) => void;
+  onSelect: (mode: TieredLeagueMode, tier: string | null) => void;
 }
 
 function Legend(): ReactNode {

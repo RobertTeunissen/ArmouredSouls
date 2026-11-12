@@ -13,14 +13,16 @@ import {
 } from '../adminThresholds';
 import {
   TOURNAMENT_TYPES,
-  type ChampionStable,
-  type CurrentTournament,
   type MatchGroupRow,
-  type TournamentOverview,
   type TournamentRow,
-  type TournamentType,
-  type TournamentTypeSeason,
 } from './tournamentOverviewTypes';
+import type {
+  ChampionStable,
+  CurrentTournament,
+  TournamentOverview,
+  TournamentType,
+  TournamentTypeSeason,
+} from '../../../shared/types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const RECENT_CHAMPIONS = 5;

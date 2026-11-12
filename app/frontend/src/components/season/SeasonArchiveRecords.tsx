@@ -3,7 +3,7 @@ import { RecordBoard, RecordDetail, RECORD_GROUPS } from '../hall-of-records';
 import type { RecordDefinition } from '../hall-of-records';
 import { findMyPlaces } from '../../utils/hallOfRecords';
 import { archiveRecordCatalogue, isOwnArchivedRecord } from '../../utils/seasonArchiveRecords';
-import type { SeasonDetail } from '../../utils/seasonApi';
+import type { SeasonDetail } from '@shared/types';
 
 export interface SeasonArchiveRecordsProps {
   detail: SeasonDetail;

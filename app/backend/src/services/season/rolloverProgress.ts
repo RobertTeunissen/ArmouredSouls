@@ -11,10 +11,8 @@
 
 import {
   ROLLOVER_STAGES,
-  type RolloverRunSummary,
-  type RolloverStageName,
-  type RolloverStageProgress,
 } from '../../types/schedulerTypes';
+import type { RolloverRunSummary, RolloverStageName, RolloverStageProgress } from '../../shared/types';
 
 /** Generated-stable progress is written at most this often (the last batch is always written). */
 export const PROGRESS_WRITE_INTERVAL_MS = 3_000;

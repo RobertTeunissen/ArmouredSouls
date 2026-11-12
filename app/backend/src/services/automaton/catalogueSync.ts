@@ -16,7 +16,7 @@ import fs from 'fs';
 import path from 'path';
 import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
-import type { CatalogueImageFill, CatalogueSyncConflict, CatalogueSyncSummary } from '../../types/automaton';
+import type { CatalogueImageFill, CatalogueSyncConflict } from '../../types/automaton';
 import {
   CATALOGUE_DIRECTORY,
   REPOSITORY_IMAGE_DIRECTORY,
@@ -30,6 +30,7 @@ import { getStrategyRegistry } from './strategies/defaultRegistry';
 import { ensureProgramSettings, PROGRAM_SETTINGS_ID } from './programSwitch';
 import { loadWeaponCatalogue } from './stableFacts';
 import type { StrategyRegistry } from './strategies/registry';
+import type { CatalogueSyncSummary } from '../../shared/types';
 
 export interface CatalogueSyncOptions {
   dryRun?: boolean;

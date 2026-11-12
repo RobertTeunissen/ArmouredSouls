@@ -10,19 +10,8 @@
  */
 import { useId, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type {
-  BlueprintFields,
-  BuildFocusOption,
-  CatalogueWeapon,
-  Hand,
-  LoadoutType,
-  RefinementStep,
-  RefinementTierKey,
-  Stance,
-  WeaponStage,
-} from '../../../utils/automatonAdminApi';
 import { REQUIRED_REFINEMENT_LAB_LEVELS } from '@shared/utils/weaponRefinement';
-import { ROBOT_ATTRIBUTES } from '@shared/utils/robotAttributes';
+import { ROBOT_ATTRIBUTES, type RobotAttribute } from '@shared/utils/robotAttributes';
 import { canEquipToSlot } from '@shared/utils/weaponSlots';
 import { formatAttributeName } from '../../weapon-refinement/attributeFormat';
 import { blueprintHeader, refinementStepCosts, type BlueprintEditorItem } from './blueprintState';
@@ -36,6 +25,17 @@ import {
   stageCost,
   stageRangeText,
 } from './automatonText';
+import type {
+  BlueprintFields,
+  BuildFocusOption,
+  CatalogueWeapon,
+  Hand,
+  LoadoutType,
+  RefinementStep,
+  RefinementTierKey,
+  Stance,
+  WeaponStage,
+} from '@shared/types';
 
 export const MAX_WEAPON_STAGES = 4;
 export const MAX_REFINEMENT_STEPS_PER_WEAPON = 5;
@@ -312,7 +312,7 @@ export function BlueprintEditor({ item, weapons, buildFocusOptions, expanded, er
                             aria-label={`Attribute, step ${index + 1}`}
                             className={FLEX_INPUT_CLASS}
                             value={step.targetAttribute ?? ''}
-                            onChange={(e) => setStep(index, { targetAttribute: e.target.value })}
+                            onChange={(e) => setStep(index, { targetAttribute: e.target.value as RobotAttribute })}
                           >
                             {ROBOT_ATTRIBUTES.map((a) => <option key={a} value={a}>{formatAttributeName(a)}</option>)}
                           </select>

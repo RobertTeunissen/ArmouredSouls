@@ -6,37 +6,10 @@
  */
 import prisma from '../../../lib/prisma';
 import type { Prisma } from '../../../../generated/prisma';
-import { ADMIN_ACTION_AREAS, areaOf, describeAdminAction, type AdminActionArea } from './adminActionCatalogue';
+import { ADMIN_ACTION_AREAS, areaOf, describeAdminAction } from './adminActionCatalogue';
+import type { AdminActionArea, AdminActionResultFilter, AdminActionsPage, JsonValue } from '../../../shared/types';
 
-export const ADMIN_ACTION_RESULTS = ['all', 'failure'] as const;
-export type AdminActionResultFilter = (typeof ADMIN_ACTION_RESULTS)[number];
-
-export interface AdminActionEntry {
-  id: number;
-  createdAt: string;
-  operationType: string;
-  result: 'success' | 'failure';
-  area: AdminActionArea;
-  title: string;
-  details: string;
-  link: string | null;
-  admin: { userId: number; name: string };
-  /** The stored summary, for the expanded row. */
-  summary: Prisma.JsonValue;
-}
-
-export interface AdminActionsPage {
-  entries: AdminActionEntry[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  /** Counts over every recorded action, whatever the filters. */
-  counts: { all: number; failures: number; byArea: Record<AdminActionArea, number> };
-  /** When the first recorded action happened, or null. */
-  since: string | null;
-}
-
+export const ADMIN_ACTION_RESULTS = ['all', 'failure'] as const satisfies readonly AdminActionResultFilter[];
 export interface AdminActionsQuery {
   area?: AdminActionArea;
   result?: AdminActionResultFilter;
@@ -90,7 +63,8 @@ export async function getAdminActions(query: AdminActionsQuery = {}): Promise<Ad
         result: row.operationResult === 'failure' ? 'failure' : 'success',
         ...described,
         admin: { userId: row.adminUserId, name: nameOf.get(row.adminUserId) ?? `Deleted user #${row.adminUserId}` },
-        summary: row.resultSummary,
+        // Stored JSON; Prisma's JsonValue and the contract's describe the same values.
+        summary: row.resultSummary as JsonValue,
       };
     }),
     total,

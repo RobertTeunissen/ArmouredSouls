@@ -11,7 +11,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import WeaponsPage from '../WeaponsPage';
 import { ApiError } from '../../../utils/ApiError';
 import { collectingWeapons, readyWeapons } from '../../../components/admin/weapons/__tests__/weaponsFixture';
-import type { AnalysisRange, AnalysisStrength } from '../../../components/admin/weapons';
+import type { AnalysisRange, AnalysisStrength } from '@shared/types';
 
 const mockGet = vi.fn();
 

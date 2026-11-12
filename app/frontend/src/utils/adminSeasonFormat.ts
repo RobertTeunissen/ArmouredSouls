@@ -7,8 +7,13 @@
  * at one cycle per day (the daily 00:00 settlement). Without a scheduled
  * settlement (automated scheduling off) there are no dates.
  */
-import type { AdminSeasonState, RolloverAttempt, RolloverStageName, SeasonRolloverHistory } from './seasonApi';
 import { formatCount } from './adminFormat';
+import type {
+  AdminSeasonState,
+  RolloverAttempt,
+  RolloverStageName,
+  SeasonRolloverHistory,
+} from '@shared/types';
 
 const DAY_MS = 86_400_000;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

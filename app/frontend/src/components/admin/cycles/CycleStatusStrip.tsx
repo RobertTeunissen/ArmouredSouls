@@ -3,9 +3,9 @@
  * runs), the running job with its elapsed time, the queue, and the next slot.
  */
 import type { ReactNode } from 'react';
-import type { SchedulerOverview } from '../../../utils/adminCycleApi';
 import { elapsedSince, formatClock, formatCountdown, formatDayTime, jobLabel } from '../../../utils/adminCycleFormat';
 import { PanelError } from '../shared';
+import type { SchedulerOverview } from '@shared/types';
 
 export interface CycleStatusStripProps {
   overview: SchedulerOverview | null;

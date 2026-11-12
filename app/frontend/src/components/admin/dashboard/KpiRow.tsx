@@ -4,9 +4,9 @@
  */
 import type { ReactNode } from 'react';
 import { AdminStatCard } from '../shared';
-import type { DashboardKpis } from '../../../utils/adminDashboardApi';
 import { computeTrend, formatCount, formatDecimal, type TrendIntent } from '../../../utils/adminDashboardFormat';
 import { PanelError } from '../shared/AdminPanel';
+import type { DashboardKpis } from '@shared/types';
 
 export interface KpiRowProps {
   kpis: DashboardKpis | null;

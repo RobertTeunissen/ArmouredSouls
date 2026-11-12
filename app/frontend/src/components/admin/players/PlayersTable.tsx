@@ -4,7 +4,6 @@
  */
 import type { ReactNode } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { PlayerIssue, PlayerRow } from '../../../utils/adminPlayersApi';
 import {
   creditsText,
   displayName,
@@ -13,6 +12,7 @@ import {
   type PlayersSort,
   type PlayersSortKey,
 } from '../../../utils/adminPlayersFormat';
+import type { PlayerIssue, PlayerRow } from '@shared/types';
 
 export interface PlayersTableProps {
   rows: PlayerRow[];

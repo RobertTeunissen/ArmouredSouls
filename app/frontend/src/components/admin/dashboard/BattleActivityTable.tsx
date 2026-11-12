@@ -6,9 +6,9 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { BattleActivity, BattleActivityRow } from '../../../utils/adminDashboardApi';
 import { formatCount, formatDecimal, formatUtcTime, modeLabel } from '../../../utils/adminDashboardFormat';
 import { AdminPanel } from '../shared/AdminPanel';
+import type { BattleActivity, BattleActivityRow } from '@shared/types';
 
 export interface BattleActivityTableProps {
   activity: BattleActivity | null;

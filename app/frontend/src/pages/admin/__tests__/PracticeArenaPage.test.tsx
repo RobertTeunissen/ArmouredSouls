@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import AdminPracticeArenaPage from '../PracticeArenaPage';
 import { ApiError } from '../../../utils/ApiError';
-import type { PracticeArenaOverview, PracticeDayStats } from '../../../utils/adminPracticeArenaApi';
+import type { PracticeArenaOverview, PracticeDayStats } from '@shared/types';
 
 const mockGetOverview = vi.fn();
 vi.mock('../../../utils/adminPracticeArenaApi', () => ({

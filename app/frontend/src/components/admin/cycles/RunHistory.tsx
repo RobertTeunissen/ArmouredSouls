@@ -9,10 +9,7 @@ import {
   BULK_CYCLES_JOB_NAME,
   SEASON_ROLLOVER_JOB_NAME,
   SCHEDULER_JOB_NAMES,
-  type SchedulerHistoryEntry,
   type SchedulerHistoryJobName,
-  type SchedulerHistoryPage,
-  type SchedulerHistoryQuery,
 } from '../../../utils/adminCycleApi';
 import {
   elapsedSince,
@@ -25,6 +22,7 @@ import {
 } from '../../../utils/adminCycleFormat';
 import { AdminPagination, AdminPanel, ADMIN_FOCUS_RING } from '../shared';
 import { RunStatus } from './RunStatus';
+import type { SchedulerHistoryEntry, SchedulerHistoryPage, SchedulerHistoryQuery } from '@shared/types';
 
 export interface RunHistoryProps {
   page: SchedulerHistoryPage | null;

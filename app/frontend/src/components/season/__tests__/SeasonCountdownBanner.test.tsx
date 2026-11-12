@@ -10,7 +10,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import SeasonCountdownBanner, { SeasonCountdownNotice } from '../SeasonCountdownBanner';
 import { useSeasonStore } from '../../../stores/seasonStore';
-import type { SeasonState } from '../../../utils/seasonApi';
+import type { SeasonState } from '@shared/types';
 
 function season(overrides: Partial<SeasonState> = {}): SeasonState {
   return {

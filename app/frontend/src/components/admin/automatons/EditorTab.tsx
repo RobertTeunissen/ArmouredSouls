@@ -23,13 +23,6 @@ import {
   updateProfile,
   updateStrategy,
   uploadBlueprintImage,
-  type BlueprintFields,
-  type CatalogueWeapon,
-  type LibraryStrategy,
-  type ProfileDetail,
-  type ProfileListItem,
-  type ProfileTurnPreview,
-  type TurnRecord,
 } from '../../../utils/automatonAdminApi';
 import { ActionButton, Card, ConfirmDialog, Dialog, Field, INPUT_CLASS, Notice } from './ui';
 import { errorText, issueMessages } from './requestErrors';
@@ -54,6 +47,15 @@ import {
   teamMaxRobots,
   type EditorForm,
 } from './editorState';
+import type {
+  BlueprintFields,
+  CatalogueWeapon,
+  LibraryStrategy,
+  ProfileDetail,
+  ProfileListItem,
+  ProfileTurnPreview,
+  TurnRecord,
+} from '@shared/types';
 
 /** Blueprints shown before "+ {n} more blueprints". */
 const COLLAPSED_BLUEPRINTS = 4;

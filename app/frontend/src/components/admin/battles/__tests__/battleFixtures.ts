@@ -1,4 +1,10 @@
-import type { BattleDetail, BattleListResponse, BattleListRow, BattleLogResponse, StableRef } from '../types';
+import type {
+  AdminBattleDetail,
+  AdminBattleLogResponse,
+  BattleListResponse,
+  BattleListRow,
+  StableRef,
+} from '@shared/types';
 
 export const PLAYER: StableRef = { userId: 1, name: 'Rustbucket Co.', stableType: 'human' };
 export const AUTOMATON: StableRef = { userId: 2, name: 'Ferrum Works', stableType: 'automaton' };
@@ -52,7 +58,7 @@ export function listResponse(battles: BattleListRow[] = [row(), KOTH_ROW, BYE_RO
   return { battles, pagination: { page: 1, limit: 25, total, totalPages: Math.ceil(total / 25) } };
 }
 
-export function detail(partial: Partial<BattleDetail> = {}): BattleDetail {
+export function detail(partial: Partial<AdminBattleDetail> = {}): AdminBattleDetail {
   return {
     id: 531203,
     battleType: 'league_2v2',
@@ -106,8 +112,8 @@ export function detail(partial: Partial<BattleDetail> = {}): BattleDetail {
   };
 }
 
-export function logResponse(extraMoves = 0): BattleLogResponse {
-  const events: BattleLogResponse['events'] = [
+export function logResponse(extraMoves = 0): AdminBattleLogResponse {
+  const events: AdminBattleLogResponse['events'] = [
     { timestamp: 8, type: 'movement', attacker: 'Ironclad', message: '🏃 Ironclad moves to (4.2, -3.1) — 6.8 units from Lumen', rangeBand: 'mid' },
     {
       timestamp: 12.4, type: 'attack', attacker: 'Ironclad', defender: 'Quasar', distance: 3.94, rangeBand: 'short',

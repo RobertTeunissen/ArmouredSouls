@@ -24,8 +24,9 @@ import { scopeNoun } from '../../utils/adminEconomyFormat';
 import { readStableScope, writeStableScope } from '../../utils/adminStableScope';
 import { ApiError } from '../../utils/ApiError';
 import { isAbortError } from '../../utils/abort';
-import { getEconomyOverview, type EconomyPreparing, type EconomyResponse, type EconomyStableScope, type EconomyWindow } from '../../utils/adminEconomyApi';
+import { getEconomyOverview } from '../../utils/adminEconomyApi';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
+import type { EconomyPreparing, EconomyResponse, EconomyStableScope, EconomyWindow } from '@shared/types';
 
 /** While the backend sums ledger cycles, ask again this often. */
 export const PREPARING_RETRY_MS = 5_000;

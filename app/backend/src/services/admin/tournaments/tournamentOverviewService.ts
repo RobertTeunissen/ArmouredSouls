@@ -15,11 +15,9 @@ import { buildTournamentOverview } from './tournamentOverview';
 import {
   TOURNAMENT_TYPES,
   type MatchGroupRow,
-  type StableType,
-  type TournamentOverview,
   type TournamentRow,
-  type TournamentType,
 } from './tournamentOverviewTypes';
+import type { StableType, TournamentOverview, TournamentType } from '../../../shared/types';
 
 interface RawTournament {
   id: number;

@@ -6,10 +6,11 @@
  */
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { previewStrategyDraft, type DraftPreview, type ProfileListItem } from '../../../utils/automatonAdminApi';
+import { previewStrategyDraft } from '../../../utils/automatonAdminApi';
 import { ActionButton, Card, Field, INPUT_CLASS, Notice, Pill } from './ui';
 import { errorText, issueMessages } from './requestErrors';
 import { STATUS_LABELS, formatCredits, goalWithTarget, statusDetailText } from './automatonText';
+import type { DraftPreview, ProfileListItem } from '@shared/types';
 
 export interface DraftPreviewPanelProps {
   draftId: number;

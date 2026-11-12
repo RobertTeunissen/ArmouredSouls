@@ -4,9 +4,9 @@
  * the caption says the same in words.
  */
 import type { ReactNode } from 'react';
-import type { SystemOverview } from '../../../utils/adminSystemApi';
 import { deriveSystemCards, type SystemTone } from '../../../utils/adminSystemFormat';
 import { PanelError } from '../shared';
+import type { SystemOverview } from '@shared/types';
 
 const BORDER: Readonly<Record<SystemTone, string>> = {
   ok: 'border-l-success',

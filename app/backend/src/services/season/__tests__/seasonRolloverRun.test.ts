@@ -57,7 +57,7 @@ import { seasonStartedAt } from '../dormantStables';
 import { deleteGeneratedStables, deleteDormantHumanStables, resetCompetitiveAndEconomicState, purgeHistory, reclaimSpace } from '../seasonPurgeService';
 import { markFinished, markRunning, recordQueued, updateRunSummary } from '../../cycle/schedulerRunStore';
 import { executeSeasonRollover, getActiveRolloverProgress, isRolloverInProgress } from '../seasonRolloverService';
-import type { RolloverRunSummary, SchedulerRunSummary } from '../../../types/schedulerTypes';
+import type { RolloverRunSummary, SchedulerRunSummary } from '../../../shared/types';
 
 const mocked = <T extends (...args: never[]) => unknown>(fn: T): jest.MockedFunction<T> => fn as jest.MockedFunction<T>;
 

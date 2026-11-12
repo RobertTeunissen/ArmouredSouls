@@ -15,7 +15,7 @@
 import cron from 'node-cron';
 import logger from '../../config/logger';
 import type { EnvConfig } from '../../config/env';
-import type { SchedulerJobName } from './schedulerJobNames';
+import type { SchedulerJobName } from '../../shared/types';
 
 /** The EnvConfig fields this module reads. */
 export type SchedulerWindowConfig = Pick<

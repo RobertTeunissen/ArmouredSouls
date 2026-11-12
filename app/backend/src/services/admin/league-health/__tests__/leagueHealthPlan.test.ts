@@ -6,7 +6,7 @@ import { HEAD_TO_HEAD_LEAGUE_RULES, PLACEMENT_LEAGUE_RULES, getLeagueRulesForMod
 import type { TieredLeagueMode } from '../../../league/league-rules';
 import { buildLeagueHealthOverview } from '../leagueHealthService';
 import { summariseMode, summariseTier, tierFlow } from '../leagueHealthPlan';
-import type { LeagueHealthRow, LeagueMoveCount, ModeRebalanceHistory } from '../leagueHealthTypes';
+import type { LeagueHealthRow, LeagueMoveCount, ModeRebalanceHistory } from '../../../../shared/types';
 
 let nextId = 1;
 

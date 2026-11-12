@@ -21,8 +21,8 @@
  */
 import prisma from '../../lib/prisma';
 import { AutomatonError, AutomatonErrorCode } from '../../errors/automatonErrors';
-import type { StrategyParametersV1, TeamNames } from '../../types/automaton';
-import type { BlockedReason, GoalDetail, PlannedAction } from './goals/goalTypes';
+import type { StrategyParametersV1 } from '../../types/automaton';
+import type { PlannedAction } from './goals/goalTypes';
 import { simulateTurn, type SimulatedTurn } from './turnPlanner';
 import { projectAction, ProjectionError } from './factProjector';
 import {
@@ -40,46 +40,15 @@ import { getStrategyRegistry } from './strategies/defaultRegistry';
 import type { StrategyRegistry } from './strategies/registry';
 import type { UpgradeStrategy } from './strategies/strategyTypes';
 import { profileTeamNames } from './automatonProfileRules';
-
-export type PreviewGoalStatus = 'done' | 'bought' | 'saving' | 'blocked' | 'waiting';
-
-export interface PreviewGoal {
-  goalId: string;
-  position: number;
-  type: UpgradeStrategy['buildOrder'][number]['type'];
-  facilityType?: string;
-  label: string;
-  target: number;
-  isMax: boolean;
-  status: PreviewGoalStatus;
-  /** Blocked by a prestige gate, or Waiting with a prestige-gated next step. */
-  gated: boolean;
-  reason?: BlockedReason;
-  detail: GoalDetail;
-  /** What this cycle bought for the Goal (also on a Saving Goal that bought part of its target first). */
-  bought: { steps: number; cost: number };
-  /** Saving: credits the next step needs and the balance it has. */
-  needed?: number;
-  available?: number;
-}
-
-export interface PreviewAction {
-  goalId: string;
-  position: number;
-  kind: PlannedAction['kind'];
-  cost: number;
-  chargedSteps: number;
-  detail: Record<string, string | number>;
-}
-
-export interface TurnPreviewResult {
-  startBalance: number;
-  projectedEndBalance: number;
-  chargedActions: number;
-  stop: SimulatedTurn['stop']['kind'];
-  actions: PreviewAction[];
-  goals: PreviewGoal[];
-}
+import type {
+  BlockedReason,
+  GoalDetail,
+  PreviewGoal,
+  PreviewGoalStatus,
+  ProfileTurnPreview,
+  TeamNames,
+  TurnPreviewResult,
+} from '../../shared/types';
 
 export interface PreviewContext {
   params: StrategyParametersV1;
@@ -214,15 +183,6 @@ export async function readSeasonFacts(): Promise<SeasonFacts> {
     select: { seasonNumber: true, phase: true },
   });
   return { seasonNumber: season?.seasonNumber ?? 0, phase: season?.phase === 'preparation' ? 'preparation' : 'competitive' };
-}
-
-export interface ProfileTurnPreview extends TurnPreviewResult {
-  catalogueKey: string;
-  status: 'draft' | 'active';
-  strategyKey: string;
-  strategyVersion: number;
-  seasonNumber: number;
-  phase: StableFacts['phase'];
 }
 
 export interface TurnPreviewDeps {

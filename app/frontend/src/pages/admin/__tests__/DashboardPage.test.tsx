@@ -11,7 +11,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import DashboardPage from '../DashboardPage';
-import type { BattleActivity, DashboardKpis, DashboardStatus } from '../../../utils/adminDashboardApi';
+import type { BattleActivity, DashboardKpis, DashboardStatus } from '@shared/types';
 
 // ----------------------------------------------------------------
 // apiClient mock: routes each URL to a handler

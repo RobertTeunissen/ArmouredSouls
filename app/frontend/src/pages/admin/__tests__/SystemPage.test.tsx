@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import AdminSystemPage from '../SystemPage';
 import { ApiError } from '../../../utils/ApiError';
-import type { SystemOverview } from '../../../utils/adminSystemApi';
+import type { SystemOverview } from '@shared/types';
 
 const mockGetOverview = vi.fn();
 vi.mock('../../../utils/adminSystemApi', () => ({

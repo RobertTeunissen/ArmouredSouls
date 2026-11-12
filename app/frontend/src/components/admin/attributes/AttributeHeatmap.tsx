@@ -6,8 +6,9 @@
 import { useMemo, useState } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
 import { EffectValue } from './EffectCell';
-import { ANALYSIS_COLUMNS, ATTRIBUTE_GROUPS, type AnalysisColumn, type AnalysisColumnSummary, type AttributeEffectRow } from './types';
+import { ANALYSIS_COLUMNS, ATTRIBUTE_GROUPS } from './types';
 import { attributeLabel, columnLabel, formatShare, groupLabel } from '../../../utils/adminAttributesFormat';
+import type { AnalysisColumn, AnalysisColumnSummary, AttributeEffectRow } from '@shared/types';
 
 export interface AttributeHeatmapProps {
   attributes: AttributeEffectRow[];

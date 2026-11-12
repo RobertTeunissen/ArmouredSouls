@@ -15,11 +15,6 @@ import {
   exportStrategyDraft,
   getStrategyDraft,
   updateStrategyDraft,
-  type DraftView,
-  type FileBuildOrderEntry,
-  type FileTargetValue,
-  type ProfileListItem,
-  type UpgradeWarningEntry,
 } from '../../../utils/automatonAdminApi';
 import { ActionButton, Card, ConfirmDialog, FOCUS_RING, Field, FieldError, IconButton, INPUT_CLASS, NARROW_INPUT_CLASS, Notice } from './ui';
 import { errorText, issueMessages } from './requestErrors';
@@ -38,6 +33,13 @@ import {
   removeGoal,
   targetFieldText,
 } from './builderState';
+import type {
+  DraftView,
+  FileBuildOrderEntry,
+  FileTargetValue,
+  ProfileListItem,
+  UpgradeWarningEntry,
+} from '@shared/types';
 
 export interface StrategyBuilderProps {
   draftId: number;

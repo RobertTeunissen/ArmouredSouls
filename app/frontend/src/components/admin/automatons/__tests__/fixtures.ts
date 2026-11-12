@@ -1,5 +1,9 @@
 /** Test data for the admin Automatons page (Spec #55, task 10.6). Shapes follow `automatonAdminApi.ts`. */
 import type {
+  TieredStandingsMode,
+} from '../../../../utils/automatonAdminApi';
+import { PLACEMENT_STANDINGS_MODES, TEAM_STANDINGS_MODES, TIERED_STANDINGS_MODES } from '@shared/utils/automatonStandingsTier';
+import type {
   AutomatonStatusBar,
   BlueprintView,
   CatalogueWeapon,
@@ -10,10 +14,8 @@ import type {
   ProfileListItem,
   ProfileTurnPreview,
   StrategyComparison,
-  TieredStandingsMode,
   UpgradeDryRun,
-} from '../../../../utils/automatonAdminApi';
-import { PLACEMENT_STANDINGS_MODES, TEAM_STANDINGS_MODES, TIERED_STANDINGS_MODES } from '@shared/utils/automatonStandingsTier';
+} from '@shared/types';
 
 export const EVENT_ORDER = [
   'league_2v2', 'tag_team', 'league_3v3', 'league_1v1', 'koth', 'grand_melee', 'tournament_3v3', 'tournament_1v1', 'tournament_2v2',

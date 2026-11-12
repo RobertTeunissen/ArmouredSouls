@@ -13,7 +13,7 @@
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { Prisma } from '../../../generated/prisma';
-import type { SchedulerRunStatus, SchedulerRunSummary, SchedulerRunTrigger } from '../../types';
+import type { SchedulerRunStatus, SchedulerRunSummary, SchedulerRunTrigger } from '../../shared/types';
 
 /** How often the running process proves it is alive. */
 export const SCHEDULER_HEARTBEAT_INTERVAL_MS = 60_000;

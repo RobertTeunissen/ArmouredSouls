@@ -13,6 +13,7 @@ import { facilityLabel } from './strategyDefinitionSchema';
 import type { PlannedAction } from '../goals/goalTypes';
 import { simulateTurn, type SimulatedTurn, type SimulationContext } from '../turnPlanner';
 import type { GoalDefinition } from './strategyTypes';
+import type { ScenarioPurchase } from '../../../shared/types';
 
 /** Starting balance of every new stable (onboarding budget). */
 export const SCENARIO_STARTING_BALANCE = 3_000_000;
@@ -47,16 +48,6 @@ export type ScenarioPurchaseKind =
   | 'weapon_purchase'
   | 'weapon_sale'
   | 'weapon_refinement';
-
-/** One charged step, in execution order. */
-export interface ScenarioPurchase {
-  turnIndex: number;
-  goalId: string;
-  kind: ScenarioPurchaseKind;
-  label: string;
-  /** Credits spent; a sale is negative (its proceeds). */
-  cost: number;
-}
 
 function chargedSteps(action: PlannedAction): Omit<ScenarioPurchase, 'turnIndex' | 'goalId'>[] {
   const facility = (type: FacilityType, toLevel: number, cost: number): Omit<ScenarioPurchase, 'turnIndex' | 'goalId'> =>

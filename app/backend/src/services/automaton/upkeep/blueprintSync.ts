@@ -6,7 +6,8 @@
  * `robotSettingsService`. Names (R3.9) and images (R3.10) are not synced here;
  * loadout and Weapon_Path changes are fitted by the weapons Goal.
  */
-import type { BlueprintFacts, Stance, StableFacts } from '../stableFacts';
+import type { BlueprintFacts, StableFacts } from '../stableFacts';
+import type { Stance } from '../../../shared/types';
 
 export interface BlueprintDrift {
   robotId: number;

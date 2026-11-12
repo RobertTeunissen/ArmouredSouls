@@ -11,10 +11,6 @@ import {
   createStrategyDraft,
   getStrategyComparison,
   listStrategyDrafts,
-  type DraftSummary,
-  type LibraryStrategy,
-  type ProfileListItem,
-  type StrategyComparison,
 } from '../../../utils/automatonAdminApi';
 import { ToggleChip } from './ui';
 import { errorText } from './requestErrors';
@@ -23,6 +19,7 @@ import { StrategyEconomy } from './StrategyEconomy';
 import { StrategyLibrary } from './StrategyLibrary';
 import { StrategyBuilder } from './StrategyBuilder';
 import { StrategyUpgradeDialog } from './StrategyUpgradeDialog';
+import type { DraftSummary, LibraryStrategy, ProfileListItem, StrategyComparison } from '@shared/types';
 
 export type StrategiesView = 'comparison' | 'economy' | 'library';
 

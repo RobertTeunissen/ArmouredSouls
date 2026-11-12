@@ -2,9 +2,15 @@
  * Pure helpers of Cycle Controls: job labels and descriptions, durations,
  * UTC day labels and the one-line run result. Unit-tested without rendering.
  */
-import type { MissedRun, SchedulerJobName, SchedulerRun, SchedulerRunStatus, SchedulerRunTrigger } from './adminCycleApi';
 import { BULK_CYCLES_JOB_NAME, SEASON_ROLLOVER_JOB_NAME } from './adminCycleApi';
 import { jobLabel as dashboardJobLabel } from './adminDashboardFormat';
+import type {
+  MissedRunView,
+  SchedulerJobName,
+  SchedulerRunStatus,
+  SchedulerRunTrigger,
+  SchedulerRunView,
+} from '@shared/types';
 
 /** What a manual run does, for the confirmation dialog. */
 export const JOB_DESCRIPTIONS: Readonly<Record<SchedulerJobName, string>> = {
@@ -83,7 +89,7 @@ export function formatCountdown(iso: string, now: Date): string {
   return `in ${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, '0')}m`;
 }
 
-export function triggerLabel(run: Pick<SchedulerRun, 'trigger' | 'triggeredBy'>): string {
+export function triggerLabel(run: Pick<SchedulerRunView, 'trigger' | 'triggeredBy'>): string {
   const labels: Record<SchedulerRunTrigger, string> = { cron: 'Cron', manual: 'Manual', resume: 'Resumed', bulk: 'Bulk' };
   const base = labels[run.trigger] ?? run.trigger;
   if ((run.trigger === 'manual' || run.trigger === 'bulk') && run.triggeredBy) {
@@ -102,7 +108,7 @@ export const STATUS_LABELS: Readonly<Record<SchedulerRunStatus, string>> = {
 };
 
 /** The one-line result of a finished run, or null when there is nothing to say. */
-export function runResultText(run: Pick<SchedulerRun, 'jobName' | 'status' | 'summary' | 'error'>): string | null {
+export function runResultText(run: Pick<SchedulerRunView, 'jobName' | 'status' | 'summary' | 'error'>): string | null {
   if (run.status === 'failed' || run.status === 'interrupted') return run.error;
   const summary = run.summary;
   if (!summary) return null;
@@ -128,7 +134,7 @@ export function runResultText(run: Pick<SchedulerRun, 'jobName' | 'status' | 'su
 }
 
 /** "3v3 Tournament on 21 Oct 18:00 · backend down 17:58–18:03". */
-export function describeMissed(missed: MissedRun, now: Date): string {
+export function describeMissed(missed: MissedRunView, now: Date): string {
   const base = `${jobLabel(missed.jobName)} on ${formatDayTime(missed.expectedAt, now)}`;
   return missed.downtime ? `${base} · backend down ${formatClock(missed.downtime.from)}–${formatClock(missed.downtime.to)}` : base;
 }

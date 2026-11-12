@@ -7,7 +7,7 @@ import prisma from '../../../lib/prisma';
 import type { KothPlacement } from '../../../types';
 import { classifyBattleOutcome, eloSwing, type BattleOutcome } from './battleOutcome';
 import { modeShape } from './battleModes';
-import type { BattleSideSummary, PlacementFieldSummary, StableKind, StableRef } from './battleTypes';
+import type { BattleSideSummary, PlacementFieldSummary, StableRef, StableType } from '../../../shared/types';
 
 export interface BattleCoreRow {
   id: number;
@@ -73,7 +73,7 @@ const NO_FACTS = (): BattleFacts => ({
 
 const UNKNOWN = 'Unknown';
 
-function stableRef(user: { id: number; username: string; stableName: string | null; stableType: StableKind }): StableRef {
+function stableRef(user: { id: number; username: string; stableName: string | null; stableType: StableType }): StableRef {
   return { userId: user.id, name: user.stableName || user.username, stableType: user.stableType };
 }
 
@@ -257,7 +257,7 @@ export function summariseSides(
       ? [...f.participants].sort((a, b) => (a.placement ?? 99) - (b.placement ?? 99))[0] ?? null
       : recordedWinner;
     const others = f.participants.filter(p => p !== lead);
-    const byType: Record<StableKind, number> = { human: 0, generated: 0, automaton: 0 };
+    const byType: Record<StableType, number> = { human: 0, generated: 0, automaton: 0 };
     for (const p of others) byType[p.stable.stableType] += 1;
     let sides: BattleSideSummary[] = [];
     if (lead) {

@@ -37,7 +37,8 @@ import { teamsDue } from './teamUpkeep';
 import { subscriptionChanges } from './subscriptionUpkeep';
 import { blueprintDrift } from './blueprintSync';
 import { tuningChanges } from './tuningUpkeep';
-import type { EventOrder, TeamNames } from '../../../types/automaton';
+import type { EventOrder } from '../../../types/automaton';
+import type { TeamNames } from '../../../shared/types';
 
 /** The four Free_Upkeep parts, in the order R5.7 runs them. */
 export const FREE_UPKEEP_PARTS = ['teams', 'subscriptions', 'blueprint_sync', 'tuning'] as const;

@@ -8,8 +8,9 @@ import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING } from '../shared';
-import { ADMIN_ACTION_AREA_LABELS, ADMIN_ACTION_LINK_LABELS, type AdminActionEntry } from '../../../utils/adminActionsApi';
+import { ADMIN_ACTION_AREA_LABELS, ADMIN_ACTION_LINK_LABELS } from '../../../utils/adminActionsApi';
 import { AREA_TONE, formatActionTime, summaryRows } from '../../../utils/adminActionsFormat';
+import type { AdminActionEntry } from '@shared/types';
 
 /** Columns from `lg` up; the expanded details are indented to the Action column (1.25 + 8.5 + 7.5 + 2 × 1 rem). */
 const GRID = 'lg:grid lg:grid-cols-[8.5rem_7.5rem_minmax(0,1.3fr)_minmax(0,1.4fr)_8rem_4.5rem] lg:items-start lg:gap-4';

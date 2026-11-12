@@ -19,7 +19,6 @@ import { Link } from 'react-router-dom';
 import {
   getSeasonSummary,
   markSeasonSummarySeen,
-  type SeasonSummary,
 } from '../../utils/seasonApi';
 import { useSeasonStore, selectSeason } from '../../stores/seasonStore';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
@@ -29,6 +28,7 @@ import { MODE_LONG_LABELS } from '../../utils/stableViewFormat';
 import { categoryLabel, modeLabel, rankBadge } from '../../utils/seasonFormat';
 import { formatCount } from '../../utils/hallOfRecords';
 import DashboardNotification from '../DashboardNotification';
+import type { SeasonSummary } from '@shared/types';
 
 const log = createLogger('SeasonSummaryModal');
 

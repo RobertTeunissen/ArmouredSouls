@@ -5,8 +5,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../utils/ApiError';
 import { isAbortError } from '../utils/abort';
-import { getSystemOverview, type SystemOverview } from '../utils/adminSystemApi';
+import { getSystemOverview } from '../utils/adminSystemApi';
 import type { Section } from './useCycleControls';
+import type { SystemOverview } from '@shared/types';
 
 export const SYSTEM_POLL_MS = 60_000;
 

@@ -8,10 +8,11 @@
  */
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { getStrategyEconomy, type StrategyEconomy as StrategyEconomyData, type StrategyEconomyRow } from '../../../utils/automatonAdminApi';
+import { getStrategyEconomy } from '../../../utils/automatonAdminApi';
 import { FOCUS_RING, ToggleChip } from './ui';
 import { errorText } from './requestErrors';
 import { batchLabel, formatCredits, formatNumber, savingGoalText } from './automatonText';
+import type { StrategyEconomy as StrategyEconomyData, StrategyEconomyRow } from '@shared/types';
 
 export interface StrategyEconomyProps {
   onOpenStrategy: (strategyKey: string) => void;

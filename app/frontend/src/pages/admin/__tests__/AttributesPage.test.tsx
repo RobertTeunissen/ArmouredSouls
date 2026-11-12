@@ -11,7 +11,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import AttributesPage from '../AttributesPage';
 import { ApiError } from '../../../utils/ApiError';
 import { collectingResponse, readyResponse } from '../../../components/admin/attributes/__tests__/attributeFixtures';
-import type { AnalysisRange, LayerToggles } from '../../../components/admin/attributes';
+import type { AnalysisRange, LayerToggles } from '@shared/types';
 
 const mockGet = vi.fn();
 

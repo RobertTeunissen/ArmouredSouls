@@ -11,15 +11,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import CycleControlsPage from '../CycleControlsPage';
+import { SCHEDULER_JOB_NAMES } from '../../../utils/adminCycleApi';
+import { jobLabel } from '../../../utils/adminCycleFormat';
 import type {
   SchedulerHistoryPage,
   SchedulerJobName,
   SchedulerOverview,
-  SchedulerRun,
-  SchedulerSlot,
-} from '../../../utils/adminCycleApi';
-import { SCHEDULER_JOB_NAMES } from '../../../utils/adminCycleApi';
-import { jobLabel } from '../../../utils/adminCycleFormat';
+  SchedulerRunView,
+  SchedulerSlotView,
+} from '@shared/types';
 
 type Config = { params?: Record<string, unknown>; signal?: AbortSignal };
 const mockGet = vi.fn<(url: string, config?: Config) => Promise<{ data: unknown }>>();
@@ -43,7 +43,7 @@ const TIMES: Record<SchedulerJobName, string> = {
 };
 const ORDER: SchedulerJobName[] = ['settlement', 'league', 'team2v2League', 'tournament', 'tagTeam', 'koth', 'team3v3League', 'team2v2Tournament', 'grandMelee', 'team3v3Tournament'];
 
-function run(overrides: Partial<SchedulerRun> & Pick<SchedulerRun, 'id' | 'jobName'>): SchedulerRun {
+function run(overrides: Partial<SchedulerRunView> & Pick<SchedulerRunView, 'id' | 'jobName'>): SchedulerRunView {
   return {
     trigger: 'cron',
     triggeredBy: null,
@@ -58,7 +58,7 @@ function run(overrides: Partial<SchedulerRun> & Pick<SchedulerRun, 'id' | 'jobNa
   };
 }
 
-function slot(jobName: SchedulerJobName, overrides: Partial<SchedulerSlot> = {}): SchedulerSlot {
+function slot(jobName: SchedulerJobName, overrides: Partial<SchedulerSlotView> = {}): SchedulerSlotView {
   const [hh, mm] = TIMES[jobName].split(':');
   return {
     jobName,

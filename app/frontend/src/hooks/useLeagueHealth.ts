@@ -8,7 +8,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../utils/ApiError';
 import { isAbortError } from '../utils/abort';
-import { getLeagueHealth, type LeagueHealthOverview } from '../utils/adminLeagueHealthApi';
+import { getLeagueHealth } from '../utils/adminLeagueHealthApi';
+import type { LeagueHealthOverview } from '@shared/types';
 
 export interface LeagueHealthState {
   data: LeagueHealthOverview | null;

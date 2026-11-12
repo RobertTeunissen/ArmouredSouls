@@ -3,8 +3,8 @@
  * low-balance threshold, plus the window's earned / running costs / bought.
  */
 import type { ReactNode } from 'react';
-import type { StableCashflow } from '../../../utils/adminPlayersApi';
 import { compactCreditsText, creditsText } from '../../../utils/adminPlayersFormat';
+import type { StableCashflow } from '@shared/types';
 
 export interface BalanceTrendProps {
   cashflow: StableCashflow;

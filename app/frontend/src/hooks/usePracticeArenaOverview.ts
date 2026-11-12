@@ -5,8 +5,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../utils/ApiError';
 import { isAbortError } from '../utils/abort';
-import { getPracticeArenaOverview, type PracticeArenaOverview } from '../utils/adminPracticeArenaApi';
+import { getPracticeArenaOverview } from '../utils/adminPracticeArenaApi';
 import type { Section } from './useCycleControls';
+import type { PracticeArenaOverview } from '@shared/types';
 
 export const POLL_MS = 60_000;
 

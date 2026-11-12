@@ -5,11 +5,13 @@
  */
 import {
   ACHIEVEMENT_STABLES,
-  type AchievementCategory,
-  type AchievementRow,
-  type AchievementStables,
-  type AchievementTier,
 } from './adminAchievementsApi';
+import type {
+  AchievementAnalyticsRow,
+  AchievementCategory,
+  AchievementStableScope,
+  AchievementTier,
+} from '@shared/types';
 
 export const TIER_ORDER: readonly AchievementTier[] = ['easy', 'medium', 'hard', 'very_hard', 'secret'];
 export const CATEGORY_ORDER: readonly AchievementCategory[] = ['combat', 'league', 'economy', 'prestige', 'style'];
@@ -38,13 +40,13 @@ export function categoryLabel(category: AchievementCategory): string {
 }
 
 /** `?stables=` → a known scope, Players by default. */
-export function readAchievementStables(params: URLSearchParams): AchievementStables {
+export function readAchievementStables(params: URLSearchParams): AchievementStableScope {
   const raw = params.get('stables');
-  return (ACHIEVEMENT_STABLES as readonly string[]).includes(raw ?? '') ? (raw as AchievementStables) : 'players';
+  return (ACHIEVEMENT_STABLES as readonly string[]).includes(raw ?? '') ? (raw as AchievementStableScope) : 'players';
 }
 
 /** Players are the default, so they leave the URL clean. */
-export function writeAchievementStables(params: URLSearchParams, stables: AchievementStables): URLSearchParams {
+export function writeAchievementStables(params: URLSearchParams, stables: AchievementStableScope): URLSearchParams {
   const next = new URLSearchParams(params);
   if (stables === 'players') next.delete('stables');
   else next.set('stables', stables);
@@ -72,7 +74,7 @@ export interface TierStrip {
 }
 
 /** One strip per tier in tier order, with every achievement's rate and the tier median. */
-export function tierStrips(rows: ReadonlyArray<AchievementRow>): TierStrip[] {
+export function tierStrips(rows: ReadonlyArray<AchievementAnalyticsRow>): TierStrip[] {
   return TIER_ORDER.map((tier) => {
     const rates = rows.filter((row) => row.tier === tier).map((row) => row.rate).sort((a, b) => a - b);
     return { tier, count: rates.length, rates, median: rates.length > 0 ? rates[Math.floor((rates.length - 1) / 2)] : null };
@@ -80,7 +82,7 @@ export function tierStrips(rows: ReadonlyArray<AchievementRow>): TierStrip[] {
 }
 
 /** Hard or very hard, yet unlocked by most of the population: highest rate first. */
-export function easierThanTier(rows: ReadonlyArray<AchievementRow>): AchievementRow[] {
+export function easierThanTier(rows: ReadonlyArray<AchievementAnalyticsRow>): AchievementAnalyticsRow[] {
   return rows
     .filter((row) => (row.tier === 'hard' || row.tier === 'very_hard') && row.rate >= EASIER_THAN_TIER_RATE)
     .sort((a, b) => b.rate - a.rate || a.achievementId.localeCompare(b.achievementId))
@@ -88,7 +90,7 @@ export function easierThanTier(rows: ReadonlyArray<AchievementRow>): Achievement
 }
 
 /** Easy or medium, yet rarely unlocked: lowest rate first. */
-export function harderThanTier(rows: ReadonlyArray<AchievementRow>): AchievementRow[] {
+export function harderThanTier(rows: ReadonlyArray<AchievementAnalyticsRow>): AchievementAnalyticsRow[] {
   return rows
     .filter((row) => (row.tier === 'easy' || row.tier === 'medium') && row.rate <= HARDER_THAN_TIER_RATE)
     .sort((a, b) => a.rate - b.rate || a.achievementId.localeCompare(b.achievementId))
@@ -103,7 +105,7 @@ export function defaultDirection(key: AchievementSortKey): SortDirection {
   return key === 'name' || key === 'category' || key === 'tier' ? 'asc' : 'desc';
 }
 
-function compareBy(key: AchievementSortKey, a: AchievementRow, b: AchievementRow): number {
+function compareBy(key: AchievementSortKey, a: AchievementAnalyticsRow, b: AchievementAnalyticsRow): number {
   switch (key) {
     case 'name': return a.name.localeCompare(b.name);
     case 'category': return CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
@@ -118,7 +120,7 @@ function compareBy(key: AchievementSortKey, a: AchievementRow, b: AchievementRow
  * Sorted copy. Ties fall back to the achievement id; achievements nobody
  * unlocked stay last when sorting by median day in either direction.
  */
-export function sortAchievements(rows: ReadonlyArray<AchievementRow>, key: AchievementSortKey, direction: SortDirection): AchievementRow[] {
+export function sortAchievements(rows: ReadonlyArray<AchievementAnalyticsRow>, key: AchievementSortKey, direction: SortDirection): AchievementAnalyticsRow[] {
   const sign = direction === 'asc' ? 1 : -1;
   return [...rows].sort((a, b) => {
     if (key === 'medianDay' && (a.medianDay === null) !== (b.medianDay === null)) return a.medianDay === null ? 1 : -1;

@@ -25,7 +25,8 @@ import type { StrategyRegistry } from './strategies/registry';
 import { storedParameters } from './automatonProfileRules';
 import { bestTiersForUsers, LEAGUE_TIER_ORDER, PLAYED_STANDING_SQL, TIERED_MODE_SQL, type LeagueTier } from './standingsTier';
 import type { HighestTier } from '../../shared/utils/automatonStandingsTier';
-import { buildModePerformance, readModeAggregates, winPercentage, type ModePerformance } from './strategyModePerformance';
+import { buildModePerformance, readModeAggregates, winPercentage } from './strategyModePerformance';
+import type { ComparisonRow, ModePerformance, StrategyComparison } from '../../shared/types';
 
 export { winPercentage };
 
@@ -33,36 +34,8 @@ export const COMPARISON_CACHE_TTL_MS = 60_000;
 
 export const HUMAN_REFERENCE_LABEL = 'Human stables (reference)';
 
-export interface ComparisonRow {
-  /** The strategy key; null on the reference row. */
-  strategyKey: string | null;
-  displayName: string;
-  reference: boolean;
-  stables: number;
-  robots: { average: number; targetAverage: number | null };
-  prestigeAverage: number;
-  /** The highest current tier any robot or team holds (played rows only), with the number of stables whose own highest equals it. */
-  bestTier: { tier: LeagueTier; stables: number } | null;
-  creditsAverage: number;
-  /** Six entries in `TIERED_STANDINGS_MODES` order, zero-filled. */
-  modes: ModePerformance[];
-}
-
 /** A row before its per-mode block is attached. */
 type ComparisonRowBase = Omit<ComparisonRow, 'modes'>;
-
-export interface StrategyComparison {
-  season: {
-    seasonNumber: number;
-    phase: string;
-    /** 1-based competitive cycle; 0 while preparing. */
-    cycle: number;
-    lengthCycles: number;
-    preparationDay: number;
-  };
-  rows: ComparisonRow[];
-  generatedAt: string;
-}
 
 /** The read client: the singleton, or a transaction (tests isolate the shared dev database this way). */
 export type ComparisonDb = Pick<Prisma.TransactionClient, '$queryRaw' | 'automatonProfile' | 'robot' | 'teamBattle' | 'standing'>;

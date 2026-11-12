@@ -100,7 +100,7 @@ export function calculateTeamTournamentPrestige(currentRound: number, maxRounds:
 
 // ─── Public Interfaces ───────────────────────────────────────────────────────
 
-export interface TeamBattleParticipantResult {
+export interface TeamTournamentParticipantResult {
   robotId: number;
   team: 1 | 2;
   damageDealt: number;
@@ -113,7 +113,7 @@ export interface TeamTournamentBattleResult {
   battleId: number;
   /** The team advancing in the bracket (the higher seed on a double forfeit). */
   winnerId: number;
-  participants: TeamBattleParticipantResult[];
+  participants: TeamTournamentParticipantResult[];
   durationSeconds: number;
   isByeMatch: boolean;
   /** True when the match was resolved as a forfeit (nothing simulated). */
@@ -502,7 +502,7 @@ export async function processTeamTournamentBattle(
   });
 
   // Build participant results for return
-  const participants: TeamBattleParticipantResult[] = participantRecords.map(p => ({
+  const participants: TeamTournamentParticipantResult[] = participantRecords.map(p => ({
     robotId: p.robotId,
     team: p.team as 1 | 2,
     damageDealt: p.damageDealt,

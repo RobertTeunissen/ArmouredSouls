@@ -4,10 +4,10 @@
  * cap), so only the last window is kept, for at most `CACHE_TTL_MS` and until
  * a new build is recorded.
  */
-import { ANALYSIS_RANGE_DAYS, MIN_RECORDING_DAYS, type AnalysisRange } from './analysisOptions';
+import { ANALYSIS_RANGE_DAYS, MIN_RECORDING_DAYS } from './analysisOptions';
 import { countRecordedBattles, getRecordingBounds, loadComparisons, sampleRate } from './analysisData';
 import type { ComparisonSet } from './comparisons';
-import type { AttributeAnalysisCollecting } from './analysisTypes';
+import type { AnalysisRange, AttributeAnalysisCollecting } from '../../../shared/types';
 
 export const DAY_MS = 24 * 3600 * 1000;
 export const CACHE_TTL_MS = 10 * 60 * 1000;

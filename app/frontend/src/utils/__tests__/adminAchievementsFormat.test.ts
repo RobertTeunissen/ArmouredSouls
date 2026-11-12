@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import type { AchievementRow, AchievementTier } from '../adminAchievementsApi';
 import {
   NOTE_LIMIT,
   TIER_ORDER,
@@ -13,8 +12,9 @@ import {
   tierStrips,
   writeAchievementStables,
 } from '../adminAchievementsFormat';
+import type { AchievementAnalyticsRow, AchievementTier } from '@shared/types';
 
-const row = (over: Partial<AchievementRow>): AchievementRow => ({
+const row = (over: Partial<AchievementAnalyticsRow>): AchievementAnalyticsRow => ({
   achievementId: 'C1', name: 'A', description: '', category: 'combat', tier: 'easy', hidden: false,
   unlocked: 0, rate: 0, medianDay: null, unlockedAll: 0, ...over,
 });
@@ -101,7 +101,7 @@ describe('sortAchievements', () => {
     row({ achievementId: 'C10', name: 'Alpha', category: 'combat', tier: 'easy', unlocked: 5, medianDay: null, unlockedAll: 7 }),
     row({ achievementId: 'C1', name: 'Charlie', category: 'style', tier: 'medium', unlocked: 8, medianDay: 2, unlockedAll: 8 }),
   ];
-  const ids = (sorted: AchievementRow[]) => sorted.map((r) => r.achievementId);
+  const ids = (sorted: AchievementAnalyticsRow[]) => sorted.map((r) => r.achievementId);
 
   it('sorts numbers and text, breaking ties by numeric id', () => {
     expect(ids(sortAchievements(rows, 'unlocked', 'desc'))).toEqual(['C1', 'C2', 'C10']);

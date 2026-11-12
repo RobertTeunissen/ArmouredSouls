@@ -8,7 +8,7 @@ import {
   latestAttempt,
   timelineDates,
 } from '../adminSeasonFormat';
-import type { RolloverAttempt } from '../seasonApi';
+import type { RolloverAttempt } from '@shared/types';
 
 const config = { seasonLengthCycles: 100, preparationLengthCycles: 2, countdownCycles: 7, accoladeDepth: 3, retainedImagesPerStable: 20 };
 const base = {

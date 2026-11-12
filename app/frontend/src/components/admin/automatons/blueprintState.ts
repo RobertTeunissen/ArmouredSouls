@@ -3,9 +3,9 @@
  * 10.3): the card item, the Refinement_Plan step costs (shared formula) and
  * the collapsed header line.
  */
-import type { BlueprintFields, CatalogueWeapon, RefinementStep } from '../../../utils/automatonAdminApi';
 import { calculateRefinementCost } from '@shared/utils/weaponRefinement';
 import { BUILD_FOCUS_NAMES, LOADOUT_LABELS, STANCE_LABELS, stageRangeBand } from './automatonText';
+import type { BlueprintFields, CatalogueWeapon, RefinementStep } from '@shared/types';
 
 export interface BlueprintEditorItem {
   slot: number;

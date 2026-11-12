@@ -8,75 +8,7 @@
  */
 import { api } from './api';
 import type { StableScope } from './adminStableScope';
-
-export interface DashboardHumanPlayers {
-  total: number;
-  active7d: number;
-  new7d: number;
-  inactive3d: number;
-  /** About seven days ago; active/inactive are null until a snapshot exists. */
-  previous: { active7d: number | null; new7d: number; inactive3d: number | null };
-}
-
-export interface DashboardKpis {
-  currentCycle: number;
-  lastCycleAt: string | null;
-  humanPlayers: DashboardHumanPlayers;
-  robots: { total: number; battleReady: number; battleReadyPercentage: number };
-  timestamp: string;
-}
-
-export interface DashboardSchedulerSummary {
-  active: boolean;
-  runningJob: string | null;
-  queueLength: number;
-  jobsTotal: number;
-  jobsSucceeded: number;
-  jobsFailed: string[];
-  jobsNotYetReported: number;
-  processStartedAt: string;
-}
-
-export interface DashboardCycleHealth {
-  settlementOverdue: boolean;
-  failedJobs: string[];
-  stuckMatches: number;
-}
-
-export interface DashboardStatus {
-  cycle: { number: number; lastSettlementAt: string | null; nextSettlementAt: string | null };
-  season: { number: number; phase: string; seasonCycle: number } | null;
-  scheduler: DashboardSchedulerSummary;
-  queuedMatches: number | null;
-  attention: {
-    bankruptcyRisk: { count: number; threshold: number } | null;
-    /** Last 24 hours: every security signal, and the bursts and violations among them. */
-    security: { signals: number; alerts: number } | null;
-    automatons: { needAttention: number; failed: number } | null;
-    cycleHealth: DashboardCycleHealth;
-    /** Server errors (5xx) of the last 24 hours and the route with the most; null when unreadable. */
-    requests: { failures24h: number; topRoute: string | null; topCode: string | null } | null;
-  };
-  timestamp: string;
-}
-
-export interface BattleActivityRow {
-  mode: string;
-  lastCycle: number | null;
-  season: number;
-  walkovers: number;
-  queued: number;
-  drawRate: number | null;
-  killRate: number;
-  avgDurationSeconds: number;
-}
-
-export interface BattleActivity {
-  rows: BattleActivityRow[];
-  totals: Omit<BattleActivityRow, 'mode'>;
-  lastCycleWindow: { cycleNumber: number; from: string; to: string } | null;
-  timestamp: string;
-}
+import type { BattleActivity, DashboardKpis, DashboardStatus } from '@shared/types';
 
 export function getDashboardKpis(filter: StableScope, signal?: AbortSignal): Promise<DashboardKpis> {
   return api.get<DashboardKpis>('/api/admin/dashboard/kpis', { params: { stables: filter }, signal });

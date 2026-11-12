@@ -43,7 +43,8 @@ import { planStartingStage } from './goals/robotCountGoal';
 import { planStorageRoom, stageHands, takeReusable, unequippedItems, weaponByName } from './goals/goalSupport';
 import type { EquipSource, WeaponPurchasePart, WeaponSaleStep, FacilityLevelStep } from './goals/goalTypes';
 import { checkTurnBudget } from './turnBudget';
-import { loadStableFacts, reloadOptions, type BlueprintFacts, type Hand, type InventoryFacts, type RobotFacts, type StableFacts } from './stableFacts';
+import { loadStableFacts, reloadOptions, type BlueprintFacts, type InventoryFacts, type RobotFacts, type StableFacts } from './stableFacts';
+import type { Hand } from '../../shared/types';
 
 /** Goal id recorded on the charged steps (Turn_Record actions, audit context). */
 export const FITOUT_RECOVERY_GOAL_ID = 'fitout_recovery';

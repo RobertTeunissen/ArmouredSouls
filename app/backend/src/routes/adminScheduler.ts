@@ -16,7 +16,7 @@ import { validateRequest, validated } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 // The constants module, not cycleScheduler: a test that mocks the scheduler
 // must not be able to turn this into `z.enum(undefined)`.
-import { SCHEDULER_JOB_NAMES, type SchedulerJobName } from '../services/cycle/schedulerJobNames';
+import { SCHEDULER_JOB_NAMES } from '../services/cycle/schedulerJobNames';
 import { BULK_CYCLES_JOB_NAME, SEASON_ROLLOVER_JOB_NAME } from '../types/schedulerTypes';
 import { startManualRun } from '../services/cycle/cycleScheduler';
 import {
@@ -26,6 +26,7 @@ import {
   listSchedulerRuns,
 } from '../services/cycle/schedulerHistoryService';
 import { recordAction as recordAuditAction } from '../services/admin/adminAuditLogService';
+import type { SchedulerJobName } from '../shared/types';
 
 const router = express.Router();
 

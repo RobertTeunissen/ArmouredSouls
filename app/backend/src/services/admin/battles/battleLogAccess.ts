@@ -11,7 +11,7 @@ import { getBattleLogRetentionDays } from '../../retention/battleLogRetentionSer
 import { BATTLE_LOG_SELECT, decodeBattleLog } from '../../battle/battleLogCodec';
 import type { KothLogStorage } from '../../../types/battleLogTypes';
 import { modeShape } from './battleModes';
-import type { AdminCombatEvent, BattleLogResponse, CombatLogStatus } from './battleTypes';
+import type { AdminBattleLogResponse, AdminCombatEvent, CombatLogStatus } from '../../../shared/types';
 
 /** The retention job runs daily at 01:30 UTC and removes logs older than the window. */
 const RETENTION_RUN_UTC_MINUTES = 90;
@@ -91,7 +91,7 @@ export function combatEventsOf(log: Record<string, unknown> | null): AdminCombat
   );
 }
 
-export async function getAdminBattleLog(battleId: number): Promise<BattleLogResponse> {
+export async function getAdminBattleLog(battleId: number): Promise<AdminBattleLogResponse> {
   const { battleType, createdAt, log } = await loadStoredLog(battleId);
   const storage = (log as StoredLog | null)?.storage ?? null;
   return {

@@ -1,9 +1,10 @@
 import { ROBOT_ATTRIBUTES } from '../../../../shared/utils/robotAttributes';
 import { getLoadoutBonus } from '../../../../shared/utils/robotStats';
-import { ALL_LAYERS_ON, type LayerToggles } from '../analysisOptions';
+import { ALL_LAYERS_ON } from '../analysisOptions';
 import { layerBuild, layerValue, layeredValues, type LayeredBuild, type RawBuild } from '../attributeLayers';
 import { addBattle, emptyComparisonSet, PLACEMENT_PAIR_CAP, type AnalysisBattle, type AnalysisParticipant } from '../comparisons';
 import { GROUP_PAIRS, GROUP_SIZE, LayeredValueCache, buildDesign, penaltyMask, profileKey, profileTallies, robotProfile } from '../analysisFeatures';
+import type { LayerToggles } from '../../../../shared/types';
 
 const OFF: LayerToggles = { tuning: false, weapons: false, refinements: false, loadout: false, stance: false };
 

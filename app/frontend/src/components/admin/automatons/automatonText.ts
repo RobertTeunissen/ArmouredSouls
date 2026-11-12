@@ -7,7 +7,11 @@
  * focused on rendering and the formatting is unit-tested.
  */
 import type {
-  AttributeGroup,
+  TieredStandingsMode,
+} from '../../../utils/automatonAdminApi';
+import type {
+  AcademyGroup,
+  AutomatonFacilityType,
   BlockedReason,
   BuildFocusKey,
   BuildOrderDescriptor,
@@ -25,12 +29,11 @@ import type {
   Stance,
   TargetBounds,
   TurnStatus,
-  TieredStandingsMode,
   TurnTrigger,
   UpgradeConfirmation,
   UpgradeWarningEntry,
   WeaponStage,
-} from '../../../utils/automatonAdminApi';
+} from '@shared/types';
 
 // ── Labels ───────────────────────────────────────────────────────────
 
@@ -66,7 +69,7 @@ export const FACILITY_LABELS: Readonly<Record<string, string>> = {
 };
 
 /** Facility types a Strategy_Builder facility Goal can target (academies are bought by attributes Goals). */
-export const BUILDER_FACILITY_TYPES: readonly string[] = [
+export const BUILDER_FACILITY_TYPES: readonly AutomatonFacilityType[] = [
   'repair_bay',
   'training_facility',
   'weapons_workshop',
@@ -92,7 +95,7 @@ export const STANCE_LABELS: Readonly<Record<Stance, string>> = {
   balanced: 'balanced',
 };
 
-export const GROUP_LABELS: Readonly<Record<AttributeGroup, string>> = {
+export const GROUP_LABELS: Readonly<Record<AcademyGroup, string>> = {
   combat: 'Combat',
   defense: 'Defense',
   mobility: 'Mobility',

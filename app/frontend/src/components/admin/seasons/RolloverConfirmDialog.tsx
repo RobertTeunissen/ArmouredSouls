@@ -5,9 +5,9 @@
  */
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { RolloverPreview } from '../../../utils/seasonApi';
 import { formatCount } from '../../../utils/adminSeasonFormat';
 import { ActionButton, Dialog, INPUT_CLASS } from '../automatons/ui';
+import type { RolloverPreview } from '@shared/types';
 
 export const CONFIRM_PHRASE = 'CONFIRM_ROLLOVER';
 

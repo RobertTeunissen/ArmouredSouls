@@ -9,12 +9,12 @@
  */
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { ActivateAllOutcome, LibraryStrategy, ProfileListItem } from '../../../utils/automatonAdminApi';
 import { ActionButton, ConfirmDialog, FOCUS_RING, Notice, ToggleChip } from './ui';
 import { errorText } from './requestErrors';
 import { NEED_ATTENTION_LABELS, deriveStablesView, strategyOptions, type NeedAttentionCode, type StableSort, type StablesFilter } from './stablesView';
 import { StablesToolbar } from './StablesToolbar';
 import { StablesList } from './StablesList';
+import type { ActivateAllOutcome, LibraryStrategy, ProfileListItem } from '@shared/types';
 
 export type { StablesFilter } from './stablesView';
 

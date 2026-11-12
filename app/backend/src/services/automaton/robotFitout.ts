@@ -40,8 +40,9 @@ import {
   type ExecutionCursor,
 } from './executionSteps';
 import { awardQuietly, runFreeUpkeep, type FreeUpkeepIssue } from './upkeep/freeUpkeep';
-import { blueprintForSlot, loadStableFacts, reloadOptions, type BlueprintFacts, type Hand, type StableFacts } from './stableFacts';
+import { blueprintForSlot, loadStableFacts, reloadOptions, type BlueprintFacts, type StableFacts } from './stableFacts';
 import type { ChainStep, PlannedAction } from './goals/goalTypes';
+import type { Hand } from '../../shared/types';
 
 type RobotChainAction = Extract<PlannedAction, { kind: 'robot_chain' }>;
 type FitoutStep = Extract<ChainStep, { kind: 'fitout' }>;

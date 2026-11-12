@@ -1,6 +1,7 @@
 import type { NSFWJS, PredictionType } from 'nsfwjs';
 import type { Tensor3D } from '@tensorflow/tfjs-node';
 import logger from '../../config/logger';
+import type { ModerationThresholds } from '../../shared/types';
 
 export interface ModerationResult {
   safe: boolean;
@@ -22,12 +23,6 @@ export type ModerationAvailabilityStatus = 'starting' | 'ready' | 'unavailable';
 export interface ModerationAvailability {
   status: ModerationAvailabilityStatus;
   changedAt: string;
-}
-
-export interface ModerationThresholds {
-  porn: number;
-  hentai: number;
-  sexy: number;
 }
 
 /** A score at or above any of these blocks the upload (NSFW hard block). */

@@ -5,7 +5,6 @@
  */
 import type { ReactNode } from 'react';
 import { AdminPanel } from '../shared';
-import type { AchievementRow } from '../../../utils/adminAchievementsApi';
 import {
   EASIER_THAN_TIER_RATE,
   HARDER_THAN_TIER_RATE,
@@ -14,11 +13,12 @@ import {
   tierLabel,
 } from '../../../utils/adminAchievementsFormat';
 import { formatCount } from '../../../utils/adminDashboardFormat';
+import type { AchievementAnalyticsRow } from '@shared/types';
 
 function NoteList({ title, note, rows, population, tone }: {
   title: string;
   note: string;
-  rows: AchievementRow[];
+  rows: AchievementAnalyticsRow[];
   population: number;
   tone: 'warning' | 'primary';
 }): ReactNode {
@@ -50,8 +50,8 @@ function NoteList({ title, note, rows, population, tone }: {
 }
 
 export function TierNotes({ easier, harder, population, who }: {
-  easier: AchievementRow[];
-  harder: AchievementRow[];
+  easier: AchievementAnalyticsRow[];
+  harder: AchievementAnalyticsRow[];
   population: number;
   who: string;
 }): ReactNode {

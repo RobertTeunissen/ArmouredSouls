@@ -19,7 +19,7 @@ import { PlayerDetailPanel, PlayerSegmentCards, PlayersTable, StableSearch } fro
 import { AdminPagination } from '../../components/admin/shared';
 import { ApiError } from '../../utils/ApiError';
 import { isAbortError } from '../../utils/abort';
-import { getPlayersOverview, type PlayersOverview } from '../../utils/adminPlayersApi';
+import { getPlayersOverview } from '../../utils/adminPlayersApi';
 import {
   PLAYERS_PAGE_SIZE,
   SEGMENT_LABELS,
@@ -29,6 +29,7 @@ import {
   type PlayersViewState,
 } from '../../utils/adminPlayersFormat';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
+import type { PlayersOverview } from '@shared/types';
 
 /** Low-balance threshold until the overview arrives (the same as the server's). */
 const FALLBACK_LOW_BALANCE = 10_000;

@@ -13,7 +13,7 @@ import fs from 'fs';
 import path from 'path';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import type { EventOrder, RefinementStep, StrategyParametersV1, TeamNames, WeaponStage } from '../../types/automaton';
+import type { EventOrder, StrategyParametersV1 } from '../../types/automaton';
 import { AutomatonError, AutomatonErrorCode } from '../../errors/automatonErrors';
 import {
   CATALOGUE_SCHEMA_VERSION,
@@ -24,6 +24,7 @@ import {
 } from './automatonCatalogueService';
 import { getStrategyRegistry } from './strategies/defaultRegistry';
 import type { StrategyRegistry } from './strategies/registry';
+import type { RefinementStep, TeamNames, WeaponStage } from '../../shared/types';
 
 /** `app/backend/uploads` (served at `/uploads`). */
 export const UPLOADS_DIRECTORY = path.resolve(__dirname, '..', '..', '..', 'uploads');

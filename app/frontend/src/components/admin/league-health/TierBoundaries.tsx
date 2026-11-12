@@ -4,7 +4,6 @@
  * A table from md up, one card per boundary below.
  */
 import type { ReactNode } from 'react';
-import type { LeagueSeasonOverview, SeasonBoundary } from '../../../utils/adminLeagueHealthApi';
 import {
   bounceFractionText,
   bounceNote,
@@ -12,6 +11,7 @@ import {
   boundaryLabel,
   formatCount,
 } from '../../../utils/adminLeagueHealthFormat';
+import type { LeagueSeasonOverview, SeasonBoundary } from '@shared/types';
 
 export interface TierBoundariesProps {
   season: LeagueSeasonOverview;

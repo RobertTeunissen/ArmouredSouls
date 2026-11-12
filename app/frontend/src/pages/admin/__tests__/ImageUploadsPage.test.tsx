@@ -9,7 +9,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import ImageUploadsPage from '../ImageUploadsPage';
-import type { CleanupPreview, ImageDetail, ImagesOverview, ImagesPage, ImageTile } from '../../../utils/adminImagesApi';
+import type { CleanupPreview, ImageDetail, ImagesOverview, ImagesPage, ImageTile } from '@shared/types';
 
 const mockGet = vi.fn();
 const mockPost = vi.fn();

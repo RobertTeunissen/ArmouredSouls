@@ -10,7 +10,7 @@ import { MemoryRouter } from 'react-router-dom';
 import SeasonSummaryModal from '../SeasonSummaryModal';
 import { useSeasonStore } from '../../../stores/seasonStore';
 import * as seasonApi from '../../../utils/seasonApi';
-import type { SeasonState, SeasonSummary } from '../../../utils/seasonApi';
+import type { SeasonState, SeasonSummary } from '@shared/types';
 
 vi.mock('../../../utils/seasonApi', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../utils/seasonApi')>()),

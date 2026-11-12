@@ -5,7 +5,7 @@
  */
 import { useId, useState } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
-import { ANALYSIS_COLUMNS, type AnalysisColumn, type AnalysisRange, type AttributeFilters, type LayerKey } from './types';
+import { ANALYSIS_COLUMNS, type AttributeFilters } from './types';
 import {
   DEFAULT_ATTRIBUTE_FILTERS,
   LAYER_OPTIONS,
@@ -14,6 +14,7 @@ import {
   columnLabel,
   layersSummary,
 } from '../../../utils/adminAttributesFormat';
+import type { AnalysisColumn, AnalysisRange, LayerKey } from '@shared/types';
 
 export interface AttributesControlsProps {
   filters: AttributeFilters;

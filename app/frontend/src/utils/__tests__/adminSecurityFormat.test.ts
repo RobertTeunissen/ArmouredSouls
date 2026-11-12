@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { bucketLabel, firedSummary, readSecurityWindow, shortDateTime, writeSecurityWindow } from '../adminSecurityFormat';
 import { readImagesView, writeImagesView, bytesText } from '../adminImagesFormat';
-import type { SignalSummary } from '../adminSecurityApi';
+import type { SignalSummary } from '@shared/types';
 
 const summary = (signal: SignalSummary['signal'], total: number): SignalSummary => ({ signal, total, perBucket: [total], lastSeenAt: null });
 

@@ -19,7 +19,7 @@ import type {
   MetaTuning,
   MetaTuningAttribute,
   RefinementKind,
-} from './metaBuildsTypes';
+} from '../../../shared/types';
 
 const REFINEMENT_KINDS: readonly RefinementKind[] = ['hone', 'augment', 'sharpen', 'forge'];
 const TOP_SPENDERS = 5;

@@ -16,10 +16,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { PracticeDayStats } from '../../../utils/adminPracticeArenaApi';
 import { dayLabel, formatCount, formatUnavailable, shortDate } from '../../../utils/adminPracticeArenaFormat';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { ADMIN_FOCUS_RING, AdminPanel } from '../shared';
+import type { PracticeDayStats } from '@shared/types';
 
 export interface PracticeDailyTrendProps {
   days: PracticeDayStats[] | null;

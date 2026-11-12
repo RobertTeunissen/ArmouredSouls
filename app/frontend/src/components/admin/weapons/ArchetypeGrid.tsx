@@ -3,9 +3,10 @@
  * the win-chance effect against an equally strong average robot, coloured only
  * when significant, with the share of all robots and of players' robots.
  */
-import { LOADOUTS, RANGE_BANDS, type AnalysisColumn, type ArchetypeRow } from './types';
+import { LOADOUTS, RANGE_BANDS } from './types';
 import { effectDescription, formatEffect } from '../../../utils/adminAttributesFormat';
 import { archetypeLabel, bandLabel, effectCellClass as cellClass, formatUsage, loadoutLabel } from '../../../utils/adminWeaponsFormat';
+import type { AnalysisColumn, ArchetypeRow } from '@shared/types';
 
 export interface ArchetypeGridProps {
   archetypes: ArchetypeRow[];

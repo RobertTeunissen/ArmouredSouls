@@ -1,7 +1,7 @@
 import { buildBattleExportText, eventLines, formatDuration, formatEventTime } from '../battleExportText';
-import type { AdminCombatEvent, BattleDetailResponse } from '../battleTypes';
+import type { AdminBattleDetail, AdminCombatEvent } from '../../../../shared/types';
 
-const detail = (overrides: Partial<BattleDetailResponse> = {}): BattleDetailResponse => ({
+const detail = (overrides: Partial<AdminBattleDetail> = {}): AdminBattleDetail => ({
   id: 531203,
   battleType: 'league_2v2',
   leagueType: 'gold',

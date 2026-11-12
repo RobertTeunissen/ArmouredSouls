@@ -10,8 +10,7 @@
  */
 import { discountedWeaponPrice, robotPurchaseCost } from '../pricing';
 import { chooseRobotName } from '../robotNaming';
-import { blueprintForSlot, type Hand, type InventoryFacts, type StableFacts } from '../stableFacts';
-import type { WeaponStage } from '../../../types/automaton';
+import { blueprintForSlot, type InventoryFacts, type StableFacts } from '../stableFacts';
 import {
   facilityChain,
   planStorageRoom,
@@ -29,6 +28,7 @@ import {
   type GoalOutcome,
   type WeaponPurchasePart,
 } from './goalTypes';
+import type { Hand, WeaponStage } from '../../../shared/types';
 
 /** Most robots a stable can own (Roster Expansion L10). */
 export const MAX_ROBOTS = 11;

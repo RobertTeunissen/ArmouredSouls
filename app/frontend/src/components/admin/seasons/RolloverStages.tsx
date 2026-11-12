@@ -4,9 +4,9 @@
  * The purge stage shows a bar while generated stables are being deleted.
  */
 import type { ReactNode } from 'react';
-import type { RolloverRunSummary, RolloverStageProgress } from '../../../utils/seasonApi';
 import { elapsedSince, formatDuration } from '../../../utils/adminCycleFormat';
 import { STAGE_DESCRIPTIONS, STAGE_LABELS } from '../../../utils/adminSeasonFormat';
+import type { RolloverRunSummary, RolloverStageProgress } from '@shared/types';
 
 const STATUS: Readonly<Record<RolloverStageProgress['status'], { icon: string; label: string; tone: string }>> = {
   pending: { icon: '○', label: 'Waiting', tone: 'text-tertiary' },

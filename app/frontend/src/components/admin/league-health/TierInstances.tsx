@@ -5,8 +5,8 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { LeagueHealthInstance, LeagueHealthModeSummary, LeagueHealthTier } from '../../../utils/adminLeagueHealthApi';
 import { entityNoun, formatCount, pointsUnit, standingsHref, tierLabel } from '../../../utils/adminLeagueHealthFormat';
+import type { LeagueHealthInstance, LeagueHealthModeSummary, LeagueHealthTier } from '@shared/types';
 
 export interface TierInstancesProps {
   mode: LeagueHealthModeSummary;

@@ -18,7 +18,7 @@
 import { BUILD_FOCUS_WEIGHTS } from '../../../buildFocus';
 import { getStrategyRegistry } from '../../defaultRegistry';
 import { createStrategyRegistry, interpretStrategy, type StrategyRegistry } from '../../registry';
-import type { StrategyDefinitionFile } from '../../strategyTypes';
+import type { StrategyDefinitionFile } from '../../../../../shared/types';
 
 export function duoV1Definition(key = 'duo'): StrategyDefinitionFile {
   const duo = getStrategyRegistry().getStrategy('duo', 1);

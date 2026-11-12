@@ -3,9 +3,9 @@
  * TOAST), with their live row estimate (`pg_stat_user_tables`).
  */
 import type { ReactNode } from 'react';
-import type { SystemOverview } from '../../../utils/adminSystemApi';
 import { formatRows, formatSize } from '../../../utils/adminSystemFormat';
 import { AdminPanel } from '../shared';
+import type { SystemOverview } from '@shared/types';
 
 export interface LargestTablesProps {
   database: SystemOverview['database'] | undefined;

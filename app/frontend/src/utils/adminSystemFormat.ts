@@ -2,11 +2,11 @@
  * Pure helpers of the admin System page: sizes, error-code labels, the status
  * cards and the scheduler lock summary. Unit-tested without rendering.
  */
-import type { SystemJob, SystemOverview } from './adminSystemApi';
 import { formatDayTime } from './adminCycleFormat';
 import { formatAgo, formatDuration as formatCompactDuration } from './adminDashboardFormat';
 import { errorCodeLabel, formatCount } from './adminFormat';
 import { shortDate } from './adminPracticeArenaFormat';
+import type { SystemJob, SystemOverview } from '@shared/types';
 
 const KB = 1024;
 const MB = KB * 1024;

@@ -18,9 +18,6 @@ import {
   getStrategyLibrary,
   listAllProfiles,
   setProgramSwitch,
-  type AutomatonStatusBar as StatusBarData,
-  type LibraryStrategy,
-  type ProfileListItem,
 } from '../../utils/automatonAdminApi';
 import { AutomatonStatusBar } from '../../components/admin/automatons/AutomatonStatusBar';
 import { StablesTab, type StablesFilter } from '../../components/admin/automatons/StablesTab';
@@ -31,6 +28,7 @@ import { CatalogueTab } from '../../components/admin/automatons/CatalogueTab';
 import { FOCUS_RING, Notice } from '../../components/admin/automatons/ui';
 import { errorText } from '../../components/admin/automatons/requestErrors';
 import { AdminPageHeader } from '../../components/admin/shared';
+import type { AutomatonStatusBar as StatusBarData, LibraryStrategy, ProfileListItem } from '@shared/types';
 
 export type AutomatonsTab = 'stables' | 'strategies' | 'editor' | 'catalogue';
 

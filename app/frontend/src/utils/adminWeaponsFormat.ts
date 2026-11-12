@@ -1,22 +1,25 @@
 /**
  * Labels, formatting and URL state of the admin Weapons page.
  */
-import { ANALYSIS_COLUMNS, ANALYSIS_RANGES, type EffectEstimate } from '../components/admin/attributes/types';
+import { ANALYSIS_COLUMNS, ANALYSIS_RANGES } from '../components/admin/attributes/types';
 import { TONE_CLASSES, effectTone } from './adminAttributesFormat';
 import {
   ANALYSIS_STRENGTHS,
   MATCHUP_VIEWS,
-  type AnalysisColumn,
-  type AnalysisRange,
-  type AnalysisStrength,
-  type ArchetypeKey,
-  type Loadout,
-  type MatchupView,
-  type RangeBand,
-  type UsageTier,
   type WeaponFilters,
-  type WeaponRow,
 } from '../components/admin/weapons/types';
+import type {
+  AnalysisColumn,
+  AnalysisRange,
+  AnalysisStrength,
+  ArchetypeKey,
+  EffectEstimate,
+  Loadout,
+  MatchupView,
+  RangeBand,
+  UsageTier,
+  WeaponRow,
+} from '@shared/types';
 
 export const DEFAULT_WEAPON_FILTERS: WeaponFilters = { range: '7d', column: 'all', strength: 'all', matchups: 'bands' };
 

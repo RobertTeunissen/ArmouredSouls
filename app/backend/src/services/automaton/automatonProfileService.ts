@@ -29,7 +29,7 @@ import { AutomatonError, AutomatonErrorCode } from '../../errors/automatonErrors
 import { hashPassword } from '../auth/passwordService';
 import { validateStableName } from '../../utils/validation';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
-import type { BuildFocusKey, RefinementStep, StrategyParametersV1, TeamNames, WeaponStage } from '../../types/automaton';
+import type { StrategyParametersV1 } from '../../types/automaton';
 import {
   buildableBlueprintCount,
   compareCatalogueKeys,
@@ -58,16 +58,38 @@ import {
 import { deleteProfileImages } from './automatonImageService';
 import { loadWeaponCatalogue } from './stableFacts';
 import { getStrategyRegistry } from './strategies/defaultRegistry';
-import { describeBuildOrder, highestRobotsTarget, resolveGoalTarget, type BuildOrderDescriptor } from './strategies/strategyParameters';
+import { describeBuildOrder, highestRobotsTarget, resolveGoalTarget } from './strategies/strategyParameters';
 import type { StrategyRegistry } from './strategies/registry';
 import type { UpgradeStrategy } from './strategies/strategyTypes';
 import { bestTiersForUsers, type LeagueTier } from './standingsTier';
 import type { TieredStandingsMode } from '../../shared/utils/automatonStandingsTier';
-import { loadActiveNeedAttention, loadNeedAttention, type NeedAttentionReason } from './needAttention';
+import { loadActiveNeedAttention, loadNeedAttention } from './needAttention';
 import { teamNameMaxRobots, teamsForSlots } from './teamRule';
 import { BUILD_FOCUS_WEIGHTS, GROUP_ACADEMY } from './buildFocus';
-import { attributePlanView, buildFocusOptions, type AttributePlanSubject, type AttributePlanView } from './attributePlanView';
+import { attributePlanView, buildFocusOptions, type AttributePlanSubject } from './attributePlanView';
 import type { FacilityType } from './stableFacts';
+import type {
+  ActivateAllOutcome,
+  ActivationResult,
+  AttributePlanView,
+  BlueprintView,
+  BuildFocusKey,
+  BuildOrderDescriptor,
+  CreateDraftInput,
+  NeedAttentionReason,
+  ProfileDetail,
+  ProfileListItem,
+  ProfileListPage,
+  ProfileListQuery,
+  RefinementStep,
+  TeamNames,
+  TeamRowView,
+  TurnRecordPage,
+  TurnSummary,
+  UpdateProfileInput,
+  UpdateStrategyInput,
+  WeaponStage,
+} from '../../shared/types';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -87,31 +109,6 @@ export { automatonUsername, AUTOMATON_USERNAME_PREFIX, profileEventOrder, profil
 /** Opening balance of an Activated stable: the `User.currency` default (R2.2). */
 export const AUTOMATON_OPENING_BALANCE = 3_000_000;
 
-export interface CreateDraftInput {
-  catalogueKey: string;
-  stableName: string;
-  franchise: string;
-  backstory: string;
-  strategyKey: string;
-  eventOrder?: string[];
-  teamNames?: TeamNames;
-}
-
-export interface UpdateProfileInput {
-  stableName?: string;
-  franchise?: string;
-  backstory?: string;
-  teamNames?: TeamNames;
-  eventOrder?: string[];
-}
-
-export interface UpdateStrategyInput {
-  strategyKey: string;
-  /** Goal id → Goal_Target, merged over the stored targets (same key) or the defaults (new key). */
-  targets?: Record<string, number>;
-  teamNames?: TeamNames;
-}
-
 export type BlueprintInput = BlueprintFields;
 
 export interface AddBlueprintInput extends BlueprintInput {
@@ -130,17 +127,6 @@ export interface MutationResult<T> {
   /** Field names that changed, for the admin audit summary (R11.3). */
   changedFields: string[];
 }
-
-export interface ActivationResult {
-  catalogueKey: string;
-  userId: number;
-  stableName: string;
-  activatedAt: string;
-}
-
-export type ActivateAllOutcome =
-  | { catalogueKey: string; outcome: 'activated'; stableName: string; userId: number }
-  | { catalogueKey: string; outcome: 'rejected'; code: string; message: string };
 
 // ── Loading ──────────────────────────────────────────────────────────
 
@@ -271,25 +257,6 @@ async function assertStableNameFree(
   if (user || profile) throw stableNameTakenError(stableName);
 }
 
-// ── Read models ──────────────────────────────────────────────────────
-
-export interface TurnSummary {
-  seasonNumber: number;
-  trigger: string;
-  slot: number;
-  attempt: number;
-  status: string;
-  reason: string | null;
-  creditsSpent: number;
-  creditsReceived: number;
-  /** Charged steps of the turn. */
-  actionCount: number;
-  /** The Goal the turn ended Saving on (position, label, target) or null. */
-  savingGoal: { goalId: string; position: number | null; label: string | null; target: number | null } | null;
-  startedAt: string;
-  finishedAt: string | null;
-}
-
 type TurnRow = Prisma.AutomatonTurnGetPayload<Record<string, never>>;
 
 function savingGoalOf(goalOutcomes: Prisma.JsonValue): string | null {
@@ -331,45 +298,6 @@ function robotTarget(strategy: UpgradeStrategy | undefined, params: StrategyPara
   return highestRobotsTarget(strategy.buildOrder, params ?? { targets: {} });
 }
 
-export interface ProfileListItem {
-  catalogueKey: string;
-  stableName: string;
-  franchise: string;
-  status: 'draft' | 'active';
-  origin: string;
-  strategyKey: string;
-  strategyVersion: number;
-  strategyDisplayName: string | null;
-  blueprintCount: number;
-  robots: { current: number; target: number | null };
-  credits: number | null;
-  prestige: number | null;
-  /** Highest current tier over played standings rows only; null when the stable has not played a tiered mode. */
-  bestTier: LeagueTier | null;
-  /** The mode holding `bestTier`; null exactly when `bestTier` is null. */
-  bestTierMode: TieredStandingsMode | null;
-  lastTurn: TurnSummary | null;
-  activatedAt: string | null;
-  /** Need_Attention reasons in the approved order; empty for a draft (R11.12). */
-  needAttention: NeedAttentionReason[];
-}
-
-export interface ProfileListQuery {
-  status?: 'draft' | 'active';
-  strategy?: string;
-  /** true: only stables that Need_Attention; false: only those that do not (R11.11). */
-  attention?: boolean;
-  page: number;
-  limit: number;
-}
-
-export interface ProfileListPage {
-  items: ProfileListItem[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
 /** Profiles with progress, ordered by Catalogue_Key (R11.2). */
 /**
  * Each profile's most recent Turn_Record. One DISTINCT ON read of the ids on
@@ -388,7 +316,7 @@ async function readLatestTurns(profileIds: readonly number[]): Promise<Map<numbe
   return new Map(turns.map((turn) => [turn.profileId, turn]));
 }
 
-export async function listProfiles(query: ProfileListQuery, deps: ProfileServiceDeps = {}): Promise<ProfileListPage> {
+export async function listProfiles(query: ProfileListQuery & { page: number; limit: number }, deps: ProfileServiceDeps = {}): Promise<ProfileListPage> {
   const registry = registryOf(deps);
   const filters: Prisma.AutomatonProfileWhereInput = {
     ...(query.status ? { status: query.status } : {}),
@@ -447,62 +375,6 @@ export async function listProfiles(query: ProfileListQuery, deps: ProfileService
     };
   });
   return { items, total, page: query.page, limit: query.limit };
-}
-
-export interface BlueprintView extends BlueprintRecord {
-  id: number;
-  imageUrl: string | null;
-  /** The live robot built from this blueprint, if any. */
-  liveRobot: { id: number; name: string } | null;
-}
-
-export interface TeamRowView {
-  size: 2 | 3;
-  index: number;
-  slots: number[];
-  name: string | null;
-  /** Robot names of the live robots in the team's slots (null for a slot without one). */
-  members: (string | null)[];
-  state: 'formed' | 'waiting';
-  /** The slot whose robot forms the team (its highest slot), when waiting. */
-  waitsForSlot: number | null;
-}
-
-export interface ProfileDetail {
-  catalogueKey: string;
-  stableName: string;
-  franchise: string;
-  backstory: string;
-  status: 'draft' | 'active';
-  origin: string;
-  activatedAt: string | null;
-  userId: number | null;
-  credits: number | null;
-  prestige: number | null;
-  strategy: {
-    key: string;
-    version: number;
-    displayName: string | null;
-    latestVersion: number | null;
-    /** The numbered Build_Order with this stable's Goal_Targets. */
-    buildOrder: (BuildOrderDescriptor & { target: number })[];
-    parametersValid: boolean;
-  };
-  teamNames: TeamNames;
-  requiredTeamNames: { twoVsTwo: number; threeVsThree: number } | null;
-  teams: TeamRowView[];
-  eventOrder: string[];
-  blueprints: BlueprintView[];
-  registeredTeams: { id: number; teamSize: number; teamName: string; robotIds: number[] }[];
-  lastTurn: TurnSummary | null;
-  /**
-   * The Editor's attributes plans, one per attributes Goal (R11.10): the live
-   * robots, or the blueprints up to the highest robots target of a stable
-   * without robots.
-   */
-  attributePlans: AttributePlanView[];
-  /** Build_Focus presets for the blueprint editor (admin-only text). */
-  buildFocusOptions: { key: BuildFocusKey; displayName: string; description: string }[];
 }
 
 /** Robots an attributes plan covers: the live robots, else the blueprints up to the robots target. */
@@ -614,13 +486,6 @@ export async function getProfileDetail(catalogueKey: string, deps: ProfileServic
     attributePlans,
     buildFocusOptions: buildFocusOptions(),
   };
-}
-
-export interface TurnRecordPage {
-  items: (TurnSummary & { startBalance: number; endBalance: number | null; durationMs: number | null; actions: Prisma.JsonValue; goalOutcomes: Prisma.JsonValue; upkeepIssues: Prisma.JsonValue })[];
-  total: number;
-  page: number;
-  limit: number;
 }
 
 /** Turn_Records of one profile, newest first (R11.2). */

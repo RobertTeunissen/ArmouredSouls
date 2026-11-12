@@ -16,11 +16,9 @@ import {
   getBattleActivity,
   getDashboardKpis,
   getDashboardStatus,
-  type BattleActivity,
-  type DashboardKpis,
-  type DashboardStatus,
 } from '../utils/adminDashboardApi';
 import type { StableScope } from '../utils/adminStableScope';
+import type { BattleActivity, DashboardKpis, DashboardStatus } from '@shared/types';
 
 export interface DashboardSection<T> {
   data: T | null;

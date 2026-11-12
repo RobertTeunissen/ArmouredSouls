@@ -6,9 +6,9 @@
 import type { ReactNode } from 'react';
 import { AdminPanel } from '../shared';
 import { MANUAL_REPAIR_DISCOUNT } from '@shared/utils/repairCost';
-import type { EconomyFlow, EconomyOverview, EconomyStableKind, RepairTotals } from '../../../utils/adminEconomyApi';
 import { SCOPE_LABELS, scopeNoun } from '../../../utils/adminEconomyFormat';
 import { compactCreditsText } from '../../../utils/adminPlayersFormat';
+import type { EconomyFlow, EconomyOverview, EconomyStableKind, RepairTotals } from '@shared/types';
 
 
 const signed = (value: number): string => `${value > 0 ? '+' : ''}${compactCreditsText(value)}`;

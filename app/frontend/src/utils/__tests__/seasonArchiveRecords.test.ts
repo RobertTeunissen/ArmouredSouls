@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { archiveRecordCatalogue } from '../seasonArchiveRecords';
-import type { SeasonDetail } from '../seasonApi';
+import type { SeasonDetail } from '@shared/types';
 
 type Row = SeasonDetail['accolades'][number];
 

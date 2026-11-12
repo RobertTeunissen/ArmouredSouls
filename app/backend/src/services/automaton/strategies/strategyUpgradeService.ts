@@ -23,7 +23,7 @@ import logger from '../../../config/logger';
 import { Prisma } from '../../../../generated/prisma';
 import { AppError } from '../../../errors/AppError';
 import { AutomatonError, AutomatonErrorCode } from '../../../errors/automatonErrors';
-import type { StrategyParametersV1, TeamNames } from '../../../types/automaton';
+import type { StrategyParametersV1 } from '../../../types/automaton';
 import {
   buildableBlueprintCount,
   compareCatalogueKeys,
@@ -38,6 +38,14 @@ import { migrateTargets, type TargetChange } from './migrateTargets';
 import { facilityLabel } from './strategyDefinitionSchema';
 import type { StrategyRegistry } from './registry';
 import type { GoalSpec, UpgradeStrategy } from './strategyTypes';
+import type {
+  TeamNames,
+  UpgradeConfirmation,
+  UpgradeDryRun,
+  UpgradeEvaluation,
+  UpgradeRequest,
+  UpgradeWarningEntry,
+} from '../../../shared/types';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -56,45 +64,10 @@ export interface UpgradeSubject {
 /** The target version: a Strategy_Version of the registry or an interpreted Strategy_Draft. */
 export type UpgradeTarget = Pick<UpgradeStrategy, 'key' | 'version' | 'buildOrder' | 'parameterSchema'>;
 
-export interface LabelledTargetChange extends TargetChange {
-  /** "Robots", "Booking Office", … */
-  label: string;
-}
-
 export interface UpgradeRejection {
   code: string;
   /** The approved "Error: too few blueprints" / "Error: team names count" text, or the first issue. */
   reason: string;
-}
-
-export interface UpgradeEvaluation {
-  catalogueKey: string;
-  stableName: string;
-  status: 'draft' | 'active';
-  fromVersion: number;
-  toVersion: number;
-  changes: LabelledTargetChange[];
-  /** The migrated Goal_Targets. */
-  params: StrategyParametersV1;
-  requiredTeamNames: { twoVsTwo: number; threeVsThree: number };
-  passes: boolean;
-  rejection: UpgradeRejection | null;
-}
-
-export interface UpgradeRequest {
-  toVersion: number;
-  /** The profiles to upgrade; absent = every profile of the strategy on an older version. */
-  catalogueKeys?: string[];
-  confirm?: boolean;
-  /** New Team_Names; single-profile upgrades only. */
-  teamNames?: TeamNames;
-}
-
-export interface UpgradeDryRun {
-  strategyKey: string;
-  toVersion: number;
-  confirm: false;
-  profiles: UpgradeEvaluation[];
 }
 
 export interface UpgradedProfile {
@@ -109,14 +82,6 @@ export interface RejectedProfile extends UpgradeRejection {
   catalogueKey: string;
   stableName: string;
   fromVersion: number;
-}
-
-export interface UpgradeConfirmation {
-  strategyKey: string;
-  toVersion: number;
-  confirm: true;
-  upgraded: UpgradedProfile[];
-  rejected: RejectedProfile[];
 }
 
 export interface StrategyUpgradeDeps {
@@ -356,14 +321,6 @@ export async function confirmUpgrade(strategyKey: string, request: UpgradeReques
     reason: `${r.code}: ${r.reason}`,
   })));
   return { strategyKey, toVersion: to.version, confirm: true, upgraded, rejected };
-}
-
-export interface UpgradeWarningEntry {
-  catalogueKey: string;
-  stableName: string;
-  fromVersion: number;
-  code: string;
-  reason: string;
 }
 
 /**

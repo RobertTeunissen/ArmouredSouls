@@ -5,7 +5,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { StableRef } from './types';
+import type { StableRef } from '@shared/types';
 
 export function StableLink({ stable, className = '' }: { stable: StableRef; className?: string }): ReactNode {
   return (

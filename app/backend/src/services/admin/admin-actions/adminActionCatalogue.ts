@@ -4,10 +4,9 @@
  * the action was taken on. Pure; the operation names are the ones written by
  * `recordAction` across the admin routes and services.
  */
+import type { AdminActionArea } from '../../../shared/types';
 
-export const ADMIN_ACTION_AREAS = ['cycles', 'season', 'automatons', 'moderation', 'players', 'changelog', 'other'] as const;
-export type AdminActionArea = (typeof ADMIN_ACTION_AREAS)[number];
-
+export const ADMIN_ACTION_AREAS = ['cycles', 'season', 'automatons', 'moderation', 'players', 'changelog', 'other'] as const satisfies readonly AdminActionArea[];
 /** Operations of every area except Automatons (those are matched by the `automaton.` prefix). */
 const AREA_OF: Readonly<Record<string, AdminActionArea>> = {
   scheduler_trigger: 'cycles',

@@ -11,7 +11,7 @@ import {
   type StablesViewInput,
 } from '../stablesView';
 import { LIBRARY, PROFILES, listItem } from './fixtures';
-import type { ProfileListItem, TurnSummary } from '../../../../utils/automatonAdminApi';
+import type { ProfileListItem, TurnSummary } from '@shared/types';
 
 const TURN = PROFILES[0].lastTurn as TurnSummary;
 

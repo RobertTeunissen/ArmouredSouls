@@ -1,7 +1,8 @@
+import type { ImagesFilter } from '@shared/types';
+
 /**
  * URL state and text helpers of the admin Image Uploads page.
  */
-import type { ImagesFilter } from './adminImagesApi';
 
 export interface ImagesViewState {
   filter: ImagesFilter;

@@ -12,7 +12,6 @@ import { downloadJson } from '../../../utils/download';
 import { BattleParticipants } from './BattleParticipants';
 import { BattlePayoutCheck } from './BattlePayoutCheck';
 import { BattleCombatLog } from './BattleCombatLog';
-import type { BattleDetail } from './types';
 import {
   endedByLabel,
   formatBattleDateTime,
@@ -23,10 +22,11 @@ import {
   modeLabel,
   resultLabel,
 } from '../../../utils/adminBattlesFormat';
+import type { AdminBattleDetail } from '@shared/types';
 
 type Notice = { tone: 'success' | 'error'; text: string } | null;
 
-function resultHeadline(b: BattleDetail): { text: string; tone: string } {
+function resultHeadline(b: AdminBattleDetail): { text: string; tone: string } {
   if (b.result === 'bye') return { text: 'Bye · no opponent', tone: 'text-warning' };
   if (b.result === 'forfeit') return { text: 'Forfeit', tone: 'text-warning' };
   if (b.result === 'draw') return { text: 'Draw', tone: 'text-secondary' };
@@ -45,7 +45,7 @@ function Fact({ label, value }: { label: string; value: string }): React.ReactEl
   );
 }
 
-function ResultCard({ battle }: { battle: BattleDetail }): React.ReactElement {
+function ResultCard({ battle }: { battle: AdminBattleDetail }): React.ReactElement {
   const headline = resultHeadline(battle);
   const fought = battle.result !== 'bye' && battle.result !== 'forfeit';
   return (

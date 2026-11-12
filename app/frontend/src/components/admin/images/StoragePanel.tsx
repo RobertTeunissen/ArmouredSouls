@@ -8,9 +8,10 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { ADMIN_FOCUS_RING, AdminPanel } from '../shared';
 import { ApiError } from '../../../utils/ApiError';
-import { getCleanupPreview, runImageCleanup, type CleanupPreview, type CleanupResult, type ImagesOverview } from '../../../utils/adminImagesApi';
+import { getCleanupPreview, runImageCleanup } from '../../../utils/adminImagesApi';
 import { bytesText } from '../../../utils/adminImagesFormat';
 import { formatCount } from '../../../utils/adminDashboardFormat';
+import type { CleanupPreview, CleanupResult, ImagesOverview } from '@shared/types';
 
 export interface StoragePanelProps {
   overview: ImagesOverview;

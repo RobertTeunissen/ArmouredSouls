@@ -7,7 +7,6 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ADMIN_FOCUS_RING, AdminPanel } from '../shared';
-import type { AchievementCategory, AchievementRow } from '../../../utils/adminAchievementsApi';
 import {
   CATEGORY_ORDER,
   categoryLabel,
@@ -20,6 +19,7 @@ import {
   type SortDirection,
 } from '../../../utils/adminAchievementsFormat';
 import { formatCount } from '../../../utils/adminDashboardFormat';
+import type { AchievementAnalyticsRow, AchievementCategory } from '@shared/types';
 
 interface Column {
   key: AchievementSortKey;
@@ -40,7 +40,7 @@ const COLUMNS: readonly Column[] = [
 const COLLAPSED_ROWS = 15;
 
 export interface AchievementTableProps {
-  rows: AchievementRow[];
+  rows: AchievementAnalyticsRow[];
   /** "active players" / "Automatons" / "generated stables", for the column note. */
   who: string;
   /** Whether the All accounts column differs from Unlocked (players only). */

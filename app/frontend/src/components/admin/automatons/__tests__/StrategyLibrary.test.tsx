@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { StrategyLibrary } from '../StrategyLibrary';
-import type { BuildOrderDescriptor, DraftSummary, LibraryStrategy } from '../../../../utils/automatonAdminApi';
+import type { BuildOrderDescriptor, DraftSummary, LibraryStrategy } from '@shared/types';
 
 const BUILD_ORDER: BuildOrderDescriptor[] = [
   { position: 1, goalId: 'g1', type: 'robots', label: 'Robots', defaultTarget: 2, bounds: { min: 1, max: 3 }, isMax: false, buys: 'A second robot' },

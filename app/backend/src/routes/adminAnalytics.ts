@@ -20,7 +20,6 @@ import { getMetaBuilds, getMetaChoices } from '../services/admin/meta';
 import {
   getLeagueHealthOverview,
   getLeagueSeason,
-  type LeagueSeasonStableFilter,
 } from '../services/admin/league-health';
 import { TIERED_LEAGUE_MODES } from '../services/league/league-rules';
 import { ECONOMY_STABLE_SCOPES, ECONOMY_WINDOWS, getEconomyOverview } from '../services/admin/adminEconomyService';
@@ -42,6 +41,7 @@ import {
   SEARCH_PHRASES_MAX_PAGE,
 } from '../services/search/searchAnalyticsPhraseService';
 import { MAXIMUM_QUERY_LENGTH } from '../services/search/searchTypes';
+import type { LeagueSeasonStableFilter } from '../shared/types';
 
 const router = express.Router();
 

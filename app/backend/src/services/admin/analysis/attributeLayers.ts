@@ -24,7 +24,7 @@
 import { ROBOT_ATTRIBUTES } from '../../../shared/utils/robotAttributes';
 import { getLoadoutBonus } from '../../../shared/utils/robotStats';
 import type { AttributeValues, StoredRefinement } from '../../../types/combatBuildTypes';
-import type { LayerToggles } from './analysisOptions';
+import type { LayerToggles, RefinementTier } from '../../../shared/types';
 
 export const ATTRIBUTE_COUNT = ROBOT_ATTRIBUTES.length;
 
@@ -43,8 +43,7 @@ export interface RawBuild {
 }
 
 /** Refinement tiers as bits of `LayeredBuild.refinementTiers`. */
-export const REFINEMENT_TIER_BITS = { hone: 1, augment: 2, sharpen: 4, forge: 8 } as const;
-export type RefinementTier = keyof typeof REFINEMENT_TIER_BITS;
+export const REFINEMENT_TIER_BITS = { hone: 1, augment: 2, sharpen: 4, forge: 8 } as const satisfies Record<RefinementTier, number>;
 export const REFINEMENT_TIERS = Object.keys(REFINEMENT_TIER_BITS) as RefinementTier[];
 
 /** Additive layers inside `LayeredBuild.data`, each `ATTRIBUTE_COUNT` long, in `ROBOT_ATTRIBUTES` order. */

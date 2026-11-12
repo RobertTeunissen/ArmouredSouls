@@ -1,4 +1,5 @@
 import { LEAGUE_TIERS } from './leagueInstanceService';
+import type { TieredLeagueMode } from '../../shared/types';
 
 /**
  * Promotion and demotion policy shared by every head-to-head league mode.
@@ -42,9 +43,10 @@ export const TIERED_LEAGUE_MODES = [
   'tag_team',
   'koth',
   'grand_melee',
-] as const;
+] as const satisfies readonly TieredLeagueMode[];
 
-export type TieredLeagueMode = typeof TIERED_LEAGUE_MODES[number];
+// The union is a wire contract (shared admin-league-health.ts).
+export type { TieredLeagueMode };
 
 /** Whether a mode ranks by placement points (no LP gate) rather than head-to-head LP. */
 export function isPlacementLeagueMode(mode: string): boolean {

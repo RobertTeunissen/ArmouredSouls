@@ -30,7 +30,7 @@ import { startAdminRollover } from '../../src/services/season/adminSeasonRollove
 import { getSeasonRolloverHistory } from '../../src/services/season/seasonRolloverHistoryService';
 import { resetRunStore, startProcess } from '../../src/services/cycle/schedulerRunStore';
 import { loadEnvConfig } from '../../src/config/env';
-import type { SchedulerRunSummary } from '../../src/types/schedulerTypes';
+import type { SchedulerRunSummary } from '../../src/shared/types';
 
 dotenv.config();
 

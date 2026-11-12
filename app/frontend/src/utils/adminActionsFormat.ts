@@ -1,12 +1,13 @@
 /**
  * URL state and display helpers of the admin Actions page (`/admin/actions`).
  */
-import { ADMIN_ACTION_AREAS, type AdminActionArea, type AdminActionResultFilter, type AdminActionsQuery, type JsonValue } from './adminActionsApi';
+import { ADMIN_ACTION_AREAS, type AdminActionsFilters } from './adminActionsApi';
+import type { AdminActionArea, AdminActionResultFilter, JsonValue } from '@shared/types';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /** Read the page state from the URL (`area`, `result=failure`, `page`). */
-export function readActionsView(params: URLSearchParams): AdminActionsQuery {
+export function readActionsView(params: URLSearchParams): AdminActionsFilters {
   const rawArea = params.get('area');
   const area = ADMIN_ACTION_AREAS.find((value) => value === rawArea) ?? null;
   const result: AdminActionResultFilter = params.get('result') === 'failure' ? 'failure' : 'all';
@@ -15,7 +16,7 @@ export function readActionsView(params: URLSearchParams): AdminActionsQuery {
 }
 
 /** Write a patch of the page state into the URL; defaults are left out. */
-export function writeActionsView(params: URLSearchParams, patch: Partial<AdminActionsQuery>): URLSearchParams {
+export function writeActionsView(params: URLSearchParams, patch: Partial<AdminActionsFilters>): URLSearchParams {
   const next = new URLSearchParams(params);
   const set = (name: string, value: string | null): void => {
     if (value === null) next.delete(name);

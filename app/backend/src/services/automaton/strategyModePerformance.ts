@@ -20,31 +20,7 @@ import {
   type TieredStandingsMode,
 } from '../../shared/utils/automatonStandingsTier';
 import { PLAYED_STANDING_SQL, TIERED_MODE_SQL } from './standingsTier';
-
-export interface ModePerformance {
-  mode: TieredStandingsMode;
-  /** placement = koth, grand_melee. */
-  kind: 'head_to_head' | 'placement';
-  /** team = league_2v2, league_3v3, tag_team. */
-  entityType: 'robot' | 'team';
-  /** Distinct stables with at least one played row in the mode. */
-  stablesPlayed: number;
-  /** Robots or teams with a played row. */
-  entitiesPlayed: number;
-  /** Placement modes: first places. */
-  wins: number;
-  /** Placement modes: always 0 (not recorded). */
-  losses: number;
-  /** Placement modes: always 0 (not recorded). */
-  draws: number;
-  /** head_to_head: W + L + D; placement: SUM(total_matches). */
-  matches: number;
-  /** wins ÷ matches × 100, one decimal; null when matches = 0. */
-  winPercentage: number | null;
-  /** Placement modes: MIN(best_placement); head_to_head: null. */
-  bestPlacement: number | null;
-  lowSample: boolean;
-}
+import type { ModePerformance } from '../../shared/types';
 
 /** One grouped row of `readModeAggregates`: a strategy (null = Human_Stables) in one mode. */
 export interface ModeAggregate {

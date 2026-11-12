@@ -8,7 +8,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import SeasonControlPage from '../SeasonControlPage';
 import { ApiError } from '../../../utils/ApiError';
-import type { AdminSeasonState, RolloverPreview, SeasonRolloverHistory } from '../../../utils/seasonApi';
+import type { AdminSeasonState, RolloverPreview, SeasonRolloverHistory } from '@shared/types';
 
 const mockGetState = vi.fn();
 const mockGetPreview = vi.fn();

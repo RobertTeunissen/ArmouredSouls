@@ -11,8 +11,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../utils/ApiError';
 import { isAbortError } from '../utils/abort';
-import { getMetaBuilds, getMetaChoices, type MetaBuilds, type MetaChoices } from '../utils/adminMetaApi';
+import { getMetaBuilds, getMetaChoices } from '../utils/adminMetaApi';
 import type { StableScope } from '../utils/adminStableScope';
+import type { MetaBuilds, MetaChoices } from '@shared/types';
 
 export interface FilteredLoad<T> {
   data: T | null;

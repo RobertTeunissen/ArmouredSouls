@@ -6,8 +6,8 @@
 import { useMemo, useState } from 'react';
 import { ADMIN_FOCUS_RING, PanelError } from '../shared';
 import { useBattleLog } from '../../../hooks/useAdminBattles';
-import type { CombatEvent, CombatLogStatus } from './types';
 import { displayMessage, formatEventTime, formatNumber, formatShortDate } from '../../../utils/adminBattlesFormat';
+import type { AdminCombatEvent, CombatLogStatus } from '@shared/types';
 
 export const EVENTS_PER_PAGE = 200;
 
@@ -16,7 +16,7 @@ type EventFilter = 'all' | 'combat' | 'movement' | 'critical' | 'miss' | 'destro
 const COMBAT_TYPES = new Set(['attack', 'critical', 'miss', 'counter', 'malfunction', 'shield_break', 'yield', 'destroyed', 'robot_eliminated']);
 const MOVEMENT_TYPES = new Set(['movement', 'range_transition', 'out_of_range', 'counter_out_of_range']);
 
-const FILTERS: ReadonlyArray<{ key: EventFilter; label: string; test: (e: CombatEvent) => boolean }> = [
+const FILTERS: ReadonlyArray<{ key: EventFilter; label: string; test: (e: AdminCombatEvent) => boolean }> = [
   { key: 'all', label: 'All events', test: () => true },
   { key: 'combat', label: 'Combat', test: (e) => COMBAT_TYPES.has(e.type) },
   { key: 'movement', label: 'Movement', test: (e) => MOVEMENT_TYPES.has(e.type) },
@@ -36,7 +36,7 @@ const TYPE_TAGS: Record<string, string> = {
   zone_exit: 'Zone',
 };
 
-function EventRow({ event, index }: { event: CombatEvent; index: number }): React.ReactElement {
+function EventRow({ event, index }: { event: AdminCombatEvent; index: number }): React.ReactElement {
   const [open, setOpen] = useState(false);
   const formula = typeof event.formulaBreakdown?.calculation === 'string' ? event.formulaBreakdown : null;
   const tag = TYPE_TAGS[event.type];

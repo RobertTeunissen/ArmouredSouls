@@ -19,11 +19,15 @@ import prisma from '../../lib/prisma';
 import { listSeasonsForBrowsing } from './seasonQueryService';
 import {
   SEASON_ROLLOVER_JOB_NAME,
-  type RolloverRunSummary,
-  type RolloverStageName,
-  type RolloverStageProgress,
-  type SchedulerRunSummary,
 } from '../../types/schedulerTypes';
+import type {
+  RolloverRunSummary,
+  RolloverStageName,
+  RolloverStageProgress,
+  SchedulerRunSummary,
+  SeasonHistoryEntry,
+  SeasonRolloverHistory,
+} from '../../shared/types';
 
 export type RolloverAttemptStatus = 'success' | 'failed' | 'interrupted';
 
@@ -43,27 +47,6 @@ export interface RolloverAttemptView {
   /** Stage progress (runs only). */
   stages: RolloverStageProgress[] | null;
   result: RolloverRunSummary['result'];
-}
-
-export interface SeasonHistoryEntry {
-  seasonNumber: number;
-  isLegacy: boolean;
-  startedAt: string;
-  endedAt: string | null;
-  competitiveCycles: number;
-  humanStableCount: number;
-  generatedStableCount: number;
-  /** The rollover that closed this season, when one was recorded. */
-  rollover: RolloverAttemptView | null;
-  /** Earlier attempts on this season that did not complete, newest first. */
-  failedAttempts: RolloverAttemptView[];
-}
-
-export interface SeasonRolloverHistory {
-  /** Completed seasons, newest first. */
-  seasons: SeasonHistoryEntry[];
-  /** Attempts on the current season that did not complete, newest first. */
-  currentSeasonAttempts: RolloverAttemptView[];
 }
 
 interface Attempt {

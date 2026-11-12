@@ -14,9 +14,8 @@
  *   facility levels reached, credits spent and the Goal it ends Saving on.
  */
 import { BUILD_FOCUS_WEIGHTS } from '../../../buildFocus';
-import type { BuildFocusKey, RefinementStep } from '../../../../../types/automaton';
 import type { RobotAttribute } from '../../../../../shared/utils/robotAttributes';
-import { AUTOMATON_FACILITY_TYPES, type BlueprintFacts, type FacilityType, type LoadoutType, type Stance } from '../../../stableFacts';
+import { AUTOMATON_FACILITY_TYPES, type BlueprintFacts, type FacilityType } from '../../../stableFacts';
 import { planNextStep } from '../../../turnPlanner';
 import { loadStrategyRegistry, STRATEGY_DIRECTORY } from '../../registry';
 import { SCENARIO_STARTING_BALANCE, projectOpeningBuild, type ScenarioResult } from '../../scenarioProjector';
@@ -24,6 +23,7 @@ import { goalLabel } from '../../strategyDefinitionSchema';
 import { defaultParameters } from '../../strategyParameters';
 import type { UpgradeStrategy } from '../../strategyTypes';
 import { SEED_WEAPON_MAP } from './strategyTestSupport';
+import type { BuildFocusKey, LoadoutType, RefinementStep, Stance } from '../../../../../shared/types';
 
 // ── Build_Order notation of the review document ──────────────────────
 

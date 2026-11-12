@@ -6,7 +6,6 @@
 import type { ReactNode } from 'react';
 import { PanelError, PanelSkeleton, StableScopeToggle } from '../shared';
 import { useLeagueSeason } from '../../../hooks/useLeagueSeason';
-import type { LeagueHealthMode } from '../../../utils/adminLeagueHealthApi';
 import type { StableScope } from '../../../utils/adminStableScope';
 import {
   formatCount,
@@ -16,9 +15,10 @@ import {
 } from '../../../utils/adminLeagueHealthFormat';
 import { SeasonTrend } from './SeasonTrend';
 import { TierBoundaries } from './TierBoundaries';
+import type { TieredLeagueMode } from '@shared/types';
 
 export interface LeagueSeasonProps {
-  mode: LeagueHealthMode;
+  mode: TieredLeagueMode;
   entityType: 'robot' | 'team';
   stable: StableScope;
   onStableChange: (stable: StableScope) => void;

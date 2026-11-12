@@ -9,7 +9,7 @@
  */
 import prisma from '../../../lib/prisma';
 import type { Prisma } from '../../../../generated/prisma';
-import type { MetaChoices } from './metaBuildsTypes';
+import type { MetaChoices } from '../../../shared/types';
 
 /** Weapons owned, robots with a main weapon, and owned weapons in any slot. */
 export async function getWeaponStats(userFilter: Prisma.UserWhereInput = {}): Promise<MetaChoices['weapons']> {

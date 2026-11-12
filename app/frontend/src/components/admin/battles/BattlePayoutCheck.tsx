@@ -6,8 +6,8 @@ import { useState } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
 import { StableTag } from './BattleBadges';
 import { StableLink } from './StableLink';
-import type { PayoutCheck, PlacementPayoutComponent, StablePayoutCheck } from './types';
 import { formatCredits, formatNumber } from '../../../utils/adminBattlesFormat';
+import type { PayoutCheck, PlacementPayoutComponent, StablePayoutCheck } from '@shared/types';
 
 const OVERALL: Record<PayoutCheck['status'], { text: string; tone: string }> = {
   match: { text: 'All payouts match the ledger', tone: 'bg-success/15 text-success' },

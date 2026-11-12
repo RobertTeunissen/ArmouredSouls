@@ -21,33 +21,13 @@ import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import { buildStableScopeFilter, type StableScope } from '../../utils/stableScope';
 import { countQueuedMatchesByMode, DASHBOARD_BATTLE_MODES } from './adminQueuedMatches';
+import type { BattleActivity, BattleActivityRow } from '../../shared/types';
 
 /** Modes where a draw cannot happen (placement modes always have a winner). */
 const NO_DRAW_MODES: ReadonlySet<string> = new Set(['koth', 'grand_melee']);
 
 /** Results are cached per filter: a season holds hundreds of thousands of battles. */
 const CACHE_TTL_MS = 60_000;
-
-export interface BattleActivityRow {
-  mode: string;
-  lastCycle: number | null;
-  season: number;
-  walkovers: number;
-  queued: number;
-  /** Percentage with one decimal over fought battles; null where draws cannot happen. */
-  drawRate: number | null;
-  /** Percentage with one decimal over fought battles. */
-  killRate: number;
-  /** Mean duration of fought battles, one decimal. */
-  avgDurationSeconds: number;
-}
-
-export interface BattleActivity {
-  rows: BattleActivityRow[];
-  totals: Omit<BattleActivityRow, 'mode'>;
-  lastCycleWindow: { cycleNumber: number; from: string; to: string } | null;
-  timestamp: string;
-}
 
 /** One aggregated row as returned by the SQL. */
 export interface RawBattleTypeAggregate {

@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING, AdminSlideOver, PanelError, PanelSkeleton } from '../shared';
 import { ApiError } from '../../../utils/ApiError';
 import { isAbortError } from '../../../utils/abort';
-import { getPlayerDetail, type PlayerDetail, type PlayerDetailRobot, type PlayerSegment } from '../../../utils/adminPlayersApi';
+import { getPlayerDetail } from '../../../utils/adminPlayersApi';
 import {
   SEGMENT_LABELS,
   capitalize,
@@ -26,6 +26,7 @@ import { BalanceTrend } from './BalanceTrend';
 import { PasswordResetForm } from './PasswordResetForm';
 import { IssueTag } from './PlayersTable';
 import { StableKindTag } from './StableSearch';
+import type { PlayerDetail, PlayerDetailRobot, PlayerSegment } from '@shared/types';
 
 export interface PlayerDetailPanelProps {
   userId: number | null;

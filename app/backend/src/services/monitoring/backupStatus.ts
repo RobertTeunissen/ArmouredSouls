@@ -11,13 +11,15 @@
 import fs from 'fs';
 import logger from '../../config/logger';
 import { getConfig } from '../../config/env';
+import type { BackupStatus } from '../../shared/types';
 
 export const BACKUP_DAILY_DIR = '/opt/armouredsouls/backups/daily';
 /** A daily backup older than this is stale (a day plus margin). */
 export const BACKUP_STALE_AFTER_MS = 26 * 60 * 60 * 1000;
 const BACKUP_SUFFIXES = ['.sql.zst', '.sql.gz', '.dump'] as const;
 
-export type BackupStatus = 'ok' | 'stale' | 'missing' | 'not_applicable';
+// The status is a wire contract (shared admin-system.ts).
+export type { BackupStatus };
 
 export interface LatestBackup {
   status: BackupStatus;

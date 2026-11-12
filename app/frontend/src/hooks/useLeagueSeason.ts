@@ -10,9 +10,8 @@ import type { StableScope } from '../utils/adminStableScope';
 import { isAbortError } from '../utils/abort';
 import {
   getLeagueSeason,
-  type LeagueHealthMode,
-  type LeagueSeasonOverview,
 } from '../utils/adminLeagueHealthApi';
+import type { LeagueSeasonOverview, TieredLeagueMode } from '@shared/types';
 
 export interface LeagueSeasonState {
   data: LeagueSeasonOverview | null;
@@ -26,7 +25,7 @@ interface Loaded {
 }
 
 /** `reloadToken` changes when the page's Refresh is used. */
-export function useLeagueSeason(mode: LeagueHealthMode, stable: StableScope, reloadToken: number): LeagueSeasonState {
+export function useLeagueSeason(mode: TieredLeagueMode, stable: StableScope, reloadToken: number): LeagueSeasonState {
   const key = `${mode}:${stable}`;
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [loading, setLoading] = useState(true);

@@ -1,6 +1,6 @@
 import { migrateTargets } from '../migrateTargets';
 import { deriveGoalSpecs } from '../strategyDefinitionSchema';
-import type { FileBuildOrderEntry, StrategyDefinitionFile } from '../strategyTypes';
+import type { FileBuildOrderEntry, StrategyDefinitionFile } from '../../../../shared/types';
 
 function definition(version: number, buildOrder: Omit<FileBuildOrderEntry, 'position'>[]): StrategyDefinitionFile {
   return {

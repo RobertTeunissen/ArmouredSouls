@@ -10,7 +10,13 @@
  */
 import prisma from '../../../lib/prisma';
 import type { ParticipantFact } from './battleFacts';
-import type { PayoutCheck, PayoutInputs, PlacementPayoutComponent, StablePayoutCheck, StableRef } from './battleTypes';
+import type {
+  PayoutCheck,
+  PayoutInputs,
+  PlacementPayoutComponent,
+  StablePayoutCheck,
+  StableRef,
+} from '../../../shared/types';
 
 export interface LedgerEntry {
   id: number;

@@ -3,9 +3,9 @@
  * Five columns from `xl`, a stacked label/value list below.
  */
 import type { ReactNode } from 'react';
-import type { DashboardStatus } from '../../../utils/adminDashboardApi';
 import { deriveStatusCells, type StatusTone } from '../../../utils/adminDashboardFormat';
 import { PanelError } from '../shared/AdminPanel';
+import type { DashboardStatus } from '@shared/types';
 
 export interface StatusStripProps {
   status: DashboardStatus | null;

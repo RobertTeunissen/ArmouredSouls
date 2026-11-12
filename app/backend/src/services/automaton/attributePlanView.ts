@@ -8,7 +8,6 @@
  * still has to buy on the way. Pure: the Build_Focus maths of `buildFocus.ts`,
  * no reads.
  */
-import type { AttributeGroup, BuildFocusKey } from '../../types/automaton';
 import {
   ATTRIBUTE_GROUPS,
   BUILD_FOCUS_PRESETS,
@@ -19,28 +18,13 @@ import {
   type BuildFocusWeightTable,
 } from './buildFocus';
 import type { FacilityType } from './stableFacts';
-
-export interface AttributePlanGroup {
-  group: AttributeGroup;
-  target: number;
-  /** Academy level the target needs (0 = none). */
-  academyLevel: number;
-  /** This robot is the first in the plan that needs an academy level the stable lacks ("▸ academy bought on the way"). */
-  buysAcademy: boolean;
-}
+import type { AcademyGroup, AttributePlanGroup, AttributePlanView, BuildFocusKey } from '../../shared/types';
 
 export interface AttributePlanRobotView {
   slot: number;
   robotName: string;
   buildFocus: BuildFocusKey;
   groups: AttributePlanGroup[];
-}
-
-export interface AttributePlanView {
-  goalId: string;
-  robots: AttributePlanRobotView[];
-  /** Academy levels bought on the way, in group order (Combat, Defense, Mobility, AI). */
-  academies: { group: AttributeGroup; level: number }[];
 }
 
 export interface AttributePlanSubject {
@@ -56,8 +40,8 @@ export function attributePlanView(
   academyLevels: Readonly<Partial<Record<FacilityType, number>>>,
   weights: BuildFocusWeightTable,
 ): AttributePlanView {
-  const held = new Map<AttributeGroup, number>(ATTRIBUTE_GROUPS.map((g) => [g, academyLevels[GROUP_ACADEMY[g]] ?? 0]));
-  const bought = new Map<AttributeGroup, number>(held);
+  const held = new Map<AcademyGroup, number>(ATTRIBUTE_GROUPS.map((g) => [g, academyLevels[GROUP_ACADEMY[g]] ?? 0]));
+  const bought = new Map<AcademyGroup, number>(held);
   const robotViews = robots.map((robot): AttributePlanRobotView => {
     const robotWeights = weights[robot.buildFocus];
     const targets = groupTargets(robotWeights, goal.target, goal.isMax);

@@ -16,9 +16,9 @@ import {
 } from '../buildFocus';
 import { attributeIncrementCost, quoteFacilityLevel } from '../pricing';
 import { rosterCapacityOf, type StableFacts } from '../stableFacts';
-import type { AttributeGroup } from '../../../types/automaton';
 import { blockedFromQuote } from './goalSupport';
 import { savingOrActionable, type Goal, type GoalContext, type GoalOutcome } from './goalTypes';
+import type { AcademyGroup } from '../../../shared/types';
 
 export interface AttributeGoalOptions {
   /** The Goal_Target is `Max` (every attribute to 50). */
@@ -40,7 +40,7 @@ export function createAttributeGoal(id: string, options: AttributeGoalOptions): 
       }
       const academyLevels = Object.fromEntries(
         ATTRIBUTE_GROUPS.map((group) => [group, facts.facilities[GROUP_ACADEMY[group]]]),
-      ) as Record<AttributeGroup, number>;
+      ) as Record<AcademyGroup, number>;
       const trainingLevel = facts.facilities.training_facility;
       const rosterCapacity = rosterCapacityOf(facts);
 

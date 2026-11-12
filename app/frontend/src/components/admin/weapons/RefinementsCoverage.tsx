@@ -4,9 +4,9 @@
  */
 import { useId, useState } from 'react';
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { CoverageSummary, RefinementSummary, RefinementTier } from './types';
 import { effectDescription, formatCount } from '../../../utils/adminAttributesFormat';
 import { formatUsage } from '../../../utils/adminWeaponsFormat';
+import type { CoverageSummary, RefinementSummary, RefinementTier } from '@shared/types';
 
 export interface RefinementsCoverageProps {
   refinements: RefinementSummary;

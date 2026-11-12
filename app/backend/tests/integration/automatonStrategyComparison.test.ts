@@ -22,15 +22,14 @@ import { Prisma } from '../../generated/prisma';
 import {
   clearStrategyComparisonCache,
   getStrategyComparison,
-  type StrategyComparison,
 } from '../../src/services/automaton/strategyComparisonService';
 import { bestTiersForUsers } from '../../src/services/automaton/standingsTier';
-import type { ModePerformance } from '../../src/services/automaton/strategyModePerformance';
 import { TIERED_STANDINGS_MODES } from '../../src/shared/utils/automatonStandingsTier';
 import { getStrategyRegistry } from '../../src/services/automaton/strategies/defaultRegistry';
 import { defaultParameters, highestRobotsTarget } from '../../src/services/automaton/strategies/strategyParameters';
 import { createAutomatonStable, deleteAutomatonStables } from '../helpers/automatonStable';
 import { runTag, startAdminApi, type AdminApiHarness } from '../helpers/automatonAdminApi';
+import type { ModePerformance, StrategyComparison } from '../../src/shared/types';
 
 const tag = runTag();
 

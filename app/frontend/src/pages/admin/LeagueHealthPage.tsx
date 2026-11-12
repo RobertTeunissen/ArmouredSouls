@@ -17,7 +17,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { LeagueGrid, LeagueHealthAttention, LeagueModeTabs, LeagueSeason, TierTable } from '../../components/admin/league-health';
 import { ADMIN_FOCUS_RING, PanelError, PanelSkeleton } from '../../components/admin/shared';
 import { useLeagueHealth } from '../../hooks/useLeagueHealth';
-import type { LeagueHealthMode } from '../../utils/adminLeagueHealthApi';
 import { readStableScope, STABLE_SCOPES, writeStableScope, type StableScope } from '../../utils/adminStableScope';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
 import {
@@ -29,6 +28,7 @@ import {
   seasonLabel,
   standingsHref,
 } from '../../utils/adminLeagueHealthFormat';
+import type { TieredLeagueMode } from '@shared/types';
 
 function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined'
@@ -52,7 +52,7 @@ function LeagueHealthPage(): React.ReactElement {
     }, 0);
   }, []);
 
-  const select = useCallback((nextMode: LeagueHealthMode, tier: string | null, scroll = false): void => {
+  const select = useCallback((nextMode: TieredLeagueMode, tier: string | null, scroll = false): void => {
     setSearchParams((params) => {
       const updated = new URLSearchParams(params);
       if (nextMode === DEFAULT_LEAGUE_HEALTH_MODE) updated.delete('mode');

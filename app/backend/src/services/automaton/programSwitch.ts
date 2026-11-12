@@ -24,7 +24,7 @@ export interface ProgramSwitchState {
   updatedByUserId: number | null;
 }
 
-export interface ProgramSwitchChange {
+export interface ProgramSwitchResult {
   previous: boolean;
   current: boolean;
   updatedAt: Date;
@@ -60,7 +60,7 @@ export async function isProgramEnabled(db: SettingsDb = prisma): Promise<boolean
  * caller's audit entry. Setting the current value is allowed and reported as
  * unchanged (`previous === current`).
  */
-export async function setProgramSwitch(enabled: boolean, adminUserId: number): Promise<ProgramSwitchChange> {
+export async function setProgramSwitch(enabled: boolean, adminUserId: number): Promise<ProgramSwitchResult> {
   return prisma.$transaction(async (tx) => {
     const before = await ensureProgramSettings(tx);
     const after = await tx.automatonProgramSetting.update({

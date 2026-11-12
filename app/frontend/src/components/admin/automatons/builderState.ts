@@ -3,8 +3,14 @@
  * Goal labels, new Goals from the Goal_Library, moves and removals that keep
  * positions 1…n, and the issues per Goal and for the whole Build_Order.
  */
-import type { FileBuildOrderEntry, FileGoalReference, FileTargetValue, StrategyRuleIssue } from '../../../utils/automatonAdminApi';
 import { GOAL_TYPE_LABELS, facilityLabel } from './automatonText';
+import type {
+  AutomatonFacilityType,
+  FileBuildOrderEntry,
+  FileGoalReference,
+  FileTargetValue,
+  StrategyRuleIssue,
+} from '@shared/types';
 
 export function goalLabel(goal: FileGoalReference): string {
   return goal.type === 'facility' ? facilityLabel(goal.facilityType) : GOAL_TYPE_LABELS[goal.type];
@@ -83,7 +89,7 @@ export function targetFieldText(value: FileTargetValue): string {
 }
 
 /** The Goal_Library choices of "Add goal": Robots · Facility ({facility}) · Attributes · Weapons · Refine · Economy. */
-export function goalLibraryChoices(facilityTypes: readonly string[]): { value: string; label: string; goal: FileGoalReference }[] {
+export function goalLibraryChoices(facilityTypes: readonly AutomatonFacilityType[]): { value: string; label: string; goal: FileGoalReference }[] {
   return [
     { value: 'robots', label: 'Robots', goal: { type: 'robots' } },
     ...facilityTypes.map((facilityType) => ({ value: `facility:${facilityType}`, label: `Facility (${facilityLabel(facilityType)})`, goal: { type: 'facility' as const, facilityType } })),

@@ -8,7 +8,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../utils/ApiError';
 import { isAbortError } from '../utils/abort';
 import { getAttributeAnalysis } from '../utils/adminAttributesApi';
-import { LAYER_KEYS, type AnalysisRange, type AttributeAnalysisResponse, type LayerToggles } from '../components/admin/attributes/types';
+import { LAYER_KEYS } from '../components/admin/attributes/types';
+import type { AnalysisRange, AttributeAnalysisResponse, LayerToggles } from '@shared/types';
 
 export interface AttributeAnalysisState {
   data: AttributeAnalysisResponse | null;

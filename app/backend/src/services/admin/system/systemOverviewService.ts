@@ -19,7 +19,7 @@ import { getLatestBackup } from '../../monitoring/backupStatus';
 import { SCHEDULER_JOB_NAMES } from '../../cycle/schedulerJobNames';
 import { lastUtcDays, unavailableByDay } from '../../practice-arena/practiceArenaUsageService';
 import { classifyStarts, failuresSince, parseMemInfo, summarizeErrors, summarizeJobs, summarizeSlow, type MetricRow } from './systemRules';
-import type { SystemDisk, SystemMemory, SystemOverview, SystemTable } from './systemTypes';
+import type { SystemDisk, SystemMemory, SystemOverview, SystemTable } from '../../../shared/types';
 
 export const REQUEST_WINDOW_DAYS = 7;
 export const JOB_WINDOW_DAYS = 8;

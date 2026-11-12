@@ -10,7 +10,6 @@
  * do not link, except the viewer's own stable, which is matched on its name the
  * way the archive always has and links to the viewer's stable page.
  */
-import type { SeasonDetail } from './seasonApi';
 import { categoryLabel } from './seasonFormat';
 import { formatCurrency } from './formatters';
 import {
@@ -27,6 +26,7 @@ import type {
   WinStreakMode,
 } from '../components/hall-of-records/types';
 import type { StableType } from '../types/stable';
+import type { SeasonDetail } from '@shared/types';
 
 type ArchivedRecord = SeasonDetail['accolades'][number];
 

@@ -6,10 +6,10 @@
  */
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import type { DraftSummary, LibraryStrategy } from '../../../utils/automatonAdminApi';
 import { ActionButton, Dialog, FOCUS_RING, Field, INPUT_CLASS, Notice } from './ui';
 import { errorText } from './requestErrors';
 import { boundsText, hasUpgradableStables, targetText } from './automatonText';
+import type { DraftSummary, LibraryStrategy } from '@shared/types';
 
 export interface StrategyLibraryProps {
   strategies: LibraryStrategy[] | null;

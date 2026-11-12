@@ -5,9 +5,9 @@
  * Read-only: the preview buys nothing.
  */
 import type { ReactNode } from 'react';
-import type { ProfileTurnPreview } from '../../../utils/automatonAdminApi';
 import { Card, Notice } from './ui';
 import { formatCredits, gatedFurtherDownText, goalWithTarget, previewActionText } from './automatonText';
+import type { ProfileTurnPreview } from '@shared/types';
 
 export interface TurnPreviewPanelProps {
   stableName: string;

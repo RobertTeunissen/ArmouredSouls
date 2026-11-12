@@ -10,66 +10,16 @@
 import prisma from '../../lib/prisma';
 import { SeasonError, SeasonErrorCode } from '../../errors';
 import type {
-  ArchivedStanding,
-  ArchivedTeamMembership,
   ArchivedFacility,
 } from '../../types';
 import type { StableTypeValue } from '../../utils/stableType';
-
-/** One collapsed row of a stable's season history. */
-export interface StableSeasonSummary {
-  seasonNumber: number;
-  isLegacy: boolean;
-  competitiveCycles: number;
-  finalCredits: number;
-  prestigeEarned: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  winRate: number;
-  championshipTitles: number;
-  achievementsUnlocked: number;
-  achievementsAvailable: number;
-  robotCount: number;
-  teamCount: number;
-  bestTier: { tier: string; mode: string } | null;
-}
-
-/** Expanded detail for one archived season of one stable. */
-export interface StableSeasonDetail extends StableSeasonSummary {
-  stableName: string;
-  highestElo: number;
-  totalFame: number;
-  facilities: ArchivedFacility[];
-  achievementIds: string[];
-  robots: Array<{
-    robotName: string;
-    imageUrl: string | null;
-    frameId: number;
-    paintJob: string | null;
-    finalElo: number;
-    fame: number;
-    wins: number;
-    losses: number;
-    draws: number;
-    totalBattles: number;
-    damageDealtLifetime: number;
-    damageTakenLifetime: number;
-    kills: number;
-    mainWeaponName: string | null;
-    offhandWeaponName: string | null;
-    standings: ArchivedStanding[];
-    teams: ArchivedTeamMembership[];
-  }>;
-  accolades: Array<{
-    category: string;
-    rank: number;
-    subjectName: string;
-    value: number;
-    valueLabel: string;
-    mode: string | null;
-  }>;
-}
+import type {
+  ArchivedStanding,
+  ArchivedTeamMembership,
+  SeasonListEntry,
+  StableSeasonDetail,
+  StableSeasonSummary,
+} from '../../shared/types';
 
 /** Tier ordering, weakest first, for "best tier reached". */
 const TIER_ORDER = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
@@ -209,19 +159,19 @@ export async function getStableSeasonDetail(
   };
 }
 
-/** One entry in the global season list. */
-export interface SeasonListEntry {
-  seasonNumber: number;
-  isLegacy: boolean;
-  competitiveCycles: number;
+/** A completed season as the services read it (Dates); the route sends `SeasonListEntry`. */
+export interface SeasonListRow extends Omit<SeasonListEntry, 'startedAt' | 'endedAt'> {
   startedAt: Date;
   endedAt: Date | null;
-  humanStableCount: number;
-  generatedStableCount: number;
+}
+
+/** The wire form of a season row (ISO dates). */
+export function toSeasonListEntry(row: SeasonListRow): SeasonListEntry {
+  return { ...row, startedAt: row.startedAt.toISOString(), endedAt: row.endedAt?.toISOString() ?? null };
 }
 
 /** Every completed season, newest first. */
-export async function listSeasonsForBrowsing(): Promise<SeasonListEntry[]> {
+export async function listSeasonsForBrowsing(): Promise<SeasonListRow[]> {
   const seasons = await prisma.season.findMany({
     where: { phase: 'completed' },
     orderBy: { seasonNumber: 'desc' },

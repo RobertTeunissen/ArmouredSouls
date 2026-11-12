@@ -15,8 +15,8 @@ import {
   type ModeCell,
   type RosterRow,
 } from '../stableViewFormat';
-import type { ArchivedRobot } from '../seasonApi';
 import type { PublicRobotStanding } from '../../components/stable-view/types';
+import type { ArchivedRobot } from '@shared/types';
 
 const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 

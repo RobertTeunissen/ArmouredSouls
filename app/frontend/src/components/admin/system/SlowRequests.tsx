@@ -3,11 +3,11 @@
  * count, average and slowest (aggregates per hour, so no median).
  */
 import type { ReactNode } from 'react';
-import type { SystemOverview } from '../../../utils/adminSystemApi';
 import { formatDayTime } from '../../../utils/adminCycleFormat';
 import { formatCount } from '../../../utils/adminFormat';
 import { formatRequestMs } from '../../../utils/adminSystemFormat';
 import { AdminPanel } from '../shared';
+import type { SystemOverview } from '@shared/types';
 
 export interface SlowRequestsProps {
   requests: SystemOverview['requests'] | null;

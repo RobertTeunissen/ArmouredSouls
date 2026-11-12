@@ -4,9 +4,9 @@
  */
 import type { ReactNode } from 'react';
 import { AdminPanel } from '../shared';
-import type { ImagesOverview } from '../../../utils/adminImagesApi';
 import { bytesText, dayMonth } from '../../../utils/adminImagesFormat';
 import { formatCount } from '../../../utils/adminDashboardFormat';
+import type { ImagesOverview } from '@shared/types';
 
 export function ImageStatCards({ overview }: { overview: ImagesOverview }): ReactNode {
   const { inUse, season, moderation, storage } = overview;

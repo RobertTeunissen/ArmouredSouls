@@ -4,10 +4,10 @@
  */
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import type { PracticeArenaOverview } from '../../../utils/adminPracticeArenaApi';
 import { formatDayTime } from '../../../utils/adminCycleFormat';
 import { formatCount, shortDate } from '../../../utils/adminPracticeArenaFormat';
 import { ADMIN_FOCUS_RING, AdminPanel } from '../shared';
+import type { PracticeArenaOverview } from '@shared/types';
 
 export interface TopPractitionersProps {
   overview: PracticeArenaOverview | null;

@@ -1,9 +1,9 @@
 import AutomatonBadge from '../AutomatonBadge';
 import type { StableType } from '../../types/stable';
-import type { SeasonState } from '../../utils/seasonApi';
 import { categoryLabel } from '../../utils/seasonFormat';
 import { formatMonthYear } from '../../utils/stableViewFormat';
 import type { StableAccolade, StableUser } from './types';
+import type { SeasonState } from '@shared/types';
 
 interface StableHeaderProps {
   user: StableUser;

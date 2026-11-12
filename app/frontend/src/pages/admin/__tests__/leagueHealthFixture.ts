@@ -1,16 +1,17 @@
+import type {
+  LeagueHealthInstance,
+  LeagueHealthModeSummary,
+  LeagueHealthOverview,
+  LeagueHealthTier,
+  LeagueSeasonOverview,
+  TieredLeagueMode,
+} from '@shared/types';
+
 /**
  * Small League Health overview for page and format tests: six modes, six tiers
  * each, with the problems the page must show (blocked team Champion, low
  * promotion, few demotions, unsubscribed rows).
  */
-import type {
-  LeagueHealthInstance,
-  LeagueHealthMode,
-  LeagueHealthModeSummary,
-  LeagueHealthOverview,
-  LeagueHealthTier,
-  LeagueSeasonOverview,
-} from '../../../utils/adminLeagueHealthApi';
 
 const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 
@@ -64,7 +65,7 @@ export function tier(name: string, overrides: Partial<LeagueHealthTier> = {}): L
   };
 }
 
-function mode(name: LeagueHealthMode, tiers: Partial<Record<string, Partial<LeagueHealthTier>>> = {}): LeagueHealthModeSummary {
+function mode(name: TieredLeagueMode, tiers: Partial<Record<string, Partial<LeagueHealthTier>>> = {}): LeagueHealthModeSummary {
   const team = name === 'league_2v2' || name === 'league_3v3' || name === 'tag_team';
   const placement = name === 'koth' || name === 'grand_melee';
   return {

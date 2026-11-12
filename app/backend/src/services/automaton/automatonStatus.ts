@@ -17,32 +17,7 @@ import prisma from '../../lib/prisma';
 import type { AutomatonTurnTrigger } from '../../../generated/prisma';
 import { getProgramSwitch } from './programSwitch';
 import { loadActiveNeedAttention, type NeedAttentionCode } from './needAttention';
-
-export interface LastTurnStep {
-  seasonNumber: number;
-  trigger: AutomatonTurnTrigger;
-  slot: number;
-  /** "Cycle {n}", "Prep {n}" or "Season start". */
-  label: string;
-  /** Latest `finishedAt` of the group; null while every record is in progress. */
-  finishedAt: string | null;
-  /** Turn_Records in the group. */
-  processed: number;
-  /** Latest `finishedAt` − earliest `startedAt`; null while nothing has finished. */
-  durationMs: number | null;
-}
-
-export interface AutomatonStatusBar {
-  program: { turnsEnabled: boolean; updatedAt: string };
-  /** Null before the first Turn_Step ("Never"). */
-  lastStep: LastTurnStep | null;
-  /** Active_Automatons whose most recent Turn_Record is `failed`. */
-  failedCount: number;
-  /** Active_Automatons with at least one Need_Attention reason. */
-  needAttentionCount: number;
-  /** Active_Automatons per Need_Attention reason (a stable can have several). */
-  needAttentionByReason: Record<NeedAttentionCode, number>;
-}
+import type { AutomatonStatusBar, LastTurnStep } from '../../shared/types';
 
 /** The Turn_Trigger label with its Turn_Slot (PLAYER_FACING_TEXT §6.2). */
 export function turnStepLabel(trigger: AutomatonTurnTrigger, slot: number): string {

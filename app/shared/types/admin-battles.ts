@@ -1,16 +1,20 @@
 /**
- * Response shapes of the admin Battles endpoints (`/api/admin/battles*`).
- * The frontend mirrors these in `app/frontend/src/components/admin/battles/types.ts`.
+ * Wire contracts for the admin Battles page (`/api/admin/battles`,
+ * `/battles/:id`, `/battles/:id/log`; backend `services/admin/battles`).
  */
-import type { BattleResult, EndedBy } from './battleOutcome';
+import type { StableType } from './stable';
 
-export type StableKind = 'human' | 'generated' | 'automaton';
+/** How a battle resolved (backend `battleOutcome.ts`). */
+export type BattleResult = 'win' | 'draw' | 'bye' | 'forfeit';
+export type EndedBy = 'destroyed' | 'yield' | 'team_eliminated' | 'time_limit' | 'score_reached' | 'last_standing';
+/** Whether the stable's recorded payouts match the ledger. */
+export type PayoutStatus = 'match' | 'mismatch' | 'missing';
 
 export interface StableRef {
   userId: number;
   /** Stable name, or the username when the stable has none. */
   name: string;
-  stableType: StableKind;
+  stableType: StableType;
 }
 
 /** One side of a two-sided battle, or the winner of a placement battle. */
@@ -26,7 +30,7 @@ export interface BattleSideSummary {
 export interface PlacementFieldSummary {
   /** Robots in the field besides the winner. */
   others: number;
-  othersByStableType: Record<StableKind, number>;
+  othersByStableType: Record<StableType, number>;
 }
 
 export interface BattleListRow {
@@ -125,13 +129,13 @@ export interface StablePayoutCheck {
   stable: StableRef;
   battleIncome: { participants: number; ledger: number | null };
   streaming: { participants: number; ledger: number | null };
-  status: 'match' | 'mismatch' | 'missing';
+  status: PayoutStatus;
   /** `battle_income` formula inputs for this stable, from the ledger metadata. */
   inputs: PayoutInputs | null;
 }
 
 export interface PayoutCheck {
-  status: 'match' | 'mismatch' | 'missing' | 'unavailable';
+  status: PayoutStatus | 'unavailable';
   stables: StablePayoutCheck[];
   ledgerEntries: number;
 }
@@ -147,7 +151,7 @@ export interface CombatLogStatus {
   movementSampled: boolean;
 }
 
-export interface BattleDetailResponse {
+export interface AdminBattleDetail {
   id: number;
   battleType: string;
   leagueType: string;
@@ -169,10 +173,28 @@ export interface BattleDetailResponse {
   combatLog: CombatLogStatus;
 }
 
-/** A stored combat event as the admin log returns it (shape varies per event type). */
-export type AdminCombatEvent = Record<string, unknown> & { timestamp: number; type: string; message?: string };
+export interface AdminFormulaBreakdown {
+  calculation?: string;
+  components?: Record<string, number>;
+  result?: number;
+}
 
-export interface BattleLogResponse {
+/** A stored combat event as the admin log returns it; fields vary per event type. */
+export interface AdminCombatEvent {
+  timestamp: number;
+  type: string;
+  message?: string;
+  attacker?: string;
+  defender?: string;
+  distance?: number;
+  rangeBand?: string;
+  formulaBreakdown?: AdminFormulaBreakdown;
+  robotHP?: Record<string, number>;
+  robotShield?: Record<string, number>;
+  [key: string]: unknown;
+}
+
+export interface AdminBattleLogResponse {
   battleId: number;
   status: CombatLogStatus;
   events: AdminCombatEvent[];

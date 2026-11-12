@@ -78,6 +78,7 @@ import {
   updateDraft,
 } from '../services/automaton/strategies/strategyDraftService';
 import { confirmUpgrade, dryRunUpgrade } from '../services/automaton/strategies/strategyUpgradeService';
+import type { ProgramSwitchChange } from '../shared/types';
 
 const router = express.Router();
 router.use(authenticateToken);
@@ -382,7 +383,8 @@ router.put(
   ...validated({ body: programBody }, async (req: AuthRequest, res: Response, { body }) => {
     const change = await setProgramSwitch(body.turnsEnabled, req.user!.userId);
     recordSuccess(req, res, { changedFields: ['turnsEnabled'], previous: change.previous, current: change.current });
-    res.json(change);
+    const response: ProgramSwitchChange = { ...change, updatedAt: change.updatedAt.toISOString() };
+    res.json(response);
   }),
 );
 

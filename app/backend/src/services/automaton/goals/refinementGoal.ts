@@ -19,18 +19,16 @@ import {
   type RefinementRow,
 } from '../../../shared/utils/weaponRefinement';
 import { refinementLabLevelForTier, refinementStepCost } from '../pricing';
-import { inventoryItem, type Hand, type InventoryFacts, type RobotFacts, type StableFacts } from '../stableFacts';
-import type { RefinementStep } from '../../../types/automaton';
+import { inventoryItem, type InventoryFacts, type RobotFacts, type StableFacts } from '../stableFacts';
 import { facilityChain, weaponByName } from './goalSupport';
 import { finalStageIndex } from './weaponStageGoal';
 import {
   savingOrActionable,
-  type BlockedReason,
   type Goal,
   type GoalContext,
-  type GoalDetail,
   type GoalOutcome,
 } from './goalTypes';
+import type { BlockedReason, GoalDetail, Hand, RefinementStep } from '../../../shared/types';
 
 export type NextRefinement =
   | { kind: 'done' }

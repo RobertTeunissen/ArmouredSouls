@@ -5,9 +5,9 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING } from '../shared';
-import type { SecuritySignal, SignalSourceRow, SignalStableRow } from '../../../utils/adminSecurityApi';
 import { STABLE_SIGNAL_LABELS, shortDateTime, stableLabel } from '../../../utils/adminSecurityFormat';
 import { formatCount } from '../../../utils/adminDashboardFormat';
+import type { SecuritySignal, SignalSourceRow, SignalStableRow } from '@shared/types';
 
 const STABLE_TYPE_LABELS: Readonly<Record<NonNullable<SignalStableRow['stableType']>, string>> = {
   human: 'Player',

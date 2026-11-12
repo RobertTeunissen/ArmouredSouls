@@ -18,7 +18,7 @@
  */
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import { executeUpgradeTransaction, type UpgradeRequest } from '../robot/robotUpgradeService';
+import { executeUpgradeTransaction, type RobotUpgradeRequest } from '../robot/robotUpgradeService';
 import { refineWeapon } from '../economy/weaponRefinementService';
 import { invalidateUserRobotsCache } from '../robot/robotQueryService';
 import { eventLogger } from '../common/eventLogger';
@@ -38,8 +38,9 @@ import {
 } from './executionSteps';
 import { executeRobotChain } from './robotFitout';
 import { awardQuietly, type FreeUpkeepIssue } from './upkeep/freeUpkeep';
-import { loadStableFacts, reloadOptions, type Hand, type RobotFacts, type StableFacts } from './stableFacts';
+import { loadStableFacts, reloadOptions, type RobotFacts, type StableFacts } from './stableFacts';
 import type { PlannedAction } from './goals/goalTypes';
+import type { Hand } from '../../shared/types';
 
 export {
   createExecutionCursor,
@@ -72,7 +73,7 @@ async function executeAttributeUpgrade(
 ): Promise<void> {
   const { userId } = ctx.identity;
   const robot = robotInSlot(facts, action.robotSlot);
-  const upgrades: Record<string, UpgradeRequest> = {};
+  const upgrades: Record<string, RobotUpgradeRequest> = {};
   for (const [attribute, levels] of Object.entries(action.increments) as [RobotAttribute, number][]) {
     const currentLevel = Math.floor(robot.attributes[attribute]);
     upgrades[attribute] = { currentLevel, plannedLevel: currentLevel + levels };

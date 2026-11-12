@@ -17,72 +17,24 @@ import { getCurrentProcessId } from './schedulerRunStore';
 import { findMissedRuns, parseDailyCron, type MissedRun } from './schedulerMissedRuns';
 import { getCurrentSeason } from '../season/seasonService';
 import { SchedulerError, SchedulerErrorCode } from '../../errors/schedulerErrors';
-import type { SchedulerRunStatus, SchedulerRunSummary, SchedulerRunTrigger } from '../../types';
+import type {
+  MissedRunView,
+  SchedulerHistoryEntry,
+  SchedulerHistoryPage,
+  SchedulerHistoryQuery,
+  SchedulerOverview,
+  SchedulerRunStatus,
+  SchedulerRunSummary,
+  SchedulerRunTrigger,
+  SchedulerRunView,
+  SchedulerSlotView,
+} from '../../shared/types';
 
 const DAY_MS = 24 * 60 * 60_000;
 /** The overview's missed-run banner looks back this far. */
 export const OVERVIEW_MISSED_WINDOW_DAYS = 7;
 /** History never reaches further back than this. */
 export const MAX_HISTORY_DAYS = 30;
-
-export interface SchedulerRunView {
-  id: number;
-  jobName: string;
-  trigger: SchedulerRunTrigger;
-  triggeredBy: { userId: number; username: string | null } | null;
-  status: SchedulerRunStatus;
-  queuedAt: string;
-  startedAt: string | null;
-  finishedAt: string | null;
-  durationMs: number | null;
-  summary: SchedulerRunSummary | null;
-  error: string | null;
-}
-
-export interface MissedRunView {
-  jobName: string;
-  expectedAt: string;
-  downtime: { from: string; to: string } | null;
-}
-
-export interface SchedulerSlotView {
-  jobName: string;
-  schedule: string;
-  /** "HH:MM" in UTC, or null for a non-daily schedule. */
-  time: string | null;
-  nextRunAt: string | null;
-  lastRun: SchedulerRunView | null;
-  /** A queued or running run of this job in this process. */
-  activeRun: SchedulerRunView | null;
-}
-
-export interface SchedulerOverview {
-  scheduler: {
-    active: boolean;
-    process: { id: number; startedAt: string; deployTag: string | null } | null;
-  };
-  season: { number: number; phase: string; seasonCycle: number } | null;
-  cycle: { number: number };
-  running: SchedulerRunView | null;
-  queue: SchedulerRunView[];
-  next: { jobName: string; at: string } | null;
-  slots: SchedulerSlotView[];
-  missed: { windowDays: number; runs: MissedRunView[] };
-  timestamp: string;
-}
-
-export type SchedulerHistoryEntry =
-  | { kind: 'run'; at: string; run: SchedulerRunView }
-  | { kind: 'restart'; at: string; restart: { processId: number; deployTag: string | null; schedulerEnabled: boolean; downSince: string | null } }
-  | { kind: 'missed'; at: string; missed: MissedRunView };
-
-export interface SchedulerHistoryPage {
-  entries: SchedulerHistoryEntry[];
-  page: number;
-  limit: number;
-  total: number;
-  windowDays: number;
-}
 
 interface RunRow {
   id: number;
@@ -243,14 +195,6 @@ export async function getSchedulerOverview(now: Date = new Date()): Promise<Sche
     missed: { windowDays: OVERVIEW_MISSED_WINDOW_DAYS, runs: missed.map(toMissedView) },
     timestamp: now.toISOString(),
   };
-}
-
-export interface SchedulerHistoryQuery {
-  jobName?: string;
-  problemsOnly?: boolean;
-  days?: number;
-  page?: number;
-  limit?: number;
 }
 
 const PROBLEM_STATUSES: ReadonlySet<string> = new Set(['failed', 'interrupted']);

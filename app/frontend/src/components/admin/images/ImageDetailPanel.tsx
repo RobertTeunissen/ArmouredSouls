@@ -10,8 +10,9 @@ import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING, AdminSlideOver, PanelError, PanelSkeleton } from '../shared';
 import { ApiError } from '../../../utils/ApiError';
 import { isAbortError } from '../../../utils/abort';
-import { getImageDetail, removeImage, type ImageDetail, type ModerationScores } from '../../../utils/adminImagesApi';
+import { getImageDetail, removeImage } from '../../../utils/adminImagesApi';
 import { bytesText, fullDateTime, ownerLabel } from '../../../utils/adminImagesFormat';
+import type { ImageDetail, ModerationScores } from '@shared/types';
 
 export interface ImageDetailPanelProps {
   imageId: number | null;
