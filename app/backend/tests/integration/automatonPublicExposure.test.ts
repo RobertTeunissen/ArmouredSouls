@@ -28,13 +28,15 @@ import {
   fetchCareerRecords,
   fetchCombatRecords,
   fetchEconomicRecords,
+  fetchUpsetRecords,
+} from '../../src/services/records/recordsQueryService';
+import {
   fetchGrandMeleeRecords,
   fetchKothRecords,
   fetchTeamBattleRecords,
   fetchTournamentChampions,
-  fetchUpsetRecords,
   fetchWinStreakRecords,
-} from '../../src/services/records/recordsQueryService';
+} from '../../src/services/records/modeRecordsQueries';
 
 const suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 const MARKERS = {

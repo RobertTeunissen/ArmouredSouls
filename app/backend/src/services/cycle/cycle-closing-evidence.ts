@@ -1,7 +1,8 @@
 import logger from '../../config/logger';
 import prisma from '../../lib/prisma';
 import { formatProcessMemoryUsage } from '../../utils/process-memory';
-import { EventType, eventLogger } from '../common/eventLogger';
+import { eventLogger } from '../common/eventLogger';
+import { EventType } from '../common/auditEventTypes';
 
 const BALANCE_PAGE_SIZE = 100;
 

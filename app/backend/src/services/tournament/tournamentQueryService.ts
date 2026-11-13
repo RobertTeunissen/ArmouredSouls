@@ -7,7 +7,7 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import type { Prisma } from '../../../generated/prisma';
 import { TournamentError, TournamentErrorCode } from '../../errors';
-import { computeSeedings } from './tournamentService';
+import { computeSeedings } from './tournamentBracket';
 import { resolveParticipantsBatch } from './tournamentParticipantResolver';
 
 export type TournamentParticipantType = 'robot' | 'team_2v2' | 'team_3v3';

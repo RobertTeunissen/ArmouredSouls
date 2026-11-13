@@ -24,7 +24,8 @@
 import prisma from '../../src/lib/prisma';
 import logger from '../../src/config/logger';
 import type { ScheduledTournamentMatch } from '../../generated/prisma';
-import { advanceWinnersToNextRound, computeSeedings } from '../../src/services/tournament/tournamentService';
+import { advanceWinnersToNextRound } from '../../src/services/tournament/tournamentService';
+import { computeSeedings } from '../../src/services/tournament/tournamentBracket';
 import {
   executeSoloTournamentRound,
   processTournamentBattle,

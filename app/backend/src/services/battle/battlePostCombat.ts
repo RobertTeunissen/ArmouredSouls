@@ -26,7 +26,8 @@ import {
   applyStreamingTeamShare,
   StreamingRevenueCalculation,
 } from '../economy/streamingRevenueService';
-import { eventLogger, EventType } from '../common/eventLogger';
+import { eventLogger } from '../common/eventLogger';
+import { EventType } from '../common/auditEventTypes';
 import { getCurrentCycleNumber } from './baseOrchestrator';
 import { achievementService, type AchievementEvent, type UnlockedAchievement } from '../achievement';
 import { applyCreditMutation, applyCreditMutationInTransaction } from '../financial/creditMutationService';

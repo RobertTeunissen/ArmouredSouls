@@ -13,12 +13,12 @@
  * **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7**
  */
 
+import { resetScheduler } from '../../src/services/cycle/cycleScheduler';
 import {
   executeTournamentCycle,
   executeTeam2v2TournamentCycle,
   executeTeam3v3TournamentCycle,
-  resetScheduler,
-} from '../../src/services/cycle/cycleScheduler';
+} from '../../src/services/cycle/cycleEventJobs';
 
 // --- Mocks ---
 

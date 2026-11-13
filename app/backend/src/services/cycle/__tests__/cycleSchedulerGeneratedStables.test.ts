@@ -4,7 +4,7 @@
  * competitive cycle 1 creates the first tournaments) and in competitive step 7.
  * A failed top-up never fails settlement.
  */
-import { executeSettlement } from '../cycleScheduler';
+import { executeSettlement } from '../cycleSettlementJob';
 import { runTurnStepNonFatal } from '../../automaton';
 import { topUpGeneratedStables } from '../../../utils/userGeneration';
 

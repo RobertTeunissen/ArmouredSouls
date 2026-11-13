@@ -6,7 +6,7 @@
 
 import prisma from '../src/lib/prisma';
 import { processBattle } from '../src/services/league/leagueBattleOrchestrator';
-import { EventType } from '../src/services/common/eventLogger';
+import { EventType } from '../src/services/common/auditEventTypes';
 import { useFinancialCaptureTestEnvironment } from './financialCaptureTestHelper';
 
 useFinancialCaptureTestEnvironment();

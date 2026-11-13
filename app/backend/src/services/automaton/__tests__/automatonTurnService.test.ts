@@ -27,18 +27,20 @@ import { resumeIncompleteFitouts } from '../fitoutRecovery';
 import {
   runTurnStep,
   runTurnStepNonFatal,
-  withTurnStepLease,
   STEP_BUDGET_EXHAUSTED,
   TURN_ACTION_LIMIT,
   TURN_BUDGET_EXHAUSTED,
   CUTOVER_IN_PROGRESS,
-  TURN_STEP_LEASE_LOST,
-  TURN_STEP_LEASE_RENEW_MS,
-  TURN_STEP_LEASE_TTL_MS,
   TURN_STEP_MIN_BUDGET_MS,
   type TurnStepDependencies,
   type TurnStepInput,
 } from '../automatonTurnService';
+import {
+  withTurnStepLease,
+  TURN_STEP_LEASE_LOST,
+  TURN_STEP_LEASE_RENEW_MS,
+  TURN_STEP_LEASE_TTL_MS,
+} from '../turnStepLease';
 import { setProgramSwitch } from '../programSwitch';
 import logger from '../../../config/logger';
 import { fakeDb, fakePrisma, resetFakeDb, seedTurn, type FakeProfileRow } from './helpers/fakeTurnDb';

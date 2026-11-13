@@ -1,9 +1,8 @@
 import { Battle } from '../../../generated/prisma';
 import { encodeBattleLog } from '../battle/battleLogCodec';
 import prisma from '../../lib/prisma';
-import logger from '../../config/logger';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
-import { computeBattleSummary } from '../battle/battleSummaryComputer';
+import { writeBattleSummary } from '../battle/battleSummaryWriter';
 import { TagTeamWithRobots, TagTeamBattleResult } from './tagTeamTypes';
 import { recordCombatBuilds } from '../battle/combatBuildRecorder';
 import { yieldedRobotNames } from '../battle/battleAchievementContext';
@@ -187,8 +186,8 @@ export async function createTagTeamBattleRecord(
   await recordCombatBuilds(battle.id, 'tag_team', [team1.activeRobot, team1.reserveRobot, team2.activeRobot, team2.reserveRobot]);
 
   // Write pre-computed battle summary (Spec #39)
-  const summaryData = computeBattleSummary({
-    events: (result.battleLog || []) as unknown as import('../../shared/utils/battleStatistics').BattleLogEvent[],
+  await writeBattleSummary(battle.id, {
+    events: result.battleLog,
     duration: result.durationSeconds,
     battleType: 'tag_team',
     robotMaxHP: {
@@ -216,14 +215,7 @@ export async function createTagTeamBattleRecord(
     startingPositions: result.startingPositions as Record<string, { x: number; y: number }> | undefined,
     endingPositions: result.endingPositions as Record<string, { x: number; y: number }> | undefined,
     arenaRadius: result.arenaRadius,
-  });
-  if (summaryData) {
-    await prisma.battleSummary.create({
-      data: { battleId: battle.id, ...summaryData },
-    }).catch((err: unknown) => {
-      logger.warn('[tag-team] Failed to write battle summary', { battleId: battle.id, error: err instanceof Error ? err.message : String(err) });
-    });
-  }
+  }, '[tag-team]');
 
   return battle;
 }

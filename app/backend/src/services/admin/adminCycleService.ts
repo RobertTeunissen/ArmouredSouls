@@ -1,26 +1,13 @@
-import { executeScheduledBattles } from '../league/leagueBattleOrchestrator';
-import { executeScheduledKothBattles } from '../koth/kothBattleOrchestrator';
-import { runMatchmaking } from '../analytics/matchmakingService';
-import { runKothMatchmaking } from '../koth/kothMatchmakingService';
-import { rebalanceLeagues } from '../league/leagueRebalancingService';
+/**
+ * Admin bulk cycle executor: runs one or more complete game cycles on demand
+ * (the admin "run cycles" action), sharing the scheduler's preparation and
+ * settlement boundaries. The per-event blocks live in `adminCycleSteps`.
+ *
+ * @module services/admin/adminCycleService
+ */
+
 import { redealLeagueInstances } from '../league/leagueInstanceRedeal';
-import { rebalanceTagTeamLeagues } from '../tag-team/tagTeamLeagueRebalancingService';
-import { runTagTeamMatchmaking } from '../tag-team/tagTeamMatchmakingService';
-import { executeScheduledTagTeamBattles } from '../tag-team/tagTeamBattleOrchestrator';
-import { executeScheduledTeamBattles } from '../team-battle/teamBattleOrchestrator';
-import { rebalanceTeamBattleLeagues } from '../team-battle/teamBattleAdapter';
-import { runTeamBattleMatchmaking } from '../team-battle/teamBattleMatchmakingService';
-import { topUpGeneratedStables, type GeneratedStableTopUpResult } from '../../utils/userGeneration';
 import { repairRobotsForEvent } from '../economy/repairService';
-import {
-  getActiveTournaments,
-  getCurrentRoundMatches,
-  autoCreateNextTournament,
-  advanceWinnersToNextRound,
-} from '../tournament/tournamentService';
-import { executeSoloTournamentRound } from '../tournament/tournamentBattleOrchestrator';
-import { executeTeamTournamentRound } from '../tournament/teamTournamentBattleOrchestrator';
-import { autoCreateNextTeamTournament } from '../tournament/teamTournamentService';
 import { cleanupSeasonOrphans } from '../moderation/imageLibraryService';
 import { EventLogger } from '../common/eventLogger';
 import { cycleLogger } from '../../utils/cycleLogger';
@@ -35,38 +22,23 @@ import {
   getActiveFinancialCycleNumber,
   getSerializedCycleCutoverUserIdWatermark,
 } from '../cycle/canonicalCycleIdentity';
-import type { TurnStepInput, TurnStepOutcome } from '../automaton/automatonTurnService';
-
-/**
- * Run an Automaton Turn_Step for a bulk cycle (Spec #55 R7.3, R7.4) and
- * return its outcome for the bulk response. Never throws (R7.8).
- */
-/**
- * Top up the generated stables to `GENERATED_STABLE_TARGET` for a manual run
- * (the "generateUsersPerCycle" option). A failure is reported in the cycle
- * result instead of failing the run, as before.
- */
-async function topUpGeneratedStablesForAdmin(): Promise<GeneratedStableTopUpResult | { error: string }> {
-  try {
-    const summary = await topUpGeneratedStables();
-    logger.info(`[Admin] Generated stables: created ${summary.usersCreated} (had ${summary.existingBefore}, target ${summary.target})`);
-    return summary;
-  } catch (error) {
-    logger.error(`[Admin] Error topping up generated stables:`, error);
-    return { error: error instanceof Error ? error.message : String(error) };
-  }
-}
-
-async function runAutomatonTurnStep(input: TurnStepInput): Promise<TurnStepOutcome> {
-  try {
-    const { runTurnStepNonFatal } = await import('../automaton');
-    return await runTurnStepNonFatal(input);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    logger.error(`[Admin] Automaton Turn_Step failed (non-fatal) — ${message}`);
-    return { ok: false, code: 'UNEXPECTED_ERROR', message };
-  }
-}
+import type { TurnStepOutcome } from '../automaton/automatonTurnService';
+import {
+  CycleStepRunner,
+  executeTournamentStep,
+  runAutomatonTurnStep,
+  runGrandMeleeBlock,
+  runKothBlock,
+  runLeague1v1Block,
+  runTagTeamBlock,
+  runTeamLeagueBlock,
+  runTeamTournamentBlock,
+  runTournamentBlock,
+  topUpGeneratedStablesForAdmin,
+  type GrandMeleeBlockSummary,
+  type TeamLeagueBlockResult,
+  type TeamTournamentBlockResult,
+} from './adminCycleSteps';
 
 /** Options accepted by the bulk cycle executor (mirrors req.body fields). */
 export interface BulkCycleOptions {
@@ -82,14 +54,14 @@ export interface CycleResult {
   cycle: number;
   // Event block results (slot map order)
   leagueBlock?: { battles: unknown; repair: unknown; rebalancing: unknown; matchmaking: unknown };
-  team2v2LeagueBlock?: { battles: unknown; rebalancing: unknown; matchmaking: unknown } | { error: string };
+  team2v2LeagueBlock?: TeamLeagueBlockResult;
   tournamentBlock?: { repair: unknown; tournaments: unknown };
   tagTeamBlock?: { repair: unknown; battles: unknown; rebalancing: unknown; matchmaking: unknown };
   kothBlock?: { repair: unknown; battles: unknown; matchmaking: unknown };
-  team3v3LeagueBlock?: { battles: unknown; rebalancing: unknown; matchmaking: unknown } | { error: string };
-  team2v2TournamentBlock?: { skipped: true; message: string } | { repair: unknown; matchesExecuted: number; matchesFailed: number; tournamentName?: string; tournamentRound?: number; tournamentMaxRounds?: number; tournamentCreated?: boolean; skippedReason?: string };
+  team3v3LeagueBlock?: TeamLeagueBlockResult;
+  team2v2TournamentBlock?: TeamTournamentBlockResult;
   grandMeleeBlock?: GrandMeleeBlockSummary | { error: string };
-  team3v3TournamentBlock?: { skipped: true; message: string } | { repair: unknown; matchesExecuted: number; matchesFailed: number; tournamentName?: string; tournamentRound?: number; tournamentMaxRounds?: number; tournamentCreated?: boolean; skippedReason?: string };
+  team3v3TournamentBlock?: TeamTournamentBlockResult;
   // Settlement results
   settlement?: {
     userGeneration: unknown;
@@ -120,102 +92,6 @@ export interface BulkCycleResult {
   averageCycleDuration: number;
   results: CycleResult[];
   timestamp: string;
-}
-
-/** Result shape for the Grand Melee block of a bulk cycle. */
-// A type alias (not an interface) so it stays assignable to the event logger's Record<string, unknown>.
-export type GrandMeleeBlockSummary = {
-  matchesExecuted: number;
-  matchesFailed: number;
-  /** Matches whose ready field fell below the minimum at battle time (byes and forfeits instead of a fight). */
-  belowMinimumMatches: number;
-  /** Robots placed last because they had no main weapon at battle time. */
-  forfeitedRobots: number;
-  matchesCreated: number;
-};
-/** Result shape for tournament execution step. */
-export interface TournamentStepSummary {
-  tournamentsExecuted?: number;
-  roundsExecuted?: number;
-  matchesExecuted?: number;
-  /** Bracket Bye_Events resolved and paid this run (Spec #49). */
-  byeMatchesResolved?: number;
-  /** Matches resolved as battle-time forfeits (single or double; nothing simulated). */
-  forfeits?: number;
-  tournamentsCompleted?: number;
-  tournamentsCreated?: number;
-  errors?: string[];
-  error?: string;
-}
-
-/**
- * Execute tournament rounds, advance winners, and auto-create next tournament.
- * Shared by both the cycles=0 tournament-only path and the full cycle pipeline.
- */
-async function executeTournamentStep(): Promise<TournamentStepSummary> {
-  const summary: TournamentStepSummary = {
-    tournamentsExecuted: 0,
-    roundsExecuted: 0,
-    matchesExecuted: 0,
-    byeMatchesResolved: 0,
-    forfeits: 0,
-    tournamentsCompleted: 0,
-    tournamentsCreated: 0,
-    errors: [],
-  };
-
-  try {
-    const activeTournaments = await getActiveTournaments();
-
-    for (const tournament of activeTournaments) {
-      try {
-        const currentRoundMatches = await getCurrentRoundMatches(tournament.id);
-
-        if (currentRoundMatches.length > 0) {
-          // Shared executor (rule 7): byes, fought matches and the failure
-          // policy, identical to the cron path.
-          const roundResult = await executeSoloTournamentRound(tournament.id);
-          summary.matchesExecuted! += roundResult.matchesExecuted + roundResult.byesResolved + roundResult.matchesResumed;
-          summary.byeMatchesResolved = (summary.byeMatchesResolved ?? 0) + roundResult.byesResolved;
-          summary.forfeits = (summary.forfeits ?? 0) + roundResult.forfeits;
-          for (const err of roundResult.errors) {
-            summary.errors!.push(`Tournament ${tournament.id} ${err}`);
-          }
-
-          await advanceWinnersToNextRound(tournament.id);
-          summary.roundsExecuted!++;
-        }
-
-        summary.tournamentsExecuted!++;
-
-        const updatedTournament = await prisma.tournament.findUnique({
-          where: { id: tournament.id },
-        });
-
-        if (updatedTournament?.status === 'completed') {
-          summary.tournamentsCompleted!++;
-        }
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        summary.errors!.push(`Tournament ${tournament.id}: ${errorMsg}`);
-      }
-    }
-
-    try {
-      const nextTournament = await autoCreateNextTournament();
-      if (nextTournament) {
-        summary.tournamentsCreated!++;
-        logger.info(`[Admin] Auto-created tournament: ${nextTournament.name}`);
-      }
-    } catch (error) {
-      logger.error('[Admin] Failed to auto-create tournament:', error);
-    }
-  } catch (error) {
-    logger.error('[Admin] Tournament execution error:', error);
-    return { error: error instanceof Error ? error.message : String(error) };
-  }
-
-  return summary;
 }
 
 /**
@@ -351,567 +227,18 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       // evidence and snapshot creation have completed.
       await eventLogger.logCycleStart(currentCycleNumber, 'manual');
 
-      let stepNumber = 0;
+      const steps = new CycleStepRunner(eventLogger, currentCycleNumber);
       const reservedSlotsFired: string[] = [];
 
-      // ═══════════════════════════════════════════════════════════════════
-      // SLOT 1: 1v1 League (repair → execute → rebalance → matchmaking)
-      // ═══════════════════════════════════════════════════════════════════
-      logger.info(`[Admin] Slot 1: 1v1 League`);
-
-      // 1.1 Repair
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-league)`);
-      const leagueRepairStart = Date.now();
-      const leagueRepairSummary = await repairRobotsForEvent('league_1v1', true, currentCycleNumber);
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'repair_pre_league',
-        stepNumber,
-        Date.now() - leagueRepairStart,
-        { robotsRepaired: leagueRepairSummary.robotsRepaired, totalCost: leagueRepairSummary.totalFinalCost }
-      );
-
-      // 1.2 Execute battles
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Execute League Battles (1v1)`);
-      const leagueBattleStart = Date.now();
-      const battleSummary = await executeScheduledBattles(new Date());
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'execute_league_battles',
-        stepNumber,
-        Date.now() - leagueBattleStart,
-        { battlesExecuted: battleSummary.totalBattles }
-      );
-
-      // 1.3 Rebalance leagues
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Rebalance Leagues`);
-      const leagueRebalanceStart = Date.now();
-      const rebalancingSummary = await rebalanceLeagues();
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'rebalance_leagues',
-        stepNumber,
-        Date.now() - leagueRebalanceStart,
-        { promotions: rebalancingSummary.totalPromoted, demotions: rebalancingSummary.totalDemoted }
-      );
-
-      // 1.4 Matchmaking (24h lead time)
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Leagues (1v1)`);
-      const leagueMatchmakingStart = Date.now();
-      const leagueMatchesCreated = await runMatchmaking();
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'matchmaking_leagues',
-        stepNumber,
-        Date.now() - leagueMatchmakingStart,
-        { matchesCreated: leagueMatchesCreated }
-      );
-
-      // ═══════════════════════════════════════════════════════════════════
-      // SLOT 2: Team 2v2 League (execute → rebalance → matchmaking)
-      // ═══════════════════════════════════════════════════════════════════
-      logger.info(`[Admin] Slot 2: Team 2v2 League`);
-      let team2v2BattleSummary = null;
-      let team2v2RebalancingSummary = null;
-      let team2v2MatchesCreated = 0;
-      let team2v2Error: string | undefined;
-
-      try {
-        // 2.0 Repair (Spec #41 — was missing, must match cron behavior)
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-team-2v2-league)`);
-        const team2v2RepairStart = Date.now();
-        await repairRobotsForEvent('league_2v2', true, currentCycleNumber);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'repair_pre_team_2v2_league',
-          stepNumber,
-          Date.now() - team2v2RepairStart,
-          {}
-        );
-
-        // 2.1 Execute scheduled 2v2 battles
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Execute Team 2v2 League Battles`);
-        const team2v2BattleStart = Date.now();
-        team2v2BattleSummary = await executeScheduledTeamBattles(2);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'execute_team_2v2_battles',
-          stepNumber,
-          Date.now() - team2v2BattleStart,
-          { matchesCompleted: team2v2BattleSummary.matchesCompleted, matchesCancelled: team2v2BattleSummary.matchesCancelled }
-        );
-
-        // 2.2 Rebalance 2v2 league tiers
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Rebalance Team 2v2 Leagues`);
-        const team2v2RebalanceStart = Date.now();
-        team2v2RebalancingSummary = await rebalanceTeamBattleLeagues(2);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'rebalance_team_2v2_leagues',
-          stepNumber,
-          Date.now() - team2v2RebalanceStart,
-          { promotions: team2v2RebalancingSummary.totalPromoted, demotions: team2v2RebalancingSummary.totalDemoted }
-        );
-
-        // 2.3 Run 2v2 matchmaking (24h lead time)
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Team 2v2 League`);
-        const team2v2MatchmakingStart = Date.now();
-        team2v2MatchesCreated = await runTeamBattleMatchmaking(2);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'matchmaking_team_2v2',
-          stepNumber,
-          Date.now() - team2v2MatchmakingStart,
-          { matchesCreated: team2v2MatchesCreated }
-        );
-      } catch (team2v2Err) {
-        // R14.7: Record failure, continue remaining steps and iterations
-        team2v2Error = team2v2Err instanceof Error ? team2v2Err.message : String(team2v2Err);
-        logger.error(`[Admin] Team 2v2 League block failed:`, team2v2Err);
-      }
-
-      // ═══════════════════════════════════════════════════════════════════
-      // SLOT 3: 1v1 Tournament (repair → execute/advance/auto-create)
-      // ═══════════════════════════════════════════════════════════════════
-      logger.info(`[Admin] Slot 3: 1v1 Tournament`);
-      let tournamentSummary: TournamentStepSummary | null = null;
-
-      // 3.1 Repair
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-tournament)`);
-      const tournamentRepairStart = Date.now();
-      const tournamentRepairSummary = await repairRobotsForEvent('tournament_1v1', true, currentCycleNumber);
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'repair_pre_tournament',
-        stepNumber,
-        Date.now() - tournamentRepairStart,
-        { robotsRepaired: tournamentRepairSummary.robotsRepaired, totalCost: tournamentRepairSummary.totalFinalCost }
-      );
-
-      // 3.2 Execute tournament step
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Tournament Execution / Scheduling`);
-      const tournamentExecStart = Date.now();
-      if (includeTournaments) {
-        tournamentSummary = await executeTournamentStep();
-        logger.info(`[Admin] Tournaments: ${tournamentSummary.tournamentsExecuted || 0} executed, ${tournamentSummary.roundsExecuted || 0} rounds, ${tournamentSummary.matchesExecuted || 0} matches, ${tournamentSummary.forfeits || 0} forfeits`);
-      }
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'tournament_execution',
-        stepNumber,
-        Date.now() - tournamentExecStart,
-        {
-          tournamentsExecuted: tournamentSummary?.tournamentsExecuted || 0,
-          matchesExecuted: tournamentSummary?.matchesExecuted || 0,
-          forfeits: tournamentSummary?.forfeits || 0,
-        }
-      );
-
-      // ═══════════════════════════════════════════════════════════════════
-      // SLOT 4: Tag Team (repair → execute → rebalance → matchmaking)
-      // ═══════════════════════════════════════════════════════════════════
-      logger.info(`[Admin] Slot 4: Tag Team`);
-
-      // 4.1 Repair
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-tag-team)`);
-      const tagTeamRepairStart = Date.now();
-      const tagTeamRepairSummary = await repairRobotsForEvent('tag_team', true, currentCycleNumber);
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'repair_pre_tag_team',
-        stepNumber,
-        Date.now() - tagTeamRepairStart,
-        { robotsRepaired: tagTeamRepairSummary.robotsRepaired, totalCost: tagTeamRepairSummary.totalFinalCost }
-      );
-
-      // 4.2 Execute tag team battles
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Execute Tag Team Battles`);
-      const tagTeamBattleStart = Date.now();
-      const tagTeamBattleSummary = await executeScheduledTagTeamBattles(new Date());
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'execute_tag_team_battles',
-        stepNumber,
-        Date.now() - tagTeamBattleStart,
-        { battlesExecuted: tagTeamBattleSummary?.totalBattles || 0 }
-      );
-
-      // 4.3 Rebalance tag team leagues
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Rebalance Tag Team Leagues`);
-      const tagTeamRebalanceStart = Date.now();
-      const tagTeamRebalancingSummary = await rebalanceTagTeamLeagues();
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'rebalance_tag_team_leagues',
-        stepNumber,
-        Date.now() - tagTeamRebalanceStart,
-        { promotions: tagTeamRebalancingSummary.totalPromoted, demotions: tagTeamRebalancingSummary.totalDemoted }
-      );
-
-      // 4.4 Tag Team matchmaking (24h lead time)
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Tag Teams`);
-      const tagTeamMatchmakingStart = Date.now();
-      const tagTeamMatchesCreated = await runTagTeamMatchmaking();
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'matchmaking_tag_teams',
-        stepNumber,
-        Date.now() - tagTeamMatchmakingStart,
-        { matchesCreated: tagTeamMatchesCreated }
-      );
-
-      // ═══════════════════════════════════════════════════════════════════
-      // SLOT 5: KotH (repair → execute → matchmaking)
-      // ═══════════════════════════════════════════════════════════════════
-      logger.info(`[Admin] Slot 5: KotH`);
-      let kothBattleSummary = null;
-      let kothMatchesCreated = 0;
-      let kothRepairSummary = null;
-
-      if (includeKoth) {
-        // 5.1 Repair
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-koth)`);
-        const kothRepairStart = Date.now();
-        kothRepairSummary = await repairRobotsForEvent('koth', true, currentCycleNumber);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'repair_pre_koth',
-          stepNumber,
-          Date.now() - kothRepairStart,
-          { robotsRepaired: kothRepairSummary.robotsRepaired, totalCost: kothRepairSummary.totalFinalCost }
-        );
-
-        // 5.2 Execute KotH battles
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Execute Scheduled KotH Battles`);
-        const kothBattleStart = Date.now();
-        kothBattleSummary = await executeScheduledKothBattles(new Date());
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'execute_koth_battles',
-          stepNumber,
-          Date.now() - kothBattleStart,
-          {
-            battlesExecuted: kothBattleSummary.totalMatches,
-            belowMinimumMatches: kothBattleSummary.belowMinimumMatches,
-            forfeitedRobots: kothBattleSummary.forfeitedRobots,
-          }
-        );
-
-        // 5.2b Rebalance KotH leagues (Spec #41 — was missing, must match cron behavior)
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Rebalance KotH Leagues`);
-        const kothRebalanceStart = Date.now();
-        const { rebalanceKothLeagues } = await import('../league/leagueRebalancingService');
-        const kothRebalanceSummary = await rebalanceKothLeagues();
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'rebalance_koth_leagues',
-          stepNumber,
-          Date.now() - kothRebalanceStart,
-          { promotions: kothRebalanceSummary.totalPromoted, demotions: kothRebalanceSummary.totalDemoted }
-        );
-
-        // 5.3 KotH matchmaking (24h lead time)
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: KotH Matchmaking`);
-        const kothMatchmakingStart = Date.now();
-        kothMatchesCreated = await runKothMatchmaking();
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'matchmaking_koth',
-          stepNumber,
-          Date.now() - kothMatchmakingStart,
-          { matchesCreated: kothMatchesCreated }
-        );
-      } else {
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Skipping KotH (includeKoth=false)`);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'koth_skipped',
-          stepNumber,
-          0,
-          { skipped: true }
-        );
-      }
-
-      // ═══════════════════════════════════════════════════════════════════
-      // SLOT 6: Team 3v3 League (execute → rebalance → matchmaking)
-      // ═══════════════════════════════════════════════════════════════════
-      logger.info(`[Admin] Slot 6: Team 3v3 League`);
-      let team3v3BattleSummary = null;
-      let team3v3RebalancingSummary = null;
-      let team3v3MatchesCreated = 0;
-      let team3v3Error: string | undefined;
-
-      try {
-        // 6.0 Repair (Spec #41 — was missing, must match cron behavior)
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-team-3v3-league)`);
-        const team3v3RepairStart = Date.now();
-        await repairRobotsForEvent('league_3v3', true, currentCycleNumber);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'repair_pre_team_3v3_league',
-          stepNumber,
-          Date.now() - team3v3RepairStart,
-          {}
-        );
-
-        // 6.1 Execute scheduled 3v3 battles
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Execute Team 3v3 League Battles`);
-        const team3v3BattleStart = Date.now();
-        team3v3BattleSummary = await executeScheduledTeamBattles(3);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'execute_team_3v3_battles',
-          stepNumber,
-          Date.now() - team3v3BattleStart,
-          { matchesCompleted: team3v3BattleSummary.matchesCompleted, matchesCancelled: team3v3BattleSummary.matchesCancelled }
-        );
-
-        // 6.2 Rebalance 3v3 league tiers
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Rebalance Team 3v3 Leagues`);
-        const team3v3RebalanceStart = Date.now();
-        team3v3RebalancingSummary = await rebalanceTeamBattleLeagues(3);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'rebalance_team_3v3_leagues',
-          stepNumber,
-          Date.now() - team3v3RebalanceStart,
-          { promotions: team3v3RebalancingSummary.totalPromoted, demotions: team3v3RebalancingSummary.totalDemoted }
-        );
-
-        // 6.3 Run 3v3 matchmaking (24h lead time)
-        stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Team 3v3 League`);
-        const team3v3MatchmakingStart = Date.now();
-        team3v3MatchesCreated = await runTeamBattleMatchmaking(3);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'matchmaking_team_3v3',
-          stepNumber,
-          Date.now() - team3v3MatchmakingStart,
-          { matchesCreated: team3v3MatchesCreated }
-        );
-      } catch (team3v3Err) {
-        // R14.7: Record failure, continue remaining steps and iterations
-        team3v3Error = team3v3Err instanceof Error ? team3v3Err.message : String(team3v3Err);
-        logger.error(`[Admin] Team 3v3 League block failed:`, team3v3Err);
-      }
-
-      // ═══════════════════════════════════════════════════════════════════
-      // SLOT 7: Team 2v2 Tournament (repair → execute/advance/auto-create)
-      // ═══════════════════════════════════════════════════════════════════
-      logger.info(`[Admin] Slot 7: Team 2v2 Tournament`);
-      let team2v2TournamentResult: CycleResult['team2v2TournamentBlock'] = undefined;
-
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-team-2v2-tournament)`);
-      const team2v2TournamentRepairStart = Date.now();
-      const team2v2TournamentRepairSummary = await repairRobotsForEvent('tournament_2v2', true, currentCycleNumber);
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'repair_pre_team_2v2_tournament',
-        stepNumber,
-        Date.now() - team2v2TournamentRepairStart,
-        { robotsRepaired: team2v2TournamentRepairSummary.robotsRepaired, totalCost: team2v2TournamentRepairSummary.totalFinalCost }
-      );
-
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Execute Team 2v2 Tournament`);
-      const team2v2TournamentExecStart = Date.now();
-
-      try {
-        const active2v2Tournament = await prisma.tournament.findFirst({
-          where: { participantType: 'team_2v2', status: 'active' },
-        });
-
-        if (active2v2Tournament) {
-          logger.info(`[Admin] Executing round ${active2v2Tournament.currentRound} of "${active2v2Tournament.name}"`);
-          const roundResult = await executeTeamTournamentRound(active2v2Tournament.id, 2);
-          await advanceWinnersToNextRound(active2v2Tournament.id);
-
-          team2v2TournamentResult = {
-            repair: team2v2TournamentRepairSummary,
-            matchesExecuted: roundResult.matchesExecuted,
-            matchesFailed: roundResult.matchesFailed,
-            tournamentName: active2v2Tournament.name,
-            tournamentRound: active2v2Tournament.currentRound,
-            tournamentMaxRounds: active2v2Tournament.maxRounds,
-          };
-        } else {
-          // No active tournament — try to create one
-          const newTournament = await autoCreateNextTeamTournament(2);
-          if (newTournament) {
-            logger.info(`[Admin] Auto-created team 2v2 tournament: "${newTournament.name}"`);
-            team2v2TournamentResult = {
-              repair: team2v2TournamentRepairSummary,
-              matchesExecuted: 0,
-              matchesFailed: 0,
-              tournamentName: newTournament.name,
-              tournamentCreated: true,
-            };
-          } else {
-            logger.info(`[Admin] Team 2v2 Tournament: Skipped — insufficient eligible teams`);
-            team2v2TournamentResult = {
-              repair: team2v2TournamentRepairSummary,
-              matchesExecuted: 0,
-              matchesFailed: 0,
-              skippedReason: 'insufficient eligible teams',
-            };
-          }
-        }
-      } catch (team2v2TournamentErr) {
-        logger.error(`[Admin] Team 2v2 Tournament block failed:`, team2v2TournamentErr);
-        team2v2TournamentResult = {
-          repair: team2v2TournamentRepairSummary,
-          matchesExecuted: 0,
-          matchesFailed: 0,
-          skippedReason: team2v2TournamentErr instanceof Error ? team2v2TournamentErr.message : String(team2v2TournamentErr),
-        };
-      }
-
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'team_2v2_tournament_execution',
-        stepNumber,
-        Date.now() - team2v2TournamentExecStart,
-        { matchesExecuted: (team2v2TournamentResult && 'matchesExecuted' in team2v2TournamentResult) ? team2v2TournamentResult.matchesExecuted : 0 }
-      );
-
-      // ═══════════════════════════════════════════════════════════════════
-      // SLOT 8: Grand Melee (Spec #44: R7.5)
-      // ═══════════════════════════════════════════════════════════════════
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Grand Melee — executing cycle (repair → execute → rebalance → matchmake)`);
-      let grandMeleeResult: GrandMeleeBlockSummary | { error: string };
-      try {
-        const { executeScheduledGrandMeleeBattles } = await import('../grand-melee/grandMeleeBattleOrchestrator');
-        const { runGrandMeleeMatchmaking } = await import('../grand-melee/grandMeleeMatchmakingService');
-        const { rebalanceGrandMeleeLeagues } = await import('../league/leagueRebalancingService');
-
-        await repairRobotsForEvent('grand_melee', true, currentCycleNumber);
-        const execSummary = await executeScheduledGrandMeleeBattles();
-        await rebalanceGrandMeleeLeagues();
-        const matchesCreated = await runGrandMeleeMatchmaking();
-
-        grandMeleeResult = {
-          matchesExecuted: execSummary.successfulMatches,
-          matchesFailed: execSummary.failedMatches,
-          belowMinimumMatches: execSummary.belowMinimumMatches,
-          forfeitedRobots: execSummary.forfeitedRobots,
-          matchesCreated,
-        };
-      } catch (err) {
-        grandMeleeResult = { error: err instanceof Error ? err.message : String(err) };
-        logger.error('[Admin] Grand Melee cycle failed:', err);
-      }
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'grand_melee',
-        stepNumber,
-        0,
-        grandMeleeResult
-      );
-
-      // ═══════════════════════════════════════════════════════════════════
-      // SLOT 9: Team 3v3 Tournament (repair → execute/advance/auto-create)
-      // ═══════════════════════════════════════════════════════════════════
-      logger.info(`[Admin] Slot 9: Team 3v3 Tournament`);
-      let team3v3TournamentResult: CycleResult['team3v3TournamentBlock'] = undefined;
-
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-team-3v3-tournament)`);
-      const team3v3TournamentRepairStart = Date.now();
-      const team3v3TournamentRepairSummary = await repairRobotsForEvent('tournament_3v3', true, currentCycleNumber);
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'repair_pre_team_3v3_tournament',
-        stepNumber,
-        Date.now() - team3v3TournamentRepairStart,
-        { robotsRepaired: team3v3TournamentRepairSummary.robotsRepaired, totalCost: team3v3TournamentRepairSummary.totalFinalCost }
-      );
-
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Execute Team 3v3 Tournament`);
-      const team3v3TournamentExecStart = Date.now();
-
-      try {
-        const active3v3Tournament = await prisma.tournament.findFirst({
-          where: { participantType: 'team_3v3', status: 'active' },
-        });
-
-        if (active3v3Tournament) {
-          logger.info(`[Admin] Executing round ${active3v3Tournament.currentRound} of "${active3v3Tournament.name}"`);
-          const roundResult = await executeTeamTournamentRound(active3v3Tournament.id, 3);
-          await advanceWinnersToNextRound(active3v3Tournament.id);
-
-          team3v3TournamentResult = {
-            repair: team3v3TournamentRepairSummary,
-            matchesExecuted: roundResult.matchesExecuted,
-            matchesFailed: roundResult.matchesFailed,
-            tournamentName: active3v3Tournament.name,
-            tournamentRound: active3v3Tournament.currentRound,
-            tournamentMaxRounds: active3v3Tournament.maxRounds,
-          };
-        } else {
-          // No active tournament — try to create one
-          const newTournament = await autoCreateNextTeamTournament(3);
-          if (newTournament) {
-            logger.info(`[Admin] Auto-created team 3v3 tournament: "${newTournament.name}"`);
-            team3v3TournamentResult = {
-              repair: team3v3TournamentRepairSummary,
-              matchesExecuted: 0,
-              matchesFailed: 0,
-              tournamentName: newTournament.name,
-              tournamentCreated: true,
-            };
-          } else {
-            logger.info(`[Admin] Team 3v3 Tournament: Skipped — insufficient eligible teams`);
-            team3v3TournamentResult = {
-              repair: team3v3TournamentRepairSummary,
-              matchesExecuted: 0,
-              matchesFailed: 0,
-              skippedReason: 'insufficient eligible teams',
-            };
-          }
-        }
-      } catch (team3v3TournamentErr) {
-        logger.error(`[Admin] Team 3v3 Tournament block failed:`, team3v3TournamentErr);
-        team3v3TournamentResult = {
-          repair: team3v3TournamentRepairSummary,
-          matchesExecuted: 0,
-          matchesFailed: 0,
-          skippedReason: team3v3TournamentErr instanceof Error ? team3v3TournamentErr.message : String(team3v3TournamentErr),
-        };
-      }
-
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'team_3v3_tournament_execution',
-        stepNumber,
-        Date.now() - team3v3TournamentExecStart,
-        { matchesExecuted: (team3v3TournamentResult && 'matchesExecuted' in team3v3TournamentResult) ? team3v3TournamentResult.matchesExecuted : 0 }
-      );
+      const leagueBlock = await runLeague1v1Block(steps);
+      const team2v2League = await runTeamLeagueBlock(steps, 2);
+      const tournamentBlock = await runTournamentBlock(steps, includeTournaments);
+      const tagTeamBlock = await runTagTeamBlock(steps);
+      const kothBlock = await runKothBlock(steps, includeKoth);
+      const team3v3League = await runTeamLeagueBlock(steps, 3);
+      const team2v2TournamentResult = await runTeamTournamentBlock(steps, 2);
+      const grandMeleeResult = await runGrandMeleeBlock(steps);
+      const team3v3TournamentResult = await runTeamTournamentBlock(steps, 3);
 
       // ═══════════════════════════════════════════════════════════════════
       // SLOT 10: Settlement
@@ -921,21 +248,14 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       logger.info(`[Admin] Slot 10: Settlement`);
 
       // 10.1 Top up generated stables to GENERATED_STABLE_TARGET
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Top up generated stables`);
-      const userGenStart = Date.now();
-      const userGenerationSummary = generateUsersPerCycle ? await topUpGeneratedStablesForAdmin() : null;
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'auto_generate_users',
-        stepNumber,
-        Date.now() - userGenStart,
-        { usersCreated: userGenerationSummary && 'usersCreated' in userGenerationSummary ? userGenerationSummary.usersCreated : 0 }
+      const userGenerationSummary = await steps.run(
+        'Top up generated stables', 'auto_generate_users',
+        async () => (generateUsersPerCycle ? topUpGeneratedStablesForAdmin() : null),
+        (r) => ({ usersCreated: r && 'usersCreated' in r ? r.usersCreated : 0 }),
       );
 
       // 10.2 Calculate and Log Passive Income & Operating Costs
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Calculate Passive Income & Operating Costs`);
+      const financesStep = steps.next('Calculate Passive Income & Operating Costs');
       const financesStart = Date.now();
 
       let totalPassiveIncome = 0;
@@ -964,73 +284,46 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
 
       logger.info(`[Admin] Passive income: ₡${totalPassiveIncome.toLocaleString()}, Operating costs: ₡${totalOperatingCosts.toLocaleString()}`);
 
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'calculate_passive_income_and_costs',
-        stepNumber,
-        Date.now() - financesStart,
-        {
-          usersProcessed: financesUsersProcessed,
-          totalPassiveIncome,
-          totalOperatingCosts,
-          skipped: false,
-        }
-      );
+      await steps.complete(financesStep, 'calculate_passive_income_and_costs', Date.now() - financesStart, {
+        usersProcessed: financesUsersProcessed,
+        totalPassiveIncome,
+        totalOperatingCosts,
+        skipped: false,
+      });
 
       // 10.3 Log end-of-cycle balances before creating the completion proof.
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Log End-of-Cycle Balances`);
-      const balancesStart = Date.now();
-      const endOfCycleUserCount = await logCycleEndBalances(
-        currentCycleNumber,
-        maximumUserId,
-      );
-      if (endOfCycleUserCount !== financesUsersProcessed) {
-        throw new Error(
-          `Cycle ${currentCycleNumber} closing cohort changed: settled `
-          + `${financesUsersProcessed}, captured ${endOfCycleUserCount}`,
-        );
-      }
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'log_end_of_cycle_balances',
-        stepNumber,
-        Date.now() - balancesStart,
-        { usersLogged: endOfCycleUserCount },
+      const endOfCycleUserCount = await steps.run(
+        'Log End-of-Cycle Balances', 'log_end_of_cycle_balances',
+        async () => {
+          const usersLogged = await logCycleEndBalances(currentCycleNumber, maximumUserId);
+          if (usersLogged !== financesUsersProcessed) {
+            throw new Error(
+              `Cycle ${currentCycleNumber} closing cohort changed: settled `
+              + `${financesUsersProcessed}, captured ${usersLogged}`,
+            );
+          }
+          return usersLogged;
+        },
+        (usersLogged) => ({ usersLogged }),
       );
 
       // 10.4 Write the final completion event and its snapshot. A snapshot
       // failure is a close failure, never a completed cycle without evidence.
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Create Cycle Snapshot`);
-      const snapshotStart = Date.now();
-      await eventLogger.logCycleComplete(currentCycleNumber, Date.now() - cycleStart);
-      const { cycleSnapshotService } = await import('../cycle/cycleSnapshotService');
-      await cycleSnapshotService.createSnapshot(currentCycleNumber);
+      await steps.run('Create Cycle Snapshot', 'create_cycle_snapshot', async () => {
+        await eventLogger.logCycleComplete(currentCycleNumber, Date.now() - cycleStart);
+        const { cycleSnapshotService } = await import('../cycle/cycleSnapshotService');
+        await cycleSnapshotService.createSnapshot(currentCycleNumber);
+      }, () => ({}));
       const snapshotResult = { created: true };
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'create_cycle_snapshot',
-        stepNumber,
-        Date.now() - snapshotStart,
-        {},
-      );
 
       // 10.5 Advance the completed count last, then update non-financial tier
       // residency. This is the shared scheduled/admin cutover boundary.
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Finalize Cycle Counters`);
-      const cycleCountersStart = Date.now();
-      await completeSerializedCycleCutover(claimedClosingCycle);
-      claimedClosingCycle = null;
-      await prisma.standing.updateMany({ where: {}, data: { cyclesInTier: { increment: 1 } } });
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'increment_cycle_counters',
-        stepNumber,
-        Date.now() - cycleCountersStart,
-        {},
-      );
+      const closingCycle = claimedClosingCycle;
+      await steps.run('Finalize Cycle Counters', 'increment_cycle_counters', async () => {
+        await completeSerializedCycleCutover(closingCycle);
+        claimedClosingCycle = null;
+        await prisma.standing.updateMany({ where: {}, data: { cyclesInTier: { increment: 1 } } });
+      }, () => ({}));
 
       // 10.5a Spec #55 R7.4: the settlement Automaton turn for the closed
       // cycle. Admin bulk cycles never advance the season counter, so the
@@ -1043,19 +336,13 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       });
 
       // 10.6 Orphan cleanup is operational maintenance, not closing evidence.
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Orphan Image Cleanup`);
-      const orphanStart = Date.now();
       let orphanResult = null;
       try {
         // Archive- and Image_Library-aware: retained images survive the sweep.
-        orphanResult = await cleanupSeasonOrphans();
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'orphan_image_cleanup',
-          stepNumber,
-          Date.now() - orphanStart,
-          { filesDeleted: orphanResult.filesDeleted, bytesReclaimed: orphanResult.bytesReclaimed },
+        orphanResult = await steps.run(
+          'Orphan Image Cleanup', 'orphan_image_cleanup',
+          () => cleanupSeasonOrphans(),
+          (r) => ({ filesDeleted: r.filesDeleted, bytesReclaimed: r.bytesReclaimed }),
         );
       } catch (orphanError) {
         logger.error(`[Admin] Failed to run orphan image cleanup:`, orphanError);
@@ -1063,13 +350,13 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
 
       // Display Cycle Summary
       logger.info(`[Admin] === Cycle ${currentCycleNumber} Summary ===`);
-      logger.info(`[Admin] 1v1 League Battles: ${battleSummary.totalBattles}`);
-      logger.info(`[Admin] Team 2v2 League Battles: ${team2v2BattleSummary?.matchesCompleted ?? 0}${team2v2Error ? ' (ERROR)' : ''}`);
-      logger.info(`[Admin] Tag Team Battles: ${tagTeamBattleSummary?.totalBattles || 0}`);
-      if (kothBattleSummary) {
-        logger.info(`[Admin] KotH Battles: ${kothBattleSummary.totalMatches} (${kothBattleSummary.successfulMatches} successful, ${kothBattleSummary.failedMatches} failed)`);
+      logger.info(`[Admin] 1v1 League Battles: ${leagueBlock.battles.totalBattles}`);
+      logger.info(`[Admin] Team 2v2 League Battles: ${team2v2League.battles?.matchesCompleted ?? 0}${'error' in team2v2League.block ? ' (ERROR)' : ''}`);
+      logger.info(`[Admin] Tag Team Battles: ${tagTeamBlock.battles?.totalBattles || 0}`);
+      if (kothBlock) {
+        logger.info(`[Admin] KotH Battles: ${kothBlock.battles.totalMatches} (${kothBlock.battles.successfulMatches} successful, ${kothBlock.battles.failedMatches} failed)`);
       }
-      logger.info(`[Admin] Team 3v3 League Battles: ${team3v3BattleSummary?.matchesCompleted ?? 0}${team3v3Error ? ' (ERROR)' : ''}`);
+      logger.info(`[Admin] Team 3v3 League Battles: ${team3v3League.battles?.matchesCompleted ?? 0}${'error' in team3v3League.block ? ' (ERROR)' : ''}`);
       if (team2v2TournamentResult && 'matchesExecuted' in team2v2TournamentResult) {
         logger.info(`[Admin] Team 2v2 Tournament: ${team2v2TournamentResult.matchesExecuted} matches executed${team2v2TournamentResult.tournamentCreated ? ' (new tournament created)' : ''}${team2v2TournamentResult.skippedReason ? ` (skipped: ${team2v2TournamentResult.skippedReason})` : ''}`);
       }
@@ -1081,33 +368,12 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
 
       cycleResults.push({
         cycle: currentCycleNumber,
-        leagueBlock: {
-          battles: battleSummary,
-          repair: leagueRepairSummary,
-          rebalancing: rebalancingSummary,
-          matchmaking: { matchesCreated: leagueMatchesCreated },
-        },
-        team2v2LeagueBlock: team2v2Error
-          ? { error: team2v2Error }
-          : { battles: team2v2BattleSummary, rebalancing: team2v2RebalancingSummary, matchmaking: { matchesCreated: team2v2MatchesCreated } },
-        tournamentBlock: {
-          repair: tournamentRepairSummary,
-          tournaments: tournamentSummary,
-        },
-        tagTeamBlock: {
-          repair: tagTeamRepairSummary,
-          battles: tagTeamBattleSummary,
-          rebalancing: tagTeamRebalancingSummary,
-          matchmaking: { matchesCreated: tagTeamMatchesCreated },
-        },
-        kothBlock: includeKoth ? {
-          repair: kothRepairSummary,
-          battles: kothBattleSummary,
-          matchmaking: { matchesCreated: kothMatchesCreated },
-        } : undefined,
-        team3v3LeagueBlock: team3v3Error
-          ? { error: team3v3Error }
-          : { battles: team3v3BattleSummary, rebalancing: team3v3RebalancingSummary, matchmaking: { matchesCreated: team3v3MatchesCreated } },
+        leagueBlock,
+        team2v2LeagueBlock: team2v2League.block,
+        tournamentBlock,
+        tagTeamBlock,
+        kothBlock,
+        team3v3LeagueBlock: team3v3League.block,
         team2v2TournamentBlock: team2v2TournamentResult,
         grandMeleeBlock: grandMeleeResult,
         team3v3TournamentBlock: team3v3TournamentResult,

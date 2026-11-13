@@ -104,11 +104,6 @@ jest.mock('../src/services/common/eventLogger', () => ({
     logCycleComplete: jest.fn().mockResolvedValue(undefined),
     logEventBatch: jest.fn().mockResolvedValue(undefined),
   })),
-  EventType: {
-    PASSIVE_INCOME: 'PASSIVE_INCOME',
-    OPERATING_COSTS: 'OPERATING_COSTS',
-    CYCLE_END_BALANCE: 'CYCLE_END_BALANCE',
-  },
 }));
 jest.mock('../src/services/notifications/notification-service', () => ({
   buildSuccessMessage: jest.fn().mockReturnValue(null),

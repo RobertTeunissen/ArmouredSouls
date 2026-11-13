@@ -46,7 +46,7 @@
 import { performance } from 'node:perf_hooks';
 import prisma from '../../src/lib/prisma';
 import logger from '../../src/config/logger';
-import { executeSettlement } from '../../src/services/cycle/cycleScheduler';
+import { executeSettlement } from '../../src/services/cycle/cycleSettlementJob';
 import { invalidateSeasonCache } from '../../src/services/season/seasonService';
 import { setAlertSender } from '../../src/services/automaton/automatonObservability';
 import { syncCatalogue } from '../../src/services/automaton/catalogueSync';

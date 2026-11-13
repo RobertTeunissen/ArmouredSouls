@@ -6,7 +6,7 @@
 
 import { cycleSnapshotService } from '../src/services/cycle/cycleSnapshotService';
 import { eventLogger } from '../src/services/common/eventLogger';
-import { EventType } from '../src/services/common/eventLogger';
+import { EventType } from '../src/services/common/auditEventTypes';
 import prisma from '../src/lib/prisma';
 
 describe('CycleSnapshotService', () => {

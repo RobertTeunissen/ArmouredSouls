@@ -21,12 +21,14 @@ import {
   fetchCareerRecords,
   fetchEconomicRecords,
   fetchPrestigeRecords,
+} from './recordsQueryService';
+import {
   fetchKothRecords,
   fetchTeamBattleRecords,
   fetchTournamentChampions,
   fetchGrandMeleeRecords,
   fetchWinStreakRecords,
-} from './recordsQueryService';
+} from './modeRecordsQueries';
 
 /** How old the payload may get before a request triggers a background rebuild. */
 export const HALL_OF_RECORDS_TTL_MS = 5 * 60 * 1000;

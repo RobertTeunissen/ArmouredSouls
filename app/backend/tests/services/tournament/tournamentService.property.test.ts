@@ -9,11 +9,8 @@
 import * as fc from 'fast-check';
 import { validateParticipantType, ParticipantType } from '../../../src/services/tournament/tournamentParticipantResolver';
 import { TournamentError, TournamentErrorCode } from '../../../src/errors/tournamentErrors';
-import {
-  seedParticipantsByELO,
-  generateStandardSeedOrder,
-  TournamentParticipant,
-} from '../../../src/services/tournament/tournamentService';
+import { TournamentParticipant } from '../../../src/services/tournament/tournamentService';
+import { seedParticipantsByELO, generateStandardSeedOrder } from '../../../src/services/tournament/tournamentBracket';
 
 const VALID_PARTICIPANT_TYPES = ['robot', 'team_2v2', 'team_3v3'] as const;
 

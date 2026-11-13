@@ -9,7 +9,8 @@
  * Requirements: R4.4
  */
 
-import { resolveDraw, DrawResolution, calculateTeamTournamentPrestige } from '../../../src/services/tournament/teamTournamentBattleOrchestrator';
+import { resolveDraw, DrawResolution } from '../../../src/services/tournament/teamTournamentBattleOrchestrator';
+import { calculateTeamTournamentPrestige } from '../../../src/services/tournament/teamTournamentRewards';
 import { calculateTournamentPrestige } from '../../../src/utils/tournamentRewards';
 import { TeamBattleResult } from '../../../src/types/teamBattleLogTypes';
 

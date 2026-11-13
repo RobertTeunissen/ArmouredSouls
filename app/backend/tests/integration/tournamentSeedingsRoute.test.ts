@@ -14,7 +14,7 @@ import prisma from '../../src/lib/prisma';
 import tournamentRoutes from '../../src/routes/tournaments';
 import { errorHandler } from '../../src/middleware/errorHandler';
 import { generateToken } from '../../src/services/auth/jwtService';
-import { generateStandardSeedOrder } from '../../src/services/tournament/tournamentService';
+import { generateStandardSeedOrder } from '../../src/services/tournament/tournamentBracket';
 
 const RUN = `tsr${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 

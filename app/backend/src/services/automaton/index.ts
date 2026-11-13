@@ -9,8 +9,6 @@ export {
   runTurnStep,
   runTurnStepNonFatal,
   runAutomatonTurn,
-  withTurnStepLease,
-  assertNoCutoverInProgress,
   claimTurnRecord,
   getStrategyRegistry,
   TURN_ACTION_LIMIT,
@@ -26,6 +24,7 @@ export {
   type TurnStepSource,
   type TurnStepSummary,
 } from './automatonTurnService';
+export { withTurnStepLease, assertNoCutoverInProgress } from './turnStepLease';
 export {
   getProgramSwitch,
   isProgramEnabled,

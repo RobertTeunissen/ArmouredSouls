@@ -128,7 +128,6 @@ jest.mock('../../../src/services/common/eventLogger', () => ({
     logCycleComplete: jest.fn(),
     logEventBatch: jest.fn(),
   })),
-  EventType: { PASSIVE_INCOME: 'passive_income', OPERATING_COSTS: 'operating_costs', CYCLE_END_BALANCE: 'cycle_end_balance' },
 }));
 jest.mock('../../../src/services/notifications/integration', () => ({
   __esModule: true,
@@ -140,7 +139,7 @@ jest.mock('../../../src/utils/scheduleUtils', () => ({
 
 // ── Import under test ────────────────────────────────────────────────
 
-import { createReservedSlotHandler } from '../../../src/services/cycle/cycleScheduler';
+import { createReservedSlotHandler } from '../../../src/services/cycle/cycleEventJobs';
 
 // ── Tests ────────────────────────────────────────────────────────────
 

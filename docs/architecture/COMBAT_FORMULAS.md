@@ -1059,7 +1059,7 @@ Each tick (0.1s):
 ### Engagement_Cycle
 
 Season 2 (#520). Roles and two speed bursts keep melee-versus-ranged fights moving between ranges
-(`arena/engagementCycle.ts`, applied in the `simulationLoop.ts` movement phase):
+(`arena/engagementCycle.ts`, applied in the `simulationPhases.ts` movement phase):
 
 ```
 Engagement range = getEngagementRange(robot, opponent)
@@ -1192,7 +1192,7 @@ such as Shock Maul / Thermal Lance, shields) only resolves an attack when the di
 actual target is <= 2. Every other band reaches any distance (range penalty above applies).
 ```
 
-Physical reach is checked per hand, independent of patience, in two places: the `simulationLoop.ts` hand
+Physical reach is checked per hand, independent of patience, in two places: the `simulationPhases.ts` hand
 gates (`canAttack`) and a defensive guard at the top of `performAttack()` (`isWithinWeaponReach`, measured
 from the real positions, not from the spatial context). A blocked attempt:
 

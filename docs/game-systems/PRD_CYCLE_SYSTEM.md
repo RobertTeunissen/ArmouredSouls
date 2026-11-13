@@ -97,7 +97,7 @@ Heavy modes (1v1 League, KotH) are spaced 5 hours apart. Reserved slots are no-o
 
 ### Key Source Files
 
-- Scheduler: `app/backend/src/services/cycle/cycleScheduler.ts`
+- Scheduler: `app/backend/src/services/cycle/cycleScheduler.ts` (lock, run history, cron registration); job bodies in `cycleEventJobs.ts` and `cycleSettlementJob.ts`
 - Admin bulk: `app/backend/src/services/admin/adminCycleService.ts`
 - Snapshot service: `app/backend/src/services/cycle/cycleSnapshotService.ts`
 - Repair service: `app/backend/src/services/robot/robotRepairService.ts`
@@ -158,7 +158,7 @@ Heavy modes (1v1 League, KotH) are spaced 5 hours apart. Reserved slots are no-o
 
 ### Spec #53 settlement and financial evidence contract
 
-`User.currency` is the balance field used by settlement. `Settlement_Service` is the only mutating implementation: `cycleScheduler.ts`, `adminCycleService.ts`, and the supported `/api/admin/daily-finances/process` path delegate to it rather than maintaining separate balance updates. For each applicable stable and `cycleNumber`, it creates exactly two financial components in a deterministic order:
+`User.currency` is the balance field used by settlement. `Settlement_Service` is the only mutating implementation: `cycleSettlementJob.ts`, `adminCycleService.ts`, and the supported `/api/admin/daily-finances/process` path delegate to it rather than maintaining separate balance updates. For each applicable stable and `cycleNumber`, it creates exactly two financial components in a deterministic order:
 
 1. one `passive_income` `FinancialLedger`/`AuditLog` `financial_transaction` pair; and
 2. one `operating_costs` pair.
@@ -506,8 +506,8 @@ Active_Automatons act once per cycle in a Turn_Step (`runTurnStep` in `services/
 
 | Call site | Placement | Turn_Trigger / Turn_Slot |
 |---|---|---|
-| `cycleScheduler.ts` `executeSettlement`, Preparation_Phase | after `advancePreparationCycle()`, before the early return | `preparation` / `preparationCyclesCompleted` |
-| `cycleScheduler.ts` `executeSettlement`, competitive | last step, after `advanceCompetitiveCycle()`, only when no season boundary was reached | `settlement` / the closed global cycle number |
+| `cycleSettlementJob.ts` `executeSettlement`, Preparation_Phase | after `advancePreparationCycle()`, before the early return | `preparation` / `preparationCyclesCompleted` |
+| `cycleSettlementJob.ts` `executeSettlement`, competitive | last step, after `advanceCompetitiveCycle()`, only when no season boundary was reached | `settlement` / the closed global cycle number |
 | `seasonRolloverService.ts` Stage 5 | after `reclaimSpace()` in the new season | `season_open` / 0 |
 | `adminCycleService.ts` bulk preparation loop | after each `advancePreparationCycle()` | `preparation` / `preparationCyclesCompleted` |
 | `adminCycleService.ts` bulk competitive loop | after `completeSerializedCycleCutover` and the counters step | `settlement` / the closed cycle number; result in the bulk response's `automatonTurns` |

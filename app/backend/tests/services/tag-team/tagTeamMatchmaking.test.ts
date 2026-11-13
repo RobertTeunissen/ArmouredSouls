@@ -163,7 +163,6 @@ jest.mock('../../../src/services/common/eventLogger', () => ({
     logCycleComplete: jest.fn(),
     logEventBatch: jest.fn(),
   })),
-  EventType: { PASSIVE_INCOME: 'passive_income', OPERATING_COSTS: 'operating_costs', CYCLE_END_BALANCE: 'cycle_end_balance' },
 }));
 
 // ── Import under test ────────────────────────────────────────────────

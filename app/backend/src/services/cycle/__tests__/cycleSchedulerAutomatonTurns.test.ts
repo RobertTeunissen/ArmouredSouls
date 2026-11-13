@@ -4,7 +4,7 @@
  * as the last step after `advanceCompetitiveCycle()` when no boundary was
  * reached, never on the boundary cycle, and never failing settlement.
  */
-import { executeSettlement } from '../cycleScheduler';
+import { executeSettlement } from '../cycleSettlementJob';
 import { completeSerializedCycleCutover } from '../canonicalCycleIdentity';
 import { executeSeasonRollover } from '../../season/seasonRolloverService';
 import { runTurnStepNonFatal } from '../../automaton';

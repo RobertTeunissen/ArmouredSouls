@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.22
-**Last Updated**: November 9, 2026
+**Version**: v1.23
+**Last Updated**: November 13, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.23 (Nov 13, 2026, #590): every backend service file over 800 lines split by responsibility, no behaviour change. Steps the battle orchestrators repeated moved to shared modules: `battle/battlePreparation` (robot loading, loadout fallbacks, tuning preparation), `battle/battleSummaryWriter`, `battle/placementBattleSteps` and `battle/placementMatchExecutor` (KotH and Grand Melee), `team-battle/teamBattlePostCombat` (team leagues and team tournaments). Mode files split out: `tournament/teamTournamentEntry`, `teamTournamentRewards`, `teamTournamentFinalization`, `tournamentForfeit`, `tournamentBattleRecord`, `tournamentBattleFinalization`, `tournamentBracket`, `tournamentCompletion`; `league/leagueBattleRecord`, `leagueByeAndForfeit`; `team-battle/teamBattleByeAndForfeit`; `admin/adminCycleSteps`; `cycle/cycleEventJobs`, `cycleSettlementJob`; `records/modeRecordsQueries`; `automaton/automatonProfileStore`, `automatonProfileQueries`, `turnStepLease`; `battle/combat-simulator/simulationPhases`; `achievement/triggerQueries`; `common/auditEventTypes`. Removed as unused: the inert `isPreparationPhase` stub in the tournament cycle jobs (always false; the scheduler already skips battle event jobs during a Preparation_Phase), the deprecated `_generateBracketPairs`, `_REPAIR_COST_PER_HP` and the unused league battle constants, and re-exports nobody imported (`getCurrentCycleNumber` from the league orchestrator, the profile rule names from `automatonProfileService`, the tournament cycles from `cycleScheduler`).
 - v1.22 (Nov 9, 2026): `match/matchHistoryService` split into `upcomingMatchesService`, `matchHistoryService` and `battleLogService` (no behaviour change); `economy/unifiedFacilityROIService` has one ROI path (`calculateAllEconomicROIs`), the unused single-facility `calculateFacilityROI` removed. Also retired as unused: `common/dataIntegrityService` with `common/financialIntegrityDiagnostics` (only reachable through the removed `/api/analytics/integrity`), `economy/financialReportService` with `generateFinancialReport`/`generatePerRobotFinancialReport` (only fed the removed legacy finance endpoints), `standings/robotLeagueTiers`, and the uncalled helpers `calculateFinancialHealth`, `catalogueIssueCode`, `clearTuningAllocation` and `estimateEventSize`.
 - v1.21 (Nov 9, 2026): route clean-up — inline Prisma moved out of the route files into `robot/robotLookupService`, `tournament/tournamentQueryService`, `economy/facilityOverviewService`, `economy/weaponInventoryQueryService`, `auth/profileUpdateService`, `league/tierChangeFeedService` and `team-battle/teamBattleQueryService`; routes read typed input through `validated()` (`middleware/schemaValidator`). Deleted as unused: `battle/battleStrategy` (`BattleStrategy`/`BattleProcessor`, never used by a mode), `cycle/leagueCycleOrchestrator`, and the never-imported barrels of admin, analytics, arena, auth, battle, common, cycle, economy, koth, league, notifications, onboarding, robot and tournament. With the 26 API endpoints no client called (legacy finances, unused analytics, `/auth/logout`, robot matches/upcoming, leaderboard cache, KotH instances, changelog unread count, team league history, weapon availability): `analytics/stableAnalyticsService`, `common/queryService`, `cycle/cyclePerformanceMonitoringService`, and the methods only they used. `economy/financialSummaryService` serves `GET /api/finances/summary`.
 - v1.20 (Nov 8, 2026): `league/` gains `standing-status`, `league-zone-meta`, `leagueStandingsService` and `myStandingsService` (League Standings redesign); `league-rebalancing-preview` exposes the pure `buildLeagueTierPreview`.
@@ -49,7 +50,7 @@ The backend currently contains **38 domain directories** under `app/backend/src/
 
 | Domain | Primary responsibility |
 |---|---|
-| `achievement` | Achievement progression and rewards |
+| `achievement` | Achievement progression and rewards (`triggerEvaluator` holds the trigger switch, `triggerQueries` its DB checks) |
 | `admin` | Administrative operations and dashboards |
 | `analytics` | Cross-domain analytics and reporting |
 | `arena` | Spatial combat subsystems |
@@ -62,7 +63,7 @@ The backend currently contains **38 domain directories** under `app/backend/src/
 | `dashboard` | Player dashboard data |
 | `economy` | Repairs, streaming revenue, and ROI |
 | `financial` | Financial reporting and reconciliation |
-| `grand-melee` | Grand Melee orchestration |
+| `grand-melee` | Grand Melee orchestration (shared placement steps and executor in `battle/`) |
 | `koth` | King of the Hill orchestration |
 | `leaderboard` | Leaderboard cache and reads |
 | `league` | League battles, instances, and rebalancing |
@@ -74,7 +75,7 @@ The backend currently contains **38 domain directories** under `app/backend/src/
 | `notifications` | Operational notification dispatch |
 | `onboarding` | New-player onboarding |
 | `practice-arena` | Offline practice battles |
-| `records` | Hall of Records data |
+| `records` | Hall of Records data (`recordsQueryService`: shared helpers and the combat, upset, career, economic and prestige sections; `modeRecordsQueries`: KotH, team battles, tournament champions, Grand Melee, win streaks) |
 | `retention` | Battle-log retention and cleanup |
 | `robot` | Robot lifecycle and upgrades |
 | `scheduling` | Event scopes, timing, and placement byes |
@@ -108,7 +109,7 @@ Admin panel operations — stats dashboards, cycle execution, battle viewer, HP 
 | `meta/` (`metaChoicesService`, `metaBuildsService`) | Admin Meta page per stable type (`?stables=`): choices (`GET /api/admin/meta/choices`: stances, loadouts, yield, weapons, facilities) and build sections (`GET /api/admin/meta/builds`): tuning (robots tuned, pool used, points per group and attribute), refinements (per kind, targeted attributes, top spenders) and event entry (robots per event, events per robot) for one stable type. Read-only |
 | `achievements/` (`achievementAnalyticsService`) | Admin Achievements (`GET /api/admin/achievements/analytics?stables=`): this season's unlocks per achievement for players (rate out of players not dormant this season), Automatons or generated stables, median unlock day, all-accounts count. Read-only |
 | `tournaments/` (`tournamentOverviewService`, `tournamentOverview`) | Admin Tournaments (`GET /api/admin/tournaments/overview`): running tournament per type with schedule status and expected finish, this season's sizes and champions. Read-only |
-| `adminCycleService` | Bulk cycle execution (`executeBulkCycles`), snapshot backfill |
+| `adminCycleService`, `adminCycleSteps` | Bulk cycle execution (`executeBulkCycles`): preparation days, the cycles=0 tournament-only run, settlement and the financial cutover. `adminCycleSteps` holds one block per slot-map event (repair → execute → rebalance → matchmaking) and `CycleStepRunner`, which numbers and records each step |
 | `season/adminSeasonRolloverRunService` | `POST /api/admin/seasons/rollover`: the admin rollover under the scheduler lock (`seasonRollover`), recorded as a run; `startAdminRollover` runs in the background (202), `runAdminRollover` waits. 409 while a rollover of either trigger is queued or running |
 | `season/adminSeasonStateService` | `GET /api/admin/seasons/state`: season state, configuration, `startedAt`, `nextSettlementAt`, the active rollover with stage progress |
 | `season/seasonRolloverHistoryService` | `GET /api/admin/seasons/history`: completed seasons with their rollover and failed attempts, from `seasonRollover` runs and older `season_rollover` audit rows |
@@ -123,7 +124,8 @@ Automaton_Stables: computer-run stables that play by human rules. Public API in 
 
 | Service | Purpose |
 |---------|---------|
-| `automatonTurnService` | `runTurnStep` / `runTurnStepNonFatal` / `runAutomatonTurn`: cohort, Turn_Records, retries, heartbeat Turn_Step lease, deadline, bounded concurrency, mid-step cutover guard |
+| `automatonTurnService` | `runTurnStep` / `runTurnStepNonFatal` / `runAutomatonTurn`: cohort, Turn_Records, retries, deadline, bounded concurrency |
+| `turnStepLease` | Heartbeat Turn_Step lease (`withTurnStepLease`), mid-step cutover guard (`assertNoCutoverInProgress`), Turn_Record error codes |
 | `turnStepPool` | `runWithConcurrency`: bounded worker pool; items start in index order, the first error stops new starts |
 | `turnPlanner` | Pure planner: walks the Build_Order and returns the next Goal_Outcome |
 | `goals/` | Goal_Library: `robotCountGoal`, `facilityGoal`, `attributeGoal`, `weaponStageGoal`, `refinementGoal`, `economyGoal` (+ `goalTypes`, `goalSupport`) |
@@ -136,6 +138,7 @@ Automaton_Stables: computer-run stables that play by human rules. Public API in 
 | `robotNaming`, `requestKeys`, `turnBudget` | Blueprint names with "Mk II" suffixing, deterministic request keys, per-turn `TURN_*` budget constants, Turn_Step deadline (`resolveTurnStepDeadline`) and concurrency clamp (`effectiveTurnConcurrency`) |
 | `strategies/` | `registry` (loads Strategy_Definition_Files, startup check), `strategyDefinitionSchema`, `strategyParameters`, `migrateTargets`, `strategyLibrary`, `strategyDraftService`, `strategyUpgradeService`, `autoUpgrade` (every profile to the latest version; `pnpm run automaton:upgrade`, run by the deploy), `scenarioProjector`, `defaultRegistry` |
 | `automatonProfileService`, `automatonProfileRules` | Profile and blueprint CRUD, validation, Activation |
+| `automatonProfileStore`, `automatonProfileQueries` | Profile loading/locking and shared row helpers; the admin read models (profile list, detail, Turn_Records) |
 | `turnPreview`, `attributePlanView` | Read-only Turn_Preview and per-robot attribute plan |
 | `needAttention`, `automatonStatus`, `turnRecords`, `strategyComparisonService`, `strategyModePerformance` | Admin read models: Need_Attention, Status_Bar, Turn_Records, Strategy_Comparison (60 s cache) and its per-mode performance from played `standings` |
 | `programSwitch` | Program_Switch in `automaton_program_settings` |
@@ -197,8 +200,11 @@ Core combat engine — the simulator and shared orchestration helpers.
 
 | Service | Purpose |
 |---------|---------|
-| `combatSimulator` | Tick-based 1v1 and N-robot combat simulation (`simulateBattle`, `simulateBattleMulti`) |
-| `baseOrchestrator` | Shared battle orchestration pipeline (validate → simulate → record) |
+| `combatSimulator` | Tick-based 1v1 and N-robot combat simulation (`simulateBattle`, `simulateBattleMulti`). `combat-simulator/simulationLoop` sets the battle up and runs the loop; `simulationPhases` holds the per-tick phases in their fixed order (movement, facing, range transitions, attacks, shield regen, state checks, battle end, movement events) |
+| `baseOrchestrator` | Battle mode identifiers (`ALL_BATTLE_TYPES`) and `getCurrentCycleNumber` |
+| `battlePreparation` | Steps every orchestrator shares before simulating: load robots with weapons and refinements (`loadCombatRobot(s)`, `COMBAT_ROBOT_INCLUDE`), apply and log loadout fallbacks, prepare robots with their tuning |
+| `battleSummaryWriter` | `writeBattleSummary` (compute + store, a failed insert is logged and never fails the battle) and `buildSummaryRobotMaps`, used by every fought-battle writer |
+| `placementBattleSteps`, `placementMatchExecutor` | Steps KotH and Grand Melee share: field loading and partition, participant rows, the one atomic reward transaction (stable income, prestige, fame, streaming), previous-loss lookup, audit events; and the paced one-match-at-a-time executor with bye and failure handling |
 | `battlePostCombat` | Shared post-combat helpers (streaming revenue, audit logging, stat updates, credit/prestige/fame awards) |
 | `combatBuildRecorder` | `recordCombatBuilds`: writes `battle_participant_builds` (base and effective attributes, tuning, weapons with refinements, loadout, stance, yield) for every robot that fought, from the build `prepareRobotForCombat` captured. Called by all seven fought-battle writers; never fails a battle |
 | `byeResolutionService` | The single writer for a Bye_Event in all nine modes — entity resolution, the Bye_Award_Claim, the whole Bye_Record and the credit award. Simulates nothing (Spec #49) |
@@ -214,6 +220,7 @@ Shared infrastructure services used across domains.
 | Service | Purpose |
 |---------|---------|
 | `eventLogger` | AuditLog event creation (battle_complete, passive_income, operating_costs, etc.) |
+| `auditEventTypes` | The `EventType` catalogue, the audit entry shape and payload validation |
 | `eventCompression` | Combat event deduplication |
 | `guide-service` | In-game guide content loading and caching (Markdown + YAML frontmatter) |
 | `markdown-parser` | Markdown parsing with heading extraction |
@@ -225,6 +232,7 @@ Automated game loop — the scheduler and analytics snapshot system.
 | Service | Purpose |
 |---------|---------|
 | `cycleScheduler` | 10 independent cron jobs (league, team2v2League, tournament, tagTeam, koth, team3v3League, team2v2Tournament, grandMelee, team3v3Tournament, settlement) — all league modes use unified matchmaking pipeline. Handlers are registered even with `SCHEDULER_ENABLED=false` (only cron is gated), so jobs can always be run by hand: `startManualRun` (background, 409 when already active), `triggerJob` (waits), `runExclusive` (the bulk runner under the same lock). Every run is recorded through `schedulerRunStore` |
+| `cycleEventJobs`, `cycleSettlementJob` | The job bodies `cycleScheduler` registers: one battle-event job per slot, and settlement (closing, cutover, then generated-stable top-up, Automaton turns and the league instance re-deal) |
 | `schedulerRunStore` | Persistent run history: one `scheduler_processes` row per backend start with a 60 s heartbeat; `scheduler_job_runs` queued → running → success / failed / skipped; marks an earlier process's unfinished runs `interrupted`. All writes non-fatal |
 | `schedulerMissedRuns` | Pure: daily slots with no covering cron/resume run (15 min grace), with the downtime window when the backend was down |
 | `schedulerHistoryService` | Cycle Controls reads: `GET /api/admin/scheduler/overview` (status strip, slots with last run, missed runs), `GET /api/admin/scheduler/runs` (runs + restart markers + missed, paginated), `GET /api/admin/scheduler/runs/:id` |
@@ -258,7 +266,7 @@ King of the Hill mode — orchestration and matchmaking.
 
 | Service | Purpose |
 |---------|---------|
-| `kothBattleOrchestrator` | KotH match execution (placement rewards, zone scoring, no ELO changes) |
+| `kothBattleOrchestrator` | KotH match execution (placement rewards, zone scoring, no ELO changes); the shared placement steps and executor are in `battle/` |
 | `kothMatchmakingService` | KotH group formation (5-6 robots, LP-banding within tier/instance, same-stable swaps, recent-opponent swaps — unified pipeline per Spec #41). A tier instance below `MIN_GROUP_SIZE` now creates one Bye_Event per eligible robot via `scheduling/thinInstanceByes` rather than being skipped (Spec #49) |
 
 ### league/
@@ -266,7 +274,8 @@ King of the Hill mode — orchestration and matchmaking.
 
 | Service | Purpose |
 |---------|---------|
-| `leagueBattleOrchestrator` | League match execution (LP, prestige, fame, streaming, ELO, bye matches) |
+| `leagueBattleOrchestrator` | League 1v1 match execution (simulate, then streaming, audit, achievements) and the scheduled-battle executor |
+| `leagueBattleRecord`, `leagueByeAndForfeit` | Battle/participant/summary rows and the per-robot update (LP, credits, prestige, fame); byes and battle-time forfeits |
 | `leagueInstanceService` | League instance management (max 100 robots per instance, assignment, rebalancing); `assignLeagueInstanceWithLock` delegates to `leagueInstancePlacement` |
 | `leagueInstancePlacement` | Prisma-free, transaction-scoped instance picker: `MAX_ENTITIES_PER_INSTANCE` (100), `leagueInstanceLockKey`, `pickLeagueInstanceInTransaction` (mode/tier advisory lock, least-full instance, lowest number on ties, opens a new instance when all are full) |
 | `leagueInstanceRedeal` | `redealLeagueInstances`: round-robin redistribution of every tier of every tiered mode outside the nightly rebalance (season rollover, preparation days; issue #599). Never throws |
@@ -370,6 +379,8 @@ Shared matchmaking utilities consumed by all league matchmakers and tag team.
 | `teamBattleService` | Team CRUD — register, swap member, rename, disband. Registration and swaps need no subscription; both call `ensureTeamStandings` so a team enters each mode once every member holds it. Swaps keep the team's standings; disband deletes them. LP/tier live in `standings`. |
 | `teamBattleMatchmakingService` | 2v2/3v3 matchmaking orchestration per league instance. Subscription-gated eligibility. Creates `ScheduledTeamBattleMatch` rows with `matchMode` discriminator (`'league_2v2'`, `'league_3v3'`, `'tag_team'`, `'tournament_2v2'`, `'tournament_3v3'`). |
 | `teamBattleOrchestrator` | Battle execution — fetch scheduled matches, invoke engine, persist results, distribute rewards. |
+| `teamBattleByeAndForfeit` | Team league byes and battle-time forfeits (shared bye and forfeit writers). |
+| `teamBattlePostCombat` | Steps team leagues and team tournaments share: the team battle log, the battle summary and the per-side robot combat stat update. |
 | `teamBattleEngine` | N-vs-N simulation wrapper around `combatSimulator`. All 2N robots active simultaneously. |
 | `teamBattleRewardService` | Reward calculation and distribution: one team credit pool per side (N × 1v1 reward × 0.75 Team_Credit_Pool_Factor, #527), split with `distributeTeamCredits`. |
 | `teamBattleAdapter` | `LeagueAdapter<TeamBattle>` for `leagueEngine.ts` — exports `teamBattle2v2Adapter`, `teamBattle3v3Adapter`, and `tagTeamLeagueAdapter`. The tag team adapter remaps LP/league fields to `tagTeamLp`/`tagTeamLeague`/`tagTeamLeagueId` with `entityType = 'tag_team'`. Promotion/demotion with same config as 1v1. |
@@ -381,8 +392,12 @@ Tournament system — bracket management and battle execution.
 | Service | Purpose |
 |---------|---------|
 | `tournamentBattleOrchestrator` | 1v1 tournament match execution (HP tiebreaker, round-based rewards, championship titles). `executeSoloTournamentRound(tournamentId)` runs one round for the cycle, admin and route callers: byes, resumes of linked battles, battle-time forfeits (`resolveSoloTournamentForfeit`) and fought matches, with every failure sent to `recoverTournamentMatch`; it never throws for one match |
-| `tournamentService` | Tournament CRUD, entity-agnostic bracket generation (ELO seeding), round advancement, auto-creation |
-| `teamTournamentBattleOrchestrator` | Team tournament match execution — dispatches to Team Battle Engine, draw tiebreaking, N× rewards |
+| `tournamentForfeit`, `tournamentBattleRecord`, `tournamentBattleFinalization` | 1v1 tournament battle-time forfeits; the battle record and per-robot stats/income; the checkpoint resume of a linked battle |
+| `tournamentService` | Tournament CRUD, eligibility, byes, round advancement, auto-creation |
+| `tournamentBracket` | Pure bracket math: ELO seeding, standard seed order, round-1 bracket, seed lookup, next-round planning, seedings view |
+| `tournamentCompletion` | Finishing a tournament: champion titles and achievements, or completion without a champion |
+| `teamTournamentBattleOrchestrator` | Team tournament match execution — dispatches to Team Battle Engine, draw tiebreaking |
+| `teamTournamentEntry`, `teamTournamentRewards`, `teamTournamentFinalization` | Team tournament entry decision and forfeits; credit pools, prestige, fame and streaming; achievements and the checkpoint resume |
 | `teamTournamentService` | Team eligibility checks, tournament creation, combined-ELO seeding |
 | `tournamentParticipantResolver` | Resolves participant details by type (robot name for 1v1, team name + members for 2v2/3v3) |
 

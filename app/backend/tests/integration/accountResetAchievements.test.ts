@@ -26,7 +26,7 @@ import onboardingRoutes from '../../src/routes/onboarding';
 import { errorHandler } from '../../src/middleware/errorHandler';
 import { eventLogger } from '../../src/services/common/eventLogger';
 import { achievementService } from '../../src/services/achievement/achievementService';
-import { checkWeaponsRefinedCount } from '../../src/services/achievement/triggerEvaluator';
+import { checkWeaponsRefinedCount } from '../../src/services/achievement/triggerQueries';
 
 const app = express();
 app.use(express.json());
