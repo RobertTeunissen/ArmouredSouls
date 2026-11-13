@@ -3,19 +3,6 @@
 import { Weapon } from '../../generated/prisma';
 
 /**
- * Check if a weapon is compatible with a specific loadout type
- */
-export function isWeaponCompatibleWithLoadout(weapon: Weapon, loadoutType: string): boolean {
-  // Weapons with loadoutType 'any' work with all loadouts
-  if (weapon.loadoutType === 'any') {
-    return true;
-  }
-
-  // Otherwise, weapon must match the robot's loadout type
-  return weapon.loadoutType === loadoutType;
-}
-
-/**
  * Check if a weapon can be equipped to a specific slot (main or offhand)
  * based on its type and the robot's loadout configuration. The rule lives in
  * `app/shared/utils/weaponSlots.ts` (the admin Automaton editor uses it too).
@@ -49,24 +36,6 @@ export function validateOffhandEquipment(
   }
 
   return { valid: true };
-}
-
-/**
- * Get all valid loadout types for a given weapon in a specific slot
- */
-export function getValidLoadoutsForWeapon(weapon: Weapon, slot: 'main' | 'offhand'): string[] {
-  const validLoadouts: string[] = [];
-
-  const loadoutTypes = ['single', 'weapon_shield', 'two_handed', 'dual_wield'];
-
-  for (const loadout of loadoutTypes) {
-    const result = canEquipToSlot(weapon, slot, loadout);
-    if (result.canEquip) {
-      validLoadouts.push(loadout);
-    }
-  }
-
-  return validLoadouts;
 }
 
 /**

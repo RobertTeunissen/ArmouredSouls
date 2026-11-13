@@ -9,7 +9,7 @@ import { getPracticeArenaOverview } from '../utils/adminPracticeArenaApi';
 import type { Section } from './useCycleControls';
 import type { PracticeArenaOverview } from '@shared/types';
 
-export const POLL_MS = 60_000;
+const POLL_MS = 60_000;
 
 export interface PracticeArenaOverviewData {
   overview: Section<PracticeArenaOverview>;

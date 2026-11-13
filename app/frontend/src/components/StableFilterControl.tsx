@@ -44,4 +44,3 @@ export function StableFilterControl({ value, onChange }: StableFilterControlProp
   );
 }
 
-export default StableFilterControl;

@@ -14,15 +14,8 @@ import {
   rankRobotSources,
   rankStableSources,
 } from './searchRanking';
-import {
-  GuideSearchSource,
-  MAX_RESULTS_PER_CATEGORY,
-  MAX_TOTAL_RESULTS,
-  MINIMUM_QUERY_LENGTH,
-  RobotSearchSource,
-  SearchResponse,
-  StableSearchSource,
-} from './searchTypes';
+import { GuideSearchSource, MAX_RESULTS_PER_CATEGORY, MAX_TOTAL_RESULTS, MINIMUM_QUERY_LENGTH, RobotSearchSource, StableSearchSource } from './searchTypes';
+import type { SearchResponse } from '../../shared/types';
 
 /** The selected robot fields returned by the search source query. */
 export interface RobotSearchRecord {
@@ -295,5 +288,5 @@ export class SearchService {
   }
 }
 
-export const searchService = new SearchService();
+const searchService = new SearchService();
 export default searchService;

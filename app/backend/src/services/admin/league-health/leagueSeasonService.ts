@@ -23,7 +23,6 @@ import type {
   SeasonCycleMoves,
 } from '../../../shared/types';
 
-export const LEAGUE_SEASON_STABLE_FILTERS = ['all', 'human', 'automaton', 'generated'] as const satisfies readonly LeagueSeasonStableFilter[];
 interface RawMove {
   cycle_number: number;
   change_type: string;

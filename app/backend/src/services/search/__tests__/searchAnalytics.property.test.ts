@@ -62,7 +62,7 @@ import type {
   SearchAnalyticsReportQuery,
   SearchAnalyticsStore,
 } from '../searchAnalyticsTypes';
-import type { SearchResponse } from '../searchTypes';
+import type { SearchResponse } from '../../../shared/types';
 
 const NUM_RUNS = 100;
 const EVENT_TIMESTAMP = new Date('2026-09-17T12:00:00.000Z');

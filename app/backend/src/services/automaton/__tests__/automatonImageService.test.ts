@@ -6,10 +6,8 @@
 import fs from 'fs';
 import path from 'path';
 import {
-  AUTOMATON_UPLOAD_URL_PREFIX,
   deleteProfileImages,
   getAutomatonUploadDir,
-  isAutomatonUploadUrl,
   resolveAutomatonImagePath,
   setAutomatonUploadDir,
 } from '../automatonImageService';
@@ -54,15 +52,6 @@ describe('resolveAutomatonImagePath', () => {
     [''],
   ])('rejects the file name %p', (fileName) => {
     expect(() => resolveAutomatonImagePath('clone-legion', fileName)).toThrow(expect.objectContaining({ code: 'AUTOMATON_IMAGE_INVALID' }));
-  });
-});
-
-describe('isAutomatonUploadUrl', () => {
-  it('accepts only uploads of the same key', () => {
-    expect(isAutomatonUploadUrl(`${AUTOMATON_UPLOAD_URL_PREFIX}/clone-legion/${UUID_FILE}`, 'clone-legion')).toBe(true);
-    expect(isAutomatonUploadUrl(`${AUTOMATON_UPLOAD_URL_PREFIX}/dalek-empire/${UUID_FILE}`, 'clone-legion')).toBe(false);
-    expect(isAutomatonUploadUrl('/assets/automatons/clone-legion/1.webp', 'clone-legion')).toBe(false);
-    expect(isAutomatonUploadUrl(`${AUTOMATON_UPLOAD_URL_PREFIX}/clone-legion/../${UUID_FILE}`, 'clone-legion')).toBe(false);
   });
 });
 

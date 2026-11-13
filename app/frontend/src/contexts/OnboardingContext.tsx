@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
 import { api } from '../utils/api';
 import { ApiError } from '../utils/ApiError';
-import type { OnboardingState, OnboardingChoices, OnboardingContextType, OnboardingErrorInfo } from './onboarding.types';
+import type { OnboardingState, OnboardingContextType, OnboardingErrorInfo } from './onboarding.types';
+import type { OnboardingChoices } from '@shared/types';
 
 export type { OnboardingState, OnboardingChoices, OnboardingContextType, OnboardingErrorInfo };
 

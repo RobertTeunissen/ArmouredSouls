@@ -27,25 +27,21 @@ import { Prisma } from '../../../generated/prisma';
 import { AppError } from '../../errors/AppError';
 import { AutomatonError, AutomatonErrorCode } from '../../errors/automatonErrors';
 import { hashPassword } from '../auth/passwordService';
-import { validateStableName } from '../../utils/validation';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
 import type { StrategyParametersV1 } from '../../types/automaton';
 import {
   buildableBlueprintCount,
   compareCatalogueKeys,
   eventOrderIssues,
-  requiredTeamNameCountsFor,
   robotsTargetIssues,
   type BlueprintFields,
   type CatalogueIssue,
-  type WeaponCatalogue,
 } from './automatonCatalogueService';
 import {
   assertNoIssues,
   blueprintIssues,
   issuesError,
   automatonUsername,
-  AUTOMATON_USERNAME_PREFIX,
   nextFreeSlot,
   profileEventOrder,
   profileTeamNames,
@@ -56,56 +52,37 @@ import {
   type BlueprintRecord,
 } from './automatonProfileRules';
 import { deleteProfileImages } from './automatonImageService';
-import { loadWeaponCatalogue } from './stableFacts';
-import { getStrategyRegistry } from './strategies/defaultRegistry';
-import { describeBuildOrder, highestRobotsTarget, resolveGoalTarget } from './strategies/strategyParameters';
-import type { StrategyRegistry } from './strategies/registry';
 import type { UpgradeStrategy } from './strategies/strategyTypes';
-import { bestTiersForUsers, type LeagueTier } from './standingsTier';
-import type { TieredStandingsMode } from '../../shared/utils/automatonStandingsTier';
-import { loadActiveNeedAttention, loadNeedAttention } from './needAttention';
-import { teamNameMaxRobots, teamsForSlots } from './teamRule';
-import { BUILD_FOCUS_WEIGHTS, GROUP_ACADEMY } from './buildFocus';
-import { attributePlanView, buildFocusOptions, type AttributePlanSubject } from './attributePlanView';
-import type { FacilityType } from './stableFacts';
+import {
+  type ProfileServiceDeps,
+  type Tx,
+  blueprintNotFound,
+  lockProfile,
+  buildableOf,
+  blueprintRecord,
+  profileStableName,
+  registryOf,
+  weaponsOf,
+  pinnedStrategy,
+  strategyIssue,
+  json,
+  isUniqueViolation,
+  uniqueTarget,
+  stableNameTakenError,
+  assertStableNameFormat,
+  assertStableNameFree,
+} from './automatonProfileStore';
+import { getProfileDetail } from './automatonProfileQueries';
 import type {
   ActivateAllOutcome,
   ActivationResult,
-  AttributePlanView,
-  BlueprintView,
-  BuildFocusKey,
-  BuildOrderDescriptor,
   CreateDraftInput,
-  NeedAttentionReason,
   ProfileDetail,
-  ProfileListItem,
-  ProfileListPage,
-  ProfileListQuery,
-  RefinementStep,
   TeamNames,
-  TeamRowView,
-  TurnRecordPage,
-  TurnSummary,
   UpdateProfileInput,
   UpdateStrategyInput,
-  WeaponStage,
 } from '../../shared/types';
 
-// ── Types ────────────────────────────────────────────────────────────
-
-/** Injectable dependencies (tests). */
-export interface ProfileServiceDeps {
-  registry?: StrategyRegistry;
-  weapons?: WeaponCatalogue;
-  /**
-   * Activate-all only: which drafts to consider (default: every draft). Tests
-   * on a shared database limit it to their own drafts, so other drafts are
-   * never activated by a test run.
-   */
-  draftScope?: (catalogueKey: string) => boolean;
-}
-
-export { automatonUsername, AUTOMATON_USERNAME_PREFIX, profileEventOrder, profileTeamNames };
 /** Opening balance of an Activated stable: the `User.currency` default (R2.2). */
 export const AUTOMATON_OPENING_BALANCE = 3_000_000;
 
@@ -126,400 +103,6 @@ export interface MutationResult<T> {
   result: T;
   /** Field names that changed, for the admin audit summary (R11.3). */
   changedFields: string[];
-}
-
-// ── Loading ──────────────────────────────────────────────────────────
-
-type Tx = Prisma.TransactionClient;
-
-const PROFILE_INCLUDE = {
-  user: { select: { id: true, stableName: true, currency: true, prestige: true } },
-  blueprints: { orderBy: { slotIndex: 'asc' as const } },
-} satisfies Prisma.AutomatonProfileInclude;
-
-type ProfileRow = Prisma.AutomatonProfileGetPayload<{ include: typeof PROFILE_INCLUDE }>;
-type BlueprintRow = ProfileRow['blueprints'][number];
-
-function notFound(catalogueKey: string): AutomatonError {
-  return new AutomatonError(AutomatonErrorCode.AUTOMATON_NOT_FOUND, `No Automaton stable ${catalogueKey}`, 404);
-}
-
-function blueprintNotFound(catalogueKey: string, slot: number): AutomatonError {
-  return new AutomatonError(AutomatonErrorCode.AUTOMATON_BLUEPRINT_NOT_FOUND, `Stable ${catalogueKey} has no blueprint in slot ${slot}`, 404);
-}
-
-/** Lock the profile row and read it with its blueprints. */
-async function lockProfile(tx: Tx, catalogueKey: string): Promise<ProfileRow> {
-  const locked = await tx.$queryRaw<{ id: number }[]>`
-    SELECT "id" FROM "automaton_profiles" WHERE "catalogue_key" = ${catalogueKey} FOR UPDATE`;
-  if (locked.length === 0) throw notFound(catalogueKey);
-  return tx.automatonProfile.findUniqueOrThrow({ where: { id: locked[0].id }, include: PROFILE_INCLUDE });
-}
-
-/** Buildable blueprints of a profile: slots 1…k without a gap (R3.7, R3.6). */
-function buildableOf(rows: readonly { slotIndex: number }[]): number {
-  return buildableBlueprintCount(rows.map((r) => r.slotIndex));
-}
-
-async function readProfile(catalogueKey: string): Promise<ProfileRow> {
-  const profile = await prisma.automatonProfile.findUnique({ where: { catalogueKey }, include: PROFILE_INCLUDE });
-  if (!profile) throw notFound(catalogueKey);
-  return profile;
-}
-
-export function blueprintRecord(row: BlueprintRow): BlueprintRecord {
-  return {
-    slot: row.slotIndex,
-    robotName: row.robotName,
-    loadoutType: row.loadoutType as BlueprintRecord['loadoutType'],
-    stance: row.stance as BlueprintRecord['stance'],
-    yieldThreshold: row.yieldThreshold,
-    buildFocus: row.buildFocus as BlueprintRecord['buildFocus'],
-    weaponPath: row.weaponPath as unknown as WeaponStage[],
-    refinementPlan: row.refinementPlan as unknown as RefinementStep[],
-  };
-}
-
-/** The display stable name: `User.stableName` once active, the planned name while Draft. */
-export function profileStableName(profile: Pick<ProfileRow, 'status' | 'plannedStableName'> & { user: { stableName: string | null } | null }): string {
-  return (profile.status === 'active' ? profile.user?.stableName : profile.plannedStableName) ?? '';
-}
-
-function registryOf(deps: ProfileServiceDeps): StrategyRegistry {
-  return deps.registry ?? getStrategyRegistry();
-}
-
-async function weaponsOf(deps: ProfileServiceDeps): Promise<WeaponCatalogue> {
-  return deps.weapons ?? loadWeaponCatalogue();
-}
-
-function pinnedStrategy(profile: Pick<ProfileRow, 'strategyKey' | 'strategyVersion' | 'catalogueKey'>, registry: StrategyRegistry): UpgradeStrategy {
-  const strategy = registry.getStrategy(profile.strategyKey, profile.strategyVersion);
-  if (!strategy) {
-    throw new AutomatonError(
-      AutomatonErrorCode.AUTOMATON_CATALOGUE_INVALID,
-      `Strategy ${profile.strategyKey} v${profile.strategyVersion} of ${profile.catalogueKey} has no Strategy_Definition_File`,
-      409,
-    );
-  }
-  return strategy;
-}
-
-function strategyIssue(message: string): CatalogueIssue[] {
-  return [{ rule: 'strategy_unknown', message, path: ['strategyKey'] }];
-}
-
-function json(value: unknown): Prisma.InputJsonValue {
-  return value as Prisma.InputJsonValue;
-}
-
-function isUniqueViolation(error: unknown): error is Prisma.PrismaClientKnownRequestError {
-  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
-}
-
-function uniqueTarget(error: Prisma.PrismaClientKnownRequestError): string {
-  const target = error.meta?.target;
-  if (Array.isArray(target)) return target.join(',');
-  return typeof target === 'string' ? target : JSON.stringify(error.meta ?? {});
-}
-
-// ── Stable names ─────────────────────────────────────────────────────
-
-function stableNameTakenError(stableName: string): AutomatonError {
-  return new AutomatonError(AutomatonErrorCode.AUTOMATON_STABLE_NAME_TAKEN, `Stable name "${stableName}" is already taken.`, 409);
-}
-
-function assertStableNameFormat(stableName: string): void {
-  const result = validateStableName(stableName);
-  if (!result.valid) {
-    throw issuesError([{ rule: 'stable_name', message: result.error ?? 'Invalid stable name.', path: ['stableName'] }]);
-  }
-}
-
-/**
- * A stable name is free when no other `User` has it and no other
- * Automaton_Profile plans it (design §4 D3, R3.8: the `PUT /api/user/profile`
- * rules plus the drafts' planned names).
- */
-async function assertStableNameFree(
-  tx: Tx,
-  stableName: string,
-  exclude: { userId?: number | null; profileId?: number },
-): Promise<void> {
-  const user = await tx.user.findFirst({
-    where: { stableName, ...(exclude.userId ? { NOT: { id: exclude.userId } } : {}) },
-    select: { id: true },
-  });
-  const profile = await tx.automatonProfile.findFirst({
-    where: { plannedStableName: stableName, ...(exclude.profileId ? { NOT: { id: exclude.profileId } } : {}) },
-    select: { id: true },
-  });
-  if (user || profile) throw stableNameTakenError(stableName);
-}
-
-type TurnRow = Prisma.AutomatonTurnGetPayload<Record<string, never>>;
-
-function savingGoalOf(goalOutcomes: Prisma.JsonValue): string | null {
-  if (!Array.isArray(goalOutcomes)) return null;
-  const last = goalOutcomes[goalOutcomes.length - 1] as { kind?: unknown; goalId?: unknown } | null | undefined;
-  return last && last.kind === 'saving' && typeof last.goalId === 'string' ? last.goalId : null;
-}
-
-function turnSummary(turn: TurnRow, strategy: UpgradeStrategy | undefined, params: StrategyParametersV1 | null): TurnSummary {
-  const goalId = turn.status === 'completed' ? savingGoalOf(turn.goalOutcomes) : null;
-  const definition = goalId ? strategy?.buildOrder.find((d) => d.id === goalId) : undefined;
-  const descriptor = definition ? describeBuildOrder([definition])[0] : undefined;
-  return {
-    seasonNumber: turn.seasonNumber,
-    trigger: turn.trigger,
-    slot: turn.slot,
-    attempt: turn.attempt,
-    status: turn.status,
-    reason: turn.reason,
-    creditsSpent: turn.creditsSpent,
-    creditsReceived: turn.creditsReceived,
-    actionCount: Array.isArray(turn.actions) ? turn.actions.length : 0,
-    savingGoal: goalId
-      ? {
-        goalId,
-        position: definition?.position ?? null,
-        label: descriptor?.label ?? null,
-        target: definition ? resolveGoalTarget(definition, params ?? { targets: {} }) : null,
-      }
-      : null,
-    startedAt: turn.startedAt.toISOString(),
-    finishedAt: turn.finishedAt?.toISOString() ?? null,
-  };
-}
-
-/** Highest robots Goal_Target of the stable's Build_Order (the "target" of Robots current / target). */
-function robotTarget(strategy: UpgradeStrategy | undefined, params: StrategyParametersV1 | null): number | null {
-  if (!strategy) return null;
-  return highestRobotsTarget(strategy.buildOrder, params ?? { targets: {} });
-}
-
-/** Profiles with progress, ordered by Catalogue_Key (R11.2). */
-/**
- * Each profile's most recent Turn_Record. One DISTINCT ON read of the ids on
- * the `(profile_id, started_at)` index, then the rows: a nested `take: 1`
- * include would load every turn of the season for every listed profile.
- */
-async function readLatestTurns(profileIds: readonly number[]): Promise<Map<number, TurnRow>> {
-  if (profileIds.length === 0) return new Map();
-  const latest = await prisma.$queryRaw<{ id: number }[]>`
-    SELECT DISTINCT ON ("profile_id") "id"
-    FROM "automaton_turns"
-    WHERE "profile_id" IN (${Prisma.join([...profileIds])})
-    ORDER BY "profile_id", "started_at" DESC, "id" DESC`;
-  if (latest.length === 0) return new Map();
-  const turns = await prisma.automatonTurn.findMany({ where: { id: { in: latest.map((row) => row.id) } } });
-  return new Map(turns.map((turn) => [turn.profileId, turn]));
-}
-
-export async function listProfiles(query: ProfileListQuery & { page: number; limit: number }, deps: ProfileServiceDeps = {}): Promise<ProfileListPage> {
-  const registry = registryOf(deps);
-  const filters: Prisma.AutomatonProfileWhereInput = {
-    ...(query.status ? { status: query.status } : {}),
-    ...(query.strategy ? { strategyKey: query.strategy } : {}),
-  };
-  let where = filters;
-  if (query.attention !== undefined) {
-    // Need_Attention is computed, never stored: classify the matching active stables, then filter by id.
-    const attention = await loadActiveNeedAttention(filters);
-    const flagged = [...attention].flatMap(([id, reasons]) => (reasons.length > 0 ? [id] : []));
-    where = query.attention
-      ? { AND: [filters, { id: { in: flagged } }] }
-      : { AND: [filters, { id: { notIn: flagged } }] };
-  }
-  const [total, rows] = await Promise.all([
-    prisma.automatonProfile.count({ where }),
-    prisma.automatonProfile.findMany({
-      where,
-      orderBy: { catalogueKey: 'asc' },
-      skip: (query.page - 1) * query.limit,
-      take: query.limit,
-      include: {
-        user: { select: { id: true, stableName: true, currency: true, prestige: true, _count: { select: { robots: true } } } },
-        _count: { select: { blueprints: true } },
-      },
-    }),
-  ]);
-  const userIds = rows.flatMap((row) => (row.userId === null ? [] : [row.userId]));
-  const [tiers, latestTurns, attentionByProfile] = await Promise.all([
-    bestTiersForUsers(userIds),
-    readLatestTurns(rows.map((row) => row.id)),
-    loadNeedAttention(rows.flatMap((row) => (row.status === 'active' ? [{ profileId: row.id, balance: row.user?.currency ?? null }] : []))),
-  ]);
-  const items = rows.map((row): ProfileListItem => {
-    const strategy = registry.getStrategy(row.strategyKey, row.strategyVersion);
-    const params = strategy ? storedParameters(strategy, row.strategyParameters) : null;
-    const best = row.userId === null ? null : tiers.get(row.userId) ?? null;
-    return {
-      catalogueKey: row.catalogueKey,
-      stableName: profileStableName(row),
-      franchise: row.franchise,
-      status: row.status,
-      origin: row.origin,
-      strategyKey: row.strategyKey,
-      strategyVersion: row.strategyVersion,
-      strategyDisplayName: strategy?.displayName ?? null,
-      blueprintCount: row._count.blueprints,
-      robots: { current: row.user?._count.robots ?? 0, target: robotTarget(strategy, params) },
-      credits: row.user?.currency ?? null,
-      prestige: row.user?.prestige ?? null,
-      bestTier: best?.tier ?? null,
-      bestTierMode: best?.mode ?? null,
-      lastTurn: latestTurns.has(row.id) ? turnSummary(latestTurns.get(row.id) as TurnRow, strategy, params) : null,
-      activatedAt: row.activatedAt?.toISOString() ?? null,
-      needAttention: attentionByProfile.get(row.id) ?? [],
-    };
-  });
-  return { items, total, page: query.page, limit: query.limit };
-}
-
-/** Robots an attributes plan covers: the live robots, else the blueprints up to the robots target. */
-function attributePlanSubjects(
-  blueprints: readonly { id: number; slotIndex: number; robotName: string; buildFocus: string }[],
-  liveBlueprintIds: ReadonlySet<number>,
-  robotsTarget: number | null,
-): AttributePlanSubject[] {
-  const live = blueprints.filter((b) => liveBlueprintIds.has(b.id));
-  const chosen = live.length > 0 ? live : blueprints.filter((b) => b.slotIndex <= (robotsTarget ?? 0));
-  return chosen.map((b) => ({ slot: b.slotIndex, robotName: b.robotName, buildFocus: b.buildFocus as BuildFocusKey }));
-}
-
-/** One profile with blueprints, live robots, teams and the last turn (R11.2). */
-export async function getProfileDetail(catalogueKey: string, deps: ProfileServiceDeps = {}): Promise<ProfileDetail> {
-  const registry = registryOf(deps);
-  const profile = await readProfile(catalogueKey);
-  const strategy = registry.getStrategy(profile.strategyKey, profile.strategyVersion);
-  const params = strategy ? storedParameters(strategy, profile.strategyParameters) : null;
-  const robots = profile.userId === null
-    ? []
-    : await prisma.robot.findMany({
-      where: { userId: profile.userId },
-      select: { id: true, name: true, automatonBlueprintId: true, automatonSlotIndex: true },
-      orderBy: { id: 'asc' },
-    });
-  const teams = profile.userId === null
-    ? []
-    : await prisma.teamBattle.findMany({
-      where: { stableId: profile.userId },
-      select: { id: true, teamSize: true, teamName: true, members: { select: { robotId: true }, orderBy: { slotIndex: 'asc' } } },
-      orderBy: { id: 'asc' },
-    });
-  const lastTurn = await prisma.automatonTurn.findFirst({ where: { profileId: profile.id }, orderBy: { startedAt: 'desc' } });
-  const academyRows = profile.userId === null
-    ? []
-    : await prisma.facility.findMany({
-      where: { userId: profile.userId, facilityType: { in: Object.values(GROUP_ACADEMY) } },
-      select: { facilityType: true, level: true },
-    });
-  const academyLevels = Object.fromEntries(academyRows.map((row) => [row.facilityType, row.level])) as Partial<Record<FacilityType, number>>;
-  const liveBlueprintIds = new Set(robots.flatMap((r) => (r.automatonBlueprintId === null ? [] : [r.automatonBlueprintId])));
-  const planSubjects = attributePlanSubjects(profile.blueprints, liveBlueprintIds, strategy && params ? highestRobotsTarget(strategy.buildOrder, params) : null);
-  const attributePlans = strategy
-    ? strategy.buildOrder
-      .filter((spec) => spec.type === 'attributes')
-      .map((spec) => attributePlanView(
-        { goalId: spec.id, target: params?.targets[spec.id] ?? spec.defaultTarget, isMax: spec.isMax },
-        planSubjects,
-        academyLevels,
-        BUILD_FOCUS_WEIGHTS,
-      ))
-    : [];
-
-  const robotBySlot = new Map<number, { id: number; name: string }>();
-  for (const robot of robots) {
-    if (robot.automatonSlotIndex !== null) robotBySlot.set(robot.automatonSlotIndex, { id: robot.id, name: robot.name });
-  }
-  const teamNames = profileTeamNames(profile);
-  // The Teams card rows: the Team_Rule over slots 1…min(highest robots bound, buildable blueprints) (design §17.2).
-  const buildable = buildableOf(profile.blueprints);
-  const maxRobots = strategy ? teamNameMaxRobots(strategy.buildOrder, buildable) : buildable;
-  const allSlots = Array.from({ length: maxRobots }, (_, i) => i + 1);
-  const teamRows = teamsForSlots(allSlots).map((team): TeamRowView => {
-    const members = team.slots.map((slot) => robotBySlot.get(slot)?.name ?? null);
-    const formed = members.every((m) => m !== null);
-    return {
-      size: team.size,
-      index: team.index,
-      slots: [...team.slots],
-      name: (team.size === 2 ? teamNames.twoVsTwo : teamNames.threeVsThree)[team.index] ?? null,
-      members,
-      state: formed ? 'formed' : 'waiting',
-      waitsForSlot: formed ? null : Math.max(...team.slots),
-    };
-  });
-
-  return {
-    catalogueKey: profile.catalogueKey,
-    stableName: profileStableName(profile),
-    franchise: profile.franchise,
-    backstory: profile.backstory,
-    status: profile.status,
-    origin: profile.origin,
-    activatedAt: profile.activatedAt?.toISOString() ?? null,
-    userId: profile.userId,
-    credits: profile.user?.currency ?? null,
-    prestige: profile.user?.prestige ?? null,
-    strategy: {
-      key: profile.strategyKey,
-      version: profile.strategyVersion,
-      displayName: strategy?.displayName ?? null,
-      latestVersion: registry.latestVersion(profile.strategyKey) ?? null,
-      buildOrder: strategy
-        ? describeBuildOrder(strategy.buildOrder).map((d) => ({ ...d, target: params?.targets[d.goalId] ?? d.defaultTarget }))
-        : [],
-      parametersValid: params !== null,
-    },
-    teamNames,
-    requiredTeamNames: strategy ? requiredTeamNameCountsFor(strategy, buildable) : null,
-    teams: teamRows,
-    eventOrder: profileEventOrder(profile),
-    blueprints: profile.blueprints.map((row): BlueprintView => {
-      const live = robots.find((r) => r.automatonBlueprintId === row.id);
-      return { ...blueprintRecord(row), id: row.id, imageUrl: row.imageUrl, liveRobot: live ? { id: live.id, name: live.name } : null };
-    }),
-    registeredTeams: teams.map((t) => ({ id: t.id, teamSize: t.teamSize, teamName: t.teamName, robotIds: t.members.map((m) => m.robotId) })),
-    lastTurn: lastTurn ? turnSummary(lastTurn, strategy, params) : null,
-    attributePlans,
-    buildFocusOptions: buildFocusOptions(),
-  };
-}
-
-/** Turn_Records of one profile, newest first (R11.2). */
-export async function listTurnRecords(catalogueKey: string, page: number, limit: number, deps: ProfileServiceDeps = {}): Promise<TurnRecordPage> {
-  const profile = await prisma.automatonProfile.findUnique({
-    where: { catalogueKey },
-    select: { id: true, strategyKey: true, strategyVersion: true, strategyParameters: true },
-  });
-  if (!profile) throw notFound(catalogueKey);
-  const strategy = registryOf(deps).getStrategy(profile.strategyKey, profile.strategyVersion);
-  const params = strategy ? storedParameters(strategy, profile.strategyParameters) : null;
-  const [total, rows] = await Promise.all([
-    prisma.automatonTurn.count({ where: { profileId: profile.id } }),
-    prisma.automatonTurn.findMany({
-      where: { profileId: profile.id },
-      orderBy: { startedAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-  ]);
-  return {
-    items: rows.map((row) => ({
-      ...turnSummary(row, strategy, params),
-      startBalance: row.startBalance,
-      endBalance: row.endBalance,
-      durationMs: row.durationMs,
-      actions: row.actions,
-      goalOutcomes: row.goalOutcomes,
-      upkeepIssues: row.upkeepIssues,
-    })),
-    total,
-    page,
-    limit,
-  };
 }
 
 // ── Draft lifecycle ──────────────────────────────────────────────────

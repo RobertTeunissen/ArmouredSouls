@@ -6,7 +6,8 @@
  * queued. It now delegates the round to `executeSoloTournamentRound`, whose
  * failures are already handled by the shared policy, and always advances.
  */
-import { executeTournamentCycle, resetScheduler } from '../../../src/services/cycle/cycleScheduler';
+import { resetScheduler } from '../../../src/services/cycle/cycleScheduler';
+import { executeTournamentCycle } from '../../../src/services/cycle/cycleEventJobs';
 
 jest.mock('node-cron', () => ({
   __esModule: true,

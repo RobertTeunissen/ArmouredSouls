@@ -16,13 +16,10 @@ import { encodeBattleLog } from '../battle/battleLogCodec';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
-import { resolveByeEvent } from '../battle/byeResolutionService';
-import { resolveForfeitEvent } from '../battle/forfeitResolutionService';
-import { applyLoadoutFallbacks, evaluateMatchEntry, type MatchEntryOutcome } from '../battle/combatReadiness';
-import { BYE_MODE_SPECS } from '../../utils/byeRewards';
+import { evaluateMatchEntry } from '../battle/combatReadiness';
+import { applyAndLogLoadoutFallbacks, loadCombatRobots, prepareRobotsWithTuning } from '../battle/battlePreparation';
 import { simulateTeamBattle } from './teamBattleEngine';
-import { computeBattleSummary } from '../battle/battleSummaryComputer';
-import { countKillsByRobot } from '../../shared/utils/battleStatistics';
+import { buildTeamBattleLog, updateTeamBattleCombatStats, writeTeamBattleSummary } from './teamBattlePostCombat';
 import {
   calculateTeamBattleReward,
   distributeTeamCredits,
@@ -30,9 +27,7 @@ import {
   calculateTeamBattlePrestige,
   calculateTeamBattleELOChanges,
   calculateTeamBattleLPDelta,
-  getByeTeamELO,
 } from './teamBattleRewardService';
-import { TeamBattleResult, TeamBattleLog } from '../../types/teamBattleLogTypes';
 import {
   logBattleAuditEvent,
   awardCreditsWithLedger,
@@ -40,15 +35,13 @@ import {
   awardStreamingRevenueForParticipant,
   checkAndAwardAchievements,
   didRobotLosePreviousBattle,
-  updateRobotCombatStats,
 } from '../battle/battlePostCombat';
 import { hasAllocatedTuning, hpPercentOf, lowestHpPercent } from '../battle/battleAchievementContext';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { handleMatchFailure } from '../battle/matchFailurePolicy';
 import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
-import { prepareRobotForCombat } from '../../utils/robotCalculations';
-import { getTuningBonusesBatch } from '../tuning-pool';
 import standingsService from '../standings/standingsService';
+import { resolveTeamLeagueBye, resolveTeamLeagueForfeit } from './teamBattleByeAndForfeit';
 import { recordCombatBuilds } from '../battle/combatBuildRecorder';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -71,7 +64,7 @@ export interface TeamBattleExecutionResult {
 // ─── Scheduled match type with includes ──────────────────────────────────────
 
 /** Shape of a scheduled team match as mapped from unified scheduling table with team includes. */
-interface ScheduledMatchWithTeams {
+export interface ScheduledMatchWithTeams {
   id: number;
   team1Id: number;
   team2Id: number | null;
@@ -215,173 +208,6 @@ export async function executeScheduledTeamBattles(
   return { matchesCompleted, matchesForfeited, matchesCancelled, results };
 }
 
-// ─── Bye Resolution ──────────────────────────────────────────────────────────
-
-/**
- * Resolve a team league bye through the Bye_Reward_Module (Spec #49).
- *
- * Nothing is simulated, no opponent is fabricated, and no robot is prepared for
- * combat — weapons and tuning cannot affect an unsimulated outcome, so this does
- * not call `loadTeamRobotsWithWeapons` or `prepareRobotForCombat` either. A
- * plain robot read supplies the names, HP and ELO the writer needs.
- *
- * The team still gains ELO against the bye team's notional rating and LP +3,
- * exactly as before: removing the simulation changes how the outcome is reached,
- * not what the outcome is worth.
- */
-async function resolveTeamLeagueBye(
-  match: ScheduledMatchWithTeams,
-  teamSize: 2 | 3,
-  battleType: string,
-  cycleNumber: number,
-): Promise<SingleMatchResult> {
-  const robotIds = match.team1.members.map(m => m.robotId);
-  const robots = await prisma.robot.findMany({
-    where: { id: { in: robotIds } },
-    select: { id: true, name: true, userId: true, currentHP: true, maxHP: true, elo: true },
-  });
-
-  const team1SumELO = robots.reduce((sum, r) => sum + r.elo, 0);
-  const eloChanges = calculateTeamBattleELOChanges(
-    team1SumELO,
-    getByeTeamELO(teamSize),
-    true,
-    false,
-  );
-
-  const newEloByRobotId: Record<number, number> = {};
-  for (const r of robots) {
-    newEloByRobotId[r.id] = r.elo + eloChanges.team1Change;
-  }
-
-  const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-
-  const resolution = await resolveByeEvent({
-    mode,
-    context: { mode, tier: match.teamBattleLeague },
-    claim: { source: 'scheduled_match', scheduledMatchId: match.id },
-    participants: robots,
-    stableUserId: match.team1.stableId,
-    battle: {
-      battleType,
-      leagueType: match.teamBattleLeague,
-      leagueInstanceId: match.teamBattleLeagueId,
-      winnerId: robots[0]?.id ?? null,
-      winningSide: 1,
-      byeMessage: `${match.team1.teamName ?? 'Team'} wins by walkover (bye)`,
-    },
-    standingEntity: { entityType: 'team', entityId: match.team1Id },
-    newEloByRobotId,
-    eloChange: eloChanges.team1Change,
-    cycleNumber,
-  });
-
-  logger.info(
-    `[TeamBattle] Bye: team ${match.team1Id} (${mode}) auto-win | ₡${resolution.creditsPaid} | no damage, no prestige, no fame`,
-  );
-
-  return {
-    matchId: match.id,
-    status: 'completed',
-    battleId: resolution.battleId ?? undefined,
-  };
-}
-
-// ─── Forfeit Resolution ──────────────────────────────────────────────────────
-
-/**
- * Resolve a team league battle-time forfeit through the Forfeit_Resolution_Writer.
- *
- * Nothing is simulated. The ready team wins with the bye-level reward and the
- * bye LP; the forfeiting team takes a normal loss (LP, standings, team ELO) with
- * 0 credits. Both teams unready is a draw with no credits.
- */
-async function resolveTeamLeagueForfeit(
-  match: ScheduledMatchWithTeams,
-  teamSize: 2 | 3,
-  battleType: string,
-  cycleNumber: number,
-  team1Robots: RobotWithWeapons[],
-  team2Robots: RobotWithWeapons[],
-  outcome: Exclude<MatchEntryOutcome, { kind: 'fight' }>,
-): Promise<SingleMatchResult> {
-  const team2 = match.team2!;
-  const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-  const isDraw = outcome.kind === 'double_forfeit';
-  const side1Forfeits = isDraw || outcome.forfeitingSides[0] === 1;
-  const side2Forfeits = isDraw || outcome.forfeitingSides[0] === 2;
-
-  const team1SumELO = team1Robots.reduce((sum, r) => sum + r.elo, 0);
-  const team2SumELO = team2Robots.reduce((sum, r) => sum + r.elo, 0);
-  const eloChanges = calculateTeamBattleELOChanges(team1SumELO, team2SumELO, !isDraw && side2Forfeits, isDraw);
-  const newEloByRobotId: Record<number, number> = {};
-  for (const r of team1Robots) newEloByRobotId[r.id] = r.elo + eloChanges.team1Change;
-  for (const r of team2Robots) newEloByRobotId[r.id] = r.elo + eloChanges.team2Change;
-
-  const readySide: 1 | 2 | null = isDraw ? null : side2Forfeits ? 1 : 2;
-  const winnerTeamId = readySide === 1 ? match.team1Id : readySide === 2 ? match.team2Id : null;
-  const toParticipant = (r: RobotWithWeapons) => ({
-    id: r.id,
-    name: r.name,
-    userId: r.userId,
-    currentHP: r.currentHP,
-    maxHP: r.maxHP,
-    elo: r.elo,
-  });
-  const forfeiterNames = [
-    side1Forfeits ? match.team1.teamName : null,
-    side2Forfeits ? team2.teamName : null,
-  ].filter((n): n is string => n !== null).join(' and ');
-
-  const resolution = await resolveForfeitEvent({
-    mode,
-    context: { mode, tier: match.teamBattleLeague },
-    claim: { source: 'scheduled_match', scheduledMatchId: match.id },
-    sides: [
-      {
-        side: 1,
-        forfeited: side1Forfeits,
-        stableUserId: match.team1.stableId,
-        standingEntity: { entityType: 'team', entityId: match.team1Id },
-        robots: team1Robots.map(toParticipant),
-      },
-      {
-        side: 2,
-        forfeited: side2Forfeits,
-        stableUserId: team2.stableId,
-        standingEntity: { entityType: 'team', entityId: team2.id },
-        robots: team2Robots.map(toParticipant),
-      },
-    ],
-    newEloByRobotId,
-    eloChangeBySide: { 1: eloChanges.team1Change, 2: eloChanges.team2Change },
-    lp: {
-      win: BYE_MODE_SPECS[mode].lpDelta,
-      loss: calculateTeamBattleLPDelta(false, false),
-      draw: calculateTeamBattleLPDelta(false, true),
-    },
-    standingMode: mode,
-    battle: {
-      battleType,
-      leagueType: match.teamBattleLeague,
-      leagueInstanceId: match.teamBattleLeagueId,
-      winnerId: winnerTeamId,
-      winningSide: readySide,
-      message: `${forfeiterNames || 'Team'} forfeited: a robot had no main weapon equipped`,
-    },
-    cycleNumber,
-  });
-
-  logger.info(
-    `[TeamBattle] Match ${match.id} forfeit | cycle=${cycleNumber} team_size=${teamSize} ` +
-    `team1=${match.team1Id} team2=${match.team2Id} ` +
-    `outcome=${isDraw ? 'double_forfeit' : readySide === 1 ? 'team2_forfeit' : 'team1_forfeit'} ` +
-    `credits=${resolution.creditsPaid}${resolution.alreadyResolved ? ' already_resolved' : ''}`,
-  );
-
-  return { matchId: match.id, status: 'forfeit', battleId: resolution.battleId ?? undefined };
-}
-
 // ─── Single Match Execution ──────────────────────────────────────────────────
 
 /**
@@ -415,8 +241,8 @@ async function executeSingleTeamBattle(
   }
 
   // Load robots with weapons for both teams
-  const team1Robots = await loadTeamRobotsWithWeapons(match.team1.members.map(m => m.robotId));
-  const team2Robots = await loadTeamRobotsWithWeapons(match.team2!.members.map(m => m.robotId));
+  const team1Robots: RobotWithWeapons[] = await loadCombatRobots(match.team1.members.map(m => m.robotId));
+  const team2Robots: RobotWithWeapons[] = await loadCombatRobots(match.team2!.members.map(m => m.robotId));
 
   // Battle-time readiness (rule 1): any member without a main weapon forfeits
   // the whole team (rule 2); an incomplete loadout fights as single (rule 6).
@@ -425,28 +251,10 @@ async function executeSingleTeamBattle(
     return resolveTeamLeagueForfeit(match, teamSize, battleType, cycleNumber, team1Robots, team2Robots, entry);
   }
   // In memory only, and before prepareRobotForCombat reads loadoutType.
-  for (const robotId of applyLoadoutFallbacks([...team1Robots, ...team2Robots], entry.decisions)) {
-    const decision = entry.decisions.find(d => d.robotId === robotId);
-    logger.warn('[Battle] Loadout fallback', {
-      matchId: match.id,
-      robotId,
-      storedLoadout: decision?.loadoutFallback?.storedLoadout,
-      battleLoadout: 'single',
-    });
-  }
+  applyAndLogLoadoutFallbacks([...team1Robots, ...team2Robots], entry.decisions, match.id);
 
   // Prepare all robots for combat (apply tuning bonuses)
-  const allRealRobotIds = [
-    ...team1Robots.map(r => r.id),
-    ...team2Robots.map(r => r.id),
-  ];
-  const tuningMap = await getTuningBonusesBatch(allRealRobotIds);
-  for (const robot of team1Robots) {
-    prepareRobotForCombat(robot, tuningMap.get(robot.id) ?? {});
-  }
-  for (const robot of team2Robots) {
-    prepareRobotForCombat(robot, tuningMap.get(robot.id) ?? {});
-  }
+  const tuningMap = await prepareRobotsWithTuning([...team1Robots, ...team2Robots]);
 
   // Simulate the battle
   const battleResult = simulateTeamBattle(team1Robots, team2Robots, teamSize);
@@ -472,7 +280,7 @@ async function executeSingleTeamBattle(
 
   // R7.11: Use Prisma interactive transaction for reward distribution
   // Compressed before the transaction so zstd time is not spent holding it.
-  const encodedLog = await encodeBattleLog(buildBattleLog(battleResult, teamSize));
+  const encodedLog = await encodeBattleLog(buildTeamBattleLog(battleResult, teamSize));
   const battle = await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
     // Create Battle record
     const battleRecord = await tx.battle.create({
@@ -682,97 +490,20 @@ async function executeSingleTeamBattle(
   await recordCombatBuilds(battle.id, battleType, [...team1Robots, ...team2Robots]);
 
   // Write pre-computed battle summary (Spec #39 — outside transaction, non-blocking)
-  const allRobots = [...team1Robots, ...team2Robots];
-  const robotMaxHP: Record<string, number> = {};
-  const robotNameToId: Record<string, number> = {};
-  const robotNameToTeam: Record<string, number> = {};
-  for (const r of allRobots) {
-    if (r.id > 0) {
-      robotMaxHP[r.name] = r.maxHP;
-      robotNameToId[r.name] = r.id;
-      robotNameToTeam[r.name] = battleResult.participants.find(p => p.robotId === r.id)?.team ?? 1;
-    }
-  }
-  const summaryData = computeBattleSummary({
-    events: (battleResult.detailedCombatEvents || []) as unknown as import('../../shared/utils/battleStatistics').BattleLogEvent[],
-    duration: Math.round(battleResult.durationSeconds),
-    battleType,
-    robotMaxHP,
-    robotNameToId,
-    robotNameToTeam,
-    tagTeamInfo: {
-      team1Robots: team1Robots.filter(r => r.id > 0).map(r => r.name),
-      team2Robots: team2Robots.filter(r => r.id > 0).map(r => r.name),
-    },
-    startingPositions: battleResult.startingPositions as Record<string, { x: number; y: number }> | undefined,
-    endingPositions: battleResult.endingPositions as Record<string, { x: number; y: number }> | undefined,
-    arenaRadius: battleResult.arenaRadius,
-  });
-  if (summaryData) {
-    await prisma.battleSummary.create({
-      data: { battleId: battle.id, ...summaryData },
-    }).catch((err: unknown) => {
-      logger.warn('[TeamBattle] Failed to write battle summary', { battleId: battle.id, error: err instanceof Error ? err.message : String(err) });
-    });
-  }
+  await writeTeamBattleSummary(battle.id, battleType, battleResult, team1Robots, team2Robots, '[TeamBattle]');
 
   // ── Post-transaction: robot combat stat updates via unified function ──
-  const battleTypeLabel = teamSize === 2 ? 'league_2v2' : 'league_3v3';
   const postTxFame = calculateTeamBattleFame(match.teamBattleLeague);
-  const team2TotalDamage = battleResult.participants
-    .filter(p => p.team === 2)
-    .reduce((sum, p) => sum + (p.damageDealt ?? 0), 0);
-  const team1TotalDamage = battleResult.participants
-    .filter(p => p.team === 1)
-    .reduce((sum, p) => sum + (p.damageDealt ?? 0), 0);
-  // Per-robot destruction credit. Previously this was one boolean per side
-  // ("did anyone opposite get wrecked"), handed to every robot on the team, so
-  // a single destruction credited two or three robots and a robot that wrecked
-  // two opponents still only counted one.
-  const killsByRobot = countKillsByRobot(
-    (battleResult.detailedCombatEvents || []) as unknown as Parameters<typeof countKillsByRobot>[0],
-  );
-
-  for (const robot of team1Robots) {
-    if (robot.id < 0) continue; // Skip bye robots
-    const participant = battleResult.participants.find(p => p.robotId === robot.id);
-    await updateRobotCombatStats({
-      robotId: robot.id,
-      finalHP: Math.round(participant?.finalHP ?? robot.currentHP),
-      combatMaxHP: robot.maxHP,
-      newELO: robot.elo + eloChanges.team1Change,
-      isWinner: team1Won,
-      isDraw,
-      damageDealt: Math.round(participant?.damageDealt ?? 0),
-      damageTakenByOpponent: Math.round(team2TotalDamage / teamSize),
-      opponentsDestroyed: killsByRobot[robot.name] ?? 0,
-      fameIncrement: team1Won ? postTxFame : 0,
-      battleType: battleTypeLabel,
-      stance: robot.stance,
-      loadoutType: robot.loadoutType,
-    });
-  }
-
-  {
-    for (const robot of team2Robots) {
-      const participant = battleResult.participants.find(p => p.robotId === robot.id);
-      await updateRobotCombatStats({
-        robotId: robot.id,
-        finalHP: Math.round(participant?.finalHP ?? robot.currentHP),
-        combatMaxHP: robot.maxHP,
-        newELO: robot.elo + eloChanges.team2Change,
-        isWinner: team2Won,
-        isDraw,
-        damageDealt: Math.round(participant?.damageDealt ?? 0),
-        damageTakenByOpponent: Math.round(team1TotalDamage / teamSize),
-        opponentsDestroyed: killsByRobot[robot.name] ?? 0,
-        fameIncrement: team2Won ? postTxFame : 0,
-        battleType: battleTypeLabel,
-        stance: robot.stance,
-        loadoutType: robot.loadoutType,
-      });
-    }
-  }
+  await updateTeamBattleCombatStats({
+    result: battleResult,
+    sides: [
+      { team: 1, robots: team1Robots, eloChange: eloChanges.team1Change, isWinner: team1Won, fameIncrement: team1Won ? postTxFame : 0 },
+      { team: 2, robots: team2Robots, eloChange: eloChanges.team2Change, isWinner: team2Won, fameIncrement: team2Won ? postTxFame : 0 },
+    ],
+    teamSize,
+    isDraw,
+    battleType: teamSize === 2 ? 'league_2v2' : 'league_3v3',
+  });
 
   // ── Post-transaction: streaming revenue + audit logs (non-blocking) ──
 
@@ -969,46 +700,4 @@ async function executeSingleTeamBattle(
   );
 
   return { matchId: match.id, status: 'completed', battleId: battle.id };
-}
-
-// ─── Helper Functions ────────────────────────────────────────────────────────
-
-/**
- * Load robots with their equipped weapons for combat simulation.
- */
-async function loadTeamRobotsWithWeapons(robotIds: number[]): Promise<RobotWithWeapons[]> {
-  const robots = await prisma.robot.findMany({
-    where: { id: { in: robotIds } },
-    include: {
-      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-    },
-  });
-
-  return robots as unknown as RobotWithWeapons[];
-}
-
-
-/**
- * Build the TeamBattleLog JSON structure for Battle.battleLog.
- */
-function buildBattleLog(result: TeamBattleResult, teamSize: 2 | 3): TeamBattleLog {
-  return {
-    teamBattle: true,
-    teamSize,
-    winningSide: result.winningSide,
-    isDraw: result.isDraw,
-    isByeMatch: result.isByeMatch,
-    durationSeconds: result.durationSeconds,
-    participants: result.participants,
-    events: result.battleLog,
-    detailedCombatEvents: result.detailedCombatEvents,
-    focusFireEvents: result.focusFireEvents,
-    focusFireMetrics: result.focusFireMetrics,
-    allySupportMetrics: result.allySupportMetrics,
-    formationDefenceMetrics: result.formationDefenceMetrics,
-    arenaRadius: result.arenaRadius,
-    startingPositions: result.startingPositions,
-    endingPositions: result.endingPositions,
-  };
 }

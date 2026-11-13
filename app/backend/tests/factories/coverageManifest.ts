@@ -636,7 +636,7 @@ const byeImplementationEntry: CoverageManifestEntry = {
 const byeCallerBoundaries: readonly ByeCallerBoundary[] = [
   {
     id: 'bye-caller-league-1v1',
-    currentSource: { file: 'app/backend/src/services/league/leagueBattleOrchestrator.ts', symbol: 'processByeBattle' },
+    currentSource: { file: 'app/backend/src/services/league/leagueByeAndForfeit.ts', symbol: 'processByeBattle' },
     modes: ['league_1v1'],
     finalService: 'Bye_Reward_Module',
     identityStrategy: 'scheduled_matches_v2.id + stable user + battle_income bye component',
@@ -646,7 +646,7 @@ const byeCallerBoundaries: readonly ByeCallerBoundary[] = [
   },
   {
     id: 'bye-caller-team-league',
-    currentSource: { file: 'app/backend/src/services/team-battle/teamBattleOrchestrator.ts', symbol: 'resolveTeamLeagueBye' },
+    currentSource: { file: 'app/backend/src/services/team-battle/teamBattleByeAndForfeit.ts', symbol: 'resolveTeamLeagueBye' },
     modes: ['league_2v2', 'league_3v3'],
     finalService: 'Bye_Reward_Module',
     identityStrategy: 'scheduled_matches_v2.id + team stable + battle_income bye component',
@@ -702,7 +702,7 @@ const forfeitImplementationEntry: CoverageManifestEntry = {
 const forfeitCallerBoundaries: readonly ForfeitCallerBoundary[] = [
   {
     id: 'forfeit-caller-league-1v1',
-    currentSource: { file: 'app/backend/src/services/league/leagueBattleOrchestrator.ts', symbol: 'resolveLeagueForfeit' },
+    currentSource: { file: 'app/backend/src/services/league/leagueByeAndForfeit.ts', symbol: 'resolveLeagueForfeit' },
     modes: ['league_1v1'],
     finalService: 'Forfeit_Resolution_Module',
     identityStrategy: 'scheduled_matches_v2.id + ready stable + forfeit battle_income component',
@@ -712,7 +712,7 @@ const forfeitCallerBoundaries: readonly ForfeitCallerBoundary[] = [
   },
   {
     id: 'forfeit-caller-team-league',
-    currentSource: { file: 'app/backend/src/services/team-battle/teamBattleOrchestrator.ts', symbol: 'resolveTeamLeagueForfeit' },
+    currentSource: { file: 'app/backend/src/services/team-battle/teamBattleByeAndForfeit.ts', symbol: 'resolveTeamLeagueForfeit' },
     modes: ['league_2v2', 'league_3v3'],
     finalService: 'Forfeit_Resolution_Module',
     identityStrategy: 'scheduled_matches_v2.id + ready team stable + forfeit battle_income component',
@@ -732,7 +732,7 @@ const forfeitCallerBoundaries: readonly ForfeitCallerBoundary[] = [
   },
   {
     id: 'forfeit-caller-solo-tournament',
-    currentSource: { file: 'app/backend/src/services/tournament/tournamentBattleOrchestrator.ts', symbol: 'resolveSoloTournamentForfeit' },
+    currentSource: { file: 'app/backend/src/services/tournament/tournamentForfeit.ts', symbol: 'resolveSoloTournamentForfeit' },
     modes: ['tournament_1v1'],
     finalService: 'Forfeit_Resolution_Module',
     identityStrategy: 'scheduled_tournament_matches.id + ready stable + forfeit battle_income component',
@@ -742,7 +742,7 @@ const forfeitCallerBoundaries: readonly ForfeitCallerBoundary[] = [
   },
   {
     id: 'forfeit-caller-team-tournament',
-    currentSource: { file: 'app/backend/src/services/tournament/teamTournamentBattleOrchestrator.ts', symbol: 'resolveTeamTournamentForfeit' },
+    currentSource: { file: 'app/backend/src/services/tournament/teamTournamentEntry.ts', symbol: 'resolveTeamTournamentForfeit' },
     modes: ['tournament_2v2', 'tournament_3v3'],
     finalService: 'Forfeit_Resolution_Module',
     identityStrategy: 'scheduled_tournament_matches.id + ready team stable + forfeit battle_income component',
@@ -755,7 +755,7 @@ const forfeitCallerBoundaries: readonly ForfeitCallerBoundary[] = [
 const prestigeSources: readonly PrestigeSourceBoundary[] = [
   {
     id: 'prestige-source-league-1v1',
-    currentSource: { file: 'app/backend/src/services/league/leagueBattleOrchestrator.ts', symbol: 'calculatePrestigeForBattle + updateRobotStats' },
+    currentSource: { file: 'app/backend/src/services/league/leagueBattleRecord.ts', symbol: 'calculatePrestigeForBattle + updateRobotStats' },
     finalService: 'Prestige_Service',
     source: 'battle',
     identityStrategy: 'fought battle id + recipient stable + battle prestige component',
@@ -795,7 +795,7 @@ const prestigeSources: readonly PrestigeSourceBoundary[] = [
   },
   {
     id: 'prestige-source-team-tournaments',
-    currentSource: { file: 'app/backend/src/services/tournament/teamTournamentBattleOrchestrator.ts', symbol: 'calculateTeamTournamentPrestige -> executeTeamTournamentRound' },
+    currentSource: { file: 'app/backend/src/services/tournament/teamTournamentRewards.ts', symbol: 'calculateTeamTournamentPrestige -> executeTeamTournamentRound' },
     finalService: 'Prestige_Service',
     source: 'battle',
     identityStrategy: 'tournament match id + round + winner stable + team size + battle prestige component',

@@ -18,9 +18,9 @@ import logger from '../../config/logger';
 import { securityMonitor } from '../../services/security/securityMonitor';
 import guideService from '../../services/common/guide-service';
 import searchAnalyticsStore from '../../services/search/searchAnalyticsStore';
-import type { SearchResponse } from '../../services/search/searchTypes';
 import { createTestRobot } from '../../../tests/testHelpers';
 import * as seasonService from '../../services/season/seasonService';
+import type { SearchResponse } from '../../shared/types';
 
 /**
  * Integration coverage for the authenticated universal-search boundary.

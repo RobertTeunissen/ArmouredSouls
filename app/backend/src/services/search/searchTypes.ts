@@ -1,15 +1,9 @@
 /**
- * Shared types and bounds for the authenticated universal-search contract.
- *
- * Search results intentionally contain only the identity and display fields
- * needed by the client to construct an approved destination route. Full source
- * records, private account fields, and arbitrary routes are not part of this
- * contract.
+ * Bounds and source types of the authenticated universal search. The result
+ * contract itself is in `app/shared/types/search.ts`.
  */
 
-export const SEARCH_CATEGORY_ORDER = ['robots', 'stables', 'guide'] as const;
-
-export type SearchCategory = (typeof SEARCH_CATEGORY_ORDER)[number];
+import type { SearchResponse, SearchResult } from '../../shared/types';
 
 /** Match classes are ordered from most direct to least direct. */
 export const MATCH_RANK_ORDER = ['exact', 'prefix', 'substring'] as const;
@@ -53,40 +47,6 @@ export interface GuideSearchSource {
   sectionTitle: string;
   description: string;
   bodyText: string;
-}
-
-/** Safe robot reference returned by the player search endpoint. */
-export interface RobotSearchResult {
-  category: 'robots';
-  id: number;
-  label: string;
-  subtitle?: string;
-}
-
-/** Safe stable reference returned by the player search endpoint. */
-export interface StableSearchResult {
-  category: 'stables';
-  userId: number;
-  label: string;
-}
-
-/** Safe guide reference returned by the player search endpoint. */
-export interface GuideSearchResult {
-  category: 'guide';
-  title: string;
-  sectionTitle: string;
-  sectionSlug: string;
-  articleSlug: string;
-}
-
-/** Discriminated player-safe result union. */
-export type SearchResult = RobotSearchResult | StableSearchResult | GuideSearchResult;
-
-/** Fixed three-group response returned by the authenticated search endpoint. */
-export interface SearchResponse {
-  robots: RobotSearchResult[];
-  stables: StableSearchResult[];
-  guide: GuideSearchResult[];
 }
 
 /**

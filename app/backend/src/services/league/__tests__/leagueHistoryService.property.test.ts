@@ -61,7 +61,6 @@ jest.mock('../../../config/logger', () => ({
 import {
   recordTierChange,
   getEntityHistory,
-  checkCtrlZ,
   LEAGUE_HISTORY_MODES,
 } from '../leagueHistoryService';
 import type {
@@ -378,81 +377,6 @@ describe('leagueHistoryService Property Tests', () => {
     });
   });
 
-  /**
-   * Property 10: Ctrl+Z detection correctness
-   * Generates history sequences with/without the demotion→re-promotion pattern
-   * and verifies checkCtrlZ returns correct results.
-   *
-   * **Validates: Requirements 11.1, 11.2, 11.3**
-   */
-  describe('Property 10: Ctrl+Z detection correctness', () => {
-    it('should detect Ctrl+Z when demotion followed by re-promotion within window', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          fc.integer({ min: 1, max: 10000 }), // robotId
-          fc.constantFrom(...LEAGUE_TIERS), // tierName
-          fc.integer({ min: 1, max: 100 }), // demotionCycle
-          fc.integer({ min: 1, max: 50 }), // gap between demotion and promotion
-          fc.integer({ min: 1, max: 100 }), // maxCycleWindow
-          async (robotId, tierName, demotionCycle, gap, maxCycleWindow) => {
-            const promotionCycle = demotionCycle + gap;
-
-            // First call: find demotion
-            mockPrisma.leagueHistory.findFirst
-              .mockResolvedValueOnce({
-                entityType: 'robot',
-                entityId: robotId,
-                changeType: 'demotion',
-                sourceTier: tierName,
-                cycleNumber: demotionCycle,
-              })
-              // Second call: find promotion (or not) depending on window
-              .mockResolvedValueOnce(
-                gap <= maxCycleWindow
-                  ? {
-                      entityType: 'robot',
-                      entityId: robotId,
-                      changeType: 'promotion',
-                      destinationTier: tierName,
-                      cycleNumber: promotionCycle,
-                    }
-                  : null
-              );
-
-            const result = await checkCtrlZ(robotId, tierName, maxCycleWindow);
-
-            if (gap <= maxCycleWindow) {
-              expect(result.found).toBe(true);
-              expect(result.demotionCycle).toBe(demotionCycle);
-              expect(result.promotionCycle).toBe(promotionCycle);
-            } else {
-              expect(result.found).toBe(false);
-            }
-          }
-        ),
-        { numRuns: 100 }
-      );
-    });
-
-    it('should return found=false when no demotion exists', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          fc.integer({ min: 1, max: 10000 }), // robotId
-          fc.constantFrom(...LEAGUE_TIERS), // tierName
-          fc.integer({ min: 1, max: 100 }), // maxCycleWindow
-          async (robotId, tierName, maxCycleWindow) => {
-            mockPrisma.leagueHistory.findFirst.mockResolvedValue(null);
-
-            const result = await checkCtrlZ(robotId, tierName, maxCycleWindow);
-            expect(result.found).toBe(false);
-            expect(result.demotionCycle).toBeUndefined();
-            expect(result.promotionCycle).toBeUndefined();
-          }
-        ),
-        { numRuns: 100 }
-      );
-    });
-  });
 });
 
 

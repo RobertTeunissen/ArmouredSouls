@@ -12,7 +12,8 @@ const mockPrisma = {
 };
 jest.mock('../../../lib/prisma', () => ({ __esModule: true, default: mockPrisma }));
 
-import { getMetaBuilds, summarizeEventEntry, summarizeRefinements, summarizeTuning } from '../meta';
+import { getMetaBuilds } from '../meta';
+import { summarizeEventEntry, summarizeRefinements, summarizeTuning } from '../meta/metaBuildsService';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../../subscription/eventRegistry';
 
 describe('summarizeTuning', () => {

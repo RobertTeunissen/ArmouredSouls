@@ -1,11 +1,5 @@
-import {
-  GuideSearchResult,
-  GuideSearchSource,
-  RobotSearchResult,
-  RobotSearchSource,
-  StableSearchResult,
-  StableSearchSource,
-} from './searchTypes';
+import { GuideSearchSource, RobotSearchSource, StableSearchSource } from './searchTypes';
+import type { GuideSearchResult, RobotSearchResult, StableSearchResult } from '../../shared/types';
 
 /**
  * Trims an optional display value and omits it when it has no visible content.

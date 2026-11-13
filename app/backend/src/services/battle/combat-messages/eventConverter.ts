@@ -33,7 +33,7 @@ import {
  * Prefers the robotHP/robotShield maps (correct, keyed by name) over
  * the legacy robot1HP/robot2HP fields (which swap based on attacker/defender).
  */
-export function getHPFromEvent(
+function getHPFromEvent(
   event: CombatEvent,
   robotName: string,
   context: { robot1Name: string; robot2Name: string }

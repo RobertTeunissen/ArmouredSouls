@@ -6,7 +6,8 @@ import {
   SearchService,
   StableSearchRecord,
 } from '../searchService';
-import { GuideSearchSource, SearchResponse } from '../searchTypes';
+import { GuideSearchSource } from '../searchTypes';
+import type { SearchResponse } from '../../../shared/types';
 
 function guide(overrides: Partial<GuideSearchSource> = {}): GuideSearchSource {
   return {

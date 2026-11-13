@@ -3,11 +3,9 @@ import {
   normalizeVector,
   rotateVector,
   lerp,
-  clampMagnitude,
   angleBetween,
   normalizeAngle,
   sign,
-  dotProduct,
   Position,
   Vector2D,
 } from '../src/services/arena/vector2d';
@@ -127,42 +125,6 @@ describe('vector2d', () => {
     });
   });
 
-  describe('clampMagnitude', () => {
-    it('should not change vectors within the limit', () => {
-      const v: Vector2D = { x: 3, y: 4 }; // magnitude 5
-      const result = clampMagnitude(v, 10);
-      expect(result.x).toBe(3);
-      expect(result.y).toBe(4);
-    });
-
-    it('should clamp vectors exceeding the limit', () => {
-      const v: Vector2D = { x: 6, y: 8 }; // magnitude 10
-      const result = clampMagnitude(v, 5);
-      const mag = Math.sqrt(result.x * result.x + result.y * result.y);
-      expect(mag).toBeCloseTo(5, 10);
-    });
-
-    it('should preserve direction when clamping', () => {
-      const v: Vector2D = { x: 6, y: 8 }; // magnitude 10
-      const result = clampMagnitude(v, 5);
-      expect(result.x).toBeCloseTo(3, 10);
-      expect(result.y).toBeCloseTo(4, 10);
-    });
-
-    it('should handle zero vector', () => {
-      const result = clampMagnitude({ x: 0, y: 0 }, 5);
-      expect(result.x).toBe(0);
-      expect(result.y).toBe(0);
-    });
-
-    it('should handle vector exactly at the limit', () => {
-      const v: Vector2D = { x: 3, y: 4 }; // magnitude 5
-      const result = clampMagnitude(v, 5);
-      expect(result.x).toBe(3);
-      expect(result.y).toBe(4);
-    });
-  });
-
   describe('angleBetween', () => {
     it('should return 0 for identical positions', () => {
       const p: Position = { x: 5, y: 5 };
@@ -235,25 +197,4 @@ describe('vector2d', () => {
     });
   });
 
-  describe('dotProduct', () => {
-    it('should return 0 for perpendicular vectors', () => {
-      expect(dotProduct({ x: 1, y: 0 }, { x: 0, y: 1 })).toBe(0);
-    });
-
-    it('should return positive for same-direction vectors', () => {
-      expect(dotProduct({ x: 1, y: 0 }, { x: 1, y: 0 })).toBe(1);
-    });
-
-    it('should return negative for opposite-direction vectors', () => {
-      expect(dotProduct({ x: 1, y: 0 }, { x: -1, y: 0 })).toBe(-1);
-    });
-
-    it('should calculate correctly for arbitrary vectors', () => {
-      expect(dotProduct({ x: 2, y: 3 }, { x: 4, y: 5 })).toBe(23);
-    });
-
-    it('should return 0 when either vector is zero', () => {
-      expect(dotProduct({ x: 0, y: 0 }, { x: 5, y: 3 })).toBe(0);
-    });
-  });
 });

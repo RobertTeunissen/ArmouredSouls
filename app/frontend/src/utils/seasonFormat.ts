@@ -7,7 +7,7 @@
  */
 
 /** Friendly label + icon per accolade category; unknown categories fall back to a spaced form. */
-export const CATEGORY_META: Record<string, { icon: string; label: string }> = {
+const CATEGORY_META: Record<string, { icon: string; label: string }> = {
   mostDamageInBattle: { icon: '💥', label: 'Most Damage in a Battle' },
   narrowestVictory: { icon: '🩸', label: 'Narrowest Victory' },
   biggestUpset: { icon: '🎲', label: 'Biggest Upset' },

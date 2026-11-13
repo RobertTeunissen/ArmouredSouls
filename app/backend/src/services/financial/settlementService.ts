@@ -597,7 +597,7 @@ export async function getCurrentSettlementCycleNumber(): Promise<number> {
   return getActiveFinancialCycleNumber();
 }
 
-export class SettlementService {
+class SettlementService {
   async settleCycle(options: SettlementOptions): Promise<SettlementResult> {
     return settleCycle(options);
   }

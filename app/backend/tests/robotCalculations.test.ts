@@ -1,19 +1,8 @@
-import { 
-  calculateEffectiveStats, 
-  calculateMaxHP, 
-  calculateMaxShield,
-  getLoadoutBonus,
-  getLoadoutModifiedAttributes,
-  prepareRobotForCombat,
-  getCombatBuild,
-  LOADOUT_BONUSES,
-  BASE_HP,
-  HP_MULTIPLIER,
-  SHIELD_MULTIPLIER,
-} from '../src/utils/robotCalculations';
+import { calculateEffectiveStats, calculateMaxHP, calculateMaxShield, prepareRobotForCombat, getCombatBuild, LOADOUT_BONUSES, BASE_HP, HP_MULTIPLIER, SHIELD_MULTIPLIER } from '../src/utils/robotCalculations';
+import { getLoadoutBonus, getLoadoutModifiedAttributes } from '../src/shared/utils/robotStats';
 import { ROBOT_ATTRIBUTES } from '../src/shared/utils/robotAttributes';
 import { layerBuild, layeredValues, type RawBuild } from '../src/services/admin/analysis/attributeLayers';
-import { Robot, WeaponInventory, Weapon, Prisma } from '../generated/prisma';
+import { Robot, Weapon, Prisma } from '../generated/prisma';
 
 // Mock robot data
 const createMockRobot = (overrides?: Partial<Robot>): Robot => ({

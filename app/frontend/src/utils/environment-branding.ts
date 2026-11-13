@@ -20,7 +20,7 @@ interface EnvironmentBranding {
   iconSuffix: string;
 }
 
-export const ACCEPTANCE_HOSTNAME = 'acc.armouredsouls.com';
+const ACCEPTANCE_HOSTNAME = 'acc.armouredsouls.com';
 
 const DEVELOPMENT_HOSTNAMES: ReadonlySet<string> = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
 

@@ -5,7 +5,6 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import type { UnlockedAchievement } from '../../utils/achievementUtils';
 
 const mocks = vi.hoisted(() => ({
   refreshUser: vi.fn(),
@@ -24,6 +23,7 @@ vi.mock('../../utils/api', () => ({
 }));
 
 import { useAchievementToasts } from '../useAchievementToasts';
+import type { UnlockedAchievement } from '@shared/types';
 
 const unlock = (overrides: Partial<UnlockedAchievement> = {}): UnlockedAchievement => ({
   id: 'E32', name: 'Ready for My Close-Up', description: 'Give a robot a custom image of your own', tier: 'easy',

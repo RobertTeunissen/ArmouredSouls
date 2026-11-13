@@ -58,7 +58,7 @@ function Figure({ label, value }: { label: string; value: string }): JSX.Element
   );
 }
 
-export function SeasonSummaryModal(): JSX.Element | null {
+function SeasonSummaryModal(): JSX.Element | null {
   const [summary, setSummary] = useState<SeasonSummary | null>(null);
   const [open, setOpen] = useState(false);
   const season = useSeasonStore(selectSeason);

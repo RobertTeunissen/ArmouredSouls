@@ -102,7 +102,7 @@ export interface MetricProgressionData {
   movingAverage?: number[]; // Optional moving average values
 }
 
-export class RobotPerformanceService {
+class RobotPerformanceService {
 
   /**
    * Get metric progression data for a robot over a cycle range

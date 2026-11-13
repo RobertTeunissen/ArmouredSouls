@@ -16,7 +16,8 @@
  */
 
 import prisma from '../src/lib/prisma';
-import { EventLogger, EventType } from '../src/services/common/eventLogger';
+import { EventLogger } from '../src/services/common/eventLogger';
+import { EventType } from '../src/services/common/auditEventTypes';
 import { withAuditSequence } from '../src/services/common/auditSequence';
 
 const eventLogger = new EventLogger();

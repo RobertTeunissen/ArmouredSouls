@@ -1,10 +1,6 @@
 import { useMemo } from 'react';
-import type {
-  PlaybackCombatEvent,
-  Position,
-  KothZoneState,
-  KothPlaybackData,
-} from './types';
+import type { PlaybackCombatEvent, PlaybackZoneState, KothPlaybackData } from './types';
+import type { ArenaPoint } from '@shared/types';
 
 export interface KothScoreEntry {
   robotName: string;
@@ -13,7 +9,7 @@ export interface KothScoreEntry {
 }
 
 export interface KothPlaybackState {
-  zone: KothZoneState;
+  zone: PlaybackZoneState;
   scores: KothScoreEntry[];
 }
 
@@ -36,7 +32,7 @@ export function useKothPlaybackState(
     // Robot ID → name mapping from placements data
     const idToName: Record<string, string> = kothData.robotIdToName ?? {};
 
-    let zoneCenter: Position = { x: 0, y: 0 };
+    let zoneCenter: ArenaPoint = { x: 0, y: 0 };
     const zoneRadius = kothData.zoneRadius;
     let zoneState: 'uncontested' | 'contested' | 'empty';
     let controllingRobotName: string | undefined;
@@ -98,7 +94,7 @@ export function useKothPlaybackState(
         state: zoneState,
         controllingRobotName,
         occupantNames: activeOccupants,
-      } as KothZoneState,
+      } as PlaybackZoneState,
       scores: Array.from(scores.entries()).map(([robotName, zoneScore]) => ({
         robotName,
         zoneScore,

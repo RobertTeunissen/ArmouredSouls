@@ -2,12 +2,12 @@
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
 
-export interface FileValidationResult {
+export interface ImageFileCheck {
   valid: boolean;
   error?: string;
 }
 
-export function validateUploadFile(file: File): FileValidationResult {
+export function validateUploadFile(file: File): ImageFileCheck {
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
     return { valid: false, error: 'Only JPEG, PNG, and WebP images are allowed.' };
   }

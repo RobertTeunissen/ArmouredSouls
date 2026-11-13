@@ -71,4 +71,3 @@ export function AttributeInfo({ ariaLabel, description, className = '', children
   );
 }
 
-export default AttributeInfo;

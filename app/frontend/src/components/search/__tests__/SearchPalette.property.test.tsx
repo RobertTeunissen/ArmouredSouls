@@ -12,7 +12,7 @@ import useSearchPalette, {
   SEARCH_DEBOUNCE_MS,
 } from '../useSearchPalette';
 import { search } from '../../../utils/searchApi';
-import type { SearchResponse } from '../../../utils/searchTypes';
+import type { SearchResponse } from '@shared/types';
 
 vi.mock('../../../utils/searchApi', () => ({
   search: vi.fn(),

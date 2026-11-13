@@ -42,7 +42,7 @@ import {
 } from '../../../../shared/utils/weaponRefinement';
 import { ROBOT_ATTRIBUTES } from '../../../../shared/utils/robotAttributes';
 import { calculateWeaponResaleRate } from '../../../../shared/utils/discounts';
-import type { UnlockedAchievement, WeaponInventoryItem } from '../weapon-shop/types';
+import type { WeaponInventoryItem } from '../weapon-shop/types';
 import { TIER_VISUALS } from './tierVisuals';
 import { SlotBar } from './SlotBar';
 import { RankPrefix } from './RankPrefix';
@@ -53,6 +53,7 @@ import {
   PROPORTIONAL_TIER_CAP,
   formatRefinementStat,
 } from './refinementCopy';
+import type { UnlockedAchievement } from '@shared/types';
 
 // ── Constants ────────────────────────────────────────────────────────
 

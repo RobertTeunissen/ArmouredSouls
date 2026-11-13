@@ -47,7 +47,7 @@ export const REFINEMENT_TIER_BITS = { hone: 1, augment: 2, sharpen: 4, forge: 8 
 export const REFINEMENT_TIERS = Object.keys(REFINEMENT_TIER_BITS) as RefinementTier[];
 
 /** Additive layers inside `LayeredBuild.data`, each `ATTRIBUTE_COUNT` long, in `ROBOT_ATTRIBUTES` order. */
-export const LAYER_OFFSET = {
+const LAYER_OFFSET = {
   base: 0,
   tuning: ATTRIBUTE_COUNT,
   /** Catalog weapon bonuses (both weapons), derived. */
@@ -89,7 +89,7 @@ function loadoutTable(loadoutType: string): Float64Array {
 }
 
 /** Combat checks `stance === 'offensive'` / `'defensive'`; every other value is balanced. */
-export function combatStance(stance: string): CombatStance {
+function combatStance(stance: string): CombatStance {
   return stance === 'offensive' || stance === 'defensive' ? stance : 'balanced';
 }
 

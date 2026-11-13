@@ -9,8 +9,8 @@ import { countRecordedBattles, getRecordingBounds, loadComparisons, sampleRate }
 import type { ComparisonSet } from './comparisons';
 import type { AnalysisRange, AttributeAnalysisCollecting } from '../../../shared/types';
 
-export const DAY_MS = 24 * 3600 * 1000;
-export const CACHE_TTL_MS = 10 * 60 * 1000;
+const DAY_MS = 24 * 3600 * 1000;
+const CACHE_TTL_MS = 10 * 60 * 1000;
 /** Loaded battles are ~70 MB at the comparison cap, so only the last window is kept. */
 const MAX_DATASETS = 1;
 

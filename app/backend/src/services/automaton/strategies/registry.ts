@@ -91,7 +91,7 @@ export interface StrategyRegistryOptions {
 }
 
 /** The Goal_Library instance of one Build_Order entry. */
-export function createGoal(spec: GoalSpec, options: StrategyRegistryOptions): Goal {
+function createGoal(spec: GoalSpec, options: StrategyRegistryOptions): Goal {
   switch (spec.type) {
     case 'robots':
       return createRobotCountGoal(spec.id);

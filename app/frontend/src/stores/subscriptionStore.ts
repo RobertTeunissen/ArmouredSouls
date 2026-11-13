@@ -84,5 +84,3 @@ export const useSubscriptionStore = create<SubscriptionStoreState>((set, get) =>
 // ---------------------------------------------------------------------------
 // Selectors — always subscribe to a slice, never the whole store
 // ---------------------------------------------------------------------------
-
-export const selectOverview = (s: SubscriptionStoreState): StableOverview | null => s.overview;

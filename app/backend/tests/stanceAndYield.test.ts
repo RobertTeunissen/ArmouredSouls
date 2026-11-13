@@ -1,13 +1,7 @@
-import {
-  calculateEffectiveStatsWithStance,
-  getStanceModifier,
-  isValidStance,
-  isValidYieldThreshold,
-  calculateAttributeSum,
-  STANCE_MODIFIERS,
-} from '../src/utils/robotCalculations';
+import { calculateEffectiveStatsWithStance, calculateAttributeSum } from '../src/utils/robotCalculations';
+import { getStanceModifier, isValidStance, isValidYieldThreshold } from '../src/shared/utils/robotStats';
 import { calculateRepairQuote } from '../src/shared/utils/repairCost';
-import { Robot, WeaponInventory, Weapon, Prisma } from '../generated/prisma';
+import { Robot, Prisma } from '../generated/prisma';
 
 // Mock robot data
 const createMockRobot = (overrides?: Partial<Robot>): Robot => ({

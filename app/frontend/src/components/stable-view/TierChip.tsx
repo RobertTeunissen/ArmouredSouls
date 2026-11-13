@@ -22,4 +22,3 @@ export function TierChip({ summary }: TierChipProps) {
   );
 }
 
-export default TierChip;

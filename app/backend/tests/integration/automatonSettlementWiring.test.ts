@@ -12,7 +12,7 @@
  * database's standings are not touched.
  */
 import prisma from '../../src/lib/prisma';
-import { executeSettlement } from '../../src/services/cycle/cycleScheduler';
+import { executeSettlement } from '../../src/services/cycle/cycleSettlementJob';
 import * as turnService from '../../src/services/automaton/automatonTurnService';
 import { activateProfile, addBlueprint, createDraft } from '../../src/services/automaton/automatonProfileService';
 import { setAlertSender } from '../../src/services/automaton/automatonObservability';

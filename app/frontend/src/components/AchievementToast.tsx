@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AchievementBadge from './AchievementBadge';
 import AchievementReward from './AchievementReward';
-import type { UnlockedAchievement } from '../utils/achievementUtils';
+import type { UnlockedAchievement } from '@shared/types';
 
 interface AchievementToastProps {
   achievement: UnlockedAchievement;

@@ -7,7 +7,8 @@
 
 import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
-import { EventLogger, EventType } from '../src/services/common/eventLogger';
+import { EventLogger } from '../src/services/common/eventLogger';
+import { EventType } from '../src/services/common/auditEventTypes';
 import { CycleSnapshotService } from '../src/services/cycle/cycleSnapshotService';
 import { battleLogFixture } from './helpers/battleLogFixture';
 

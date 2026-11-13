@@ -17,4 +17,3 @@ export function PrestigeEarningPower({ forecast }: { forecast: PrestigeMilestone
   );
 }
 
-export default PrestigeEarningPower;

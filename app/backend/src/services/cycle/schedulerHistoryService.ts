@@ -32,7 +32,7 @@ import type {
 
 const DAY_MS = 24 * 60 * 60_000;
 /** The overview's missed-run banner looks back this far. */
-export const OVERVIEW_MISSED_WINDOW_DAYS = 7;
+const OVERVIEW_MISSED_WINDOW_DAYS = 7;
 /** History never reaches further back than this. */
 export const MAX_HISTORY_DAYS = 30;
 

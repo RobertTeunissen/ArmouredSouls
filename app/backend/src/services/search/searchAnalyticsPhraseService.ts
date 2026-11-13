@@ -27,7 +27,7 @@ export const SEARCH_PHRASES_DEFAULT_LIMIT = 20;
 export const SEARCH_PHRASES_MAX_LIMIT = 100;
 export const SEARCH_PHRASES_MAX_PAGE = 10_000;
 /** Most rows a CSV export contains. */
-export const SEARCH_PHRASES_EXPORT_MAX_ROWS = 5_000;
+const SEARCH_PHRASES_EXPORT_MAX_ROWS = 5_000;
 
 interface PhraseStatsRow {
   phrase: string;

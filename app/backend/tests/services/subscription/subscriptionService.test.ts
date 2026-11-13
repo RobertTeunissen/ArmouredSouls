@@ -101,12 +101,11 @@ jest.mock('../../../src/services/standings/standingPlacement', () => ({
 
 import {
   isRobotSubscribedTo,
-  hasSubscription,
   subscribeRobot,
   unsubscribeRobot,
   setSubscriptionsForRobot,
 } from '../../../src/services/subscription/subscriptionService';
-import { SubscriptionError, SubscriptionErrorCode } from '../../../src/errors/subscriptionErrors';
+import { SubscriptionErrorCode } from '../../../src/errors/subscriptionErrors';
 import { getCurrentCycleNumber } from '../../../src/services/battle/baseOrchestrator';
 
 const mockGetCurrentCycleNumber = getCurrentCycleNumber as jest.MockedFunction<typeof getCurrentCycleNumber>;
@@ -149,17 +148,6 @@ describe('subscriptionService', () => {
       mockPrisma.subscription.count.mockResolvedValue(0);
 
       await expect(isRobotSubscribedTo(1, 'tournament_1v1')).resolves.toBe(false);
-    });
-  });
-
-  describe('hasSubscription', () => {
-    it('should ask exactly the same question as isRobotSubscribedTo', async () => {
-      mockPrisma.subscription.count.mockResolvedValue(1);
-
-      await expect(hasSubscription(7, 'koth')).resolves.toBe(true);
-      expect(mockPrisma.subscription.count).toHaveBeenCalledWith({
-        where: { robotId: 7, eventType: 'koth', status: 'active' },
-      });
     });
   });
 

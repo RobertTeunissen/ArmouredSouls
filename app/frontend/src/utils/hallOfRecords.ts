@@ -23,16 +23,16 @@ import {
   type RobotRecordBase,
   type TournamentChampionRecord,
   type DamageRecordMode,
-  type WinStreakMode,
 } from '../components/hall-of-records/types';
 import { PLACEMENT_MODES_RECORD_NOTE } from '../components/PlacementModesRecordNote';
 import { formatCurrency } from './formatters';
+import type { WinStreakMode } from '@shared/types';
 
 /** Mirrors the backend `KOTH_AVG_ZONE_SCORE_MIN_MATCHES` (recordsQueryService). */
-export const KOTH_AVG_ZONE_SCORE_MIN_MATCHES = 10;
+const KOTH_AVG_ZONE_SCORE_MIN_MATCHES = 10;
 
 /** Mirrors the backend `WIN_RATE_MIN_BATTLES` (recordsQueryService). */
-export const WIN_RATE_MIN_BATTLES = 50;
+const WIN_RATE_MIN_BATTLES = 50;
 
 export const RECORD_GROUP_LABELS: Record<RecordGroupKey, string> = {
   robots: 'Robots',
@@ -94,7 +94,7 @@ export function formatRecordDuration(seconds: number): string {
 }
 
 /** "Mar 15, 2026". */
-export function formatRecordDate(iso: string): string {
+function formatRecordDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

@@ -56,7 +56,6 @@ const mockLogEvent = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('../src/services/common/eventLogger', () => ({
   eventLogger: { logEvent: (...args: unknown[]) => mockLogEvent(...args) },
-  EventType: { BATTLE_COMPLETE: 'battle_complete' },
 }));
 
 jest.mock('../src/services/battle/baseOrchestrator', () => ({

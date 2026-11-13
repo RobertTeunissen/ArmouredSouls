@@ -11,10 +11,8 @@
  */
 
 import * as fc from 'fast-check';
-import {
-  DAMAGE_RECORD_MODES,
-  WIN_STREAK_MODES,
-} from '../../src/services/records/recordsQueryService';
+import { DAMAGE_RECORD_MODES } from '../../src/services/records/recordsQueryService';
+import { WIN_STREAK_MODES } from '../../src/services/records/modeRecordsQueries';
 
 describe('Most Damage is mode-scoped (R4.5)', () => {
   it('covers exactly the six battle modes the requirement names', () => {

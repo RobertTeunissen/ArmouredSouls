@@ -31,4 +31,3 @@ export function PrestigeMilestoneForecast({ forecast }: { forecast: Forecast }):
   );
 }
 
-export default PrestigeMilestoneForecast;

@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import {
-  GuideSection,
-  GuideArticle,
-  fetchGuideSections,
-  fetchGuideArticle,
-} from '../utils/guideApi';
+import { fetchGuideSections, fetchGuideArticle } from '../utils/guideApi';
 import GuideNavigation from '../components/guide/GuideNavigation';
 import GuideSearch from '../components/guide/GuideSearch';
 import GuideLandingPage from '../components/guide/GuideLandingPage';
 import GuideArticleView from '../components/guide/GuideArticleView';
 import GuideBreadcrumb from '../components/guide/GuideBreadcrumb';
 import { ApiError } from '../utils/ApiError';
+import type { GuideArticle, GuideSection } from '@shared/types';
 
 type ErrorState = {
   type: 'not-found' | 'server-error' | 'network-error';

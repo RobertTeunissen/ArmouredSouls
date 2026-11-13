@@ -1,6 +1,6 @@
 import { api } from './api';
 import type { RobotAttribute } from '../../../shared/utils/robotAttributes';
-import type { SchedulingEligibilityReport } from '@shared/types';
+import type { ModerationAvailability, SchedulingEligibilityReport, TuningAllocationState, TuningAllocationSummary } from '@shared/types';
 
 interface WeaponSlot {
   id: number;
@@ -21,13 +21,6 @@ interface WeaponSlot {
     specialProperty?: string | null;
     description?: string | null;
   };
-}
-
-export type ModerationAvailabilityStatus = 'starting' | 'ready' | 'unavailable';
-
-export interface ModerationAvailability {
-  status: ModerationAvailabilityStatus;
-  changedAt: string;
 }
 
 export interface Robot {
@@ -140,24 +133,6 @@ export interface LeagueHistoryEntry {
   leaguePoints: number;
   /** Standings mode; null on records older than Spec #44 (all league 1v1). */
   mode?: string | null;
-}
-
-export interface TuningAllocationState {
-  robotId: number;
-  facilityLevel: number;
-  poolSize: number;
-  allocated: number;
-  remaining: number;
-  perAttributeMaxes: Record<string, number>;
-  allocations: Record<string, number>;
-}
-
-/** Pool budget without per-attribute detail. */
-export interface TuningAllocationSummary {
-  robotId: number;
-  poolSize: number;
-  allocated: number;
-  remaining: number;
 }
 
 // ─── Fetch ───────────────────────────────────────────────────────────────────

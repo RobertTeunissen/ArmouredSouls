@@ -19,9 +19,8 @@
 import { Tournament } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import { TournamentError, TournamentErrorCode } from '../../errors/tournamentErrors';
 import { ParticipantType } from './tournamentParticipantResolver';
-import { TournamentParticipant, TournamentCreationResult, createTournament } from './tournamentService';
+import { TournamentParticipant, createTournament } from './tournamentService';
 import { checkSchedulingReadiness } from '../analytics/matchmakingService';
 
 // ─── Public API ──────────────────────────────────────────────────────────────
@@ -89,37 +88,6 @@ export async function getEligibleTeamsForTournament(teamSize: 2 | 3): Promise<To
   }
 
   return eligible;
-}
-
-/**
- * Create a team tournament for the given team size.
- *
- * 1. Gets eligible teams via `getEligibleTeamsForTournament`
- * 2. Throws INSUFFICIENT_PARTICIPANTS if < 4 eligible teams
- * 3. Calls `createTournament` with correct participantType and namePrefix
- *
- * @param teamSize - 2 for 2v2, 3 for 3v3
- * @returns Tournament creation result with bracket
- * @throws TournamentError with INSUFFICIENT_PARTICIPANTS if < 4 eligible teams
- */
-export async function createTeamTournament(teamSize: 2 | 3): Promise<TournamentCreationResult> {
-  const participantType: ParticipantType = teamSize === 2 ? 'team_2v2' : 'team_3v3';
-  const namePrefix = teamSize === 2 ? '2v2 Tournament' : '3v3 Tournament';
-
-  const eligible = await getEligibleTeamsForTournament(teamSize);
-
-  if (eligible.length < 4) {
-    logger.info(`[TeamTournament] Insufficient ${teamSize}v${teamSize} teams for tournament (${eligible.length}/4)`);
-    throw new TournamentError(
-      TournamentErrorCode.INSUFFICIENT_PARTICIPANTS,
-      `Need at least 4 eligible ${teamSize}v${teamSize} teams, found ${eligible.length}`,
-      400,
-      { required: 4, found: eligible.length, teamSize },
-    );
-  }
-
-  logger.info(`[TeamTournament] Creating ${teamSize}v${teamSize} tournament with ${eligible.length} eligible teams`);
-  return createTournament({ participantType, participants: eligible, namePrefix });
 }
 
 /**

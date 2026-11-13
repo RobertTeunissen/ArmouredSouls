@@ -39,7 +39,7 @@ export const SEARCH_ANALYTICS_REPORT_MAX_PAGE = 10_000;
 export const SEARCH_ANALYTICS_REPORT_DEFAULT_LIMIT = 50;
 export const SEARCH_ANALYTICS_REPORT_MAX_LIMIT = 100;
 export const SEARCH_ANALYTICS_REPORT_MAX_CYCLE = 100_000;
-export const SEARCH_ANALYTICS_REPORT_PHRASE_LIMIT = 100;
+const SEARCH_ANALYTICS_REPORT_PHRASE_LIMIT = 100;
 
 /** A longer phrase this soon after a shorter one it extends means "still typing". */
 export const SETTLED_SEARCH_WINDOW_SECONDS = 5;
@@ -466,4 +466,3 @@ export async function getSearchAnalyticsReport(
   };
 }
 
-export default getSearchAnalyticsReport;

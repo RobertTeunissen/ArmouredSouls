@@ -5,8 +5,8 @@ import { TierChip } from '../stable-view/TierChip';
 import { categoryLabel } from '../../utils/seasonFormat';
 import { formatMonthYear, modeShortLabel, type TierSummary } from '../../utils/stableViewFormat';
 import type { FormItem } from '../../utils/robotProfileFormat';
-import type { ProfileAccolade } from './useRobotProfile';
 import type { StableType } from '../../types/stable';
+import type { ProfileAccolade } from '@shared/types';
 
 interface ProfileHeaderProps {
   name: string;
@@ -107,4 +107,3 @@ function Figure({ label, value, className = 'text-white' }: { label: string; val
   );
 }
 
-export default ProfileHeader;

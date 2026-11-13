@@ -48,12 +48,12 @@ export interface RepairChargedGroup {
 }
 
 /** A stored studio multiplier that counts: a finite number ≥ 1. */
-export function isRecordedStudioMultiplier(value: unknown): value is number {
+function isRecordedStudioMultiplier(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 1;
 }
 
 /** A stored Repair Bay discount that counts: a finite number in [0, 100). */
-export function isRecordedRepairDiscountPercent(value: unknown): value is number {
+function isRecordedRepairDiscountPercent(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value < 100;
 }
 
@@ -69,7 +69,7 @@ const SUM_SNAP_DECIMALS = 6;
  * noise decides whether `Math.round` goes up or down. Snapping to
  * `SUM_SNAP_DECIMALS` places first makes both forms round the same exact value.
  */
-export function roundSummedCredits(total: number): number {
+function roundSummedCredits(total: number): number {
   const scale = 10 ** SUM_SNAP_DECIMALS;
   return Math.round(Math.round(total * scale) / scale);
 }

@@ -13,7 +13,7 @@ export { BATTLE_MODES, type BattleMode };
 /** How two sides (or a field of robots) are arranged in a mode. */
 export type ModeShape = 'duel' | 'team' | 'placement';
 
-export function isBattleMode(value: string): value is BattleMode {
+function isBattleMode(value: string): value is BattleMode {
   return (BATTLE_MODES as readonly string[]).includes(value);
 }
 

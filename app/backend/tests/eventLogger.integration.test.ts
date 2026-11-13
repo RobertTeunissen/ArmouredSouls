@@ -5,10 +5,11 @@
  */
 
 import prisma from '../src/lib/prisma';
-import { eventLogger, EventType } from '../src/services/common/eventLogger';
+import { eventLogger } from '../src/services/common/eventLogger';
+import { EventType } from '../src/services/common/auditEventTypes';
 
 describe('EventLogger Integration', () => {
-  let testCycleNumbers: number[] = [];
+  const testCycleNumbers: number[] = [];
 
   beforeEach(async () => {
     // Clean up audit logs before each test

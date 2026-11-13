@@ -13,13 +13,10 @@ import prisma from '../lib/prisma';
 // Re-export all pure calculation functions for backward compatibility
 export {
   calculateFacilityOperatingCost,
-  getMerchandisingBaseRate,
   calculateMerchandisingIncome,
   getRosterCapacity,
   getLeagueWinReward,
   getParticipationReward,
-  PARTICIPATION_REWARD_FRACTION,
-  getFacilityName,
 } from './economyFormulas';
 
 import {

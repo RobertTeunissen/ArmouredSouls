@@ -15,15 +15,15 @@
  */
 
 import { useEffect, useState } from 'react';
-import { getTutorialState, TutorialState } from '../utils/onboardingApi';
+import { getTutorialState } from '../utils/onboardingApi';
 import { api } from '../utils/api';
 import { getMyTeamBattles, TeamBattle } from '../utils/teamBattleApi';
-import { fetchTuningAllocationSummaries, TuningAllocationSummary } from '../utils/robotApi';
-import { fetchCycleProgressSummary, CycleProgressSummary } from '../utils/dashboardApi';
+import { fetchTuningAllocationSummaries } from '../utils/robotApi';
+import { fetchCycleProgressSummary } from '../utils/dashboardApi';
 import { useRobotStore, useStableStore } from '../stores';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import type { RecentTournamentWinner } from '../utils/dashboardNotifications';
-import type { TierChange, TierChangesResponse } from '@shared/types';
+import type { CycleProgressSummary, TierChange, TierChangesResponse, TuningAllocationSummary, TutorialState } from '@shared/types';
 
 /** Tournament wins are only celebrated for this long afterwards. */
 const CHAMPION_WINDOW_MS = 48 * 60 * 60 * 1000;

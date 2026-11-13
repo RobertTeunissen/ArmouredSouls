@@ -29,26 +29,26 @@ import type {
 } from '../../../shared/types';
 
 /** Lowercase letters, digits and hyphens (approved help text, §6.4b). */
-export const STRATEGY_KEY_PATTERN = /^[a-z0-9-]+$/;
-export const STRATEGY_KEY_MAX_LENGTH = 40;
+const STRATEGY_KEY_PATTERN = /^[a-z0-9-]+$/;
+const STRATEGY_KEY_MAX_LENGTH = 40;
 export const STRATEGY_DISPLAY_NAME_MAX_LENGTH = 60;
 export const STRATEGY_DESCRIPTION_MAX_LENGTH = 500;
-export const MIN_BUILD_ORDER_GOALS = 1;
-export const MAX_BUILD_ORDER_GOALS = 40;
+const MIN_BUILD_ORDER_GOALS = 1;
+const MAX_BUILD_ORDER_GOALS = 40;
 
 /** Goal_Target limits per Goal type (R6.11). */
-export const BOOKING_OFFICE_MAX_TARGET = 6;
-export const FACILITY_MAX_TARGET = 10;
-export const ROBOTS_MIN_TARGET = 1;
-export const ROBOTS_MAX_TARGET = 11;
-export const ATTRIBUTES_MIN_TARGET = 1;
-export const WEAPONS_MAX_TARGET = 3;
-export const REFINE_MAX_TARGET = 10;
+const BOOKING_OFFICE_MAX_TARGET = 6;
+const FACILITY_MAX_TARGET = 10;
+const ROBOTS_MIN_TARGET = 1;
+const ROBOTS_MAX_TARGET = 11;
+const ATTRIBUTES_MIN_TARGET = 1;
+const WEAPONS_MAX_TARGET = 3;
+const REFINE_MAX_TARGET = 10;
 /** Longest payback, in cycles, an Economy Goal may accept (a season is 100 cycles by default). */
-export const ECONOMY_MAX_TARGET = 50;
+const ECONOMY_MAX_TARGET = 50;
 
 /** Academies are bought by attributes Goals (R4.4) and may not be a facility Goal. */
-export const ACADEMY_FACILITY_TYPES: readonly FacilityType[] = [
+const ACADEMY_FACILITY_TYPES: readonly FacilityType[] = [
   'combat_training_academy',
   'defense_training_academy',
   'mobility_training_academy',
@@ -56,7 +56,7 @@ export const ACADEMY_FACILITY_TYPES: readonly FacilityType[] = [
 ];
 
 /** Facility types every strategy needs a Goal for, with a default above 0 (decision 29). */
-export const REQUIRED_FACILITY_TYPES: readonly FacilityType[] = [
+const REQUIRED_FACILITY_TYPES: readonly FacilityType[] = [
   'repair_bay',
   'training_facility',
   'weapons_workshop',
@@ -67,7 +67,7 @@ export const REQUIRED_FACILITY_TYPES: readonly FacilityType[] = [
 ];
 
 /** Non-facility Goal types every strategy needs, with a default above 0. */
-export const REQUIRED_GOAL_TYPES: readonly Exclude<GoalType, 'facility'>[] = ['robots', 'attributes', 'weapons', 'refine'];
+const REQUIRED_GOAL_TYPES: readonly Exclude<GoalType, 'facility'>[] = ['robots', 'attributes', 'weapons', 'refine'];
 
 // ── Structure ────────────────────────────────────────────────────────
 
@@ -267,7 +267,7 @@ export function builderRuleIssues(def: Pick<StrategyDefinitionFile, 'buildOrder'
 }
 
 /** The Zod schema with every builder rule applied (R6.2, R6.11). */
-export const strategyDefinitionSchema = strategyDefinitionShape.superRefine((def, ctx) => {
+const strategyDefinitionSchema = strategyDefinitionShape.superRefine((def, ctx) => {
   for (const issue of builderRuleIssues(def)) {
     ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path, params: { rule: issue.rule, position: issue.position } });
   }

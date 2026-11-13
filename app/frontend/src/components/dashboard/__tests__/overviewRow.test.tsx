@@ -9,7 +9,7 @@ import * as fc from 'fast-check';
 import { OverviewRow } from '../OverviewRow';
 import { placementReward, earnsPlacementReward, ordinal } from '../placementFormatting';
 import type { OverviewRowData } from '../types';
-import type { CycleProgressSummary } from '../../../utils/dashboardApi';
+import type { CycleProgressSummary } from '@shared/types';
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');

@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import * as fc from 'fast-check';
 import GuideTableOfContents from '../GuideTableOfContents';
-import { ArticleHeading } from '../../../utils/guideApi';
+import type { ArticleHeading } from '@shared/types';
 
 /**
  * Arbitrary that generates an ArticleHeading with valid level (2 or 3).

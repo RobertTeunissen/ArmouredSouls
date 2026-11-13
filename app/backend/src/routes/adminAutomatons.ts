@@ -48,13 +48,15 @@ import {
   createDraft,
   deleteBlueprint,
   deleteDraft,
-  getProfileDetail,
-  listProfiles,
-  listTurnRecords,
   updateBlueprint,
   updateProfile,
   updateStrategy,
 } from '../services/automaton/automatonProfileService';
+import {
+  getProfileDetail,
+  listProfiles,
+  listTurnRecords,
+} from '../services/automaton/automatonProfileQueries';
 import { storeBlueprintImage } from '../services/automaton/automatonImageService';
 import { previewProfileTurn } from '../services/automaton/turnPreview';
 import { getProgramSwitch, setProgramSwitch } from '../services/automaton/programSwitch';

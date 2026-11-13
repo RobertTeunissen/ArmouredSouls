@@ -13,7 +13,7 @@ import {
   computeSeedings,
   Round1Match,
   CompletedMatch,
-} from '../src/services/tournament/tournamentService';
+} from '../src/services/tournament/tournamentBracket';
 import type { Robot } from '../generated/prisma';
 
 function makeRobot(id: number, name: string, elo: number): Robot {

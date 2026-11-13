@@ -48,7 +48,7 @@ export function planSetupSteps({ report, hasPortrait, robotCount }: SetupStepInp
 }
 
 /** One robot can fight in these on its own; team events need a team first. */
-export const DEFAULT_SOLO_EVENTS: readonly string[] = ['league_1v1', 'tournament_1v1', 'koth'];
+const DEFAULT_SOLO_EVENTS: readonly string[] = ['league_1v1', 'tournament_1v1', 'koth'];
 
 /**
  * The events ticked when the step opens: the robot's current entries if it

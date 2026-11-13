@@ -5,6 +5,5 @@
  * yield) will reuse them.
  */
 export * from './analysisOptions';
-export { getAttributeAnalysis, clearAttributeAnalysisCache, type AttributeAnalysisParams } from './attributeAnalysisService';
-export { getWeaponAnalysis, clearWeaponAnalysisCache, type WeaponAnalysisParams } from './weaponAnalysisService';
-export { clearDatasetCache } from './analysisDataset';
+export { getAttributeAnalysis, type AttributeAnalysisParams } from './attributeAnalysisService';
+export { getWeaponAnalysis, type WeaponAnalysisParams } from './weaponAnalysisService';

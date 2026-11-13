@@ -61,4 +61,3 @@ export function RobotDeploymentCard({ robot, expanded, onToggle }: RobotDeployme
   );
 }
 
-export default RobotDeploymentCard;

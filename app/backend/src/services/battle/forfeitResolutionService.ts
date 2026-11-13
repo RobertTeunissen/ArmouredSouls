@@ -37,7 +37,7 @@ import { claimQueuedMatch, readClaimedBattleId, type WalkoverClaim } from './wal
 export type ForfeitMode = Exclude<ByeMode, 'koth' | 'grand_melee'>;
 
 /** Reason recorded on every forfeit audit row. */
-export const FORFEIT_REASON = 'No main weapon equipped';
+const FORFEIT_REASON = 'No main weapon equipped';
 
 export interface ForfeitSide {
   side: 1 | 2;

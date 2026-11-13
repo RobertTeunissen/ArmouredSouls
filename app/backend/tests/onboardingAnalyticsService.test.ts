@@ -3,7 +3,7 @@ import {
   getEvents,
   getSummary,
   clearEvents,
-  OnboardingAnalyticsEvent,
+  OnboardingEventRecord,
 } from '../src/services/analytics/onboardingAnalyticsService';
 
 // Silence logger output during tests
@@ -25,7 +25,7 @@ describe('OnboardingAnalyticsService', () => {
 
   describe('recordEvents', () => {
     it('should store events with userId and receivedAt', () => {
-      const batch: OnboardingAnalyticsEvent[] = [
+      const batch: OnboardingEventRecord[] = [
         { eventType: 'step_started', timestamp: new Date().toISOString(), step: 1 },
       ];
 
@@ -40,7 +40,7 @@ describe('OnboardingAnalyticsService', () => {
     });
 
     it('should store multiple events in a single batch', () => {
-      const batch: OnboardingAnalyticsEvent[] = [
+      const batch: OnboardingEventRecord[] = [
         { eventType: 'step_started', timestamp: new Date().toISOString(), step: 1 },
         { eventType: 'step_completed', timestamp: new Date().toISOString(), step: 1, metadata: { durationMs: 5000 } },
         { eventType: 'step_started', timestamp: new Date().toISOString(), step: 2 },
@@ -67,7 +67,7 @@ describe('OnboardingAnalyticsService', () => {
 
     it('should cap stored events at MAX_STORED_EVENTS', () => {
       // Record more than 10,000 events
-      const largeBatch: OnboardingAnalyticsEvent[] = [];
+      const largeBatch: OnboardingEventRecord[] = [];
       for (let i = 0; i < 10_050; i++) {
         largeBatch.push({ eventType: 'step_started', timestamp: new Date().toISOString(), step: 1 });
       }

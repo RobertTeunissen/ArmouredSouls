@@ -29,10 +29,10 @@ export type SpeedBurst = 'none' | 'melee_commit' | 'ranged_disengage';
 export const BURST_SPEED_MULTIPLIER = 1.30;
 
 /** Base duration of the ranged disengage burst in seconds */
-export const DISENGAGE_BASE_SECONDS = 2;
+const DISENGAGE_BASE_SECONDS = 2;
 
 /** Extra disengage burst seconds per Evasion Thrusters point (uncapped) */
-export const DISENGAGE_SECONDS_PER_EVASION = 0.04;
+const DISENGAGE_SECONDS_PER_EVASION = 0.04;
 
 /** Delay between the first melee-band hit of an engagement and the start of the ranged disengage burst (guaranteed exchange, Season 2 round 2) */
 export const DISENGAGE_DELAY_SECONDS = 2.5;

@@ -1,6 +1,5 @@
 import {
   calculateStorageCapacity,
-  hasStorageSpace,
   getStorageStatus,
 } from '../src/utils/storageCalculations';
 
@@ -24,23 +23,6 @@ describe('Storage Calculations', () => {
 
     it('should calculate max capacity correctly for level 10', () => {
       expect(calculateStorageCapacity(10)).toBe(55); // 5 + (10 × 5)
-    });
-  });
-
-  describe('hasStorageSpace', () => {
-    it('should return true when below capacity', () => {
-      expect(hasStorageSpace(3, 0)).toBe(true); // 3/5
-      expect(hasStorageSpace(8, 1)).toBe(true); // 8/10
-    });
-
-    it('should return false when at capacity', () => {
-      expect(hasStorageSpace(5, 0)).toBe(false); // 5/5
-      expect(hasStorageSpace(10, 1)).toBe(false); // 10/10
-    });
-
-    it('should return false when over capacity', () => {
-      expect(hasStorageSpace(6, 0)).toBe(false); // 6/5
-      expect(hasStorageSpace(12, 1)).toBe(false); // 12/10
     });
   });
 

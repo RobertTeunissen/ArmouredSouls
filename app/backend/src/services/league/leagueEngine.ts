@@ -220,35 +220,11 @@ export async function determinePromotionsForInstance<T extends LeagueEntityBase>
   return plan.promotionCandidates;
 }
 
-/** Determine demotion candidates from the fixed bottom percentage. */
-export async function determineDemotionsForInstance<T extends LeagueEntityBase>(
-  instanceId: string,
-  config: LeagueEngineConfig,
-  adapter: LeagueAdapter<T>,
-  excludeIds: Set<number>,
-): Promise<T[]> {
-  const tier = instanceId.split('_')[0];
-  const entities = await adapter.getEntitiesInInstance(instanceId, excludeIds);
-  const plan = planLeagueInstanceRebalancing(
-    instanceId,
-    tier,
-    entities,
-    config,
-    getPlanSelectors(adapter),
-  );
-
-  logger.info(
-    `[${config.logPrefix}] ${instanceId}: ${plan.demotionCandidates.length} demotion candidates `
-    + `from ${plan.demotionSlots} fixed slots (${plan.totalEntities} total)`,
-  );
-  return plan.demotionCandidates;
-}
-
 /**
  * Promote a single entity to the next tier.
  * LP is retained across promotions. Cycles counter is reset.
  */
-export async function promoteEntity<T extends LeagueEntityBase>(
+async function promoteEntity<T extends LeagueEntityBase>(
   entity: T,
   config: LeagueEngineConfig,
   adapter: LeagueAdapter<T>,
@@ -316,7 +292,7 @@ export async function promoteEntity<T extends LeagueEntityBase>(
  * Demote a single entity to the previous tier.
  * LP is retained across demotions. Cycles counter is reset.
  */
-export async function demoteEntity<T extends LeagueEntityBase>(
+async function demoteEntity<T extends LeagueEntityBase>(
   entity: T,
   config: LeagueEngineConfig,
   adapter: LeagueAdapter<T>,

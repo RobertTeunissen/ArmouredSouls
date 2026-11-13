@@ -1,16 +1,11 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import {
-  PlaybackState,
-  PlaybackSpeed,
-  PlaybackCombatEvent,
-  InterpolatedFrame,
-  Position,
-} from './types';
+import { PlaybackState, PlaybackSpeed, PlaybackCombatEvent, InterpolatedFrame } from './types';
+import type { ArenaPoint } from '@shared/types';
 
 interface UsePlaybackEngineProps {
   events: PlaybackCombatEvent[];
   duration: number;
-  startingPositions?: Record<string, Position>;
+  startingPositions?: Record<string, ArenaPoint>;
   robot1Name?: string;
   robot2Name?: string;
   /** All robot names (including reserves) for tag team battles */
@@ -43,8 +38,8 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-/** Interpolate a Position between two positions */
-function lerpPosition(a: Position, b: Position, t: number): Position {
+/** Interpolate a ArenaPoint between two positions */
+function lerpPosition(a: ArenaPoint, b: ArenaPoint, t: number): ArenaPoint {
   const clamped = clamp(t, 0, 1);
   return {
     x: lerp(a.x, b.x, clamped),
@@ -201,7 +196,7 @@ function getLatestHPShield(
 }
 
 /** Compute initial facing directions from starting positions (each robot faces the other) */
-function computeInitialFacing(startingPositions: Record<string, Position>): Record<string, number> {
+function computeInitialFacing(startingPositions: Record<string, ArenaPoint>): Record<string, number> {
   const names = Object.keys(startingPositions);
   const facing: Record<string, number> = {};
 
@@ -229,10 +224,10 @@ function computeInitialFacing(startingPositions: Record<string, Position>): Reco
  */
 function computeSidelinePositions(
   allRobotNames: string[],
-  startingPositions: Record<string, Position>,
+  startingPositions: Record<string, ArenaPoint>,
   arenaRadius: number
-): Record<string, Position> {
-  const sideline: Record<string, Position> = {};
+): Record<string, ArenaPoint> {
+  const sideline: Record<string, ArenaPoint> = {};
   const sidelineY = arenaRadius * 0.78; // Inside visible canvas area (room for name labels above)
   const activeNames = new Set(Object.keys(startingPositions));
   const activeList = [...activeNames];
@@ -269,8 +264,8 @@ function computeSidelinePositions(
 function collectLastKnownPositions(
   events: PlaybackCombatEvent[],
   upToIndex: number
-): Record<string, Position> {
-  const lastKnown: Record<string, Position> = {};
+): Record<string, ArenaPoint> {
+  const lastKnown: Record<string, ArenaPoint> = {};
   for (let i = 0; i <= upToIndex && i < events.length; i++) {
     const pos = events[i].positions;
     if (pos) {
@@ -291,14 +286,14 @@ function interpolateFrame(
   events: PlaybackCombatEvent[],
   time: number,
   eventIndex: number,
-  startingPositions?: Record<string, Position>,
+  startingPositions?: Record<string, ArenaPoint>,
   robot1Name?: string,
   robot2Name?: string,
   allRobotNames?: string[],
   arenaRadius?: number,
   isTagTeam?: boolean
 ): InterpolatedFrame {
-  const positions: Record<string, Position> = {};
+  const positions: Record<string, ArenaPoint> = {};
   const facingDirections: Record<string, number> = {};
 
   const [prevIdx, nextIdx] = findBracketingPositionEvents(events, time);

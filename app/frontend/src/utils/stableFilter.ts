@@ -10,7 +10,7 @@
 export type StableFilter = 'all' | 'players';
 
 export const STABLE_FILTER_PARAM = 'stables';
-export const STABLE_FILTER_STORAGE_KEY = 'stableFilter';
+const STABLE_FILTER_STORAGE_KEY = 'stableFilter';
 
 export const STABLE_FILTER_OPTIONS: ReadonlyArray<{ key: StableFilter; label: string; description: string }> = [
   { key: 'all', label: 'All', description: 'Every stable: players, Automatons and bots.' },

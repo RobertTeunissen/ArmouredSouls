@@ -122,4 +122,3 @@ export function FormSection({ robotId, form, failed = false, onRetry, isOwner, b
   );
 }
 
-export default FormSection;

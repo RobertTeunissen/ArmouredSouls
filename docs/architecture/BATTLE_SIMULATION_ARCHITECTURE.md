@@ -393,7 +393,7 @@ The primary entry point is `simulateBattleMulti(robots[], config)` which support
 **Weapon reach (#518).** Physical reach is an invariant of every resolved attack, independent of patience. A
 weapon whose `rangeBand` is `melee` (melee, energy melee such as Shock Maul, shields) needs distance ≤ 2 to
 its actual target; other bands reach any distance and only take the range penalty. It is enforced twice: the
-per-hand gates in `simulationLoop.ts` (`canAttack`, including the n > 2 target-of-opportunity search, which
+per-hand gates in `simulationPhases.ts` (`canAttack`, including the n > 2 target-of-opportunity search, which
 validates each candidate against its own distance) and a guard at the top of `performAttack()`
 (`isWithinWeaponReach`, real positions), which returns `'blocked'` for a blocked attempt (`performAttack()`
 returns `AttackOutcome` = `'blocked' | 'missed' | 'hit'`). A blocked attempt draws no random numbers, emits no
@@ -631,7 +631,7 @@ All orchestrators emit the unified `battle_complete` event type via the shared `
 | Tag Team | `battle_complete` | 4 (one per robot) |
 | KotH | `battle_complete` | 5-6 (one per robot) |
 
-> **Note:** The `EventType` enum in `common/eventLogger.ts` still contains `TOURNAMENT_MATCH` and `TAG_TEAM_BATTLE` for backward compatibility with old audit log records in the database. New code should never emit these event types.
+> **Note:** The `EventType` enum in `common/auditEventTypes.ts` still contains `TOURNAMENT_MATCH` and `TAG_TEAM_BATTLE` for backward compatibility with old audit log records in the database. New code should never emit these event types.
 
 ---
 
@@ -825,7 +825,11 @@ The acc/production environment uses individual cron triggers rather than a monol
 | `src/services/cycle/cycleScheduler.ts` | 5 independent cron jobs (league, tournament, tag team, KotH, settlement) |
 | `src/services/battle/combatSimulator.ts` | Shared combat engine — tick-based simulation using all 23 attributes |
 | `src/services/battle/baseOrchestrator.ts` | Shared types (`BattleContext`, `BattleRecordRef`) and helpers (`getCurrentCycleNumber`) |
+| `src/services/battle/battlePreparation.ts` | Shared pre-battle steps: robot loading with weapons and refinements, loadout fallbacks, tuning preparation |
+| `src/services/battle/battleSummaryWriter.ts` | Battle summary write (Spec #39), never fails a battle |
 | `src/services/battle/battlePostCombat.ts` | Shared post-combat helpers (streaming revenue, audit logging, robot stats, credits/prestige/fame) |
+| `src/services/battle/placementBattleSteps.ts`, `placementMatchExecutor.ts` | KotH and Grand Melee shared steps (participant rows, reward transaction, audit) and the paced match executor |
+| `src/services/team-battle/teamBattlePostCombat.ts` | Team league and team tournament shared steps (battle log, summary, per-side stat update) |
 | `src/services/battle/combatMessageGenerator.ts` | Raw events → narrative battle log conversion |
 | `src/services/league/leagueBattleOrchestrator.ts` | League 1v1 battle orchestration, ELO, rewards, audit logging |
 | `src/services/tournament/tournamentBattleOrchestrator.ts` | Tournament bracket battles, round-based rewards |
@@ -834,7 +838,7 @@ The acc/production environment uses individual cron triggers rather than a monol
 | `src/services/koth/kothMatchmakingService.ts` | KotH-specific matchmaking (snake-draft, one-per-stable) |
 | `src/services/practice-arena/practiceArenaService.ts` | Practice Arena battle service — builds virtual robots, calls `simulateBattle`, returns results with zero DB writes |
 | `src/services/practice-arena/practiceArenaUsageService.ts` | Usage recording (`practice_arena_events`, one row per request) and the admin overview |
-| `src/services/common/eventLogger.ts` | Audit log writer (one event per robot pattern) |
+| `src/services/common/eventLogger.ts` | Audit log writer (one event per robot pattern); the `EventType` catalogue is in `auditEventTypes.ts` |
 | `src/services/economy/streamingRevenueService.ts` | Streaming revenue calculation and awarding |
 | `src/utils/battleMath.ts` | ELO calculations (K-factor, expected score, delta) |
 | `src/utils/economyCalculations.ts` | Credit rewards, prestige multipliers, participation rewards |

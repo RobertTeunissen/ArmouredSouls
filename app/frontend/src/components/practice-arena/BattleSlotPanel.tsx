@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import type { OwnedRobot, SparringPartnerDef, SlotState, AcademyLevels } from './types';
+import type { OwnedRobot, SparringPartnerDef, SlotState } from './types';
 import { SlotToggle } from './SlotToggle';
 import { WhatIfPanel } from './WhatIfPanel';
 import type { TuningAllocations } from './WhatIfPanel';
 import { SparringConfigPanel } from './SparringConfigPanel';
 import RobotImage from '../RobotImage';
 import { fetchTuningAllocation } from '../../utils/robotApi';
+import type { AcademyLevels } from '@shared/types';
 
 export interface BattleSlotPanelProps {
   label: string;

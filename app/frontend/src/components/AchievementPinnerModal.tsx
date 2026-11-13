@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useId } from 'react';
 import AchievementBadge from './AchievementBadge';
 import { api } from '../utils/api';
-import type { AchievementWithProgress } from '../utils/achievementUtils';
 import { getTierLabel } from '../utils/achievementUtils';
+import type { AchievementWithProgress } from '@shared/types';
 
 interface AchievementPinnerModalProps {
   achievements: AchievementWithProgress[];

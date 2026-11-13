@@ -11,13 +11,13 @@ import type { Prisma, StandingsMode, StableType } from '../../../generated/prism
 import { getLeagueTierPreview } from './league-rebalancing-preview';
 import { getLeagueRulesForMode } from './league-rules';
 import { buildLeagueZoneMeta, type LeagueZoneMeta } from './league-zone-meta';
-import { buildStandingStatuses, type StandingStatus } from './standing-status';
+import { buildStandingStatuses } from './standing-status';
 import { playerOwnedEntityIds, type StableFilter } from '../standings/playerStables';
+import type { StandingStatus, StandingsPagination } from '../../shared/types';
 
 export const ROBOT_LEAGUE_MODES = ['league_1v1', 'koth', 'grand_melee'] as const;
 export type RobotLeagueMode = typeof ROBOT_LEAGUE_MODES[number];
-export const TEAM_LEAGUE_MODES = ['league_2v2', 'league_3v3', 'tag_team'] as const;
-export type TeamLeagueMode = typeof TEAM_LEAGUE_MODES[number];
+export type TeamLeagueMode = 'league_2v2' | 'league_3v3' | 'tag_team';
 
 /** Subscription event that keeps an entity of this mode entered. */
 const SUBSCRIPTION_EVENT: Record<RobotLeagueMode | TeamLeagueMode, string> = {
@@ -36,13 +36,6 @@ export interface StandingsPageQuery {
   perPage: number;
   /** 'players': human players' entries only, each keeping its place among all (#595). Default 'all'. */
   stables?: StableFilter;
-}
-
-export interface StandingsPagination {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
 }
 
 interface PageRows<T> {

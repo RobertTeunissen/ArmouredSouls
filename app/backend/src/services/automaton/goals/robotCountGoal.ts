@@ -31,7 +31,7 @@ import {
 import type { Hand, WeaponStage } from '../../../shared/types';
 
 /** Most robots a stable can own (Roster Expansion L10). */
-export const MAX_ROBOTS = 11;
+const MAX_ROBOTS = 11;
 
 interface StartingStagePlan {
   stageIndex: number;

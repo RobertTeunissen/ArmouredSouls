@@ -4,11 +4,10 @@ import AchievementBadge from '../AchievementBadge';
 import AchievementPinnerModal from '../AchievementPinnerModal';
 import { api } from '../../utils/api';
 import { categoryLabel, rankBadge } from '../../utils/seasonFormat';
-import type { AchievementWithProgress, AchievementsResponse } from '../../utils/achievementUtils';
-import type { StableAccolade, StableAchievements } from './types';
+import type { AchievementWithProgress, AchievementsResponse, StableAccolade, StableAchievementData } from '@shared/types';
 
 interface TrophyCabinetProps {
-  achievements: StableAchievements | undefined;
+  achievements: StableAchievementData | undefined;
   accolades: readonly StableAccolade[];
   isOwner: boolean;
   /** Called after the owner saved new pins, so the page can reload. */
@@ -122,4 +121,3 @@ export function TrophyCabinet({ achievements, accolades, isOwner, onPinnedChange
   );
 }
 
-export default TrophyCabinet;

@@ -27,7 +27,7 @@ import type { StrategyRegistry } from './strategies/registry';
 import type { RefinementStep, TeamNames, WeaponStage } from '../../shared/types';
 
 /** `app/backend/uploads` (served at `/uploads`). */
-export const UPLOADS_DIRECTORY = path.resolve(__dirname, '..', '..', '..', 'uploads');
+const UPLOADS_DIRECTORY = path.resolve(__dirname, '..', '..', '..', 'uploads');
 /** An admin upload URL: `/uploads/automatons/{catalogueKey}/{uuid}.webp`. */
 const ADMIN_UPLOAD_URL = /^\/uploads\/automatons\/([a-z0-9-]{3,40})\/([A-Za-z0-9-]{1,64})\.webp$/;
 

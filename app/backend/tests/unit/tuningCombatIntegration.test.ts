@@ -13,13 +13,11 @@ import {
   calculateEffectiveStats,
   calculateMaxHP,
   calculateMaxShield,
-  BASE_HP,
-  HP_MULTIPLIER,
   LOADOUT_BONUSES,
 } from '../../src/utils/robotCalculations';
-import type { TuningAttributeMap } from '../../src/services/tuning-pool';
 import { getPerAttributeMax } from '../../src/services/tuning-pool/tuningPoolConfig';
 import { Robot, Prisma } from '../../generated/prisma';
+import type { TuningAttributeMap } from '../../src/shared/types';
 
 // ── Mock Robot Factory ──────────────────────────────────────────────
 

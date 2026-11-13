@@ -16,7 +16,6 @@
 import { Robot, WeaponInventory, Weapon, Prisma } from '../../generated/prisma';
 import { toNumber } from '../lib/prismaHelpers';
 import { ROBOT_ATTRIBUTES } from '../shared/utils/robotAttributes';
-import type { TuningAttributeMap } from '../services/tuning-pool';
 import type { CombatBuildSnapshot, CombatWeaponSnapshot } from '../types/combatBuildTypes';
 import {
   applyRefinementsToWeapon,
@@ -31,11 +30,6 @@ export {
   BASE_HP,
   HP_MULTIPLIER,
   SHIELD_MULTIPLIER,
-  getLoadoutBonus,
-  getLoadoutModifiedAttributes,
-  getStanceModifier,
-  isValidStance,
-  isValidYieldThreshold,
 } from '../shared/utils/robotStats';
 
 import {
@@ -47,6 +41,7 @@ import {
   type RobotStatsInput,
   type WeaponInventoryLike,
 } from '../shared/utils/robotStats';
+import type { TuningAttributeMap } from '../shared/types';
 
 type RobotWithWeapons = Robot & {
   mainWeapon?: (WeaponInventory & { weapon: Weapon }) | null;

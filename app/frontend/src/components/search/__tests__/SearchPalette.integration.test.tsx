@@ -8,7 +8,7 @@ import SearchResultList from '../SearchResultList';
 import useSearchPalette from '../useSearchPalette';
 import { search } from '../../../utils/searchApi';
 import { buildSearchResultRoute } from '../../../utils/searchRoutes';
-import type { SearchResult, SearchResponse } from '../../../utils/searchTypes';
+import type { SearchResponse, SearchResult } from '@shared/types';
 
 vi.mock('../../../utils/searchApi', () => ({
   search: vi.fn(),

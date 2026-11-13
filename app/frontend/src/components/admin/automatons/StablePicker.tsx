@@ -10,7 +10,7 @@ import { INPUT_CLASS } from './ui';
 import { matchesSearch } from './stablesView';
 import type { ProfileListItem } from '@shared/types';
 
-export const STABLE_PICKER_LIMIT = 50;
+const STABLE_PICKER_LIMIT = 50;
 
 export interface StablePickerProps {
   /** Input id from the surrounding `Field`, so its label names the combobox. */

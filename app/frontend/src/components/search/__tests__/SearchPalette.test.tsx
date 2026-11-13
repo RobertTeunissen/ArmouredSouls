@@ -10,7 +10,7 @@ import useSearchPalette from '../useSearchPalette';
 import { search } from '../../../utils/searchApi';
 import { getSearchShortcutLabel } from '../../../utils/searchShortcut';
 import { buildSearchResultRoute } from '../../../utils/searchRoutes';
-import type { SearchResponse, SearchResult } from '../../../utils/searchTypes';
+import type { SearchResponse, SearchResult } from '@shared/types';
 
 vi.mock('../../../utils/searchApi', () => ({
   search: vi.fn(),

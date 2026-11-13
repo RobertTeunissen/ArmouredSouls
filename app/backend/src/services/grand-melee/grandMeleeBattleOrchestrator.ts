@@ -3,49 +3,39 @@
 import prisma from '../../lib/prisma';
 import { encodeBattleLog } from '../battle/battleLogCodec';
 import logger from '../../config/logger';
-import { resolveBelowMinimumField, resolvePlacementBye } from '../scheduling/thinInstanceByes';
-import { handleMatchFailure } from '../battle/matchFailurePolicy';
-import { computeBattleSummary } from '../battle/battleSummaryComputer';
-import { applyLoadoutFallbacks, partitionPlacementField } from '../battle/combatReadiness';
+import { resolveBelowMinimumField } from '../scheduling/thinInstanceByes';
 import type { KothPlacement } from '../../types';
 import { MIN_GROUP_SIZE } from './grandMeleeMatchmakingService';
 import { countKillsByRobot } from '../../shared/utils/battleStatistics';
 import { simulateBattleMulti, RobotWithWeapons, BattleConfig, SpatialCombatResult, SpatialRobotCombatState, SpatialCombatEvent } from '../battle/combatSimulator';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import {
-  logBattleAuditEvent,
   checkAndAwardAchievements,
   updateRobotCombatStats,
-  awardCreditsWithLedger,
-  awardPrestigeToUser,
-  awardBattleStreamingRevenue,
 } from '../battle/battlePostCombat';
 import { hasAllocatedTuning, isLowestElo, lowestHpPercent, yieldedRobotNames } from '../battle/battleAchievementContext';
 import standingsService from '../standings/standingsService';
-import { calculateStreamingRevenueBatch } from '../economy/streamingRevenueService';
-import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
-import { prepareRobotForCombat } from '../../utils/robotCalculations';
-import { getTuningBonusesBatch } from '../tuning-pool';
 import { calculateGrandMeleeRewards, GRAND_MELEE_BASE_MULTIPLIER, GRAND_MELEE_CREDIT_MULTIPLIER } from './grandMeleeRewards';
 import { getLeagueWinReward } from '../../utils/economyFormulas';
-import type { PlacementRewardComponent } from '../../types/financialTypes';
 import schedulingService from '../scheduling/schedulingService';
 import { defer } from '../common/deferredWork';
 import { recordCombatBuilds } from '../battle/combatBuildRecorder';
-
-/** Yield the event loop so Express can serve requests between heavy DB work */
-const throttle = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
-
-/** Delay between processing each Grand Melee match (ms) - 0 locally, 500 on server */
-const MATCH_THROTTLE_MS = process.env.NODE_ENV === 'production' ? 500 : 0;
-/** Number of matches to process before a longer cooldown pause */
-const BATCH_SIZE = 10;
-/** Cooldown pause between batches to allow GC and free memory (ms) */
-const BATCH_COOLDOWN_MS = process.env.NODE_ENV === 'production' ? 5000 : 0;
-/** Number of matches before a super-batch pause for heavy GC (memory safety) */
-const SUPER_BATCH_SIZE = 20;
-/** Long pause between super-batches to ensure memory is reclaimed (ms) */
-const SUPER_BATCH_COOLDOWN_MS = process.env.NODE_ENV === 'production' ? 30000 : 0;
+import { applyAndLogLoadoutFallbacks, prepareRobotsWithTuning } from '../battle/battlePreparation';
+import { buildSummaryRobotMaps, writeBattleSummary } from '../battle/battleSummaryWriter';
+import {
+  awardPlacementBattleRewards,
+  createPlacementParticipantRows,
+  loadPlacementField,
+  loadPreviousBattleLossMap,
+  logPlacementBattleAuditEvents,
+  type ForfeitedPlacement,
+  type PlacementBattleParticipant,
+} from '../battle/placementBattleSteps';
+import {
+  executePlacementMatches,
+  type PlacementExecutionSummary,
+  type PlacementMatchOutcome,
+} from '../battle/placementMatchExecutor';
 
 /** Persisted formula fact for placements outside the top-ten reward curve. */
 const GRAND_MELEE_PARTICIPATION_FLOOR_MULTIPLIER = 0.2;
@@ -53,65 +43,16 @@ const GRAND_MELEE_PARTICIPATION_FLOOR_MULTIPLIER = 0.2;
 // ─── Interfaces ─────────────────────────────────────────────────────
 
 /** Prepared participant data for batched DB operations */
-interface PreparedParticipant {
-  robot: RobotWithWeapons;
-  placement: number;
-  kills: number;
-  damageDealt: number;
-  finalHP: number;
-  /** Destroyed at 0 HP. A yield is recorded in `yielded` instead. */
-  destroyed: boolean;
-  /** Left the fight by yielding (HP above 0). */
-  yielded: boolean;
-  isWinner: boolean;
-  tier: string;
-  rewards: { credits: number; prestige: number; fame: number; lpDelta: number };
-}
+type PreparedParticipant = PlacementBattleParticipant;
 
-/** A robot without a main weapon, placed last without fighting (rule 4). */
-interface ForfeitedPlacement {
-  robot: RobotWithWeapons;
-  placement: number;
-}
+/** One robot's Grand Melee result in the execution summary. */
+type GrandMeleePlacementResult = { robotId: number; placement: number; kills: number };
 
 /** What one processed Grand Melee match produced, for the executor's counters. */
-interface GrandMeleeMatchOutcome {
-  outcome: 'fought' | 'below_minimum';
-  winnerId: number | null;
-  placements: Array<{ robotId: number; placement: number; kills: number }>;
-  forfeitedCount: number;
-}
+type GrandMeleeMatchOutcome = PlacementMatchOutcome<GrandMeleePlacementResult>;
 
 /** Summary of a Grand Melee battle execution run */
-export interface GrandMeleeBattleExecutionSummary {
-  totalMatches: number;
-  successfulMatches: number;
-  /**
-   * Bye_Events resolved this run (Spec #49).
-   *
-   * A sibling of `successfulMatches`, not a subset: the four counters
-   * (successful, bye, below-minimum, failed) partition `totalMatches`, so
-   * `successfulMatches` keeps meaning "combat was simulated" — which is what
-   * an operator reads when diagnosing a cycle. `matchResults.length`
-   * therefore equals `successfulMatches + byeMatches + belowMinimumMatches`.
-   */
-  byeMatches: number;
-  /**
-   * Matches whose ready field fell below the minimum at battle time: the
-   * forfeiters got a forfeit-only battle and the ready robots byes.
-   */
-  belowMinimumMatches: number;
-  failedMatches: number;
-  /** Robots placed last without fighting because they had no main weapon. */
-  forfeitedRobots: number;
-  totalRobotsInvolved: number;
-  matchResults: Array<{
-    matchId: number;
-    winnerId: number | null;
-    placements: Array<{ robotId: number; placement: number; kills: number }>;
-  }>;
-  errors: string[];
-}
+export type GrandMeleeBattleExecutionSummary = PlacementExecutionSummary<GrandMeleePlacementResult>;
 
 /** Placement result from computePlacements */
 interface PlacementEntry {
@@ -298,50 +239,23 @@ async function processGrandMeleeBattle(
 ): Promise<GrandMeleeMatchOutcome> {
   const robotIds = match.participants.map(p => p.participantId);
 
-  // 1. Load all participant robots with weapons + refinements (the full scheduled list; load only)
-  const loaded = await prisma.robot.findMany({
-    where: { id: { in: robotIds } },
-    include: {
-      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-    },
-  });
-  const loadedIds = new Set(loaded.map(r => r.id));
-  const missing = robotIds.filter(id => !loadedIds.has(id));
-  if (missing.length > 0) {
-    logger.warn(`[Grand Melee] Match #${match.id}: robot(s) ${missing.join(', ')} no longer exist, dropped from the field`);
-  }
-
-  // 2. Battle-time readiness (rule 4): robots without a main weapon are placed
-  // last and never fight. The partition comes BEFORE tuning and preparation, so
-  // a forfeiter keeps its real currentHP (prepareRobotForCombat sets full HP).
-  const { ready, forfeited: unready, decisions } = partitionPlacementField(loaded);
+  // 1-2. Load all participant robots with weapons + refinements (the full
+  // scheduled list; load only) and partition by battle-time readiness
+  // (rule 4): robots without a main weapon are placed last and never fight.
+  const { ready, unready, decisions, forfeited, totalParticipants } =
+    await loadPlacementField(robotIds, match.id, '[Grand Melee]');
   const readyIds = ready.map(r => r.id);
-  const totalParticipants = ready.length + unready.length;
-  const forfeited: ForfeitedPlacement[] = [...unready]
-    .sort((a, b) => a.id - b.id)
-    .map((robot, i) => ({ robot, placement: ready.length + 1 + i }));
 
   if (ready.length < MIN_GROUP_SIZE) {
     await resolveBelowMinimumField(match, 'grand_melee', ready, unready);
     return { outcome: 'below_minimum', winnerId: null, placements: [], forfeitedCount: unready.length };
   }
 
-  // 3. Batch-fetch tuning bonuses and prepare the ready robots for combat
-  const tuningBonusesMap = await getTuningBonusesBatch(readyIds);
-  // In memory only, and before prepareRobotForCombat reads loadoutType (rule 6).
-  for (const robotId of applyLoadoutFallbacks(ready, decisions)) {
-    const decision = decisions.find(d => d.robotId === robotId);
-    logger.warn('[Battle] Loadout fallback', {
-      matchId: match.id,
-      robotId,
-      storedLoadout: decision?.loadoutFallback?.storedLoadout,
-      battleLoadout: 'single',
-    });
-  }
-  for (const robot of ready) {
-    prepareRobotForCombat(robot, tuningBonusesMap.get(robot.id) ?? {});
-  }
+  // 3. Prepare the ready robots for combat with their tuning. Loadout
+  // fallbacks are in memory only, and come before prepareRobotForCombat
+  // reads loadoutType (rule 6).
+  applyAndLogLoadoutFallbacks(ready, decisions, match.id);
+  const tuningBonusesMap = await prepareRobotsWithTuning(ready);
 
   // 4. Compute arena radius from formula: 16 + (N - 2) * 3, sized for the robots that fight
   const arenaRadius = 16 + (ready.length - 2) * 3;
@@ -452,59 +366,12 @@ async function processGrandMeleeBattle(
 
   // 10. Create BattleParticipant records for all robots
   // (forfeiters: last places, nothing paid, HP untouched — they were never prepared)
-  await prisma.battleParticipant.createMany({
-    data: [
-      ...preparedParticipants.map(p => ({
-        battleId: battle.id,
-        robotId: p.robot.id,
-        team: 1,
-        placement: p.placement,
-        role: null,
-        credits: p.rewards.credits,
-        streamingRevenue: 0, // Updated below
-        eloBefore: p.robot.elo,
-        eloAfter: p.robot.elo,
-        prestigeAwarded: p.rewards.prestige,
-        fameAwarded: p.rewards.fame,
-        damageDealt: p.damageDealt,
-        finalHP: p.finalHP,
-        yielded: p.yielded,
-        destroyed: p.destroyed,
-      })),
-      ...forfeited.map(f => ({
-        battleId: battle.id,
-        robotId: f.robot.id,
-        team: 1,
-        placement: f.placement,
-        role: null,
-        credits: 0,
-        streamingRevenue: 0,
-        eloBefore: f.robot.elo,
-        eloAfter: f.robot.elo,
-        prestigeAwarded: 0,
-        fameAwarded: 0,
-        damageDealt: 0,
-        finalHP: f.robot.currentHP,
-        yielded: false,
-        destroyed: false,
-        forfeited: true,
-      })),
-    ],
-  });
+  await createPlacementParticipantRows(battle.id, preparedParticipants, forfeited);
 
   await recordCombatBuilds(battle.id, 'grand_melee', ready);
 
   // 11. Write pre-computed battle summary (Spec #39). The hit-grade and id maps
   // are event-driven, so they cover the ready robots only.
-  const robotMaxHP: Record<string, number> = {};
-  const robotNameToId: Record<string, number> = {};
-  const robotNameToTeam: Record<string, number> = {};
-  for (const robot of ready) {
-    robotMaxHP[robot.name] = robot.maxHP;
-    robotNameToId[robot.name] = robot.id;
-    robotNameToTeam[robot.name] = 1; // Grand Melee has no teams — all on side 1
-  }
-
   // Reuse kothPlacements field shape for Grand Melee placement data
   const kothPlacementsForSummary: KothPlacement[] = [
     ...placements.map(p => ({
@@ -519,48 +386,27 @@ async function processGrandMeleeBattle(
     ...forfeitedLogPlacements.map(p => ({ ...p, forfeited: true })),
   ];
 
-  const summaryData = computeBattleSummary({
-    events: (simResult.events || []) as unknown as import('../../shared/utils/battleStatistics').BattleLogEvent[],
+  await writeBattleSummary(battle.id, {
+    events: simResult.events,
     duration: simResult.durationSeconds,
     battleType: 'grand_melee',
-    robotMaxHP,
-    robotNameToId,
-    robotNameToTeam,
+    ...buildSummaryRobotMaps(ready, () => 1), // Grand Melee has no teams — all on side 1
     kothPlacements: kothPlacementsForSummary,
     kothData: { participantCount: totalParticipants, scoreThreshold: 0 },
     startingPositions: startPosRecord as Record<string, { x: number; y: number }>,
     endingPositions: endPosRecord as Record<string, { x: number; y: number }>,
     arenaRadius,
-  });
+  }, '[grand-melee-orchestrator]');
 
-  if (summaryData) {
-    await prisma.battleSummary.create({
-      data: { battleId: battle.id, ...summaryData },
-    }).catch((err: unknown) => {
-      logger.warn('[grand-melee-orchestrator] Failed to write battle summary', {
-        battleId: battle.id,
-        error: err instanceof Error ? err.message : String(err),
-      });
-    });
-  }
-
-  // 12. Calculate streaming revenue with single batch query
-  const streamingCalcMap = await calculateStreamingRevenueBatch(
-    preparedParticipants.map(p => ({ robotId: p.robot.id, userId: p.robot.userId })),
-  );
-
-  // 13. Atomic stable income, per-robot streaming, prestige, and fame updates.
-  const creditsByUser = new Map<number, number>();
-  const placementRewardsByUser = new Map<number, PlacementRewardComponent[]>();
-  const prestigeByUser = new Map<number, number>();
-  const fameByRobot = new Map<number, number>();
-
-  preparedParticipants.forEach((p) => {
-    if (p.rewards.credits > 0) {
-      creditsByUser.set(p.robot.userId, (creditsByUser.get(p.robot.userId) ?? 0) + p.rewards.credits);
-      const placementRewards = placementRewardsByUser.get(p.robot.userId) ?? [];
+  // 12-13. Atomic stable income, per-robot streaming, prestige, and fame updates.
+  const streamingCalcMap = await awardPlacementBattleRewards({
+    battleId: battle.id,
+    mode: 'grand_melee',
+    description: 'Grand Melee battle reward',
+    participants: preparedParticipants,
+    placementComponent: (p) => {
       const participationFloorApplied = p.placement > 10;
-      placementRewards.push({
+      return {
         mode: 'grand_melee',
         robotId: p.robot.id,
         tier: p.tier,
@@ -572,78 +418,9 @@ async function processGrandMeleeBattle(
         totalParticipants,
         participationFloorApplied,
         participationFloorMultiplier: participationFloorApplied ? GRAND_MELEE_PARTICIPATION_FLOOR_MULTIPLIER : 0,
-      });
-      placementRewardsByUser.set(p.robot.userId, placementRewards);
-    }
-    if (p.rewards.prestige > 0) {
-      prestigeByUser.set(p.robot.userId, (prestigeByUser.get(p.robot.userId) ?? 0) + p.rewards.prestige);
-    }
-    if (p.rewards.fame > 0) {
-      fameByRobot.set(p.robot.id, (fameByRobot.get(p.robot.id) ?? 0) + p.rewards.fame);
-    }
+      };
+    },
   });
-
-  await runFinancialWriteTransaction(async (tx, financialCycleNumber) => {
-    for (const [userId, credits] of creditsByUser) {
-      await awardCreditsWithLedger(
-        userId,
-        credits,
-        'battle_income',
-        financialCycleNumber,
-        'Grand Melee battle reward',
-        undefined,
-        { battleId: battle.id, placementMode: 'grand_melee' },
-        {
-          battleId: battle.id,
-          mode: 'grand_melee',
-          tier: 'placement_aggregate',
-          outcome: 'placement',
-          placement: null,
-          participationFloor: 0,
-          winComponent: 0,
-          teamSize: 1,
-          isBye: false,
-          placementRewardComponents: placementRewardsByUser.get(userId),
-          tx,
-        },
-      );
-    }
-
-    for (const [userId, prestige] of prestigeByUser) {
-      await awardPrestigeToUser(userId, prestige, financialCycleNumber, {
-        source: 'battle',
-        mode: 'grand_melee',
-        battleId: battle.id,
-        tx,
-      });
-    }
-
-    for (const [robotId, fame] of fameByRobot) {
-      await tx.robot.update({
-        where: { id: robotId },
-        data: { fame: { increment: fame } },
-      });
-    }
-
-    for (const participant of preparedParticipants) {
-      const streamingCalc = streamingCalcMap.get(participant.robot.id);
-      if (!streamingCalc) continue;
-      await awardBattleStreamingRevenue(
-        participant.robot.userId,
-        streamingCalc,
-        financialCycleNumber,
-        battle.id,
-        'grand_melee',
-        tx,
-      );
-      await tx.battleParticipant.update({
-        where: {
-          battleId_robotId: { battleId: battle.id, robotId: participant.robot.id },
-        },
-        data: { streamingRevenue: streamingCalc.totalRevenue },
-      });
-    }
-  }, { timeout: 30_000 });
 
   // 15. Update Grand Melee robot stats + standings
   await batchUpdateGrandMeleeRobotStats(preparedParticipants, simResult.durationSeconds, forfeited, totalParticipants);
@@ -651,18 +428,7 @@ async function processGrandMeleeBattle(
   // 16. Check and award achievements (deferred — non-critical path)
   defer('grand melee achievements', async () => {
     try {
-      const prevBattleResults = await prisma.battleParticipant.findMany({
-        where: {
-          robotId: { in: preparedParticipants.map(p => p.robot.id) },
-          battleId: { not: battle.id },
-        },
-        orderBy: { battle: { createdAt: 'desc' } },
-        distinct: ['robotId'],
-        select: { robotId: true, battle: { select: { winnerId: true } } },
-      });
-      const prevLostMap = new Map<number, boolean>(
-        prevBattleResults.map(r => [r.robotId, r.battle.winnerId !== null && r.battle.winnerId !== r.robotId]),
-      );
+      const prevLostMap = await loadPreviousBattleLossMap(preparedParticipants.map(p => p.robot.id), battle.id);
 
       await Promise.all(preparedParticipants.map(p => {
         const prevLost = prevLostMap.get(p.robot.id) ?? false;
@@ -707,62 +473,21 @@ async function processGrandMeleeBattle(
   // 17. Log audit events (fire-and-forget for performance)
   defer('grand melee audit', async () => {
     try {
-      for (const p of preparedParticipants) {
-        const streamingCalc = streamingCalcMap.get(p.robot.id);
-        await logBattleAuditEvent(
-          {
-            robotId: p.robot.id,
-            userId: p.robot.userId,
-            isWinner: p.isWinner,
-            isDraw: false,
-            damageDealt: p.damageDealt,
-            finalHP: p.finalHP,
-            yielded: p.yielded,
-            destroyed: p.destroyed,
-            credits: p.rewards.credits,
-            prestige: p.rewards.prestige,
-            fame: p.rewards.fame,
-            eloBefore: p.robot.elo,
-            eloAfter: p.robot.elo,
-          },
-          { id: battle.id, battleType: 'grand_melee', leagueType: 'grand_melee', durationSeconds: simResult.durationSeconds, eloChange: 0 },
-          null,
-          streamingCalc?.totalRevenue || 0,
-          false,
-          {
-            kothPlacement: p.placement,
-            kothZoneScore: 0,
-            kothZoneTime: 0,
-            kothKills: p.kills,
-            kothZoneDominanceBonus: false,
-          },
-        );
-      }
-      // Forfeiters: their last-place loss is on the record too.
-      for (const f of forfeited) {
-        await logBattleAuditEvent(
-          {
-            robotId: f.robot.id,
-            userId: f.robot.userId,
-            isWinner: false,
-            isDraw: false,
-            damageDealt: 0,
-            finalHP: f.robot.currentHP,
-            yielded: false,
-            destroyed: false,
-            credits: 0,
-            prestige: 0,
-            fame: 0,
-            eloBefore: f.robot.elo,
-            eloAfter: f.robot.elo,
-          },
-          { id: battle.id, battleType: 'grand_melee', leagueType: 'grand_melee', durationSeconds: simResult.durationSeconds, eloChange: 0 },
-          null,
-          0,
-          false,
-          { kothPlacement: f.placement, forfeit: true },
-        );
-      }
+      await logPlacementBattleAuditEvents({
+        battleId: battle.id,
+        mode: 'grand_melee',
+        durationSeconds: simResult.durationSeconds,
+        participants: preparedParticipants,
+        forfeited,
+        streamingCalcMap,
+        extras: (p) => ({
+          kothPlacement: p.placement,
+          kothZoneScore: 0,
+          kothZoneTime: 0,
+          kothKills: p.kills,
+          kothZoneDominanceBonus: false,
+        }),
+      });
     } catch (err) {
       logger.error('[Grand Melee] Audit logging failed (non-critical):', err);
     }
@@ -805,128 +530,16 @@ async function processGrandMeleeBattle(
  */
 export async function executeScheduledGrandMeleeBattles(): Promise<GrandMeleeBattleExecutionSummary> {
   logger.info('[Grand Melee Orchestrator] Executing scheduled Grand Melee battles');
-
-  // Count total scheduled Grand Melee matches
-  const totalCount = await prisma.scheduledMatch.count({
-    where: { matchType: 'grand_melee', status: 'scheduled' },
+  return executePlacementMatches<GrandMeleePlacementResult>({
+    mode: 'grand_melee',
+    logTag: '[Grand Melee Orchestrator]',
+    label: 'Grand Melee',
+    processMatch: (match) => processGrandMeleeBattle({
+      id: match.id,
+      participants: match.participants,
+      leagueType: match.leagueType,
+      leagueInstanceId: match.leagueInstanceId,
+      scheduledFor: match.scheduledFor,
+    }),
   });
-  logger.info(`[Grand Melee Orchestrator] Found ${totalCount} Grand Melee matches to execute`);
-
-  const summary: GrandMeleeBattleExecutionSummary = {
-    totalMatches: totalCount,
-    successfulMatches: 0,
-    byeMatches: 0,
-    belowMinimumMatches: 0,
-    failedMatches: 0,
-    forfeitedRobots: 0,
-    totalRobotsInvolved: 0,
-    matchResults: [],
-    errors: [],
-  };
-
-  let processed = 0;
-  // In-run exclusion set: a match whose cancel write fails (handleMatchFailure
-  // returns cancelled: false) stays 'scheduled' and must not be re-fetched in
-  // this run.
-  const attempted: number[] = [];
-
-  // Process one match at a time: fetch → execute → release memory → repeat
-  while (processed < totalCount) {
-    // Fetch the next single scheduled match
-    let unifiedMatch = await prisma.scheduledMatch.findFirst({
-      where: { matchType: 'grand_melee', status: 'scheduled', id: { notIn: [...attempted] } },
-      include: { participants: true },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    if (!unifiedMatch) break;
-
-    // SUPER-BATCH: Every 20 matches, take a long pause for memory reclamation
-    if (processed > 0 && processed % SUPER_BATCH_SIZE === 0) {
-      const memBefore = process.memoryUsage().heapUsed;
-      logger.info(
-        `[Grand Melee Orchestrator] Super-batch cooldown after ${processed} matches (mem: ${Math.round(memBefore / 1024 / 1024)}MB) - waiting ${SUPER_BATCH_COOLDOWN_MS / 1000}s for GC`,
-      );
-
-      if (global.gc) global.gc();
-      await throttle(SUPER_BATCH_COOLDOWN_MS);
-      if (global.gc) global.gc();
-
-      const memAfter = process.memoryUsage().heapUsed;
-      logger.info(
-        `[Grand Melee Orchestrator] Super-batch resumed (mem: ${Math.round(memAfter / 1024 / 1024)}MB, freed: ${Math.round((memBefore - memAfter) / 1024 / 1024)}MB)`,
-      );
-
-      // Re-fetch after pause
-      unifiedMatch = await prisma.scheduledMatch.findFirst({
-        where: { matchType: 'grand_melee', status: 'scheduled', id: { notIn: [...attempted] } },
-        include: { participants: true },
-        orderBy: { createdAt: 'asc' },
-      });
-      if (!unifiedMatch) break;
-    }
-    // REGULAR BATCH: Every 10 matches, short pause for GC opportunity
-    else if (processed > 0 && processed % BATCH_SIZE === 0) {
-      logger.info(
-        `[Grand Melee Orchestrator] Batch cooldown after ${processed} matches (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`,
-      );
-      await throttle(BATCH_COOLDOWN_MS);
-      if (global.gc) global.gc();
-    }
-    // MATCH THROTTLE: Brief pause between each match
-    else if (processed > 0) {
-      await throttle(MATCH_THROTTLE_MS);
-    }
-
-    const matchId = unifiedMatch.id;
-    attempted.push(matchId);
-    const participantCount = unifiedMatch.participants.length;
-
-    try {
-      // A Thin_Instance bye resolves without combat (Spec #49).
-      if (unifiedMatch.isByeMatch === true) {
-        await resolvePlacementBye(
-          unifiedMatch.id,
-          'grand_melee',
-          unifiedMatch.participants.map(p => p.participantId),
-          unifiedMatch.leagueType ?? undefined,
-        );
-        summary.byeMatches++;
-        summary.totalRobotsInvolved += participantCount;
-        summary.matchResults.push({ matchId, winnerId: null, placements: [] });
-        processed++;
-        continue;
-      }
-
-      const result = await processGrandMeleeBattle({
-        id: unifiedMatch.id,
-        participants: unifiedMatch.participants,
-        leagueType: unifiedMatch.leagueType,
-        leagueInstanceId: unifiedMatch.leagueInstanceId,
-        scheduledFor: unifiedMatch.scheduledFor,
-      });
-      if (result.outcome === 'below_minimum') summary.belowMinimumMatches++;
-      else summary.successfulMatches++;
-      summary.forfeitedRobots += result.forfeitedCount;
-      summary.totalRobotsInvolved += participantCount;
-      summary.matchResults.push({ matchId, winnerId: result.winnerId, placements: result.placements });
-    } catch (error) {
-      // Rule 7: cancel the match (no retry, no reward), log, carry on.
-      summary.failedMatches++;
-      const { errorSummary } = await handleMatchFailure({
-        mode: 'grand_melee',
-        ref: { source: 'scheduled_match', id: matchId },
-        error,
-        participants: unifiedMatch.participants.map(p => p.participantId),
-      });
-      summary.errors.push(`Grand Melee Match ${matchId}: ${errorSummary}`);
-    }
-
-    processed++;
-  }
-
-  logger.info(
-    `[Grand Melee Orchestrator] Execution complete: ${summary.successfulMatches} successful, ${summary.byeMatches} byes, ${summary.belowMinimumMatches} below minimum, ${summary.forfeitedRobots} robots forfeited, ${summary.failedMatches} failed (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`,
-  );
-  return summary;
 }

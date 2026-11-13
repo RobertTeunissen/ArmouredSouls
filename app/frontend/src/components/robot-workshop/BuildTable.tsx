@@ -267,4 +267,3 @@ function AttributeRow({ attr, cap, ...props }: BuildTableProps & { attr: Attribu
   );
 }
 
-export default BuildTable;

@@ -18,7 +18,7 @@ import type {
   LayerToggles,
 } from '@shared/types';
 
-export const ALL_LAYERS_ON: LayerToggles = { tuning: true, weapons: true, refinements: true, loadout: true, stance: true };
+const ALL_LAYERS_ON: LayerToggles = { tuning: true, weapons: true, refinements: true, loadout: true, stance: true };
 
 export const DEFAULT_ATTRIBUTE_FILTERS: AttributeFilters = { range: '7d', toggles: { ...ALL_LAYERS_ON }, column: 'all' };
 

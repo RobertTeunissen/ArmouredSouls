@@ -5,8 +5,8 @@ import { LEAGUE_TIERS, getTierColor, getTierName } from '../../utils/tierHelpers
 import { MODE_LONG_LABELS, ROSTER_MODES, ordinal } from '../../utils/stableViewFormat';
 import { tierBands, type HistoryEntry, type TierBand } from '../../utils/robotProfileFormat';
 import { useSeasonStore } from '../../stores/seasonStore';
-import type { ProfileStanding } from './useRobotProfile';
 import type { TieredStandingsMode } from '@shared/utils/automatonStandingsTier';
+import type { ProfileStanding } from '@shared/types';
 
 interface HistorySectionProps {
   robotId: number;
@@ -147,4 +147,3 @@ function BandStrip({ bands, end, mode }: { bands: readonly TierBand[]; end: numb
   );
 }
 
-export default HistorySection;

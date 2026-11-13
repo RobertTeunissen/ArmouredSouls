@@ -39,7 +39,6 @@ import type { WeaponFacts } from './stableFacts';
 import { requiredTeamNameCounts } from './teamRule';
 import {
   buildableBlueprintCount,
-  highestRobotsBound as buildOrderRobotsBound,
   MAX_AUTOMATON_BLUEPRINTS,
   teamNameMaxRobots,
 } from '../../shared/utils/automatonTeamRule';
@@ -56,7 +55,7 @@ export const CATALOGUE_DIRECTORY = path.resolve(__dirname, '..', '..', '..', 'pr
 /** Repository_Images: `app/frontend/public/assets/automatons` (ACC: `/opt/armouredsouls/frontend/...`). */
 export const REPOSITORY_IMAGE_DIRECTORY = path.resolve(__dirname, '..', '..', '..', '..', 'frontend', 'public', 'assets', 'automatons');
 /** URL prefix of Repository_Images (frontend static assets). */
-export const REPOSITORY_IMAGE_URL_PREFIX = '/assets/automatons';
+const REPOSITORY_IMAGE_URL_PREFIX = '/assets/automatons';
 
 export const CATALOGUE_SCHEMA_VERSION = 1;
 /** Lowercase letters, digits and hyphens, 3–40 characters (`review/CATALOGUE.md` §2). */
@@ -77,16 +76,16 @@ export function compareCatalogueKeys(a: string, b: string): number {
   return a > b ? 1 : 0;
 }
 export const MAX_BLUEPRINTS = MAX_AUTOMATON_BLUEPRINTS;
-export const MAX_WEAPON_STAGES = 4;
-export const MAX_REFINEMENT_STEPS_PER_WEAPON = 5;
-export const MAX_YIELD_THRESHOLD = 50;
-export const FRANCHISE_MAX_LENGTH = 60;
-export const BACKSTORY_MAX_LENGTH = 400;
-export const TEAM_NAME_MIN_LENGTH = 3;
-export const TEAM_NAME_MAX_LENGTH = 32;
+const MAX_WEAPON_STAGES = 4;
+const MAX_REFINEMENT_STEPS_PER_WEAPON = 5;
+const MAX_YIELD_THRESHOLD = 50;
+const FRANCHISE_MAX_LENGTH = 60;
+const BACKSTORY_MAX_LENGTH = 400;
+const TEAM_NAME_MIN_LENGTH = 3;
+const TEAM_NAME_MAX_LENGTH = 32;
 
-export const LOADOUT_TYPES = ['single', 'weapon_shield', 'dual_wield', 'two_handed'] as const satisfies readonly LoadoutType[];
-export const STANCES = ['offensive', 'defensive', 'balanced'] as const satisfies readonly Stance[];
+const LOADOUT_TYPES = ['single', 'weapon_shield', 'dual_wield', 'two_handed'] as const satisfies readonly LoadoutType[];
+const STANCES = ['offensive', 'defensive', 'balanced'] as const satisfies readonly Stance[];
 export const BUILD_FOCUS_KEYS = ['bruiser', 'deadeye', 'warden', 'sprinter', 'tactician', 'versatile'] as const satisfies readonly BuildFocusKey[];
 
 /** The Repository_Image path of a Blueprint_Slot, relative to the image directory. */
@@ -115,7 +114,7 @@ export const franchiseSchema = trimmedText(FRANCHISE_MAX_LENGTH);
 /** Backstory: admin-only flavour text, 1–400 characters. */
 export const backstorySchema = trimmedText(BACKSTORY_MAX_LENGTH);
 
-export const refinementStepSchema = z.object({
+const refinementStepSchema = z.object({
   tier: z.enum(['hone', 'augment', 'sharpen', 'forge']),
   hand: z.enum(['main', 'offhand']),
   targetAttribute: z.enum(ROBOT_ATTRIBUTES).optional(),
@@ -134,7 +133,7 @@ export const refinementStepSchema = z.object({
   }
 });
 
-export const weaponStageSchema = z.object({
+const weaponStageSchema = z.object({
   main: z.string().min(1).max(100),
   offhand: z.string().min(1).max(100).optional(),
 }).strict();
@@ -150,7 +149,7 @@ export const blueprintFieldsSchema = z.object({
   refinementPlan: z.array(refinementStepSchema).max(MAX_REFINEMENT_STEPS_PER_WEAPON * 2),
 });
 
-export const catalogueBlueprintSchema = blueprintFieldsSchema.extend({
+const catalogueBlueprintSchema = blueprintFieldsSchema.extend({
   slot: z.number().int().min(1).max(MAX_BLUEPRINTS),
 }).strict();
 
@@ -327,11 +326,6 @@ export function eventOrderIssues(eventOrder: readonly string[], at: (string | nu
   return [{ rule: 'event_order', message: `Event order must list all ${SUBSCRIBABLE_EVENT_TYPES.length} event types, each once.`, path: at }];
 }
 
-/** Highest robots bound of a Build_Order (the robot count Team_Names are sized for). */
-export function highestRobotsBound(strategy: Pick<UpgradeStrategy, 'buildOrder'>): number {
-  return buildOrderRobotsBound(strategy.buildOrder);
-}
-
 /**
  * The number of Robot_Blueprints a stable can build: the run of slots 1…k
  * with no gap. The N-th robot is built from slot N (glossary, Blueprint_Slot)
@@ -348,7 +342,7 @@ export function requiredTeamNameCountsFor(strategy: Pick<UpgradeStrategy, 'build
 }
 
 /** Approved text: review/PLAYER_FACING_TEXT.md §6.5 "Error: team names count". */
-export function teamNamesCountMessage(required: { twoVsTwo: number; threeVsThree: number }): string {
+function teamNamesCountMessage(required: { twoVsTwo: number; threeVsThree: number }): string {
   return `This stable needs ${required.twoVsTwo} team names for 2v2 and ${required.threeVsThree} for 3v3.`;
 }
 
@@ -444,7 +438,7 @@ export interface CatalogueContext {
 }
 
 /** Every context rule of one structurally valid Catalogue_Entry. */
-export function catalogueEntryIssues(entry: CatalogueEntry, context: CatalogueContext): { issues: CatalogueIssue[]; parameters?: StrategyParametersV1 } {
+function catalogueEntryIssues(entry: CatalogueEntry, context: CatalogueContext): { issues: CatalogueIssue[]; parameters?: StrategyParametersV1 } {
   const issues: CatalogueIssue[] = [];
   const stable = validateStableName(entry.stableName);
   if (!stable.valid) issues.push({ rule: 'stable_name', message: stable.error ?? 'Invalid stable name.', path: ['stableName'] });
@@ -472,7 +466,7 @@ export function catalogueEntryIssues(entry: CatalogueEntry, context: CatalogueCo
 }
 
 /** The Catalogue_Entry schema with every context rule (R10.1). */
-export function catalogueEntrySchema(context: CatalogueContext): z.ZodType<CatalogueEntry> {
+function catalogueEntrySchema(context: CatalogueContext): z.ZodType<CatalogueEntry> {
   return catalogueEntryShape.superRefine((entry, ctx) => {
     for (const issue of catalogueEntryIssues(entry, context).issues) {
       ctx.addIssue({ code: 'custom', message: issue.message, path: issue.path, params: { rule: issue.rule } });

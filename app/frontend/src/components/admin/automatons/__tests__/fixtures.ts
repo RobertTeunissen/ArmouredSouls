@@ -73,7 +73,7 @@ export const PROFILES: ProfileListItem[] = [
 ];
 
 /** A zero-filled per-mode entry with the mode's kind and entity type. */
-export function modePerformance(mode: TieredStandingsMode, overrides: Partial<ModePerformance> = {}): ModePerformance {
+function modePerformance(mode: TieredStandingsMode, overrides: Partial<ModePerformance> = {}): ModePerformance {
   return {
     mode,
     kind: PLACEMENT_STANDINGS_MODES.includes(mode) ? 'placement' : 'head_to_head',

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import SearchResultList from '../SearchResultList';
-import type { SearchResponse } from '../../../utils/searchTypes';
+import type { SearchResponse } from '@shared/types';
 
 const results: SearchResponse = {
   robots: [

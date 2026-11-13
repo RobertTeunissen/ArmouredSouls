@@ -13,26 +13,7 @@
  */
 import type { LeagueTierPreview, PlannableStanding } from './league-rebalancing-preview';
 import type { LeagueRuleSet } from './league-rules';
-
-export type StandingStatusKind =
-  | 'promotes'
-  | 'demotes'
-  /** Promotion place, enough cycles, below the tier's LP minimum. */
-  | 'held_lp'
-  /** Promotion or demotion place, not yet enough cycles in the tier. */
-  | 'held_cycles'
-  /** Promotion place and qualifying, but the empty tier above needs a larger cohort. */
-  | 'held_cohort';
-
-export interface StandingStatus {
-  kind: StandingStatusKind;
-  /** Which zone the entity's place is in. */
-  zone: 'promotion' | 'demotion';
-  /** `held_cycles`: cycles still needed in this tier. */
-  cyclesToGo?: number;
-  /** `held_lp`: the LP minimum for promotion out of this tier. */
-  minLP?: number;
-}
+import type { StandingStatus } from '../../shared/types';
 
 /** Status for every entity in a promotion or demotion place of the tier; absent = no zone place. */
 export function buildStandingStatuses<T extends PlannableStanding>(

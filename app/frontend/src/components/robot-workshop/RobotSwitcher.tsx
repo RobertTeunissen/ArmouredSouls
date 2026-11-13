@@ -42,4 +42,3 @@ export function RobotSwitcher({ robots, currentId, section, confirmLeave }: Robo
   );
 }
 
-export default RobotSwitcher;

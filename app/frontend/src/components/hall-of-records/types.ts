@@ -3,6 +3,7 @@
  * view model the page renders (built by `utils/hallOfRecords.ts`).
  */
 import type { StableType } from '../../types/stable';
+import type { WinStreakEntry, WinStreakMode } from '@shared/types';
 
 // ─── API payload ────────────────────────────────────────────────────
 
@@ -52,9 +53,7 @@ export type DamageRecordMode = typeof DAMAGE_RECORD_MODES[number];
  * League modes with a tracked win streak (Spec #46 R7). Tournament modes never
  * record one; Grand Melee is left out by decision; KotH has its own record.
  */
-export const WIN_STREAK_MODES = ['league_1v1', 'league_2v2', 'league_3v3', 'tag_team'] as const;
-
-export type WinStreakMode = typeof WIN_STREAK_MODES[number];
+export const WIN_STREAK_MODES = ['league_1v1', 'league_2v2', 'league_3v3', 'tag_team'] as const satisfies readonly WinStreakMode[];
 
 export interface MostDamageInBattle extends RecordPlace {
   battleId: number;
@@ -205,17 +204,6 @@ export interface GrandMeleeMostKills extends RobotRecordBase {
   grandMeleeMatches: number;
   /** Spec #46 R4.17: total kills alone rewards match volume. */
   killsPerMatch: number;
-}
-
-export interface WinStreakEntry extends RecordOwner, RecordPlace {
-  entityId: number;
-  /** Robot name for `league_1v1`, team name for the three team modes. */
-  entityName: string;
-  bestWinStreak: number;
-  currentWinStreak: number;
-  /** True when the best streak is the one currently running. */
-  isActive: boolean;
-  wins: number;
 }
 
 export interface TournamentChampionRecord {

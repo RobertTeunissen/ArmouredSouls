@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { SeedEntry } from '../../utils/tournamentApi';
+import type { SeedEntry } from '@shared/types';
 
 interface SeedingListProps {
   seedings: SeedEntry[];

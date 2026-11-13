@@ -4,8 +4,6 @@ import {
   getLeagueInstanceStats,
   assignLeagueInstance,
   rebalanceInstances,
-  getRobotsInInstance,
-  moveRobotToInstance,
   MAX_ROBOTS_PER_INSTANCE,
 } from '../src/services/league/leagueInstanceService';
 import { enterRobotStanding, enterRobotStandings } from './helpers/standings';
@@ -433,70 +431,4 @@ describe('League Instance Service', () => {
     });
   });
 
-  describe('getRobotsInInstance', () => {
-    it('should return robots in correct order', async () => {
-      const user = await prisma.user.create({
-        data: {
-          username: 'test_order_user',
-          passwordHash: 'hash',
-        },
-      });
-
-      await prisma.robot.createMany({
-        data: [
-          { userId: user.id, name: 'Robot A', elo: 1200, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
-          { userId: user.id, name: 'Robot B', elo: 1100, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
-          { userId: user.id, name: 'Robot C', elo: 1300, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
-        ],
-      });
-      // A: 10 LP, B and C: 20 LP each — so LP alone does not settle B against C.
-      await placeRobots(user.id, 'bronze', () => 1, {
-        leaguePointsFor: (index) => (index === 0 ? 10 : 20),
-      });
-
-      const robots = await getRobotsInInstance('bronze_1');
-
-      expect(robots).toHaveLength(3);
-      // Should be ordered by league points DESC, then ELO DESC
-      expect(robots[0].name).toBe('Robot C'); // 20 points, 1300 ELO
-      expect(robots[1].name).toBe('Robot B'); // 20 points, 1100 ELO
-      expect(robots[2].name).toBe('Robot A'); // 10 points, 1200 ELO
-    });
-  });
-
-  describe('moveRobotToInstance', () => {
-    it('should move robot to appropriate instance in new tier', async () => {
-      const user = await prisma.user.create({
-        data: {
-          username: 'test_move_user',
-          passwordHash: 'hash',
-        },
-      });
-
-      const robot = await prisma.robot.create({
-        data: {
-          userId: user.id,
-          name: 'Moving Robot',
-          currentHP: 10,
-          maxHP: 10,
-          currentShield: 2,
-          maxShield: 2,
-        },
-      });
-      await enterRobotStanding(robot.id, 'league_1v1', { tier: 'bronze', leaguePoints: 12 });
-
-      await moveRobotToInstance(robot.id, 'silver');
-
-      // The move is a standings write — tier and instance live there, not on Robot.
-      const standing = await prisma.standing.findUnique({
-        where: {
-          entityType_entityId_mode: { entityType: 'robot', entityId: robot.id, mode: 'league_1v1' },
-        },
-      });
-      expect(standing).not.toBeNull();
-      expect(standing?.tier).toBe('silver');
-      expect(standing?.leagueInstanceId).toBe('silver_1');
-      expect(standing?.leaguePoints).toBe(12); // LP is carried, not reset, by an instance move
-    });
-  });
 });

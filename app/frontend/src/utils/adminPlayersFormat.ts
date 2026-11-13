@@ -5,15 +5,15 @@
 import type { PlayerRow, PlayerSegment, StableType } from '@shared/types';
 
 export type PlayersSegmentFilter = 'all' | PlayerSegment | 'onboarding' | 'low-balance';
-export const PLAYER_SEGMENT_FILTERS: readonly PlayersSegmentFilter[] = ['all', 'active', 'inactive', 'dormant', 'onboarding', 'low-balance'];
+const PLAYER_SEGMENT_FILTERS: readonly PlayersSegmentFilter[] = ['all', 'active', 'inactive', 'dormant', 'onboarding', 'low-balance'];
 
 export type PlayersSortKey = 'stable' | 'robots' | 'battles' | 'winRate' | 'balance' | 'lastLogin' | 'joined' | 'issues';
-export const PLAYER_SORT_KEYS: readonly PlayersSortKey[] = ['stable', 'robots', 'battles', 'winRate', 'balance', 'lastLogin', 'joined', 'issues'];
+const PLAYER_SORT_KEYS: readonly PlayersSortKey[] = ['stable', 'robots', 'battles', 'winRate', 'balance', 'lastLogin', 'joined', 'issues'];
 export interface PlayersSort {
   key: PlayersSortKey;
   direction: 'asc' | 'desc';
 }
-export const DEFAULT_PLAYERS_SORT: PlayersSort = { key: 'lastLogin', direction: 'desc' };
+const DEFAULT_PLAYERS_SORT: PlayersSort = { key: 'lastLogin', direction: 'desc' };
 export const PLAYERS_PAGE_SIZE = 25;
 
 export interface PlayersViewState {
@@ -62,7 +62,7 @@ export function writePlayersView(params: URLSearchParams, patch: Partial<Players
   return next;
 }
 
-export function matchesSegment(row: PlayerRow, segment: PlayersSegmentFilter): boolean {
+function matchesSegment(row: PlayerRow, segment: PlayersSegmentFilter): boolean {
   switch (segment) {
     case 'all': return true;
     case 'onboarding': return row.issues.some((issue) => issue.code === 'onboarding_stuck');

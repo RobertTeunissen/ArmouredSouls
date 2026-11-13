@@ -15,35 +15,9 @@ import { verifyRobotOwnership } from '../../middleware/ownership';
 import { getPoolSize, getPerAttributeMax, ROBOT_ATTRIBUTES, type RobotAttribute } from './tuningPoolConfig';
 import { getCapForLevel } from '../../shared/utils/academyCaps';
 import { ATTRIBUTE_TO_ACADEMY } from '../robot/robotUpgradeService';
+import type { TuningAllocationState, TuningAllocationSummary, TuningAttributeMap } from '../../shared/types';
 
 // ── Types ────────────────────────────────────────────────────────────
-
-/** Sparse map of attribute → tuning bonus. Only non-zero attributes included. */
-export type TuningAttributeMap = Partial<Record<RobotAttribute, number>>;
-
-/** Full state returned to the frontend */
-export interface TuningAllocationState {
-  robotId: number;
-  facilityLevel: number;
-  poolSize: number;
-  allocated: number;
-  remaining: number;
-  perAttributeMaxes: Record<RobotAttribute, number>;
-  allocations: TuningAttributeMap;
-}
-
-/**
- * Pool budget only — no per-attribute detail.
- *
- * Enough to answer "does this robot have points left to spend?", which is all
- * the dashboard needs. See `getTuningAllocationSummaries`.
- */
-export interface TuningAllocationSummary {
-  robotId: number;
-  poolSize: number;
-  allocated: number;
-  remaining: number;
-}
 
 // ── Helpers ──────────────────────────────────────────────────────────
 

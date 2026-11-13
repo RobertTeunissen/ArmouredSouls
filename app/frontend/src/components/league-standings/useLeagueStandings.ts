@@ -8,7 +8,7 @@ import {
   type StandingsPage,
   type StandingsPageRequest,
 } from '../../utils/leagueStandingsApi';
-import type { MyStandingEntry } from '../../utils/leagueStandings';
+import type { MyStandingEntry } from '@shared/types';
 
 const log = createLogger('useLeagueStandings');
 

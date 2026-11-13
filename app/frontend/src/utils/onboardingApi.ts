@@ -12,39 +12,7 @@
  */
 import { api } from './api';
 import { ApiError } from './ApiError';
-
-/**
- * Tutorial state data structure
- */
-export interface TutorialState {
-  currentStep: number;
-  hasCompletedOnboarding: boolean;
-  onboardingSkipped: boolean;
-  strategy: string | null;
-  choices: OnboardingChoices;
-  startedAt: string | null;
-  completedAt: string | null;
-}
-
-/**
- * Player choices during onboarding (referenced by TutorialState).
- */
-export interface OnboardingChoices {
-  rosterStrategy?: '1_mighty' | '2_average' | '3_flimsy';
-  robotsCreated?: number[];
-  weaponsPurchased?: number[];
-  facilitiesPurchased?: string[];
-  loadoutType?: 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield';
-  preferredStance?: 'offensive' | 'defensive' | 'balanced';
-  weaponTypesSelected?: string[];
-  budgetSpent?: {
-    facilities: number;
-    robots: number;
-    weapons: number;
-    attributes: number;
-  };
-  isReplay?: boolean;
-}
+import type { TutorialState } from '@shared/types';
 
 /**
  * API response wrapper
@@ -96,38 +64,6 @@ export async function getTutorialState(): Promise<TutorialState> {
       throw new Error(error.message || 'Failed to get tutorial state', { cause: error });
     }
     throw new Error('Failed to get tutorial state', { cause: error });
-  }
-}
-
-/**
- * Skip the tutorial for the authenticated user.
- *
- * @returns Promise resolving when tutorial is skipped
- * @throws Error if request fails
- *
- * @example
- * await skipTutorial();
- * console.log('Tutorial skipped');
- *
- * Requirements: 1.6
- */
-export async function skipTutorial(): Promise<void> {
-  try {
-    const response = await api.post<ApiResponse<{ message: string }>>(
-      '/api/onboarding/skip'
-    );
-
-    if (!response.success) {
-      throw new Error(response.error || 'Failed to skip tutorial');
-    }
-  } catch (error: unknown) {
-    if (error instanceof ApiError) {
-      throw new Error(error.message || 'Failed to skip tutorial', { cause: error });
-    }
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Failed to skip tutorial', { cause: error });
   }
 }
 

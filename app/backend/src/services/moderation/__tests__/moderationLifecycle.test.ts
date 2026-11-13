@@ -1,8 +1,8 @@
-import type { ModerationAvailabilityStatus } from '../contentModerationService';
 import {
   shouldInitializeModeration,
   startModerationLifecycle,
 } from '../moderationLifecycle';
+import type { ModerationAvailabilityStatus } from '../../../shared/types';
 
 interface MockModerationService {
   initialize: jest.Mock<Promise<void>, []>;

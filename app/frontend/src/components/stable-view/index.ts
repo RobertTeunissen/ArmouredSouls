@@ -4,7 +4,5 @@ export { RosterSection, type RosterEntry } from './RosterSection';
 export { TrophyCabinet } from './TrophyCabinet';
 export { RecentResults } from './RecentResults';
 export { FacilitiesStrip } from './FacilitiesStrip';
-export { TierChip } from './TierChip';
-export { ModeStrip } from './ModeStrip';
 export { useStableProfile, type StablePageState } from './useStableProfile';
 export type * from './types';

@@ -1,6 +1,5 @@
 import prisma from '../../lib/prisma';
 
-export { TRANSACTION_TYPES } from '../../types';
 export type { TransactionType } from '../../types';
 
 interface TransactionSummary {

@@ -2,8 +2,8 @@
  * Pure derivations for the public robot profile (#504).
  */
 import { LEAGUE_TIER_ORDER, tierRank, isPlacementMode } from '@shared/utils/automatonStandingsTier';
-import type { RecentResult } from '../components/stable-view/types';
 import { ordinal } from './stableViewFormat';
+import type { RecentResult } from '@shared/types';
 
 export interface HistoryEntry {
   cycleNumber: number;

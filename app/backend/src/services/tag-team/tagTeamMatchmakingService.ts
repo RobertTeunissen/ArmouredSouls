@@ -315,7 +315,7 @@ function createByeTeam(league: string, leagueId: string): TeamBattleWithMembers 
  * Pair teams for matches within a league instance
  * Requirements 3.3, 15.6: LP matching, ELO matching, recent opponents, bye-team, same-stable exclusion
  */
-export async function pairTeams(teams: TeamBattleWithMembers[], tagTeamLeague: string, tagTeamLeagueId: string): Promise<TagTeamMatchPair[]> {
+async function pairTeams(teams: TeamBattleWithMembers[], tagTeamLeague: string, tagTeamLeagueId: string): Promise<TagTeamMatchPair[]> {
   if (teams.length === 0) {
     return [];
   }
@@ -390,7 +390,7 @@ export async function pairTeams(teams: TeamBattleWithMembers[], tagTeamLeague: s
  * Schedule matches using the unified SchedulingService.
  * Requirement 7.3: Create scheduled matches with matchType = 'tag_team'
  */
-export async function scheduleMatches(matches: TagTeamMatchPair[], scheduledFor: Date): Promise<void> {
+async function scheduleMatches(matches: TagTeamMatchPair[], scheduledFor: Date): Promise<void> {
   for (const match of matches) {
     const participants = [
       { participantType: 'team' as const, participantId: match.team1.id, slot: 1 },

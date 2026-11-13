@@ -19,7 +19,7 @@ import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import TutorialSettings from '../TutorialSettings';
-import type { TutorialState } from '../../utils/onboardingApi';
+import type { TutorialState } from '@shared/types';
 
 // Mock navigate
 const mockNavigate = vi.fn();

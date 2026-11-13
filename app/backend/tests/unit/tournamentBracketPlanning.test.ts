@@ -12,13 +12,12 @@
  */
 import * as fc from 'fast-check';
 import prisma from '../../src/lib/prisma';
+import { advanceWinnersToNextRound, resolveHigherSeed } from '../../src/services/tournament/tournamentService';
 import {
-  advanceWinnersToNextRound,
   generateStandardSeedOrder,
   planNextRoundSlots,
-  resolveHigherSeed,
   seedForParticipant,
-} from '../../src/services/tournament/tournamentService';
+} from '../../src/services/tournament/tournamentBracket';
 
 jest.mock('../../src/lib/prisma', () => ({
   __esModule: true,

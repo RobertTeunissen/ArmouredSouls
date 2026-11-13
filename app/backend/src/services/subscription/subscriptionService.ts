@@ -129,18 +129,6 @@ export async function isRobotSubscribedTo(robotId: number, eventType: string): P
   return count > 0;
 }
 
-/**
- * Alias of `isRobotSubscribedTo`, kept for the team-registration call sites.
- *
- * Subscriptions used to have a two-state model where a freshly created row sat
- * in `pending` until a matchmaker promoted it, and team registration had to
- * accept both states. Nothing ever wrote `pending`, so the distinction only ever
- * confused readers; the two helpers now ask exactly the same question.
- */
-export async function hasSubscription(robotId: number, eventType: string): Promise<boolean> {
-  return isRobotSubscribedTo(robotId, eventType);
-}
-
 // ── The one write path ───────────────────────────────────────────────
 
 /**

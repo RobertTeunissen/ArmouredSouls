@@ -1,8 +1,6 @@
 import {
-  isWeaponCompatibleWithLoadout,
   canEquipToSlot,
   validateOffhandEquipment,
-  getValidLoadoutsForWeapon,
   canChangeLoadout,
   isSlotAvailable,
 } from '../src/utils/weaponValidation';
@@ -51,26 +49,6 @@ const createMockWeapon = (overrides?: Partial<Weapon>): Weapon => ({
 describe('Weapon Validation', () => {
   afterAll(() => {
     // Pure unit test - no cleanup needed
-  });
-
-  describe('isWeaponCompatibleWithLoadout', () => {
-    it('should allow weapons with loadoutType "any" for all loadouts', () => {
-      const weapon = createMockWeapon({ loadoutType: 'any' });
-
-      expect(isWeaponCompatibleWithLoadout(weapon, 'single')).toBe(true);
-      expect(isWeaponCompatibleWithLoadout(weapon, 'weapon_shield')).toBe(true);
-      expect(isWeaponCompatibleWithLoadout(weapon, 'two_handed')).toBe(true);
-      expect(isWeaponCompatibleWithLoadout(weapon, 'dual_wield')).toBe(true);
-    });
-
-    it('should only allow specific loadout when weapon specifies it', () => {
-      const weapon = createMockWeapon({ loadoutType: 'two_handed' });
-
-      expect(isWeaponCompatibleWithLoadout(weapon, 'two_handed')).toBe(true);
-      expect(isWeaponCompatibleWithLoadout(weapon, 'single')).toBe(false);
-      expect(isWeaponCompatibleWithLoadout(weapon, 'weapon_shield')).toBe(false);
-      expect(isWeaponCompatibleWithLoadout(weapon, 'dual_wield')).toBe(false);
-    });
   });
 
   describe('canEquipToSlot - Shield weapons', () => {
@@ -181,45 +159,6 @@ describe('Weapon Validation', () => {
 
       expect(result.valid).toBe(false);
       expect(result.reason).toContain('main weapon');
-    });
-  });
-
-  describe('getValidLoadoutsForWeapon', () => {
-    it('should return correct loadouts for one-handed weapon in main slot', () => {
-      const weapon = createMockWeapon({ handsRequired: 'one', loadoutType: 'any' });
-      const loadouts = getValidLoadoutsForWeapon(weapon, 'main');
-
-      expect(loadouts).toContain('single');
-      expect(loadouts).toContain('weapon_shield');
-      expect(loadouts).toContain('dual_wield');
-      expect(loadouts).not.toContain('two_handed');
-    });
-
-    it('should return only dual_wield for one-handed weapon in offhand', () => {
-      const weapon = createMockWeapon({ handsRequired: 'one', loadoutType: 'any' });
-      const loadouts = getValidLoadoutsForWeapon(weapon, 'offhand');
-
-      expect(loadouts).toEqual(['dual_wield']);
-    });
-
-    it('should return only two_handed for two-handed weapon in main', () => {
-      const weapon = createMockWeapon({ 
-        handsRequired: 'two',
-        loadoutType: 'two_handed',
-      });
-      const loadouts = getValidLoadoutsForWeapon(weapon, 'main');
-
-      expect(loadouts).toEqual(['two_handed']);
-    });
-
-    it('should return only weapon_shield for shield in offhand', () => {
-      const shield = createMockWeapon({ 
-        handsRequired: 'shield',
-        loadoutType: 'weapon_shield',
-      });
-      const loadouts = getValidLoadoutsForWeapon(shield, 'offhand');
-
-      expect(loadouts).toEqual(['weapon_shield']);
     });
   });
 

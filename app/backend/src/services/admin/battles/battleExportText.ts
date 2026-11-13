@@ -180,7 +180,7 @@ function payoutLines(d: AdminBattleDetail): string[] {
 }
 
 /** "Name · placement 2 · tier gold: ₡7,500 × 1.5 × 0.7 × 1.25 zone dominance = ₡9,844" for one placement award. */
-export function placementComponentText(c: PlacementPayoutComponent, formatCredits: (n: number) => string): string {
+function placementComponentText(c: PlacementPayoutComponent, formatCredits: (n: number) => string): string {
   const factors = [
     formatCredits(c.tierBaseReward),
     `${c.modeBaseMultiplier}`,

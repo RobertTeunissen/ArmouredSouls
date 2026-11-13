@@ -1,14 +1,13 @@
 /**
  * Unit tests for KotH Engine — Task 2.1: Zone management and spawn positioning
  *
- * Tests createControlZone, calculateSpawnPositions, validateKothConfig,
+ * Tests createControlZone, calculateSpawnPositions,
  * and evaluateZoneOccupation.
  */
 
 import {
   createControlZone,
   calculateSpawnPositions,
-  validateKothConfig,
   evaluateZoneOccupation,
   KOTH_MATCH_DEFAULTS,
   KothMatchConfig,
@@ -183,84 +182,6 @@ describe('calculateSpawnPositions', () => {
   });
 });
 
-// ─── validateKothConfig ─────────────────────────────────────────────
-
-describe('validateKothConfig', () => {
-  it('should accept a valid config with defaults', () => {
-    const result = validateKothConfig(baseConfig());
-    expect(result.valid).toBe(true);
-    expect(result.errors).toHaveLength(0);
-  });
-
-  it('should accept participantCount 5', () => {
-    const result = validateKothConfig(baseConfig({ participantCount: 5 }));
-    expect(result.valid).toBe(true);
-  });
-
-  it('should reject participantCount 4', () => {
-    const result = validateKothConfig(baseConfig({ participantCount: 4 }));
-    expect(result.valid).toBe(false);
-    expect(result.errors[0]).toContain('participantCount');
-  });
-
-  it('should accept participantCount 7', () => {
-    const result = validateKothConfig(baseConfig({ participantCount: 7 }));
-    expect(result.valid).toBe(true);
-  });
-
-  it('should reject participantCount 8', () => {
-    const result = validateKothConfig(baseConfig({ participantCount: 8 }));
-    expect(result.valid).toBe(false);
-  });
-
-  it('should accept scoreThreshold at boundaries 15 and 90', () => {
-    expect(validateKothConfig(baseConfig({ scoreThreshold: 15 })).valid).toBe(true);
-    expect(validateKothConfig(baseConfig({ scoreThreshold: 90 })).valid).toBe(true);
-  });
-
-  it('should reject scoreThreshold outside [15, 90]', () => {
-    expect(validateKothConfig(baseConfig({ scoreThreshold: 14 })).valid).toBe(false);
-    expect(validateKothConfig(baseConfig({ scoreThreshold: 91 })).valid).toBe(false);
-  });
-
-  it('should accept timeLimit at boundaries 60 and 300', () => {
-    expect(validateKothConfig(baseConfig({ timeLimit: 60 })).valid).toBe(true);
-    expect(validateKothConfig(baseConfig({ timeLimit: 300 })).valid).toBe(true);
-  });
-
-  it('should reject timeLimit outside [60, 300]', () => {
-    expect(validateKothConfig(baseConfig({ timeLimit: 59 })).valid).toBe(false);
-    expect(validateKothConfig(baseConfig({ timeLimit: 301 })).valid).toBe(false);
-  });
-
-  it('should accept zoneRadius at boundaries 3 and 8', () => {
-    expect(validateKothConfig(baseConfig({ zoneRadius: 3 })).valid).toBe(true);
-    expect(validateKothConfig(baseConfig({ zoneRadius: 8 })).valid).toBe(true);
-  });
-
-  it('should reject zoneRadius outside [3, 8]', () => {
-    expect(validateKothConfig(baseConfig({ zoneRadius: 2 })).valid).toBe(false);
-    expect(validateKothConfig(baseConfig({ zoneRadius: 9 })).valid).toBe(false);
-  });
-
-  it('should collect multiple errors when multiple fields are invalid', () => {
-    const result = validateKothConfig({
-      participantCount: 3,
-      scoreThreshold: 100,
-      timeLimit: 10,
-      zoneRadius: 1,
-      matchId: 1,
-    });
-    expect(result.valid).toBe(false);
-    expect(result.errors).toHaveLength(4);
-  });
-
-  it('should skip validation for undefined optional fields', () => {
-    const result = validateKothConfig({ participantCount: 6, matchId: 1 });
-    expect(result.valid).toBe(true);
-    expect(result.errors).toHaveLength(0);
-  });
-});
 
 // ─── evaluateZoneOccupation ─────────────────────────────────────────
 
@@ -613,7 +534,6 @@ describe('awardKillBonus', () => {
 import {
   KothWinConditionEvaluator,
   calculateFinalPlacements,
-  KothPlacement,
 } from '../src/services/arena/kothEngine';
 import type { GameModeState } from '../src/services/arena/types';
 
@@ -1579,7 +1499,6 @@ describe('KothMovementIntentModifier', () => {
 import {
   handleRobotYield,
   handleRobotDestruction,
-  removeFromZoneOccupants,
 } from '../src/services/arena/kothEngine';
 
 // ─── handleRobotYield ───────────────────────────────────────────────
@@ -1783,7 +1702,6 @@ describe('Elimination edge cases', () => {
 
 import {
   tickPassivePenalties,
-  KOTH_PASSIVE_PENALTIES,
 } from '../src/services/arena/kothEngine';
 
 // ─── tickPassivePenalties ───────────────────────────────────────────

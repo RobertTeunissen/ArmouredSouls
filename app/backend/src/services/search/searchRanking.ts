@@ -106,7 +106,7 @@ function compareRanks(left: MatchRank, right: MatchRank): number {
  * The supplied comparator must provide the category-specific deterministic
  * tie-break for records with the same Match_Rank.
  */
-export function sortRankedSources<T>(
+function sortRankedSources<T>(
   rankedSources: readonly RankedSearchSource<T>[],
   compareSources: (left: T, right: T) => number,
 ): RankedSearchSource<T>[] {

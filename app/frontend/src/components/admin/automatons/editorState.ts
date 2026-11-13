@@ -26,7 +26,7 @@ export interface EditorForm extends StableCardValues {
   pending: { slot: number; fields: BlueprintFields }[];
 }
 
-export function blueprintFields(view: BlueprintView): BlueprintFields {
+function blueprintFields(view: BlueprintView): BlueprintFields {
   return {
     robotName: view.robotName,
     loadoutType: view.loadoutType,

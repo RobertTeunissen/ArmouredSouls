@@ -525,6 +525,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
   };
 
   const records = await import('../records/recordsQueryService');
+  const modeRecords = await import('../records/modeRecordsQueries');
 
   // ── Combat: most damage per mode (Narrowest Victory was removed, Nov 2026) ──
   await capture('combat', async () => {
@@ -595,7 +596,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
 
   // ── King of the Hill ──
   await capture('koth', async () => {
-    const koth = await records.fetchKothRecords();
+    const koth = await modeRecords.fetchKothRecords();
     if (!koth) return;
     const list = <T>(key: string): T[] => (koth[key] as T[] | undefined) ?? [];
     type KRow = { robotId: number; robotName: string };
@@ -616,7 +617,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
 
   // ── Grand Melee ──
   await capture('grandMelee', async () => {
-    const gm = await records.fetchGrandMeleeRecords();
+    const gm = await modeRecords.fetchGrandMeleeRecords();
     if (!gm) return;
     const list = <T>(key: string): T[] => (gm[key] as T[] | undefined) ?? [];
     type GRow = { robotId: number; robotName: string };
@@ -684,7 +685,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
 
   // ── League win streaks, per mode. Team modes attribute to the team. ──
   await capture('winStreaks', async () => {
-    const streaks = await records.fetchWinStreakRecords();
+    const streaks = await modeRecords.fetchWinStreakRecords();
     const teamModes = new Set<string>(['league_2v2', 'league_3v3', 'tag_team']);
     for (const [mode, entries] of Object.entries(streaks ?? {})) {
       const isTeam = teamModes.has(mode);

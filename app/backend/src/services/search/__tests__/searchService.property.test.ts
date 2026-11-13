@@ -12,7 +12,8 @@ import {
   SearchDatabase,
   SearchService,
 } from '../searchService';
-import { MINIMUM_QUERY_LENGTH, SearchResponse } from '../searchTypes';
+import { MINIMUM_QUERY_LENGTH } from '../searchTypes';
+import type { SearchResponse } from '../../../shared/types';
 
 const edgeWhitespaceArbitrary = fc.array(
   fc.constantFrom(' ', '\t', '\n', '\r'),

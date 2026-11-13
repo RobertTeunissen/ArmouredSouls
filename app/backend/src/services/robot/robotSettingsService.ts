@@ -11,11 +11,11 @@ import { RobotError, RobotErrorCode } from '../../errors/robotErrors';
 import { verifyRobotOwnership } from '../../middleware/ownership';
 import type { Prisma } from '../../../generated/prisma';
 
-export const ROBOT_STANCES = ['offensive', 'defensive', 'balanced'] as const;
+const ROBOT_STANCES = ['offensive', 'defensive', 'balanced'] as const;
 export type RobotStance = typeof ROBOT_STANCES[number];
 
-export const YIELD_THRESHOLD_MIN = 0;
-export const YIELD_THRESHOLD_MAX = 50;
+const YIELD_THRESHOLD_MIN = 0;
+const YIELD_THRESHOLD_MAX = 50;
 
 const ROBOT_WEAPON_INCLUDE = {
   // Spec #34: refinements drive rank prefix + slot bar in the

@@ -10,56 +10,15 @@
 
 import { StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
-import logger from '../../config/logger';
-import { TournamentError, TournamentErrorCode } from '../../errors/tournamentErrors';
+import type { ResolvedParticipant } from '../../shared/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type ParticipantType = 'robot' | 'team_2v2' | 'team_3v3';
 
-const VALID_PARTICIPANT_TYPES: ParticipantType[] = ['robot', 'team_2v2', 'team_3v3'];
-
-export interface ResolvedParticipant {
-  id: number;
-  displayName: string;
-  leagueTier: string;
-  elo: number;
-  ownerId: number;
-  ownerStableName?: string;
-  members?: { robotId: number; robotName: string; elo: number }[];
-}
-
 // ─── Validation ──────────────────────────────────────────────────────────────
 
-/**
- * Validates that the given type string is a recognized ParticipantType.
- * Throws TournamentError with INVALID_PARTICIPANT_TYPE if unrecognized.
- */
-export function validateParticipantType(type: string): asserts type is ParticipantType {
-  if (!VALID_PARTICIPANT_TYPES.includes(type as ParticipantType)) {
-    throw new TournamentError(
-      TournamentErrorCode.INVALID_PARTICIPANT_TYPE,
-      `Unrecognized participant type: '${type}'. Allowed values: ${VALID_PARTICIPANT_TYPES.join(', ')}`,
-      400,
-    );
-  }
-}
-
 // ─── Single Resolution ───────────────────────────────────────────────────────
-
-/**
- * Resolves a single participant's details by ID and type.
- * Returns null if the entity is not found.
- */
-export async function resolveParticipant(
-  participantId: number,
-  participantType: ParticipantType,
-): Promise<ResolvedParticipant | null> {
-  if (participantType === 'robot') {
-    return resolveRobotParticipant(participantId);
-  }
-  return resolveTeamParticipant(participantId);
-}
 
 // ─── Batch Resolution ────────────────────────────────────────────────────────
 
@@ -82,37 +41,6 @@ export async function resolveParticipantsBatch(
 }
 
 // ─── Internal: Robot Resolution ──────────────────────────────────────────────
-
-async function resolveRobotParticipant(robotId: number): Promise<ResolvedParticipant | null> {
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-    include: {
-      user: {
-        select: { id: true, stableName: true, username: true },
-      },
-    },
-  });
-
-  if (!robot) {
-    logger.warn(`Participant resolver: Robot ${robotId} not found`);
-    return null;
-  }
-
-  // Read tier from standings (source of truth)
-  const standing = await prisma.standing.findFirst({
-    where: { entityType: 'robot', entityId: robot.id, mode: StandingsMode.league_1v1 },
-    select: { tier: true },
-  });
-
-  return {
-    id: robot.id,
-    displayName: robot.name,
-    leagueTier: standing?.tier ?? 'bronze',
-    elo: robot.elo,
-    ownerId: robot.userId,
-    ownerStableName: robot.user.stableName || robot.user.username,
-  };
-}
 
 async function resolveRobotParticipantsBatch(ids: number[]): Promise<Map<number, ResolvedParticipant>> {
   const robots = await prisma.robot.findMany({
@@ -147,53 +75,6 @@ async function resolveRobotParticipantsBatch(ids: number[]): Promise<Map<number,
 }
 
 // ─── Internal: Team Resolution ───────────────────────────────────────────────
-
-async function resolveTeamParticipant(teamId: number): Promise<ResolvedParticipant | null> {
-  const team = await prisma.teamBattle.findUnique({
-    where: { id: teamId },
-    include: {
-      members: {
-        include: {
-          robot: {
-            select: { id: true, name: true, elo: true },
-          },
-        },
-        orderBy: { slotIndex: 'asc' },
-      },
-      stable: {
-        select: { id: true, stableName: true, username: true },
-      },
-    },
-  });
-
-  if (!team) {
-    logger.warn(`Participant resolver: Team ${teamId} not found`);
-    return null;
-  }
-
-  const members = team.members.map((m) => ({
-    robotId: m.robot.id,
-    robotName: m.robot.name,
-    elo: m.robot.elo,
-  }));
-
-  // Read tier from standings (source of truth)
-  const mode = team.teamSize === 2 ? 'league_2v2' : 'league_3v3';
-  const standing = await prisma.standing.findFirst({
-    where: { entityType: 'team', entityId: team.id, mode: mode as StandingsMode },
-    select: { tier: true },
-  });
-
-  return {
-    id: team.id,
-    displayName: team.teamName,
-    leagueTier: standing?.tier ?? 'bronze',
-    elo: members.reduce((sum, m) => sum + m.elo, 0),
-    ownerId: team.stableId,
-    ownerStableName: team.stable.stableName || team.stable.username,
-    members,
-  };
-}
 
 async function resolveTeamParticipantsBatch(ids: number[]): Promise<Map<number, ResolvedParticipant>> {
   const teams = await prisma.teamBattle.findMany({

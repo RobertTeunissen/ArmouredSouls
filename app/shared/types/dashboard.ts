@@ -1,13 +1,9 @@
 /**
- * Cycle_Progress_Summary — the response of `GET /api/dashboard/current-cycle`.
+ * Cycle_Progress_Summary: wire contract for `GET /api/dashboard/current-cycle`.
  *
  * Spec #48 Requirement 8. One authenticated read supplying every changing figure on
  * the Dashboard's Overview_Row, so three tiles do not each fetch and re-derive the
  * same window.
- *
- * Mirrored on the frontend in `app/frontend/src/utils/dashboardApi.ts`.
- *
- * @module types/dashboardTypes
  */
 
 /** Repair_Spend split by `repairType`. */

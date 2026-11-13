@@ -22,18 +22,16 @@ import type {
   PracticeUsage,
 } from '../../shared/types';
 
-export const PRACTICE_OUTCOMES = ['battle', 'rate_limited', 'cycle_busy'] as const;
-export type PracticeOutcome = (typeof PRACTICE_OUTCOMES)[number];
+export type PracticeOutcome = 'battle' | 'rate_limited' | 'cycle_busy';
 
-export const PRACTICE_MATCHUPS = ['owned_vs_sparring', 'owned_vs_owned', 'sparring_vs_sparring'] as const satisfies readonly PracticeMatchup[];
-export const PRACTICE_BOT_TIERS = ['WimpBot', 'AverageBot', 'ExpertBot', 'UltimateBot'] as const;
+const PRACTICE_BOT_TIERS = ['WimpBot', 'AverageBot', 'ExpertBot', 'UltimateBot'] as const;
 
 /** Days of history on the admin page (today included). */
-export const OVERVIEW_DAYS = 30;
+const OVERVIEW_DAYS = 30;
 /** Players listed under "Top practitioners". */
-export const TOP_PRACTITIONERS = 10;
+const TOP_PRACTITIONERS = 10;
 /** The migration that started recording events; its finish time bounds the history. */
-export const EVENTS_MIGRATION = '20261023140000_practice_arena_events';
+const EVENTS_MIGRATION = '20261023140000_practice_arena_events';
 
 const DAY_MS = 86_400_000;
 
@@ -109,7 +107,7 @@ export interface LockInterval {
   end: Date;
 }
 
-export const utcDayKey = (date: Date): string => date.toISOString().slice(0, 10);
+const utcDayKey = (date: Date): string => date.toISOString().slice(0, 10);
 
 const dayStart = (key: string): number => Date.parse(`${key}T00:00:00.000Z`);
 

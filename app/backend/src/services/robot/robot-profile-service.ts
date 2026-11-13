@@ -11,50 +11,13 @@ import prisma from '../../lib/prisma';
 import { getAchievementById } from '../../config/achievements';
 import { achievementService } from '../achievement';
 import { holderCount } from '../achievement/rarityHolders';
-import {
-  getRecentResults,
-  getRobotStandings,
-  type PublicRobotStanding,
-  type RecentResult,
-} from '../common/stable-view-sections';
+import { getRecentResults, getRobotStandings } from '../common/stable-view-sections';
+import type { ProfileAccolade, ProfileAchievement, ProfileStanding, PublicRobotStanding, RobotProfile } from '../../shared/types';
 
 /** Battles in the profile's form strip. */
 export const PROFILE_FORM_LIMIT = 10;
 
 const ACHIEVEMENT_TIER_ORDER: readonly string[] = ['easy', 'medium', 'hard', 'very_hard', 'secret'];
-
-export interface ProfileStanding extends PublicRobotStanding {
-  /** 1-based position by LP in the league instance; equal LP shares a rank. */
-  rank: number;
-  /** Competitors in the league instance (same entity type and mode). */
-  instanceSize: number;
-}
-
-export interface ProfileAchievement {
-  id: string;
-  name: string;
-  tier: string;
-  badgeIconFile: string;
-  unlockedAt: string;
-  /** Human stables holding it (rarity cache); null until the cache has loaded. */
-  holders: number | null;
-}
-
-export interface ProfileAccolade {
-  seasonNumber: number;
-  category: string;
-  rank: number;
-  value: number;
-  valueLabel: string;
-  mode: string | null;
-}
-
-export interface RobotProfile {
-  standings: ProfileStanding[];
-  form: RecentResult[];
-  achievements: ProfileAchievement[];
-  accolades: ProfileAccolade[];
-}
 
 /** Rank and size of the instance each standing sits in. */
 async function withRanks(standings: readonly PublicRobotStanding[]): Promise<ProfileStanding[]> {

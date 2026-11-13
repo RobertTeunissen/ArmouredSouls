@@ -64,7 +64,7 @@ export function SeasonCountdownNotice({
 }
 
 /** Site-wide placement below the navigation; the Dashboard shows the notice in its own list. */
-export function SeasonCountdownBanner(props: SeasonCountdownProps) {
+function SeasonCountdownBanner(props: SeasonCountdownProps) {
   const location = useLocation();
   const show = useSeasonStore(selectShouldShowCountdown(props.countdownCycles ?? SEASON_COUNTDOWN_CYCLES));
 

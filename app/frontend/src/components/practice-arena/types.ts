@@ -5,6 +5,7 @@
  */
 
 import type { PlaybackCombatResult } from '../BattlePlaybackViewer/types';
+import type { WhatIfOverrides } from '@shared/types';
 
 // ---------------------------------------------------------------------------
 // Enums / Unions
@@ -45,23 +46,16 @@ export interface SparringConfig {
   yieldThreshold: number;
 }
 
-export interface WhatIfOverrides {
-  attributes?: Record<string, number>;
-  loadoutType?: LoadoutType;
-  stance?: Stance;
-  yieldThreshold?: number;
-  mainWeaponId?: number;
-  offhandWeaponId?: number;
+/** What-If panel state: the request overrides plus the client-only academy simulation. */
+export interface WhatIfSettings extends WhatIfOverrides {
   /** Simulated academy level overrides (local to What-If, not sent to backend) */
   simulatedAcademyLevels?: Record<string, number>;
-  /** Tuning allocation overrides — replaces saved tuning for this practice battle */
-  tuningBonuses?: Record<string, number>;
 }
 
 export interface SlotState {
   mode: SlotMode;
   robotId: number | null;
-  overrides: WhatIfOverrides;
+  overrides: WhatIfSettings;
   sparringConfig: SparringConfig;
 }
 
@@ -89,10 +83,3 @@ export interface PracticeBatchResult {
 // ---------------------------------------------------------------------------
 // Academy Levels shape (used by WhatIfPanel and BattleSlotPanel)
 // ---------------------------------------------------------------------------
-
-export interface AcademyLevels {
-  combat_training_academy: number;
-  defense_training_academy: number;
-  mobility_training_academy: number;
-  ai_training_academy: number;
-}

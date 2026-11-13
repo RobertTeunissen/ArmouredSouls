@@ -10,7 +10,6 @@ import {
 } from '../league/leagueEngine';
 
 // Re-export for consumers that need the helper
-export { getMinLPForPromotion } from '../league/leaguePromotionThresholds';
 
 // Re-export for consumers that need the helper
 

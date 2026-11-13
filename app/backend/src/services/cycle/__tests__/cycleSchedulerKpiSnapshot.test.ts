@@ -3,7 +3,7 @@
  * cycle: after the cutover completes, only in the competitive phase, and
  * never failing settlement.
  */
-import { executeSettlement } from '../cycleScheduler';
+import { executeSettlement } from '../cycleSettlementJob';
 import { completeSerializedCycleCutover } from '../canonicalCycleIdentity';
 import { recordKpiSnapshotNonFatal } from '../../admin/adminKpiSnapshotService';
 

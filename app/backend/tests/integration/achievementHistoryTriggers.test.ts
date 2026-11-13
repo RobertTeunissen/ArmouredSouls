@@ -17,7 +17,7 @@ import {
   getAttributeUpgradeSpend,
   hasDippedBelow,
 } from '../../src/services/achievement/historyTriggers';
-import { checkRobotEquippedWeaponType, checkYieldsForcedCumulative } from '../../src/services/achievement/triggerEvaluator';
+import { checkRobotEquippedWeaponType, checkYieldsForcedCumulative } from '../../src/services/achievement/triggerQueries';
 import { loadBattleTimeMaxHP } from '../../src/services/battle/combatBuildRecorder';
 import { maxHPFromHullIntegrity } from '../../src/shared/utils/robotStats';
 import { createTestBattle, createTestRobot, createTestUser, deleteTestUser } from '../testHelpers';

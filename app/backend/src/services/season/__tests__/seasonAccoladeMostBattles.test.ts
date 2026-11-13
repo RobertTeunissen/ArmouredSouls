@@ -39,6 +39,8 @@ jest.mock('../../records/recordsQueryService', () => ({
   fetchCareerRecords: (...args: unknown[]) => mockFetchCareerRecords(...args),
   fetchEconomicRecords: jest.fn().mockResolvedValue({ highestFame: [], richestStables: [] }),
   fetchPrestigeRecords: jest.fn().mockResolvedValue({ highestPrestige: [], mostTitles: [] }),
+}));
+jest.mock('../../records/modeRecordsQueries', () => ({
   fetchKothRecords: jest.fn().mockResolvedValue(undefined),
   fetchGrandMeleeRecords: jest.fn().mockResolvedValue(undefined),
   fetchWinStreakRecords: jest.fn().mockResolvedValue({}),

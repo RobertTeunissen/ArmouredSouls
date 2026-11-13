@@ -973,7 +973,6 @@ prepareRobotForCombat(robot, tuning?)     // folds refinements, writes effective
 - prepareRobotForCombat(robot, tuning?)
 
 **Backend: /utils/weaponValidation.ts**
-- isWeaponCompatibleWithLoadout(weapon, loadoutType)
 - canEquipToSlot(weapon, slot, loadoutType)
 - Shield restriction validation
 
@@ -1062,7 +1061,7 @@ prepareRobotForCombat(robot, tuning?)     // folds refinements, writes effective
 
 **Backend:**
 - Stat calculation functions (calculateEffectiveStats, calculateMaxHP, etc.)
-- Validation functions (isWeaponCompatibleWithLoadout, etc.)
+- Validation functions (canEquipToSlot, validateOffhandEquipment, etc.)
 - Weapon equipping logic (equip, unequip, change loadout)
 
 **Frontend:**
@@ -1354,7 +1353,6 @@ maxShield = effective_shield_capacity × 4
 - prepareRobotForCombat(robot, tuning?)
 
 **Backend: /utils/weaponValidation.ts**
-- isWeaponCompatibleWithLoadout(weapon, loadoutType)
 - canEquipToSlot(weapon, slot, loadoutType)
 - Shield restriction validation
 

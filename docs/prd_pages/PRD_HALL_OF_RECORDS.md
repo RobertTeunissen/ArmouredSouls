@@ -31,7 +31,7 @@
 |---|---|
 | Route | `app/backend/src/routes/records.ts` (`GET /api/records`) |
 | Payload and cache | `app/backend/src/services/records/hallOfRecordsService.ts` (`buildHallOfRecords`, `getHallOfRecords`, `warmHallOfRecords`, `invalidateHallOfRecords`), `app/backend/src/lib/refreshingCache.ts` |
-| Queries | `app/backend/src/services/records/recordsQueryService.ts`; players' lists: `app/backend/src/services/records/recordScope.ts` (`loadPlayerSets`, `topPlaced`, `cutRanking`), `app/backend/src/services/standings/playerStables.ts` (the "Players" rule) |
+| Queries | `app/backend/src/services/records/recordsQueryService.ts` (shared helpers; combat, upset, career, economic, prestige), `app/backend/src/services/records/modeRecordsQueries.ts` (KotH, team battles, tournament champions, Grand Melee, win streaks); players' lists: `app/backend/src/services/records/recordScope.ts` (`loadPlayerSets`, `topPlaced`, `cutRanking`), `app/backend/src/services/standings/playerStables.ts` (the "Players" rule) |
 | Accolades | `app/backend/src/services/season/seasonArchiveService.ts` (`writeAccolades`) |
 | KotH streak | `app/backend/src/services/standings/standingsService.ts` (`awardKothPoints`), migration `20261108120000_rebuild_koth_win_streaks` |
 | Page | `app/frontend/src/pages/HallOfRecordsPage.tsx` (composition and URL state); Stables filter: `components/StableFilterControl.tsx`, `hooks/useStableFilter.ts`, `utils/stableFilter.ts` (shared with League Standings) |

@@ -25,15 +25,15 @@ export const SECURITY_WINDOWS = ['24h', '7d', '30d'] as const satisfies readonly
 /** Kept by the nightly retention job. */
 export const SECURITY_EVENT_RETENTION_DAYS = 90;
 /** A failed-login burst: this many failures from one IP within BURST_WINDOW_MS (the login limiter's window). */
-export const FAILED_LOGIN_BURST_COUNT = 5;
-export const FAILED_LOGIN_BURST_WINDOW_MS = 15 * 60 * 1000;
+const FAILED_LOGIN_BURST_COUNT = 5;
+const FAILED_LOGIN_BURST_WINDOW_MS = 15 * 60 * 1000;
 /** Rows per table on the page. */
 const TABLE_LIMIT = 50;
 /** Failed logins read for burst detection; far above anything seen on ACC. */
 const BURST_SCAN_LIMIT = 20_000;
 
 /** The six signal cards, in page order. `nsfw_block` comes from the audit log. */
-export const SIGNAL_CARDS = ['failed_login', 'rate_limit', 'ownership_violation', 'race_condition_burst', 'robot_creation_burst', 'nsfw_block'] as const satisfies readonly SignalCard[];
+const SIGNAL_CARDS = ['failed_login', 'rate_limit', 'ownership_violation', 'race_condition_burst', 'robot_creation_burst', 'nsfw_block'] as const satisfies readonly SignalCard[];
 export interface SecurityAttention {
   /** Signals of any kind in the last 24 hours. */
   signals: number;

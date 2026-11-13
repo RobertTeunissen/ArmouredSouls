@@ -16,14 +16,14 @@ import logger from '../../config/logger';
 // Types
 // ---------------------------------------------------------------------------
 
-export interface OnboardingAnalyticsEvent {
+export interface OnboardingEventRecord {
   eventType: string;
   timestamp: string;
   step?: number;
   metadata?: Record<string, unknown>;
 }
 
-export interface StoredEvent extends OnboardingAnalyticsEvent {
+export interface StoredEvent extends OnboardingEventRecord {
   userId: number;
   receivedAt: Date;
 }
@@ -43,7 +43,7 @@ const events: StoredEvent[] = [];
  * Record a batch of analytics events from a single user.
  * Events are stored in memory and logged at info level.
  */
-export function recordEvents(userId: number, batch: OnboardingAnalyticsEvent[]): void {
+export function recordEvents(userId: number, batch: OnboardingEventRecord[]): void {
   const now = new Date();
 
   for (const event of batch) {

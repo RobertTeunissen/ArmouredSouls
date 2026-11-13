@@ -23,10 +23,6 @@ import {
   LeagueAdapter,
   LeagueEngineConfig,
   rebalanceAllTiers,
-  determinePromotionsForInstance,
-  determineDemotionsForInstance,
-  promoteEntity,
-  demoteEntity,
 } from '../league/leagueEngine';
 import { createStandingsAdapter } from '../league/leagueRebalancingService';
 import {
@@ -36,7 +32,6 @@ import {
 import { HEAD_TO_HEAD_LEAGUE_RULES } from '../league/league-rules';
 
 // Re-export for consumers that need the helper
-export { getMinLPForPromotion } from '../league/leaguePromotionThresholds';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -102,46 +97,6 @@ export interface FullTeamBattleRebalancingSummary {
   totalDemoted: number;
   tierSummaries: TeamBattleRebalancingSummary[];
   errors: string[];
-}
-
-/**
- * Determine which teams occupy effective promotion positions in an instance.
- * The shared planner sizes the fixed zone from total population before applying
- * five-cycle residency and the source-tier LP threshold.
- */
-export async function determineTeamBattlePromotions(
-  instanceId: string,
-  excludeTeamIds: Set<number> = new Set()
-): Promise<TeamBattle[]> {
-  return determinePromotionsForInstance(instanceId, TEAM_BATTLE_LEAGUE_CONFIG, teamBattleAdapter, excludeTeamIds);
-}
-
-/**
- * Determine which teams occupy effective demotion positions in an instance.
- * The shared planner applies residency inside the fixed bottom 10% zone without
- * backfilling from lower-ranked positions.
- */
-export async function determineTeamBattleDemotions(
-  instanceId: string,
-  excludeTeamIds: Set<number> = new Set()
-): Promise<TeamBattle[]> {
-  return determineDemotionsForInstance(instanceId, TEAM_BATTLE_LEAGUE_CONFIG, teamBattleAdapter, excludeTeamIds);
-}
-
-/**
- * Promote a team to the next tier.
- * LP retention — league points are NOT reset to 0.
- */
-export async function promoteTeamBattle(team: TeamBattle): Promise<void> {
-  return promoteEntity(team, TEAM_BATTLE_LEAGUE_CONFIG, teamBattleAdapter);
-}
-
-/**
- * Demote a team to the previous tier.
- * LP retention — league points are NOT reset to 0.
- */
-export async function demoteTeamBattle(team: TeamBattle): Promise<void> {
-  return demoteEntity(team, TEAM_BATTLE_LEAGUE_CONFIG, teamBattleAdapter);
 }
 
 /**

@@ -53,7 +53,7 @@ export function isNavPageImplemented(path: string): boolean {
 }
 
 /** The player's own public stable page: the first item of the Stable menu. */
-export function myStableItem(userId: number): NavItem {
+function myStableItem(userId: number): NavItem {
   return { path: `/stables/${userId}`, label: 'My Stable' };
 }
 

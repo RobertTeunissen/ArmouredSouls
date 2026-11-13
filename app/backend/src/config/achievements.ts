@@ -146,7 +146,7 @@ export const TIER_REWARDS: Record<AchievementTier, { credits: number; prestige: 
 };
 
 /** Rewards for a Trophy: none. */
-export const TROPHY_REWARDS = { credits: 0, prestige: 0 } as const;
+const TROPHY_REWARDS = { credits: 0, prestige: 0 } as const;
 
 // --- Config array ---
 

@@ -19,7 +19,7 @@ import type { CombatBuildSnapshot } from '../../types/combatBuildTypes';
 
 type Db = typeof prisma | Prisma.TransactionClient;
 
-export function buildRow(battleId: number, battleType: string, robotId: number, build: CombatBuildSnapshot): Prisma.BattleParticipantBuildCreateManyInput {
+function buildRow(battleId: number, battleType: string, robotId: number, build: CombatBuildSnapshot): Prisma.BattleParticipantBuildCreateManyInput {
   return {
     battleId,
     robotId,

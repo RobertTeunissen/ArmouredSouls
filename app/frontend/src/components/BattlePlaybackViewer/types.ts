@@ -1,8 +1,4 @@
-/** Position in 2D arena space */
-export interface Position {
-  x: number;
-  y: number;
-}
+import type { ArenaPoint } from '@shared/types';
 
 /** Range band classification */
 export type RangeBand = 'melee' | 'short' | 'mid' | 'long';
@@ -20,7 +16,7 @@ export interface PlaybackState {
 
 /** Interpolated frame for smooth animation */
 export interface InterpolatedFrame {
-  positions: Record<string, Position>;
+  positions: Record<string, ArenaPoint>;
   facingDirections: Record<string, number>;
   hpValues: Record<string, number>;
   shieldValues: Record<string, number>;
@@ -37,7 +33,7 @@ export interface PlaybackCombatEvent {
   hit?: boolean;
   critical?: boolean;
   message: string;
-  positions?: Record<string, Position>;
+  positions?: Record<string, ArenaPoint>;
   facingDirections?: Record<string, number>;
   distance?: number;
   rangeBand?: RangeBand;
@@ -83,8 +79,8 @@ export interface PlaybackCombatResult {
   isDraw: boolean;
   events: PlaybackCombatEvent[];
   arenaRadius?: number;
-  startingPositions?: Record<string, Position>;
-  endingPositions?: Record<string, Position>;
+  startingPositions?: Record<string, ArenaPoint>;
+  endingPositions?: Record<string, ArenaPoint>;
 }
 
 /** Robot info for display */
@@ -98,16 +94,16 @@ export interface PlaybackRobotInfo {
 /** Attack indicator for rendering */
 export interface AttackIndicator {
   timestamp: number;
-  from: Position;
-  to: Position;
+  from: ArenaPoint;
+  to: ArenaPoint;
   type: 'hit' | 'miss' | 'critical' | 'malfunction';
   isRanged: boolean;
   duration: number; // seconds to display
 }
 
 /** KotH zone state for rendering */
-export interface KothZoneState {
-  center: Position;
+export interface PlaybackZoneState {
+  center: ArenaPoint;
   radius: number;
   state: 'uncontested' | 'contested' | 'empty';
   controllingRobotName?: string;

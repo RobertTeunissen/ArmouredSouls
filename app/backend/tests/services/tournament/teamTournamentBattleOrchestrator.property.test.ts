@@ -52,9 +52,9 @@ import * as fc from 'fast-check';
 import {
   resolveDraw,
   DrawResolution,
-  calculateTeamTournamentPrestige,
-  decideTeamTournamentEntry,
 } from '../../../src/services/tournament/teamTournamentBattleOrchestrator';
+import { calculateTeamTournamentPrestige } from '../../../src/services/tournament/teamTournamentRewards';
+import { decideTeamTournamentEntry } from '../../../src/services/tournament/teamTournamentEntry';
 import type { ScheduledTournamentMatch, Tournament } from '../../../generated/prisma';
 import { calculateTournamentWinReward } from '../../../src/utils/tournamentRewards';
 import { TeamBattleResult } from '../../../src/types/teamBattleLogTypes';

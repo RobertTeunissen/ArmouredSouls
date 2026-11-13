@@ -28,7 +28,7 @@ import type { FacilityType, StableFacts } from './stableFacts';
 import { facilityUpkeepPerCycle, type EconomyFacts } from './stableHistory';
 
 /** Facilities the Economy Goal can buy, in tie-break order (cheapest first-level payback first). */
-export const ECONOMY_FACILITY_TYPES = ['merchandising_hub', 'repair_bay', 'streaming_studio'] as const;
+const ECONOMY_FACILITY_TYPES = ['merchandising_hub', 'repair_bay', 'streaming_studio'] as const;
 export type EconomyFacilityType = (typeof ECONOMY_FACILITY_TYPES)[number];
 
 /** The parts of the estimate, per cycle. */

@@ -9,7 +9,7 @@ import {
   readRecentSearches,
   writeRecentSearches,
 } from '../../utils/searchHistory';
-import type { SearchResponse, SearchResult } from '../../utils/searchTypes';
+import type { SearchResponse, SearchResult } from '@shared/types';
 
 /** The delay between the latest eligible input change and a search request. */
 export const SEARCH_DEBOUNCE_MS = 200;
@@ -18,7 +18,7 @@ export const SEARCH_DEBOUNCE_MS = 200;
 export const MINIMUM_QUERY_LENGTH = 2;
 
 /** Player-safe copy used for every failed search request. */
-export const SEARCH_ERROR_MESSAGE = 'Search is unavailable. Please try again.';
+const SEARCH_ERROR_MESSAGE = 'Search is unavailable. Please try again.';
 
 export interface UseSearchPaletteOptions {
   /** Called after a result is selected; route validation stays with the caller. */
@@ -83,7 +83,7 @@ function getFocusableElements(dialog: HTMLElement): HTMLElement[] {
  * analytics, or server-side history. The request generation guard remains the
  * correctness mechanism; AbortController only avoids unnecessary work.
  */
-export function useSearchPalette(
+function useSearchPalette(
   options: UseSearchPaletteOptions = {},
 ): UseSearchPaletteResult {
   const { onResultSelect } = options;

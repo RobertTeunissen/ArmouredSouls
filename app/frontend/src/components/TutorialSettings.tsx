@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getTutorialState, replayTutorial, TutorialState } from '../utils/onboardingApi';
+import { getTutorialState, replayTutorial } from '../utils/onboardingApi';
 import ResetAccountModal from './onboarding/ResetAccountModal';
+import type { TutorialState } from '@shared/types';
 
 function TutorialSettings() {
   const navigate = useNavigate();

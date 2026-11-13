@@ -12,7 +12,7 @@ import type { Prisma } from '../../../../generated/prisma';
 import type { MetaChoices } from '../../../shared/types';
 
 /** Weapons owned, robots with a main weapon, and owned weapons in any slot. */
-export async function getWeaponStats(userFilter: Prisma.UserWhereInput = {}): Promise<MetaChoices['weapons']> {
+async function getWeaponStats(userFilter: Prisma.UserWhereInput = {}): Promise<MetaChoices['weapons']> {
   const [totalBought, equipped, equippedInventoryItems] = await Promise.all([
     prisma.weaponInventory.count({ where: { user: userFilter } }),
     prisma.robot.count({ where: { mainWeaponId: { not: null }, user: userFilter } }),
@@ -23,17 +23,17 @@ export async function getWeaponStats(userFilter: Prisma.UserWhereInput = {}): Pr
   return { totalBought, equipped, equippedInventoryItems };
 }
 
-export async function getStanceStats(userFilter: Prisma.UserWhereInput = {}): Promise<MetaChoices['stances']> {
+async function getStanceStats(userFilter: Prisma.UserWhereInput = {}): Promise<MetaChoices['stances']> {
   const rows = await prisma.robot.groupBy({ by: ['stance'], where: { user: userFilter }, _count: { id: true } });
   return rows.map((row) => ({ stance: row.stance, count: row._count.id }));
 }
 
-export async function getLoadoutStats(userFilter: Prisma.UserWhereInput = {}): Promise<MetaChoices['loadouts']> {
+async function getLoadoutStats(userFilter: Prisma.UserWhereInput = {}): Promise<MetaChoices['loadouts']> {
   const rows = await prisma.robot.groupBy({ by: ['loadoutType'], where: { user: userFilter }, _count: { id: true } });
   return rows.map((row) => ({ type: row.loadoutType, count: row._count.id }));
 }
 
-export async function getYieldThresholdStats(userFilter: Prisma.UserWhereInput = {}): Promise<MetaChoices['yieldThresholds']> {
+async function getYieldThresholdStats(userFilter: Prisma.UserWhereInput = {}): Promise<MetaChoices['yieldThresholds']> {
   const rows = await prisma.robot.groupBy({ by: ['yieldThreshold'], where: { user: userFilter }, _count: { id: true } });
   const distribution = rows
     .map((row) => ({ threshold: row.yieldThreshold, count: row._count.id }))
@@ -45,7 +45,7 @@ export async function getYieldThresholdStats(userFilter: Prisma.UserWhereInput =
 }
 
 /** Facility ownership per type (stables owning it at level ≥ 1), most owned first. */
-export async function getFacilityOwnership(userFilter: Prisma.UserWhereInput = {}): Promise<MetaChoices['facilities']> {
+async function getFacilityOwnership(userFilter: Prisma.UserWhereInput = {}): Promise<MetaChoices['facilities']> {
   const groups = await prisma.facility.groupBy({
     by: ['facilityType'],
     where: { level: { gt: 0 }, user: userFilter },

@@ -19,7 +19,8 @@ import { InventoryRow } from './InventoryRow';
 import { InventorySummaryBar } from './InventorySummaryBar';
 import { ConfirmSaleModal } from './ConfirmSaleModal';
 import { RefinementModal } from '../weapon-refinement';
-import type { UnlockedAchievement, WeaponInventoryItem } from './types';
+import type { WeaponInventoryItem } from './types';
+import type { UnlockedAchievement } from '@shared/types';
 
 interface InventoryTabProps {
   inventory: WeaponInventoryItem[];

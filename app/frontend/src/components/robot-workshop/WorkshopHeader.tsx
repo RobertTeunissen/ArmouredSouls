@@ -82,4 +82,3 @@ export function WorkshopHeader(props: WorkshopHeaderProps) {
   );
 }
 
-export default WorkshopHeader;

@@ -49,7 +49,7 @@ export const TIERED_LEAGUE_MODES = [
 export type { TieredLeagueMode };
 
 /** Whether a mode ranks by placement points (no LP gate) rather than head-to-head LP. */
-export function isPlacementLeagueMode(mode: string): boolean {
+function isPlacementLeagueMode(mode: string): boolean {
   return mode === 'koth' || mode === 'grand_melee';
 }
 

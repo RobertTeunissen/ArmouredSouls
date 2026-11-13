@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { validateUploadFile, type FileValidationResult } from '../robotImageValidation';
+import { validateUploadFile, type ImageFileCheck } from '../robotImageValidation';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
@@ -68,7 +68,7 @@ describe('Property 11: Frontend file validation mirrors backend constraints', ()
         fc.integer({ min: 1, max: MAX_SIZE }),
         (mimeType: string, size: number) => {
           const file = createMockFile(mimeType, size);
-          const result: FileValidationResult = validateUploadFile(file);
+          const result: ImageFileCheck = validateUploadFile(file);
           expect(result.valid).toBe(false);
           expect(result.error).toContain('JPEG');
         }
@@ -84,7 +84,7 @@ describe('Property 11: Frontend file validation mirrors backend constraints', ()
         oversizedFileSize,
         (mimeType: string, size: number) => {
           const file = createMockFile(mimeType, size);
-          const result: FileValidationResult = validateUploadFile(file);
+          const result: ImageFileCheck = validateUploadFile(file);
           expect(result.valid).toBe(false);
           expect(result.error).toContain('2 MB');
         }
@@ -100,7 +100,7 @@ describe('Property 11: Frontend file validation mirrors backend constraints', ()
         validFileSize,
         (mimeType: string, size: number) => {
           const file = createMockFile(mimeType, size);
-          const result: FileValidationResult = validateUploadFile(file);
+          const result: ImageFileCheck = validateUploadFile(file);
           expect(result.valid).toBe(true);
           expect(result.error).toBeUndefined();
         }
@@ -116,7 +116,7 @@ describe('Property 11: Frontend file validation mirrors backend constraints', ()
         oversizedFileSize,
         (mimeType: string, size: number) => {
           const file = createMockFile(mimeType, size);
-          const result: FileValidationResult = validateUploadFile(file);
+          const result: ImageFileCheck = validateUploadFile(file);
           expect(result.valid).toBe(false);
           // Should fail on type check first (type is checked before size)
           expect(result.error).toBeDefined();

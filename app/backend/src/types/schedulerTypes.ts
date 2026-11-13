@@ -4,10 +4,8 @@
  * Kept small on purpose: one line of result for the Cycle Controls schedule
  * and history ("669 battles", "Round 3/12 · 512 matches", "Cycle 81 closed").
  */
-import type { RolloverStageName, SchedulerRunStatus, SchedulerRunTrigger } from '../shared/types';
+import type { RolloverStageName } from '../shared/types';
 
-export const SCHEDULER_RUN_STATUSES = ['queued', 'running', 'success', 'failed', 'skipped', 'interrupted'] as const satisfies readonly SchedulerRunStatus[];
-export const SCHEDULER_RUN_TRIGGERS = ['cron', 'manual', 'resume', 'bulk'] as const satisfies readonly SchedulerRunTrigger[];
 /** Job name of an admin bulk-cycle run in `scheduler_job_runs`. */
 export const BULK_CYCLES_JOB_NAME = 'bulkCycles';
 

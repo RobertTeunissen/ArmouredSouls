@@ -34,7 +34,7 @@ import {
   calculateTeamBattleLPDelta,
   distributeTeamCredits,
 } from '../../src/services/team-battle/teamBattleRewardService';
-import { calculateTeamTournamentCreditPools } from '../../src/services/tournament/teamTournamentBattleOrchestrator';
+import { calculateTeamTournamentCreditPools } from '../../src/services/tournament/teamTournamentRewards';
 import { resolveByeReward } from '../../src/utils/byeRewards';
 import { FAME_BY_LEAGUE, PRESTIGE_BY_LEAGUE } from '../../src/utils/battleMath';
 import {
@@ -133,7 +133,7 @@ describe('team tournament pools', () => {
   });
 
   it('the orchestrator multiplies credits by teamSize only inside the pool helper', () => {
-    const source = read('services/tournament/teamTournamentBattleOrchestrator.ts');
+    const source = read('services/tournament/teamTournamentRewards.ts');
     const rewardBody = source.slice(source.indexOf('async function distributeTeamTournamentRewards('));
     const creditsSection = rewardBody.slice(0, rewardBody.indexOf('// ─── Prestige'));
     expect(creditsSection).toContain('calculateTeamTournamentCreditPools(');
@@ -200,7 +200,7 @@ describe('what #527 leaves unchanged', () => {
     const callers = [
       'services/tag-team/tagTeamRewards.ts',
       'services/team-battle/teamBattleRewardService.ts',
-      'services/tournament/teamTournamentBattleOrchestrator.ts',
+      'services/tournament/teamTournamentRewards.ts',
       'utils/byeRewards.ts',
     ];
     const walk = (dir: string): string[] =>

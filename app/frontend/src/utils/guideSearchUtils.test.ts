@@ -3,7 +3,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { filterAndRankResults } from './guideSearchUtils';
-import type { SearchIndexEntry } from './guideApi';
+import type { SearchIndexEntry } from '@shared/types';
 
 function makeEntry(overrides: Partial<SearchIndexEntry> = {}): SearchIndexEntry {
   return {

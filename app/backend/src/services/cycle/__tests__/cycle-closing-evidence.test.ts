@@ -11,7 +11,6 @@ jest.mock('../../../lib/prisma', () => ({
 }));
 
 jest.mock('../../common/eventLogger', () => ({
-  EventType: { CYCLE_END_BALANCE: 'cycle_end_balance' },
   eventLogger: { logEventBatch: mockLogEventBatch },
 }));
 

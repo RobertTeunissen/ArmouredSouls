@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { filterAndRankResults } from '../../../utils/guideSearchUtils';
-import { SearchIndexEntry } from '../../../utils/guideApi';
+import type { SearchIndexEntry } from '@shared/types';
 
 /**
  * Arbitrary that generates a valid SearchIndexEntry with controlled text fields.

@@ -4,6 +4,5 @@ export { InstanceChips } from './InstanceChips';
 export { StandingsTable } from './StandingsTable';
 export { StandingsPager } from './StandingsPager';
 export { StandingsLegend } from './StandingsLegend';
-export { StatusChip } from './StatusChip';
 export { useMyStandings, useStandingsPage } from './useLeagueStandings';
 export type { MyStandingsState, StandingsPageState } from './useLeagueStandings';

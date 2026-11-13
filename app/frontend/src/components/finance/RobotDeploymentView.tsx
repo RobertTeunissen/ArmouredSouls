@@ -75,4 +75,3 @@ export function RobotDeploymentView({ period, active, refreshToken = 0 }: RobotD
   );
 }
 
-export default RobotDeploymentView;

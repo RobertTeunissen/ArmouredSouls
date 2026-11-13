@@ -30,7 +30,7 @@ export function shouldTagOut(robot: Robot): boolean {
  * Activate a reserve robot
  * Requirement 3.5: Set HP to 100%, reset weapon cooldowns to 0
  */
-export function activateReserveRobot(robot: RobotWithWeapons): RobotWithWeapons {
+function activateReserveRobot(robot: RobotWithWeapons): RobotWithWeapons {
   robot.currentHP = robot.maxHP;
   robot.currentShield = robot.maxShield;
   // Note: Weapon cooldowns are handled by combat simulator

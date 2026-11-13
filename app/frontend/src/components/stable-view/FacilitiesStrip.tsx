@@ -60,4 +60,3 @@ export function FacilitiesStrip({ facilities }: FacilitiesStripProps) {
   );
 }
 
-export default FacilitiesStrip;

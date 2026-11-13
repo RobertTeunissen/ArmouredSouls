@@ -12,9 +12,8 @@ import {
   tierRank,
   type TieredStandingsMode,
 } from '@shared/utils/automatonStandingsTier';
-import type { PublicRobotStanding, RecentResultEntry } from '../components/stable-view/types';
 import { getTierName } from './tierHelpers';
-import type { ArchivedAccolade, ArchivedRobot } from '@shared/types';
+import type { ArchivedAccolade, ArchivedRobot, PublicRobotStanding, RecentResultEntry } from '@shared/types';
 
 export const ROSTER_MODES: readonly TieredStandingsMode[] = TIERED_STANDINGS_MODES;
 
@@ -62,7 +61,7 @@ function record(wins: number, losses: number, draws: number): string {
 }
 
 /** "56–39–0 · 130 LP", "14 first places in 50 · 718 LP", prefixed with the team for team modes. */
-export function standingDetail(s: PublicRobotStanding): string {
+function standingDetail(s: PublicRobotStanding): string {
   const result = isPlacementMode(s.mode)
     ? `${s.wins} first ${s.wins === 1 ? 'place' : 'places'} in ${s.totalMatches ?? 0}`
     : record(s.wins, s.losses, s.draws);

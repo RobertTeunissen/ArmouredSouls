@@ -9,11 +9,7 @@ import {
   ACHIEVEMENTS,
   type AchievementDefinition,
 } from '../../config/achievements';
-import type {
-  AchievementsResponse,
-  AchievementWithProgress,
-  AchievementRarityCache,
-} from './achievementTypes';
+import type { AchievementRarityCache } from './achievementTypes';
 import { resolveTeamModeWins, emptyTeamModeWins } from './teamModeWins';
 import { getAllModesBattleCounts } from '../robot/all-modes-battle-count';
 import {
@@ -29,6 +25,7 @@ import {
   buildAuditCounterWhere,
   getAchievementCounterStart,
 } from './achievementCounterWindow';
+import type { AchievementWithProgress, AchievementsResponse } from '../../shared/types';
 
 // ─── Progress Computation ───────────────────────────────────────────
 
@@ -43,7 +40,7 @@ export interface SeasonTwoProgressData {
   unlockedCount: number;
 }
 
-export const EMPTY_SEASON_TWO_PROGRESS: SeasonTwoProgressData = {
+const EMPTY_SEASON_TWO_PROGRESS: SeasonTwoProgressData = {
   robotHistory: new Map(),
   attributeUpgradeSpend: 0,
   repairSpend: 0,
@@ -56,7 +53,7 @@ export const EMPTY_SEASON_TWO_PROGRESS: SeasonTwoProgressData = {
  * Compute progress for a single numeric achievement.
  * Returns { current, target, label, bestRobotName? } or null.
  */
-export function computeProgress(
+function computeProgress(
   achievement: AchievementDefinition,
   user: { prestige: number; currency: number; totalPracticeBattles: number; championshipTitles: number; championshipTitles2v2: number; championshipTitles3v3: number },
   robots: Array<{

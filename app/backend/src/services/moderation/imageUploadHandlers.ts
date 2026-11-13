@@ -21,8 +21,9 @@ import { pendingUploadCache } from './pendingUploadCache';
 import { fileStorageService } from './fileStorageService';
 import { recordUpload } from './uploadedImageService';
 import { SecuritySeverity } from '../security/securityLogger';
-import { achievementService, type UnlockedAchievement } from '../achievement';
+import { achievementService } from '../achievement';
 import logger from '../../config/logger';
+import type { UnlockedAchievement } from '../../shared/types';
 
 /**
  * POST /api/robots/:id/image[?acknowledgeRobotLikeness=true]

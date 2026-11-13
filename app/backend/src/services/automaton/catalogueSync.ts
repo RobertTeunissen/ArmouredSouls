@@ -197,7 +197,7 @@ export async function syncCatalogue(options: CatalogueSyncOptions = {}): Promise
 }
 
 /** Human-readable summary lines (printed by the script). */
-export function formatCatalogueSyncSummary(result: Extract<CatalogueSyncResult, { ok: true }>): string[] {
+function formatCatalogueSyncSummary(result: Extract<CatalogueSyncResult, { ok: true }>): string[] {
   const { summary, dryRun } = result;
   const verb = dryRun ? 'would add' : 'added';
   const lines = [

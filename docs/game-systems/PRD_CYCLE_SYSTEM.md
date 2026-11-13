@@ -97,7 +97,7 @@ Heavy modes (1v1 League, KotH) are spaced 5 hours apart. Reserved slots are no-o
 
 ### Key Source Files
 
-- Scheduler: `app/backend/src/services/cycle/cycleScheduler.ts`
+- Scheduler: `app/backend/src/services/cycle/cycleScheduler.ts` (lock, run history, cron registration); job bodies in `cycleEventJobs.ts` and `cycleSettlementJob.ts`
 - Admin bulk: `app/backend/src/services/admin/adminCycleService.ts`
 - Snapshot service: `app/backend/src/services/cycle/cycleSnapshotService.ts`
 - Repair service: `app/backend/src/services/robot/robotRepairService.ts`
@@ -158,7 +158,7 @@ Heavy modes (1v1 League, KotH) are spaced 5 hours apart. Reserved slots are no-o
 
 ### Spec #53 settlement and financial evidence contract
 
-`User.currency` is the balance field used by settlement. `Settlement_Service` is the only mutating implementation: `cycleScheduler.ts`, `adminCycleService.ts`, and the supported `/api/admin/daily-finances/process` path delegate to it rather than maintaining separate balance updates. For each applicable stable and `cycleNumber`, it creates exactly two financial components in a deterministic order:
+`User.currency` is the balance field used by settlement. `Settlement_Service` is the only mutating implementation: `cycleSettlementJob.ts`, `adminCycleService.ts`, and the supported `/api/admin/daily-finances/process` path delegate to it rather than maintaining separate balance updates. For each applicable stable and `cycleNumber`, it creates exactly two financial components in a deterministic order:
 
 1. one `passive_income` `FinancialLedger`/`AuditLog` `financial_transaction` pair; and
 2. one `operating_costs` pair.
@@ -193,7 +193,7 @@ The bulk run takes the scheduler's lock (`runExclusive('bulkCycles', …)` in `a
 ### 5.1 Manual runs and run history (Cycle Controls)
 
 - **Handlers are always registered.** `initScheduler` registers the ten handlers and their state whether or not `SCHEDULER_ENABLED` is true; only cron registration depends on it. A job can therefore be run by hand locally and in CI.
-- **Manual runs go through `runJob`**, the same path as cron: lock, preparation gate, state, notifications. `startManualRun(jobName, userId)` records the run, returns at once and runs the job in the background; it refuses with `SCHEDULER_JOB_ALREADY_ACTIVE` (409) when that job is already queued or running. `triggerJob` (waits) remains for `POST /api/admin/scheduler/trigger/:jobName`.
+- **Manual runs go through `runJob`**, the same path as cron: lock, preparation gate, state, notifications. `startManualRun(jobName, userId)` records the run, returns at once and runs the job in the background; it refuses with `SCHEDULER_JOB_ALREADY_ACTIVE` (409) when that job is already queued or running.
 - **Persistent history.** `scheduler_processes` holds one row per backend start (with a 60 s heartbeat and an optional `DEPLOY_TAG`); `scheduler_job_runs` holds every run: trigger (`cron`, `manual`, `resume`, `bulk`), status `queued` → `running` → `success` / `failed` / `skipped` (preparation gate), duration, a small result summary (`JobContext`; settlement adds the closed `cycleNumber`) or the error. Writes are non-fatal and never fail or delay a job. At startup, runs an earlier process left `queued` or `running` become `interrupted`, ending at that process's last heartbeat.
 - **Missed runs** are derived, not stored (`schedulerMissedRuns.ts`): a daily slot with no cron or resumed run queued from 1 min before to 15 min after it, while the scheduler was enabled and after tracking started. A miss in the gap between two processes carries that downtime window.
 
@@ -506,8 +506,8 @@ Active_Automatons act once per cycle in a Turn_Step (`runTurnStep` in `services/
 
 | Call site | Placement | Turn_Trigger / Turn_Slot |
 |---|---|---|
-| `cycleScheduler.ts` `executeSettlement`, Preparation_Phase | after `advancePreparationCycle()`, before the early return | `preparation` / `preparationCyclesCompleted` |
-| `cycleScheduler.ts` `executeSettlement`, competitive | last step, after `advanceCompetitiveCycle()`, only when no season boundary was reached | `settlement` / the closed global cycle number |
+| `cycleSettlementJob.ts` `executeSettlement`, Preparation_Phase | after `advancePreparationCycle()`, before the early return | `preparation` / `preparationCyclesCompleted` |
+| `cycleSettlementJob.ts` `executeSettlement`, competitive | last step, after `advanceCompetitiveCycle()`, only when no season boundary was reached | `settlement` / the closed global cycle number |
 | `seasonRolloverService.ts` Stage 5 | after `reclaimSpace()` in the new season | `season_open` / 0 |
 | `adminCycleService.ts` bulk preparation loop | after each `advancePreparationCycle()` | `preparation` / `preparationCyclesCompleted` |
 | `adminCycleService.ts` bulk competitive loop | after `completeSerializedCycleCutover` and the counters step | `settlement` / the closed cycle number; result in the bulk response's `automatonTurns` |

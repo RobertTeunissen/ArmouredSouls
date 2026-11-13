@@ -8,7 +8,7 @@ import SearchResultList from '../search/SearchResultList';
 import useSearchPalette from '../search/useSearchPalette';
 import { buildSearchResultRoute } from '../../utils/searchRoutes';
 import { isApplePlatform } from '../../utils/searchShortcut';
-import type { SearchResult } from '../../utils/searchTypes';
+import type { SearchResult } from '@shared/types';
 
 function PageLoader(): ReactElement {
   return (

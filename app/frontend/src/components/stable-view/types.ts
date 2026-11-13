@@ -4,8 +4,8 @@
  * Mirrors `stableViewService.getStableProfile` and
  * `stable-view-sections.ts` in the backend.
  */
-import type { TieredStandingsMode } from '@shared/utils/automatonStandingsTier';
 import type { StableType } from '../../types/stable';
+import type { PublicRobotStanding, RecentResult, StableAccolade, StableAchievementData } from '@shared/types';
 
 export interface StableUser {
   id: number;
@@ -21,22 +21,6 @@ export interface StableUser {
   championshipTitles1v1?: number;
   championshipTitles2v2?: number;
   championshipTitles3v3?: number;
-}
-
-/** One tiered mode a robot has played this season (team modes via its team). */
-export interface PublicRobotStanding {
-  mode: TieredStandingsMode;
-  tier: string;
-  leaguePoints: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  /** Placement modes: matches entered (`wins` counts first places). */
-  totalMatches: number | null;
-  teamName: string | null;
-  teamId?: number | null;
-  /** League instance, e.g. `champion_2`. */
-  leagueInstanceId?: string;
 }
 
 export interface PublicRobot {
@@ -80,60 +64,12 @@ export interface StableStats {
   teamBattleWinRate: number;
 }
 
-export interface ShowcaseAchievement {
-  id: string;
-  name: string;
-  tier: string;
-  badgeIconFile: string;
-  unlockedAt: string;
-  pinned: boolean;
-  /** Human stables holding it; null until the server's rarity cache has loaded. */
-  holders: number | null;
-}
-
-export interface StableAchievements {
-  pinned: Array<{ id: string; name: string; tier: string; badgeIconFile: string; unlockedAt: string }>;
-  showcase?: ShowcaseAchievement[];
-  totalUnlocked: number;
-  totalAvailable: number;
-}
-
-export type ResultOutcome = 'win' | 'loss' | 'draw';
-
-export interface RecentResultEntry {
-  robotId: number;
-  robotName: string;
-  outcome: ResultOutcome | null;
-  placement: number | null;
-  /** ELO after minus ELO before. */
-  eloChange?: number;
-}
-
-export interface RecentResult {
-  battleId: number;
-  battleType: string;
-  tier: string | null;
-  tournamentRound: number | null;
-  createdAt: string;
-  entries: RecentResultEntry[];
-}
-
-export interface StableAccolade {
-  seasonNumber: number;
-  category: string;
-  rank: number;
-  subjectName: string;
-  value: number;
-  valueLabel: string;
-  mode: string | null;
-}
-
 export interface StableData {
   user: StableUser;
   robots: PublicRobot[];
   facilities: FacilitySummary[];
   stats: StableStats;
-  achievements?: StableAchievements;
+  achievements?: StableAchievementData;
   recentResults?: RecentResult[];
   accolades?: StableAccolade[];
 }

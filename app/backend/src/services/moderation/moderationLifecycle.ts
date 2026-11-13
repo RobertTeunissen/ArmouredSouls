@@ -1,5 +1,5 @@
 import type { EnvConfig } from '../../config/env';
-import type { ModerationAvailabilityStatus } from './contentModerationService';
+import type { ModerationAvailabilityStatus } from '../../shared/types';
 
 const DEFAULT_RECOVERY_INTERVAL_MS = 60_000;
 const DEFAULT_MAX_INITIALIZATION_ATTEMPTS = 3;

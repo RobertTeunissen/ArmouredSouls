@@ -35,14 +35,13 @@ import type {
   ImagesPage,
   ImageTile,
   ModerationScores,
-  ModerationThresholds,
   RemoveImageResult,
 } from '../../shared/types';
 
-export const UPLOAD_PREFIX = '/uploads/user-robots/';
-export const IMAGES_PAGE_SIZE = 24;
+const UPLOAD_PREFIX = '/uploads/user-robots/';
+const IMAGES_PAGE_SIZE = 24;
 /** Moderation outcomes are read from the audit log over this window (ACC keeps 30 days). */
-export const MODERATION_WINDOW_DAYS = 30;
+const MODERATION_WINDOW_DAYS = 30;
 const DAY_MS = 86_400_000;
 const WEEK_MS = 7 * DAY_MS;
 /** Paths listed in the cleanup preview. */

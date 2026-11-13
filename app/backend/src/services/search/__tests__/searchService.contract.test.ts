@@ -6,7 +6,8 @@ import {
   SearchService,
   StableSearchRecord,
 } from '../searchService';
-import { GuideSearchSource, SearchResponse } from '../searchTypes';
+import { GuideSearchSource } from '../searchTypes';
+import type { SearchResponse } from '../../../shared/types';
 
 type RobotFixture = RobotSearchRecord & {
   username: string;

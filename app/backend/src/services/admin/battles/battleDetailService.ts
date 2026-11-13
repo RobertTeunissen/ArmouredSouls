@@ -59,7 +59,7 @@ async function loadSummaryFacts(battleId: number): Promise<SummaryFacts> {
   return { perRobot, survival, koth };
 }
 
-export async function loadBattleCore(battleId: number): Promise<BattleCoreRow> {
+async function loadBattleCore(battleId: number): Promise<BattleCoreRow> {
   const [row] = await queryBattleRows(Prisma.sql`b.id = ${battleId}`, 1, 0);
   if (!row) throw new BattleError(BattleErrorCode.BATTLE_NOT_FOUND, 'Battle not found', 404, { battleId });
   return row;

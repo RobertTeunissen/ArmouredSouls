@@ -1,5 +1,5 @@
 import prisma from '../../lib/prisma';
-import { Prisma, StandingsMode } from '../../../generated/prisma';
+import { StandingsMode } from '../../../generated/prisma';
 import logger from '../../config/logger';
 import { MAX_ENTITIES_PER_INSTANCE, pickLeagueInstanceInTransaction } from './leagueInstancePlacement';
 
@@ -12,7 +12,7 @@ export const MAX_ROBOTS_PER_INSTANCE = MAX_ENTITIES_PER_INSTANCE;
 export const MAX_TEAMS_PER_INSTANCE = MAX_ENTITIES_PER_INSTANCE;
 
 // Threshold for triggering instance rebalancing
-export const REBALANCE_THRESHOLD = 20;
+const REBALANCE_THRESHOLD = 20;
 
 export interface LeagueInstance {
   leagueId: string;
@@ -204,67 +204,3 @@ export async function rebalanceInstances(tier: LeagueTier, options: InstanceOpti
   return updates.length;
 }
 
-type RobotWithUser = Prisma.RobotGetPayload<{
-  include: { user: { select: { id: true; username: true } } };
-}>;
-
-/**
- * Get all robots in a specific instance (via standings table),
- * ranked LP-first and then by ELO.
- */
-export async function getRobotsInInstance(leagueId: string): Promise<RobotWithUser[]> {
-  // Look up robot IDs from the standings table
-  const standings = await prisma.standing.findMany({
-    where: {
-      mode: 'league_1v1',
-      entityType: 'robot',
-      leagueInstanceId: leagueId,
-    },
-    select: { entityId: true, leaguePoints: true },
-  });
-
-  if (standings.length === 0) return [];
-
-  const leaguePointsByRobotId = new Map(standings.map((s) => [s.entityId, s.leaguePoints]));
-
-  const robots = await prisma.robot.findMany({
-    where: { id: { in: [...leaguePointsByRobotId.keys()] } },
-    include: {
-      user: {
-        select: {
-          id: true,
-          username: true,
-        },
-      },
-    },
-  });
-
-  // LP is the primary sort key and lives in `standings`, so it cannot be expressed in the
-  // robot query's `orderBy`. Ordering the standings query instead does not work either:
-  // the robot query re-orders the rows, which is how Spec #43 silently dropped LP from
-  // this ranking and left it ordered by ELO alone.
-  return robots.sort((a, b) => {
-    const lpDelta = (leaguePointsByRobotId.get(b.id) ?? 0) - (leaguePointsByRobotId.get(a.id) ?? 0);
-    return lpDelta !== 0 ? lpDelta : b.elo - a.elo;
-  });
-}
-
-/**
- * Move robot to a different instance (used during promotion/demotion).
- * Updates the standing record for this robot.
- */
-export async function moveRobotToInstance(robotId: number, newTier: LeagueTier): Promise<void> {
-  const targetLeagueId = await assignLeagueInstance(newTier);
-  
-  await prisma.standing.updateMany({
-    where: {
-      entityType: 'robot',
-      entityId: robotId,
-      mode: 'league_1v1',
-    },
-    data: {
-      tier: newTier,
-      leagueInstanceId: targetLeagueId,
-    },
-  });
-}

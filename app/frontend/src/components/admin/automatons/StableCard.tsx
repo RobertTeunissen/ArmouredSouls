@@ -10,7 +10,7 @@ import { Card, Field, FieldHelp, INPUT_CLASS } from './ui';
 import { EventOrderList } from './EventOrderList';
 import type { LibraryStrategy } from '@shared/types';
 
-export const BACKSTORY_MAX_LENGTH = 400;
+const BACKSTORY_MAX_LENGTH = 400;
 
 export interface StableCardValues {
   stableName: string;

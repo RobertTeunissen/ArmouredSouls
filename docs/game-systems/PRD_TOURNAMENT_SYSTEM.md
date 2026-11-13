@@ -500,7 +500,6 @@ export async function autoCreateNextTournament(): Promise<Tournament | null>
 
 // Query functions
 export async function getActiveTournaments(): Promise<Tournament[]>
-export async function getTournamentById(id: number): Promise<Tournament>
 export async function getEligibleRobotsForTournament(): Promise<Robot[]>
 export async function getCurrentRoundMatches(tournamentId: number): Promise<TournamentMatch[]>
 
@@ -1178,7 +1177,6 @@ For **large tournaments** (256+ robots):
 
 **Milestone 2.2: Tournament Match Management**
 - [x] Implement `getCurrentRoundMatches()`
-- [x] Implement `getTournamentById()`
 - [x] Implement `getActiveTournaments()`
 - [x] Write unit tests for query functions
 
