@@ -49,6 +49,7 @@ const mockProfileData: userApi.ProfileData = {
   championshipTitles: 0,
   createdAt: '2024-01-01T00:00:00Z',
   stableName: 'Test Stable',
+  stableNote: null,
   profileVisibility: 'public',
   notificationsBattle: true,
   notificationsLeague: true,
@@ -172,6 +173,74 @@ describe('ProfilePage', () => {
 
       await waitFor(() => {
         expect(screen.queryByText('Stable name must be at least 3 characters')).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Stable Notes', () => {
+    it('should render the stable notes editor', async () => {
+      renderProfilePage();
+
+      await waitFor(() => {
+        expect(screen.getByText('My Profile')).toBeInTheDocument();
+      });
+
+      expect(screen.getByText('Stable Notes')).toBeInTheDocument();
+      expect(screen.getByLabelText('Private strategy note')).toBeInTheDocument();
+      expect(screen.getByText('0/2000 characters')).toBeInTheDocument();
+    });
+
+    it('should update the character counter as the note is typed', async () => {
+      renderProfilePage();
+
+      await waitFor(() => {
+        expect(screen.getByText('My Profile')).toBeInTheDocument();
+      });
+
+      const noteInput = screen.getByLabelText('Private strategy note');
+      fireEvent.change(noteInput, { target: { value: 'Push diamond' } });
+
+      await waitFor(() => {
+        expect(screen.getByText('12/2000 characters')).toBeInTheDocument();
+      });
+    });
+
+    it('should show an error when the note exceeds 2000 characters', async () => {
+      renderProfilePage();
+
+      await waitFor(() => {
+        expect(screen.getByText('My Profile')).toBeInTheDocument();
+      });
+
+      const noteInput = screen.getByLabelText('Private strategy note');
+      fireEvent.change(noteInput, { target: { value: 'x'.repeat(2001) } });
+
+      await waitFor(() => {
+        expect(screen.getByText('Stable note must be 2000 characters or less')).toBeInTheDocument();
+      });
+    });
+
+    it('should include a changed note in the update payload', async () => {
+      const updatedProfile = { ...mockProfileData, stableNote: 'Bank credits' };
+      vi.mocked(userApi.updateProfile).mockResolvedValue(updatedProfile);
+
+      renderProfilePage();
+      await waitFor(() => {
+        expect(screen.getByText('My Profile')).toBeInTheDocument();
+      });
+
+      const noteInput = screen.getByLabelText('Private strategy note');
+      fireEvent.change(noteInput, { target: { value: 'Bank credits' } });
+
+      const saveButton = await waitFor(() => {
+        const btn = screen.getByRole('button', { name: /Save Changes/i });
+        expect(btn).not.toBeDisabled();
+        return btn;
+      });
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(userApi.updateProfile).toHaveBeenCalledWith({ stableNote: 'Bank credits' });
       });
     });
   });

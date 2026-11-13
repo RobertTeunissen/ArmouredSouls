@@ -246,7 +246,8 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 │   ├── Robot readiness cascade (forfeit risk → no weapon → incomplete loadout → no subs → slots free → tuning → damaged)
 │   ├── Team mode subscription gaps
 │   ├── Team creation suggestions
-│   └── Onboarding/welcome (when no robots)
+│   ├── Onboarding/welcome (when no robots)
+│   └── Stable Notes card (private strategy note; shown only when non-empty) ✅ [#611]
 ├── Overview Row (1 column mobile / 3 columns ≥1024px) ✅  [Spec #48]
 │   │   Position invariant: immediately after the notification stack and
 │   │   immediately before the Match Section, regardless of how many
@@ -282,6 +283,30 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 │       ├── W/L/D record
 │       └── Click to navigate
 ```
+
+### Stable Notes (#611)
+
+A private, free-text strategy note scoped to a single stable (account). ACC players
+often run several stables at once, each with its own long-term plan, and the gaps
+between action moments can be days or weeks — the note lets an owner record the plan
+for *this* stable so they do not confuse it with another.
+
+- **Purpose:** private reminder of the stable's long-term strategy. Only the owner
+  can see it; it is never shown on the public stable page or to other players.
+- **Storage & limit:** persisted on the account (`users.stable_note`, nullable
+  `TEXT`), up to **2000 characters**. The cap is enforced in validation (backend Zod
+  schema + `updateUserProfile`, and the Profile-page form), not by a column type.
+- **Editing:** done on the Profile page (`/profile`), in a dedicated "Stable Notes"
+  card with an expandable multi-line textarea, a live `n/2000` counter, and the same
+  save/validation flow as the rest of the profile. Saving an empty (or
+  whitespace-only) note clears it.
+- **Display on the dashboard:** rendered read-only at the end of the notification
+  stack as an info-variant panel (`StableNoteCard`), matching the other dashboard
+  notifications (left accent, 📝 icon, `bg-primary/10 border-primary`). Line breaks
+  and paragraphs are preserved (`whitespace-pre-wrap`). It links to `/profile` to
+  edit and is **not dismissible** — it is persistent state, not an alert.
+- **Hidden when empty:** a stable with no note shows nothing, so the feature costs no
+  screen space for players who do not use it.
 
 ### Component Hierarchy
 

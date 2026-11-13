@@ -17,6 +17,10 @@ const router = express.Router();
 // same sentence whichever layer rejects the request.
 const profileUpdateBodySchema = z.object({
   stableName: stableNameSchema.optional(),
+  stableNote: z
+    .string()
+    .max(2000, 'Stable note must be 2000 characters or less')
+    .optional(),
   profileVisibility: z
     .enum(['public', 'private'], { message: "Profile visibility must be 'public' or 'private'" })
     .optional(),

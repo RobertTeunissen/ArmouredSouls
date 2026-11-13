@@ -50,6 +50,7 @@ export interface ProfileData {
   championshipTitles3v3: number;
   createdAt: string; // ISO 8601
   stableName: string | null;
+  stableNote: string | null;
   profileVisibility: "public" | "private";
   notificationsBattle: boolean;
   notificationsLeague: boolean;
@@ -61,6 +62,7 @@ export interface ProfileData {
  */
 export interface ProfileUpdateRequest {
   stableName?: string;
+  stableNote?: string;
   profileVisibility?: "public" | "private";
   notificationsBattle?: boolean;
   notificationsLeague?: boolean;

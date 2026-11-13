@@ -92,6 +92,7 @@ vi.mock('../../components/RecentBattles', () => ({
 // Mocked as one unit so these notification tests stay about notifications.
 vi.mock('../../components/dashboard', () => ({
   OverviewRow: () => <div data-testid="overview-row">OverviewRow</div>,
+  StableNoteCard: () => null,
 }));
 
 vi.mock('../../components/RobotDashboardCard', () => ({

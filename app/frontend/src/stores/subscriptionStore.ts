@@ -32,6 +32,13 @@ interface SubscriptionStoreState {
   refresh: () => Promise<void>;
   /** Drop the cache, e.g. after a Booking Office upgrade changes the cap. */
   invalidate: () => void;
+  /**
+   * Reset every field to empty, including any shared in-flight request. Called
+   * on logout and account switch so one account's Booking Office overview never
+   * bleeds into the next (a plain `invalidate` leaves `inFlight` able to
+   * repopulate the cache with the previous account's data).
+   */
+  clear: () => void;
 }
 
 export const useSubscriptionStore = create<SubscriptionStoreState>((set, get) => ({
@@ -70,6 +77,8 @@ export const useSubscriptionStore = create<SubscriptionStoreState>((set, get) =>
   },
 
   invalidate: () => set({ overview: null, lastFetched: null }),
+
+  clear: () => set({ overview: null, loading: false, error: null, lastFetched: null, inFlight: null }),
 }));
 
 // ---------------------------------------------------------------------------

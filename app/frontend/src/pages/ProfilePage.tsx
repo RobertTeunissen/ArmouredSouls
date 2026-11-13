@@ -30,6 +30,11 @@ function ProfilePage() {
     return null;
   };
 
+  const validateStableNoteFormat = (note: string): string | null => {
+    if (note.length > 2000) return 'Stable note must be 2000 characters or less';
+    return null;
+  };
+
   const validatePasswordFormat = (password: string): string | null => {
     if (!password || password.length === 0) return null; // Empty is valid (optional field)
     if (password.length < 8) return 'Password must be at least 8 characters';
@@ -44,9 +49,12 @@ function ProfilePage() {
     const stableNameError = editedProfile.stableName !== undefined 
       ? validateStableNameFormat(editedProfile.stableName || '') 
       : null;
+    const stableNoteError = editedProfile.stableNote !== undefined
+      ? validateStableNoteFormat(editedProfile.stableNote || '')
+      : null;
     const newPasswordError = passwordData.new ? validatePasswordFormat(passwordData.new) : null;
     
-    return !!(stableNameError || newPasswordError);
+    return !!(stableNameError || stableNoteError || newPasswordError);
   };
 
   // Handle form submission
@@ -62,6 +70,12 @@ function ProfilePage() {
     // Add edited profile fields (only if they differ from current values)
     if (editedProfile.stableName !== undefined && editedProfile.stableName !== profile?.stableName) {
       updates.stableName = editedProfile.stableName ?? undefined;
+    }
+
+    // Send the note only when it differs from the loaded value. An empty string
+    // is sent deliberately — the backend trims it to null, clearing the note.
+    if (editedProfile.stableNote !== undefined && editedProfile.stableNote !== (profile?.stableNote ?? '')) {
+      updates.stableNote = editedProfile.stableNote ?? '';
     }
     
     // Add password change if provided
@@ -330,6 +344,47 @@ function ProfilePage() {
                 <div className="text-base">
                   {editedProfile.stableName ?? profile.stableName ?? profile.username}
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stable Notes Section (Editable) — private per-stable strategy note.
+              Spans both columns: multi-line content needs the width. */}
+          <div className="bg-surface-elevated p-6 rounded-lg border border-white/10 lg:col-span-2">
+            <h2 className="text-xl font-semibold mb-4">Stable Notes</h2>
+            <div className="border-t border-white/10 mb-4"></div>
+
+            <div className="space-y-2">
+              <label htmlFor="profile-stable-note" className="block text-sm font-medium">
+                Private strategy note
+              </label>
+              <p className="text-sm text-secondary">
+                Only you can see this. Jot down the long-term plan for this stable so you can pick it
+                back up days or weeks later. It shows on your dashboard while it has content.
+              </p>
+              <textarea
+                id="profile-stable-note"
+                className={`w-full px-3 py-2 bg-surface border rounded min-h-[120px] resize-y ${
+                  errors.stableNote ? 'border-red-500' : 'border-gray-600'
+                } focus:outline-none focus:border-primary`}
+                value={editedProfile.stableNote ?? profile.stableNote ?? ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEditedProfile({ ...editedProfile, stableNote: value });
+
+                  const validationError = validateStableNoteFormat(value);
+                  if (validationError) {
+                    setErrors({ ...errors, stableNote: validationError });
+                  } else {
+                    const { stableNote: _stableNote, ...restErrors } = errors;
+                    setErrors(restErrors);
+                  }
+                }}
+                placeholder="e.g. Rush Bronze with the twins, bank credits, then push Diamond in cycle 3."
+                maxLength={2000}
+              />
+              <div className={`text-xs ${errors.stableNote ? 'text-error' : 'text-secondary'}`}>
+                {errors.stableNote || `${(editedProfile.stableNote ?? profile.stableNote ?? '').length}/2000 characters`}
               </div>
             </div>
           </div>

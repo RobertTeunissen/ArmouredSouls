@@ -1,9 +1,15 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, useRef, ReactNode, useEffect } from 'react';
 import { api } from '../utils/api';
 import { ApiError } from '../utils/ApiError';
 import { createLogger } from '../utils/logger';
 import { useRobotStore } from '../stores/robotStore';
 import { useStableStore } from '../stores/stableStore';
+import { useSubscriptionStore } from '../stores/subscriptionStore';
+import {
+  saveAccount,
+  removeSavedAccount,
+  type SavedAccount,
+} from '../utils/savedAccounts';
 
 const log = createLogger('AuthContext');
 
@@ -25,6 +31,7 @@ interface User {
   currency: number;
   prestige: number;
   stableName?: string | null;
+  stableNote?: string | null;
 }
 
 /**
@@ -40,9 +47,16 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (identifier: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: (options?: { keepSavedAccount?: boolean }) => void;
   loading: boolean;
   refreshUser: () => Promise<void>;
+  /**
+   * Switch to a previously-saved account by swapping in its token and
+   * rehydrating state. Resolves when the switch succeeds. Rejects (and leaves
+   * no stale session) when the saved token is expired or revoked — the caller
+   * should then send the player to the login form for that account.
+   */
+  switchAccount: (account: SavedAccount) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -109,17 +123,77 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
+  // Monotonic session id. Bumped on every logout and account switch so a
+  // profile/robot/stable request started under an earlier session can tell it
+  // has been superseded and drop its result instead of committing another
+  // account's data. Guards against stale success, failure, and cleanup
+  // callbacks after switching or logging out.
+  const sessionGeneration = useRef(0);
+
+  /** Reset every account-scoped Zustand store so no data bleeds across sessions. */
+  const clearSessionStores = () => {
+    useRobotStore.getState().clear();
+    useStableStore.getState().clear();
+    // The subscription overview is account-scoped and has a 30s TTL plus a
+    // shared in-flight promise; a plain invalidate would let that promise
+    // repopulate it with the previous account's data, so clear it fully.
+    useSubscriptionStore.getState().clear();
+  };
+
   /**
    * Clears all authentication state and removes the JWT token from localStorage.
+   *
+   * By default this also forgets the account's saved switch credential — an
+   * explicit Logout should not leave a reusable bearer token behind for the next
+   * person at the browser. The "Add account" flow, which only detaches the
+   * current session to sign into another stable, passes `keepSavedAccount` so
+   * the player can still switch back.
    */
-  const logout = () => {
+  const logout = (options?: { keepSavedAccount?: boolean }) => {
+    // Supersede any in-flight account-scoped request.
+    sessionGeneration.current += 1;
+
+    const loggingOut = user;
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
-    // Clear Zustand stores to prevent stale data from previous session
-    useRobotStore.getState().clear();
-    useStableStore.getState().clear();
+    clearSessionStores();
+
+    if (!options?.keepSavedAccount && loggingOut) {
+      try {
+        removeSavedAccount(loggingOut.id);
+      } catch {
+        /* storage failure here is non-fatal */
+      }
+    }
   };
+
+  /**
+   * Persist an account to the saved-accounts list for one-tap switching.
+   * Best-effort: a storage failure is swallowed so it never breaks auth.
+   */
+  const rememberAccount = (account: User, accountToken: string) => {
+    try {
+      saveAccount({
+        userId: account.id,
+        label: account.stableName || account.username,
+        username: account.username,
+        token: accountToken,
+      });
+    } catch (error) {
+      log.warn('Could not save account for switching', { error });
+    }
+  };
+
+  /**
+   * True only for a definitive backend authentication rejection: a 401 whose
+   * body carried our structured error contract. A 401 with `UNKNOWN_ERROR`
+   * comes from a proxy/WAF/DDoS layer with a non-JSON body and does NOT prove
+   * the token is invalid, so it must not end a session or discard a saved
+   * account. Mirrors the check `refreshUser` has always used.
+   */
+  const isDefinitiveAuthRejection = (error: unknown): boolean =>
+    error instanceof ApiError && error.statusCode === 401 && error.code !== 'UNKNOWN_ERROR';
 
   /**
    * Fetches the current user's profile from the server using the stored token.
@@ -132,10 +206,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       return;
     }
 
+    // Snapshot the session this request belongs to. If a logout or switch bumps
+    // the generation while the request is in flight, its result is stale and
+    // must not overwrite the now-active session.
+    const generation = sessionGeneration.current;
+    const isStale = () => sessionGeneration.current !== generation;
+
     try {
       const userData = await api.get<User>('/api/user/profile');
+      if (isStale()) return;
       setUser(userData);
+      // Remember the account so Switch Account has a target. This runs here (not
+      // only in `login`) because normal sign-in and session restore go through
+      // `refreshUser` via FrontPage, bypassing `login` entirely.
+      rememberAccount(userData, currentToken);
     } catch (error) {
+      if (isStale()) return;
       // Only logout on definitive auth failures from our own backend, which
       // always answers a bad token with 401 (a 403 is a permission answer).
       // Proxy/WAF/DDoS layers may return 401 with non-JSON bodies; those
@@ -159,7 +245,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         log.warn('Failed to fetch user profile (keeping session)', { error });
       }
     } finally {
-      setLoading(false);
+      // A superseded refresh must not clear the loading state the active
+      // session may have set (e.g. a switch in progress).
+      if (!isStale()) setLoading(false);
     }
   };
 
@@ -203,6 +291,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setToken(newToken);
       setUser(userData);
       setLoading(false);
+
+      // Remember this account so the player can switch back to it later. The
+      // login response carries no stableName, so the label falls back to the
+      // username here; a later refreshUser upgrades the label if a stable name
+      // is set. Best-effort — a storage failure must not break login.
+      rememberAccount(userData, newToken);
     } catch (error) {
       // Re-throw as a plain Error so LoginForm's existing UI logic keeps
       // working (it expects `error.message`, not the structured ApiError
@@ -215,8 +309,73 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  /**
+   * Switch to a saved account. The model is a scripted token swap, not a
+   * server-side session change: there is one active token in localStorage, so a
+   * switch clears the outgoing session's cached data, installs the saved token,
+   * and re-reads the profile.
+   *
+   * A blocking loading state is entered BEFORE the token is swapped and released
+   * only when the switch settles. While `loading` is true `ProtectedRoute`
+   * unmounts the outgoing page, so the previous account's screen cannot stay
+   * interactive against the new account's credentials (e.g. saving A's edited
+   * note while the token is already B's).
+   *
+   * On failure (the saved token is expired or `tokenVersion`-revoked, so
+   * `/api/user/profile` answers a definitive 401), the half-applied session is
+   * torn down with `logout()`, the dead entry is dropped, and the error is
+   * re-thrown so the caller can route the player to the login form. A
+   * non-definitive failure (network/proxy) keeps the saved entry so a transient
+   * outage does not force re-entering the password.
+   */
+  const switchAccount = async (account: SavedAccount) => {
+    // New session: supersede any in-flight request from the outgoing account so
+    // a late-completing refresh/robot/stable fetch cannot commit A's data over B.
+    sessionGeneration.current += 1;
+    const generation = sessionGeneration.current;
+    const isStale = () => sessionGeneration.current !== generation;
+
+    // Block the UI for the transition and clear the outgoing session's cached
+    // store data (robots, stable, subscriptions) to prevent cross-account bleed.
+    setLoading(true);
+    clearSessionStores();
+
+    // Install the saved token as the active one, then rehydrate from the server.
+    localStorage.setItem('token', account.token);
+    setToken(account.token);
+
+    try {
+      const userData = await api.get<User>('/api/user/profile');
+      // A newer switch/logout started while this was in flight: abandon.
+      if (isStale()) return;
+      setUser(userData);
+      setToken(account.token);
+      // Refresh the saved entry with the latest token and label (the stable name
+      // may have changed since it was last saved).
+      rememberAccount(userData, account.token);
+    } catch (error) {
+      if (isStale()) throw error;
+      // Tear the session down so nothing stale is left, then decide whether the
+      // saved entry is dead. Only a definitive backend 401 proves the token is
+      // invalid; a network/proxy failure keeps the entry for a retry.
+      log.warn('Saved account switch failed; falling back to login', { userId: account.userId });
+      logout();
+      if (isDefinitiveAuthRejection(error)) {
+        try {
+          removeSavedAccount(account.userId);
+        } catch {
+          /* storage failure here is non-fatal */
+        }
+      }
+      throw error instanceof ApiError
+        ? new Error('Could not switch to that account. Please log in again.', { cause: error })
+        : new Error('Could not switch account. Please log in again.', { cause: error });
+    } finally {
+      if (!isStale()) setLoading(false);
+    }
+  };
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, login, logout, loading, refreshUser, switchAccount }}>
       {children}
     </AuthContext.Provider>
   );

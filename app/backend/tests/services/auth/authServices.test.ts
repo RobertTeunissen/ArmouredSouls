@@ -91,6 +91,7 @@ function makeUser(overrides: Partial<Record<string, unknown>> = {}) {
     notificationsBattle: true,
     notificationsLeague: true,
     themePreference: 'dark',
+    stableNote: null,
     championshipTitles: 0,
     championshipTitles1v1: 0,
     championshipTitles2v2: 0,
@@ -326,6 +327,14 @@ describe('userProfileService', () => {
       const result = await getUserProfile(1);
 
       expect(result.stableName).toBe('testplayer');
+    });
+
+    it('should return the stable note when set', async () => {
+      mockUserFindUnique.mockResolvedValue(makeUser({ stableNote: 'Bank credits for diamond push.' }));
+
+      const result = await getUserProfile(1);
+
+      expect(result.stableNote).toBe('Bank credits for diamond push.');
     });
 
     it('should throw AuthError when user not found', async () => {

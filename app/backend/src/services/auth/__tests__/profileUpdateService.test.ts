@@ -38,6 +38,7 @@ const updatedRow = {
   notificationsBattle: true,
   notificationsLeague: true,
   themePreference: 'dark',
+  stableNote: null as string | null,
   tokenVersion: 3,
 };
 
@@ -69,6 +70,30 @@ describe('updateUserProfile', () => {
       statusCode: 409,
       code: 'DUPLICATE_STABLE_NAME',
     });
+  });
+
+  it('trims the stable note before persisting it', async () => {
+    await updateUserProfile(7, { stableNote: '  Rush bronze, bank for diamond.  ' });
+    expect(mockUpdate.mock.calls[0][0].data).toEqual({ stableNote: 'Rush bronze, bank for diamond.' });
+  });
+
+  it('clears the stable note when given an empty (or whitespace-only) string', async () => {
+    await updateUserProfile(7, { stableNote: '   ' });
+    expect(mockUpdate.mock.calls[0][0].data).toEqual({ stableNote: null });
+  });
+
+  it('rejects a stable note over 2000 characters with a field error', async () => {
+    await expect(updateUserProfile(7, { stableNote: 'x'.repeat(2001) })).rejects.toMatchObject({
+      statusCode: 400,
+      code: 'VALIDATION_ERROR',
+      details: { fields: [{ field: 'stableNote', message: 'Stable note must be 2000 characters or less' }] },
+    });
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('accepts a stable note of exactly 2000 characters after trimming', async () => {
+    await updateUserProfile(7, { stableNote: `  ${'x'.repeat(2000)}  ` });
+    expect(mockUpdate.mock.calls[0][0].data).toEqual({ stableNote: 'x'.repeat(2000) });
   });
 
   it('rejects an empty update', async () => {

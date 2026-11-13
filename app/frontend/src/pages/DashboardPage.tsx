@@ -7,7 +7,7 @@ import SeasonPhaseCard from '../components/season/SeasonPhaseCard';
 import { SeasonCountdownNotice } from '../components/season/SeasonCountdownBanner';
 import { useSeasonStore, selectSeason } from '../stores/seasonStore';
 import RecentBattles from '../components/RecentBattles';
-import { OverviewRow, type OverviewRowData } from '../components/dashboard';
+import { OverviewRow, StableNoteCard, type OverviewRowData } from '../components/dashboard';
 import RobotDashboardCard from '../components/RobotDashboardCard';
 
 import LeagueStandingsSummary from '../components/LeagueStandingsSummary';
@@ -172,6 +172,10 @@ function DashboardPage() {
 
           {/* Team subscription gaps and team creation suggestions */}
           {teamNotifications.map(n => renderNotification(n))}
+
+          {/* #611: the player's private strategy note. Read-only here, edited on
+              the Profile page, and rendered only when it has content. */}
+          <StableNoteCard note={user.stableNote} />
         </div>
 
         {/* Spec #48: the Overview_Row. Sits between the notification stack and Recent

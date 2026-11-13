@@ -84,6 +84,7 @@ model User {
   notificationsBattle Boolean  @default(true) @map("notifications_battle")
   notificationsLeague Boolean  @default(true) @map("notifications_league")
   themePreference     String   @default("dark") @map("theme_preference") @db.VarChar(20)
+  stableNote          String?  @map("stable_note") @db.Text // Free-text strategy note, up to 2000 chars (validated)
   
   // ===== ONBOARDING TRACKING =====
   hasCompletedOnboarding Boolean   @default(false) @map("has_completed_onboarding")

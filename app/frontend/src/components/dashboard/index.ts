@@ -6,6 +6,7 @@ export { TodaysBattlesTile } from './TodaysBattlesTile';
 export { placementReward, earnsPlacementReward, ordinal } from './placementFormatting';
 export type { PlacementMode } from './placementFormatting';
 export { CreditsTile } from './CreditsTile';
+export { StableNoteCard } from './StableNoteCard';
 export {
   DashboardTile,
   DashboardTileStat,

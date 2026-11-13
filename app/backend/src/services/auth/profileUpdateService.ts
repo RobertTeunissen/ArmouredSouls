@@ -16,6 +16,7 @@ import { hashPassword } from './passwordService';
 
 export interface ProfileUpdateInput {
   stableName?: string;
+  stableNote?: string;
   profileVisibility?: 'public' | 'private';
   notificationsBattle?: boolean;
   notificationsLeague?: boolean;
@@ -27,6 +28,7 @@ export interface ProfileUpdateInput {
 export async function updateUserProfile(userId: number, input: ProfileUpdateInput): Promise<Record<string, unknown>> {
   const {
     stableName,
+    stableNote,
     profileVisibility,
     notificationsBattle,
     notificationsLeague,
@@ -56,6 +58,14 @@ export async function updateUserProfile(userId: number, input: ProfileUpdateInpu
   if (profileVisibility !== undefined) {
     if (profileVisibility !== 'public' && profileVisibility !== 'private') {
       validationErrors.profileVisibility = "Profile visibility must be 'public' or 'private'";
+    }
+  }
+
+  // Validate stableNote if provided
+  if (stableNote !== undefined) {
+    const trimmedNote = stableNote.trim();
+    if (trimmedNote.length > 2000) {
+      validationErrors.stableNote = 'Stable note must be 2000 characters or less';
     }
   }
 
@@ -135,6 +145,10 @@ export async function updateUserProfile(userId: number, input: ProfileUpdateInpu
   if (notificationsBattle !== undefined) updateData.notificationsBattle = notificationsBattle;
   if (notificationsLeague !== undefined) updateData.notificationsLeague = notificationsLeague;
   if (themePreference !== undefined) updateData.themePreference = themePreference;
+  if (stableNote !== undefined) {
+    const trimmedNote = stableNote.trim();
+    updateData.stableNote = trimmedNote.length > 0 ? trimmedNote : null;
+  }
   if (hashedPassword !== undefined) {
     updateData.passwordHash = hashedPassword;
     // Increment tokenVersion to invalidate all existing JWTs on password change
@@ -163,6 +177,7 @@ export async function updateUserProfile(userId: number, input: ProfileUpdateInpu
       notificationsBattle: true,
       notificationsLeague: true,
       themePreference: true,
+      stableNote: true,
       tokenVersion: true,
     },
   });

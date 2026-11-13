@@ -12,8 +12,9 @@ import SeasonProgressIndicator from './season/SeasonProgressIndicator';
 import SeasonCountdownBanner from './season/SeasonCountdownBanner';
 import SeasonSummaryModal from './season/SeasonSummaryModal';
 import { useSeasonStore } from '../stores/seasonStore';
-import { NavLink, DropdownMenu, MobileTab, MobileDrawer } from './nav';
+import { NavLink, DropdownMenu, AccountMenu, MobileTab, MobileDrawer } from './nav';
 import { allPages, stableNavItems } from './nav';
+import { listSavedAccounts, type SavedAccount } from '../utils/savedAccounts';
 import type { UserRobot } from './nav';
 import { useRobotStore } from '../stores';
 import SearchTrigger from './search/SearchTrigger';
@@ -26,7 +27,7 @@ export interface NavigationProps {
 function Navigation({ onOpenSearch }: NavigationProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, switchAccount } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const storeRobots = useRobotStore((state) => state.robots);
   const fetchRobots = useRobotStore((state) => state.fetchRobots);
@@ -45,6 +46,33 @@ function Navigation({ onOpenSearch }: NavigationProps) {
 
   const handleLogout = () => {
     logout();
+    navigate('/login');
+  };
+
+  // Account switching. Read on each render so a freshly-saved account (e.g. right
+  // after login) appears without a reload; the list is small.
+  const savedAccounts: SavedAccount[] = listSavedAccounts();
+
+  const handleSwitchAccount = (account: SavedAccount): void => {
+    setDrawerOpen(false);
+    void switchAccount(account)
+      .then(() => {
+        // Land on the dashboard of the newly-active account.
+        navigate('/dashboard');
+      })
+      .catch(() => {
+        // The saved token was expired or revoked: send the player to the login
+        // form to authenticate as that account again.
+        navigate('/login');
+      });
+  };
+
+  const handleAddAccount = (): void => {
+    setDrawerOpen(false);
+    // Adding an account is just logging into another one. Detach the active
+    // session so the login form is shown, but KEEP its saved credential so the
+    // player can switch straight back after signing into the other stable.
+    logout({ keepSavedAccount: true });
     navigate('/login');
   };
 
@@ -112,12 +140,14 @@ function Navigation({ onOpenSearch }: NavigationProps) {
               <span className="text-primary">₡</span>
               <span className="text-primary font-medium">{user.currency.toLocaleString()}</span>
             </div>
-            <button
-              onClick={handleLogout}
-              className="border border-error/30 text-error hover:bg-error/10 px-4 py-2 rounded-md transition-all duration-150"
-            >
-              Logout
-            </button>
+            <AccountMenu
+              currentLabel={user.stableName || user.username}
+              currentUserId={user.id}
+              savedAccounts={savedAccounts}
+              onSwitchAccount={handleSwitchAccount}
+              onAddAccount={handleAddAccount}
+              onLogout={handleLogout}
+            />
           </div>
         </div>
       </nav>
@@ -159,6 +189,10 @@ function Navigation({ onOpenSearch }: NavigationProps) {
           isAdmin={user.role === 'admin'}
           onLogout={handleLogout}
           userId={user.id}
+          currentUserId={user.id}
+          savedAccounts={savedAccounts}
+          onSwitchAccount={handleSwitchAccount}
+          onAddAccount={handleAddAccount}
         />
       </div>
 
