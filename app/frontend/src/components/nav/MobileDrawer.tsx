@@ -83,7 +83,12 @@ export function MobileDrawer({
           </button>
         </div>
 
-        <div className="py-4 overflow-y-auto h-[calc(100vh-56px)]">
+        {/* Height subtracts the drawer's own 56px header AND the fixed bottom
+            tab bar (~56px) that overlays the viewport, so the last items —
+            including the Switch Account / Add account / Logout controls — stay
+            scrollable into view instead of hiding behind the tab bar. Extra
+            bottom padding covers the iOS home-indicator safe area. */}
+        <div className="py-4 overflow-y-auto h-[calc(100vh-112px)] pb-[env(safe-area-inset-bottom)]">
           {/* ROBOTS Section */}
           <DrawerSection emoji="🤖" title="Robots">
             <DrawerMenuItem
