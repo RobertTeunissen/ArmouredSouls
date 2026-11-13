@@ -73,13 +73,14 @@ export function AccountMenu({
         onClick={() => (isOpen ? close() : open())}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className="flex min-w-0 items-center gap-1 max-w-[10rem] px-3 py-2 rounded-md transition-all duration-150 text-secondary hover:text-primary hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-elevated"
+        className="flex min-w-0 shrink items-center gap-1 max-w-[9rem] px-2 py-2 rounded-md transition-all duration-150 text-secondary hover:text-primary hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-elevated"
+        title={currentLabel}
       >
-        {/* Only the label truncates; the icon and caret stay fixed-size so the
-            button never grows past max-w with a long stable name (which would
-            push the fixed top bar into horizontal overflow). `min-w-0` on both
-            the button and the label is required for `truncate` to shrink inside
-            the navbar's flex row. */}
+        {/* Only the label truncates; the icon and caret stay fixed-size. The
+            button can shrink (`min-w-0 shrink`) and its label truncates, so a
+            long stable name — or a tight 1280px desktop row — never pushes the
+            fixed top bar into horizontal overflow. `min-w-0` on both the button
+            and the label is required for `truncate` to shrink inside a flex row. */}
         <span className="flex-shrink-0" aria-hidden="true">👤</span>
         <span className="min-w-0 truncate">{currentLabel}</span>
         <span className="flex-shrink-0" aria-hidden="true">▾</span>
