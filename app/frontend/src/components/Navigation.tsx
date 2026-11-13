@@ -69,9 +69,10 @@ function Navigation({ onOpenSearch }: NavigationProps) {
 
   const handleAddAccount = (): void => {
     setDrawerOpen(false);
-    // Adding an account is just logging into another one. Clear the active
-    // session first so the login form is shown rather than a redirect home.
-    logout();
+    // Adding an account is just logging into another one. Detach the active
+    // session so the login form is shown, but KEEP its saved credential so the
+    // player can switch straight back after signing into the other stable.
+    logout({ keepSavedAccount: true });
     navigate('/login');
   };
 

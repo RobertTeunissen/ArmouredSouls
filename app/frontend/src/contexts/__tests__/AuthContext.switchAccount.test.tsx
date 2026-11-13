@@ -18,11 +18,15 @@ vi.mock('../../utils/api', () => ({
 
 const robotClear = vi.fn();
 const stableClear = vi.fn();
+const subscriptionClear = vi.fn();
 vi.mock('../../stores/robotStore', () => ({
   useRobotStore: { getState: () => ({ clear: robotClear }) },
 }));
 vi.mock('../../stores/stableStore', () => ({
   useStableStore: { getState: () => ({ clear: stableClear }) },
+}));
+vi.mock('../../stores/subscriptionStore', () => ({
+  useSubscriptionStore: { getState: () => ({ clear: subscriptionClear }) },
 }));
 
 const target: SavedAccount = {
@@ -107,6 +111,9 @@ describe('AuthContext.switchAccount', () => {
     expect(localStorage.getItem('token')).toBe('tok-bob');
     expect(robotClear).toHaveBeenCalled();
     expect(stableClear).toHaveBeenCalled();
+    // The subscription overview is account-scoped and must be cleared too, or
+    // B would see A's Booking Office data within the 30s TTL.
+    expect(subscriptionClear).toHaveBeenCalled();
     // The switched-to account is re-saved with its fresh label/token.
     expect(saveSpy).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 2, label: 'Steel Hawks', token: 'tok-bob' }),
@@ -115,10 +122,9 @@ describe('AuthContext.switchAccount', () => {
     expect(useStableStore.getState().clear).toBe(stableClear);
   });
 
-  it('tears down the session and drops the dead account when the saved token is rejected', async () => {
+  it('tears down the session and drops the dead account on a definitive backend 401', async () => {
     const removeSpy = vi.spyOn(savedAccounts, 'removeSavedAccount').mockReturnValue([]);
-    // Session restore on mount: no token, so the first get is never hit.
-    // The switch's profile read fails with a backend 401.
+    // The switch's profile read fails with a structured backend 401.
     vi.mocked(api.get).mockRejectedValueOnce(
       new ApiError('Invalid or expired token', 'UNAUTHORIZED', 401),
     );
@@ -135,5 +141,49 @@ describe('AuthContext.switchAccount', () => {
     expect(screen.getByTestId('user')).toHaveTextContent('none');
     expect(localStorage.getItem('token')).toBeNull();
     expect(removeSpy).toHaveBeenCalledWith(2);
+  });
+
+  it('remembers the account on a successful session restore (refreshUser path)', async () => {
+    // Normal sign-in and session restore go through refreshUser, not login, so
+    // refreshUser must be what populates the saved-accounts list.
+    const saveSpy = vi.spyOn(savedAccounts, 'saveAccount').mockReturnValue([]);
+    localStorage.setItem('token', 'tok-alice');
+    vi.mocked(api.get).mockResolvedValue({
+      id: 1,
+      username: 'alice',
+      email: null,
+      role: 'user',
+      currency: 100,
+      prestige: 0,
+      stableName: 'Iron Wolves',
+    } as never);
+
+    renderHarness();
+
+    await waitFor(() => expect(screen.getByTestId('user')).toHaveTextContent('alice'));
+    expect(saveSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 1, label: 'Iron Wolves', username: 'alice', token: 'tok-alice' }),
+    );
+  });
+
+  it('keeps the saved account on a transient (non-definitive) failure', async () => {
+    const removeSpy = vi.spyOn(savedAccounts, 'removeSavedAccount').mockReturnValue([]);
+    // A proxy/WAF 401 (no structured backend code) or a network error does not
+    // prove the token is dead, so the saved entry must survive for a retry.
+    vi.mocked(api.get).mockRejectedValueOnce(
+      new ApiError('Blocked', 'UNKNOWN_ERROR', 401),
+    );
+
+    renderHarness();
+    await waitFor(() => expect(screen.getByTestId('user')).toHaveTextContent('none'));
+
+    await act(async () => {
+      screen.getByText('switch').click();
+    });
+
+    await waitFor(() => expect(screen.getByTestId('err')).toHaveTextContent(/log in again/i));
+    // Session is still torn down, but the saved account is NOT discarded.
+    expect(localStorage.getItem('token')).toBeNull();
+    expect(removeSpy).not.toHaveBeenCalled();
   });
 });
