@@ -56,7 +56,7 @@ export function modeLabel(mode: TieredLeagueMode): string {
   return MODE_LABELS[mode];
 }
 
-export function modeShortLabel(mode: TieredLeagueMode): string {
+function modeShortLabel(mode: TieredLeagueMode): string {
   return MODE_SHORT_LABELS[mode];
 }
 
@@ -141,7 +141,7 @@ export interface TierStatusText {
 }
 
 /** One decimal without a trailing ".0" ("1.6", "4"). */
-export function formatAverage(value: number): string {
+function formatAverage(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 

@@ -13,7 +13,7 @@ import { blockedFromQuote } from './goalSupport';
 import { savingOrActionable, type Goal, type GoalContext, type GoalOutcome } from './goalTypes';
 
 /** Highest Booking Office level any stable can use. */
-export const BOOKING_OFFICE_USEFUL_MAX = 6;
+const BOOKING_OFFICE_USEFUL_MAX = 6;
 
 /** Team event types of a team size (league_2v2, tag_team, tournament_2v2 / league_3v3, tournament_3v3). */
 function teamEventTypeCount(size: 2 | 3): number {

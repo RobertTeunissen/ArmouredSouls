@@ -120,7 +120,7 @@ export function strongAppearances(appearances: readonly Appearance[], cuts: Reco
 
 export type ChoiceModel = 'weapons' | 'archetypes';
 
-export function choiceFeatureCount(model: ChoiceModel, index: WeaponIndex): number {
+function choiceFeatureCount(model: ChoiceModel, index: WeaponIndex): number {
   return model === 'weapons' ? WEAPON_OFFSET + index.size : ARCHETYPE_OFFSET + ARCHETYPES.length;
 }
 

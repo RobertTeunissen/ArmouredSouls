@@ -44,7 +44,7 @@ function currentSeasonText(season: SeasonState): string {
   return `In progress · cycle ${season.seasonCycle} of ${season.seasonLengthCycles} · archived at rollover`;
 }
 
-export function SeasonHistoryBlock({ userId }: SeasonHistoryBlockProps) {
+function SeasonHistoryBlock({ userId }: SeasonHistoryBlockProps) {
   const season = useSeasonStore((s) => s.season);
   const [seasons, setSeasons] = useState<StableSeasonSummary[] | null>(null);
   const [expanded, setExpanded] = useState<number | null>(null);

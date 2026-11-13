@@ -1,12 +1,6 @@
 import prisma from '../src/lib/prisma';
-import {
-  determinePromotions,
-  determineDemotions,
-  promoteRobot,
-  demoteRobot,
-  rebalanceLeagues,
-  getMinLPForPromotion,
-} from '../src/services/league/leagueRebalancingService';
+import { determinePromotions, rebalanceLeagues } from '../src/services/league/leagueRebalancingService';
+import { getMinLPForPromotion } from '../src/services/league/leaguePromotionThresholds';
 
 
 describe('League Rebalancing Service', () => {
@@ -209,105 +203,6 @@ describe('League Rebalancing Service', () => {
 
       const toPromote = await determinePromotions('gold_1');
       expect(toPromote).toEqual([]);
-    });
-  });
-
-  describe('determineDemotions', () => {
-    it('should return bottom 10% of standings with ≥5 cycles in tier', async () => {
-      for (let i = 0; i < 20; i++) {
-        await createRobotWithStanding({
-          name: `Silver Robot ${i}`,
-          tier: 'silver',
-          leagueInstanceId: 'silver_1',
-          cyclesInTier: 10,
-          leaguePoints: i * 5, // spread so "bottom 10% by LP" is well defined
-        });
-      }
-
-      const toDemote = await determineDemotions('silver_1');
-
-      // Bottom 10% = 2 entities (lowest LP)
-      expect(toDemote.length).toBe(2);
-      expect(toDemote[0].leaguePoints).toBeLessThanOrEqual(toDemote[1].leaguePoints);
-    });
-
-    it('should return empty array for bronze tier', async () => {
-      const toDemote = await determineDemotions('bronze_1');
-      expect(toDemote).toEqual([]);
-    });
-  });
-
-  describe('promoteRobot', () => {
-    it('should move standing to next tier, assign new instance, and reset cyclesInTier', async () => {
-      const { robot, standing } = await createRobotWithStanding({
-        name: 'Promotion Test Robot',
-        tier: 'bronze',
-        leagueInstanceId: 'bronze_1',
-        cyclesInTier: 10,
-        leaguePoints: 50, // asserted to survive the promotion unchanged
-        elo: 1300,
-      });
-
-      // promoteRobot takes the standing entity (returned from determinePromotions)
-      await promoteRobot(standing);
-
-      // Verify standings row was updated
-      const updatedStanding = await prisma.standing.findFirst({
-        where: { entityType: 'robot', entityId: robot.id, mode: 'league_1v1' },
-      });
-      expect(updatedStanding?.tier).toBe('silver');
-      expect(updatedStanding?.leagueInstanceId).toMatch(/^silver_\d+$/);
-      expect(updatedStanding?.cyclesInTier).toBe(0);
-      // LP retained on promotion
-      expect(updatedStanding?.leaguePoints).toBe(50);
-    });
-
-    it('should throw error when trying to promote from champion', async () => {
-      const { standing } = await createRobotWithStanding({
-        name: 'Champion Robot',
-        tier: 'champion',
-        leagueInstanceId: 'champion_1',
-        cyclesInTier: 10,
-        elo: 1800,
-      });
-
-      await expect(promoteRobot(standing)).rejects.toThrow();
-    });
-  });
-
-  describe('demoteRobot', () => {
-    it('should move standing to previous tier and reset cyclesInTier', async () => {
-      const { robot, standing } = await createRobotWithStanding({
-        name: 'Demotion Test Robot',
-        tier: 'silver',
-        leagueInstanceId: 'silver_1',
-        cyclesInTier: 10,
-        leaguePoints: 5, // asserted to survive the demotion unchanged
-        elo: 1100,
-      });
-
-      await demoteRobot(standing);
-
-      const updatedStanding = await prisma.standing.findFirst({
-        where: { entityType: 'robot', entityId: robot.id, mode: 'league_1v1' },
-      });
-      expect(updatedStanding?.tier).toBe('bronze');
-      expect(updatedStanding?.leagueInstanceId).toMatch(/^bronze_\d+$/);
-      expect(updatedStanding?.cyclesInTier).toBe(0);
-      // LP retained on demotion
-      expect(updatedStanding?.leaguePoints).toBe(5);
-    });
-
-    it('should throw error when trying to demote from bronze', async () => {
-      const { standing } = await createRobotWithStanding({
-        name: 'Bronze Robot',
-        tier: 'bronze',
-        leagueInstanceId: 'bronze_1',
-        cyclesInTier: 10,
-        elo: 1000,
-      });
-
-      await expect(demoteRobot(standing)).rejects.toThrow();
     });
   });
 

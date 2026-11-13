@@ -39,4 +39,3 @@ export function AchievementsSection({ achievements }: { achievements: readonly P
   );
 }
 
-export default AchievementsSection;

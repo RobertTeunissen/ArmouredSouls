@@ -5,4 +5,4 @@ export {
   type PaginatedResult,
 } from './changelogService';
 
-export { processAndStore, deleteImage } from './changelogImageService';
+export { processAndStore } from './changelogImageService';

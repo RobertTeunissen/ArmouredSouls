@@ -25,4 +25,3 @@ export function Stepper({ label, value, onDecrement, onIncrement, canDecrement, 
   );
 }
 
-export default Stepper;

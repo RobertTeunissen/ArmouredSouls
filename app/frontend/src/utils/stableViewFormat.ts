@@ -62,7 +62,7 @@ function record(wins: number, losses: number, draws: number): string {
 }
 
 /** "56–39–0 · 130 LP", "14 first places in 50 · 718 LP", prefixed with the team for team modes. */
-export function standingDetail(s: PublicRobotStanding): string {
+function standingDetail(s: PublicRobotStanding): string {
   const result = isPlacementMode(s.mode)
     ? `${s.wins} first ${s.wins === 1 ? 'place' : 'places'} in ${s.totalMatches ?? 0}`
     : record(s.wins, s.losses, s.draws);

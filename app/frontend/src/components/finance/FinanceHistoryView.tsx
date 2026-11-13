@@ -174,4 +174,3 @@ export function FinanceHistoryView({ response }: { response: FinanceHistoryRespo
   );
 }
 
-export default FinanceHistoryView;

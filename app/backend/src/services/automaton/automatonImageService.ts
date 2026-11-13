@@ -27,8 +27,8 @@ import { CATALOGUE_KEY_PATTERN } from './automatonCatalogueService';
 
 const BACKEND_ROOT = path.resolve(__dirname, '..', '..', '..');
 /** `app/backend/uploads/automatons` (served by `/uploads/*`). */
-export const DEFAULT_AUTOMATON_UPLOAD_DIR = path.join(BACKEND_ROOT, 'uploads', 'automatons');
-export const AUTOMATON_UPLOAD_URL_PREFIX = '/uploads/automatons';
+const DEFAULT_AUTOMATON_UPLOAD_DIR = path.join(BACKEND_ROOT, 'uploads', 'automatons');
+const AUTOMATON_UPLOAD_URL_PREFIX = '/uploads/automatons';
 /** `{uuid}.webp`, the only file name the store writes. */
 const UPLOAD_FILE_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.webp$/;
 
@@ -64,12 +64,6 @@ export function resolveAutomatonImagePath(catalogueKey: string, fileName?: strin
   }
   if (!resolved.startsWith(uploadDir + path.sep)) throw invalidPath();
   return resolved;
-}
-
-/** True when `imageUrl` is an upload of this Catalogue_Key in the store (`/uploads/automatons/{key}/{uuid}.webp`). */
-export function isAutomatonUploadUrl(imageUrl: string, catalogueKey: string): boolean {
-  const prefix = `${AUTOMATON_UPLOAD_URL_PREFIX}/${catalogueKey}/`;
-  return imageUrl.startsWith(prefix) && UPLOAD_FILE_PATTERN.test(imageUrl.slice(prefix.length));
 }
 
 export interface StoredBlueprintImage {

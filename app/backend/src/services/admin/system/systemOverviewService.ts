@@ -21,9 +21,9 @@ import { lastUtcDays, unavailableByDay } from '../../practice-arena/practiceAren
 import { classifyStarts, failuresSince, parseMemInfo, summarizeErrors, summarizeJobs, summarizeSlow, type MetricRow } from './systemRules';
 import type { SystemDisk, SystemMemory, SystemOverview, SystemTable } from '../../../shared/types';
 
-export const REQUEST_WINDOW_DAYS = 7;
-export const JOB_WINDOW_DAYS = 8;
-export const START_WINDOW_DAYS = 7;
+const REQUEST_WINDOW_DAYS = 7;
+const JOB_WINDOW_DAYS = 8;
+const START_WINDOW_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const TOP_TABLES = 6;
 

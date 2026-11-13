@@ -1,6 +1,5 @@
 export {
   achievementService,
-  getRarityLabel,
   type AchievementEvent,
   type AchievementEventType,
   type UnlockedAchievement,

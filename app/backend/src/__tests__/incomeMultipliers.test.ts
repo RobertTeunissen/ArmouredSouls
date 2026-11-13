@@ -4,10 +4,8 @@
  * prestige bonus since #596: a win pays the same to every stable.
  */
 
-import {
-  calculateMerchandisingIncome,
-  getMerchandisingBaseRate,
-} from '../utils/economyCalculations';
+import { calculateMerchandisingIncome } from '../utils/economyCalculations';
+import { getMerchandisingBaseRate } from '../utils/economyFormulas';
 
 describe('Income Multipliers', () => {
   describe('calculateMerchandisingIncome (Spec #46 R2)', () => {

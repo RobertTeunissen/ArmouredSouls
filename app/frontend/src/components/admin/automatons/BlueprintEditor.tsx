@@ -37,9 +37,9 @@ import type {
   WeaponStage,
 } from '@shared/types';
 
-export const MAX_WEAPON_STAGES = 4;
-export const MAX_REFINEMENT_STEPS_PER_WEAPON = 5;
-export const MAX_YIELD_THRESHOLD = 50;
+const MAX_WEAPON_STAGES = 4;
+const MAX_REFINEMENT_STEPS_PER_WEAPON = 5;
+const MAX_YIELD_THRESHOLD = 50;
 
 export interface BlueprintEditorProps {
   item: BlueprintEditorItem;

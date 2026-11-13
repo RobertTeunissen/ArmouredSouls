@@ -47,4 +47,3 @@ export function ModeStrip({ cells, showLabels = false }: ModeStripProps) {
   );
 }
 
-export default ModeStrip;

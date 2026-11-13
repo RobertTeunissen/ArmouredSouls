@@ -6,11 +6,11 @@ import type {
   StableRef,
 } from '@shared/types';
 
-export const PLAYER: StableRef = { userId: 1, name: 'Rustbucket Co.', stableType: 'human' };
-export const AUTOMATON: StableRef = { userId: 2, name: 'Ferrum Works', stableType: 'automaton' };
-export const GENERATED: StableRef = { userId: 3, name: 'auto_bot_412', stableType: 'generated' };
+const PLAYER: StableRef = { userId: 1, name: 'Rustbucket Co.', stableType: 'human' };
+const AUTOMATON: StableRef = { userId: 2, name: 'Ferrum Works', stableType: 'automaton' };
+const GENERATED: StableRef = { userId: 3, name: 'auto_bot_412', stableType: 'generated' };
 
-export function row(partial: Partial<BattleListRow> = {}): BattleListRow {
+function row(partial: Partial<BattleListRow> = {}): BattleListRow {
   return {
     id: 531204,
     battleType: 'league_1v1',
@@ -32,7 +32,7 @@ export function row(partial: Partial<BattleListRow> = {}): BattleListRow {
   };
 }
 
-export const KOTH_ROW = row({
+const KOTH_ROW = row({
   id: 531188,
   battleType: 'koth',
   leagueType: 'koth',
@@ -45,7 +45,7 @@ export const KOTH_ROW = row({
   durationSeconds: 130,
 });
 
-export const BYE_ROW = row({
+const BYE_ROW = row({
   id: 531061,
   sides: [{ team: 1, label: 'Rattler', robotCount: 1, stable: PLAYER, isWinner: true }],
   result: 'bye',

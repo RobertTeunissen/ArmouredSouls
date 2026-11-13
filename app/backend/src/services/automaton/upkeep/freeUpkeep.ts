@@ -41,7 +41,7 @@ import type { EventOrder } from '../../../types/automaton';
 import type { TeamNames } from '../../../shared/types';
 
 /** The four Free_Upkeep parts, in the order R5.7 runs them. */
-export const FREE_UPKEEP_PARTS = ['teams', 'subscriptions', 'blueprint_sync', 'tuning'] as const;
+const FREE_UPKEEP_PARTS = ['teams', 'subscriptions', 'blueprint_sync', 'tuning'] as const;
 export type FreeUpkeepPart = (typeof FREE_UPKEEP_PARTS)[number];
 
 export interface FreeUpkeepContext {

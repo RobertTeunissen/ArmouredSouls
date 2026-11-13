@@ -54,7 +54,7 @@ function instanceNumber(instanceId: string): number {
 }
 
 /** The LP gate of a tier, or null when there is none (placement modes, top tier). */
-export function promotionGateLp(tier: string, rules: LeagueRuleSet): number | null {
+function promotionGateLp(tier: string, rules: LeagueRuleSet): number | null {
   if (rules.promotionMinLPOverride !== undefined) return null;
   const gate = getMinLPForPromotion(tier);
   return Number.isFinite(gate) ? gate : null;

@@ -359,7 +359,7 @@ export function initScheduler(config: SchedulerConfig): void {
       nextRunAt: null,
     });
 
-    // Store handler for manual triggering via triggerJob() / startManualRun()
+    // Store handler for manual runs via startManualRun()
     jobHandlers.set(job.name, job.handler);
 
     if (!config.enabled) continue;
@@ -402,19 +402,6 @@ export function getSchedulerState(): SchedulerState {
 }
 
 // --- Manual trigger (same path as cron: repair, execute, notify, track state) ---
-
-/**
- * Trigger a job by name, using the same handler as the cron scheduler.
- * Runs through runJob() so it gets: mutex lock, state tracking, notifications, error handling.
- * Throws if the job name is not registered.
- */
-export async function triggerJob(jobName: JobState['name'], triggeredByUserId?: number | null): Promise<void> {
-  const handler = jobHandlers.get(jobName);
-  if (!handler) {
-    throw new Error(`Unknown job name: ${jobName}. Scheduler may not be initialized.`);
-  }
-  await runJob(jobName, handler, { trigger: 'manual', triggeredByUserId });
-}
 
 /** Jobs holding or waiting for the lock right now, by name. */
 export function getActiveJobNames(): string[] {

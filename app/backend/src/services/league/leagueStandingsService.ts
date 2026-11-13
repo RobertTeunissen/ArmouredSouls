@@ -16,8 +16,7 @@ import { playerOwnedEntityIds, type StableFilter } from '../standings/playerStab
 
 export const ROBOT_LEAGUE_MODES = ['league_1v1', 'koth', 'grand_melee'] as const;
 export type RobotLeagueMode = typeof ROBOT_LEAGUE_MODES[number];
-export const TEAM_LEAGUE_MODES = ['league_2v2', 'league_3v3', 'tag_team'] as const;
-export type TeamLeagueMode = typeof TEAM_LEAGUE_MODES[number];
+export type TeamLeagueMode = 'league_2v2' | 'league_3v3' | 'tag_team';
 
 /** Subscription event that keeps an entity of this mode entered. */
 const SUBSCRIPTION_EVENT: Record<RobotLeagueMode | TeamLeagueMode, string> = {

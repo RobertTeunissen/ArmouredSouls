@@ -49,4 +49,3 @@ export function StableNoteCard({ note }: StableNoteCardProps): React.JSX.Element
   );
 }
 
-export default StableNoteCard;

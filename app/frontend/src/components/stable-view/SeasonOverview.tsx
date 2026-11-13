@@ -69,4 +69,3 @@ export function SeasonOverview({ strips, summaries }: SeasonOverviewProps) {
   );
 }
 
-export default SeasonOverview;

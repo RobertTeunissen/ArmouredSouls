@@ -9,7 +9,8 @@ const mockPrisma = {
 };
 jest.mock('../../../lib/prisma', () => ({ __esModule: true, default: mockPrisma }));
 
-import { ADMIN_ACTION_AREAS, areaOf, describeAdminAction, getAdminActions } from '../admin-actions';
+import { ADMIN_ACTION_AREAS, getAdminActions } from '../admin-actions';
+import { areaOf, describeAdminAction } from '../admin-actions/adminActionCatalogue';
 
 describe('areaOf', () => {
   it.each([

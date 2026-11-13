@@ -9,7 +9,7 @@ import { getSystemOverview } from '../utils/adminSystemApi';
 import type { Section } from './useCycleControls';
 import type { SystemOverview } from '@shared/types';
 
-export const SYSTEM_POLL_MS = 60_000;
+const SYSTEM_POLL_MS = 60_000;
 
 export interface SystemOverviewData {
   overview: Section<SystemOverview>;

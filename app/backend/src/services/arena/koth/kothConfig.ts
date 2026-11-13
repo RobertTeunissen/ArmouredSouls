@@ -116,58 +116,6 @@ export const KOTH_MATCH_DEFAULTS = {
 
 // ─── Config Validation ──────────────────────────────────────────────
 
-/**
- * Validate a KotH match configuration.
- *
- * Checks:
- *  - participantCount must be between 5 and 7
- *  - scoreThreshold (if provided) must be in [15, 90]
- *  - timeLimit (if provided) must be in [60, 300]
- *  - zoneRadius (if provided) must be in [3, 8]
- *
- * Returns { valid, errors[] } with descriptive messages for each violation.
- *
- * Requirements: 11.4, 11.5
- */
-export function validateKothConfig(config: KothMatchConfig): KothConfigValidationResult {
-  const errors: string[] = [];
-
-  if (config.participantCount < 5 || config.participantCount > 7) {
-    errors.push(
-      `participantCount must be between 5 and 7, got ${config.participantCount}`,
-    );
-  }
-
-  if (
-    config.scoreThreshold !== undefined &&
-    (config.scoreThreshold < 15 || config.scoreThreshold > 90)
-  ) {
-    errors.push(
-      `scoreThreshold must be between 15 and 90, got ${config.scoreThreshold}`,
-    );
-  }
-
-  if (
-    config.timeLimit !== undefined &&
-    (config.timeLimit < 60 || config.timeLimit > 300)
-  ) {
-    errors.push(
-      `timeLimit must be between 60 and 300 seconds, got ${config.timeLimit}`,
-    );
-  }
-
-  if (
-    config.zoneRadius !== undefined &&
-    (config.zoneRadius < 3 || config.zoneRadius > 8)
-  ) {
-    errors.push(
-      `zoneRadius must be between 3 and 8 grid units, got ${config.zoneRadius}`,
-    );
-  }
-
-  return { valid: errors.length === 0, errors };
-}
-
 // ─── Enriched Placement ─────────────────────────────────────────────
 
 /**

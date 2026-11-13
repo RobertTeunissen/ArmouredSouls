@@ -7,9 +7,7 @@
  * contract.
  */
 
-export const SEARCH_CATEGORY_ORDER = ['robots', 'stables', 'guide'] as const;
-
-export type SearchCategory = (typeof SEARCH_CATEGORY_ORDER)[number];
+export type SearchCategory = 'robots' | 'stables' | 'guide';
 
 /** Match classes are ordered from most direct to least direct. */
 export const MATCH_RANK_ORDER = ['exact', 'prefix', 'substring'] as const;

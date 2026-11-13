@@ -21,10 +21,10 @@ import { SUBSCRIBABLE_EVENT_TYPES, type SubscribableEventType } from '../subscri
 import type { FacilityType, FactsDb } from './stableFacts';
 
 /** Closed cycles the economy window covers (the closed cycle and the two before it). */
-export const ECONOMY_WINDOW_CYCLES = 3;
+const ECONOMY_WINDOW_CYCLES = 3;
 
 /** Battles per robot and event type kept for Event_Allocation. */
-export const EVENT_RESULTS_PER_EVENT = 10;
+const EVENT_RESULTS_PER_EVENT = 10;
 
 /**
  * Recurring income and costs per cycle, averaged over the closed cycles of

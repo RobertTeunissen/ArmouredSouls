@@ -12,7 +12,7 @@ import { BANKRUPTCY_RISK_THRESHOLD } from './adminThresholds';
 import type { StableCashflow, StableCashflowCycle } from '../../shared/types';
 
 /** Cycles the cashflow covers, including the ledger's cycle in progress. */
-export const STABLE_CASHFLOW_CYCLES = 10;
+const STABLE_CASHFLOW_CYCLES = 10;
 
 interface CashflowRow {
   cycle_number: number;

@@ -6,11 +6,11 @@ import type { RecordsData, RecordRobot, RobotRecordBase } from '../types';
 export const AUTO = { userId: 11, username: 'Kamino Clone Legion', stableType: 'automaton' as const };
 export const HUMAN = { userId: 12, username: 'Iron Warriors', stableType: 'human' as const };
 export const VIEWER = { userId: 1, username: 'ApenRots', stableType: 'human' as const };
-export const DATE = '2026-03-15T00:00:00Z';
+const DATE = '2026-03-15T00:00:00Z';
 
-export const autoRobot: RecordRobot = { id: 101, name: 'CT-7567 Rex', ...AUTO };
-export const humanRobot: RecordRobot = { id: 102, name: 'Ironclad', ...HUMAN };
-export const viewerRobot: RecordRobot = { id: 103, name: 'GekkeAap', ...VIEWER };
+const autoRobot: RecordRobot = { id: 101, name: 'CT-7567 Rex', ...AUTO };
+const humanRobot: RecordRobot = { id: 102, name: 'Ironclad', ...HUMAN };
+const viewerRobot: RecordRobot = { id: 103, name: 'GekkeAap', ...VIEWER };
 
 function robotRow<T extends object>(owner: RecordRobot, extra: T): RobotRecordBase & T {
   return { robotId: owner.id, robotName: owner.name, userId: owner.userId, username: owner.username, stableType: owner.stableType, ...extra };
@@ -27,7 +27,7 @@ function scaled<T extends object>(row: T, factor: number): T {
  * The Automaton holds the top of every list; a human and then the viewer
  * follow. Omitted rows are the top row scaled to 90% and 80%.
  */
-export function robotRows<T extends object>(top: T, second: T = scaled(top, 0.9), third: T = scaled(top, 0.8)): Array<RobotRecordBase & T> {
+function robotRows<T extends object>(top: T, second: T = scaled(top, 0.9), third: T = scaled(top, 0.8)): Array<RobotRecordBase & T> {
   return [robotRow(autoRobot, top), robotRow(humanRobot, second), robotRow(viewerRobot, third)];
 }
 

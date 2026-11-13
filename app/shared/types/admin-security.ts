@@ -4,7 +4,7 @@
  */
 
 
-/** Every recorded security signal (`SECURITY_SIGNALS` in backend `types/securityTypes.ts` satisfies it). */
+/** Every recorded security signal. */
 export type SecuritySignal =
   /** Wrong password, unknown account, or an Automaton name at login. */
   | 'failed_login'

@@ -187,7 +187,7 @@ function toSortedSubjects(rows: SubjectRow[]): (UpgradeSubject & { id: number })
 }
 
 /** Every profile of a strategy (any version, drafts included), ordered by Catalogue_Key. */
-export async function loadStrategySubjects(strategyKey: string): Promise<(UpgradeSubject & { id: number })[]> {
+async function loadStrategySubjects(strategyKey: string): Promise<(UpgradeSubject & { id: number })[]> {
   const rows = await prisma.automatonProfile.findMany({ where: { strategyKey }, select: SUBJECT_SELECT });
   return toSortedSubjects(rows);
 }

@@ -51,7 +51,6 @@ export const markSeasonSummarySeen = (seasonNumber: number): Promise<void> =>
 // season's phase for testing.
 
 /** The five stages of a rollover, in order. */
-export const ROLLOVER_STAGES = ['archive', 'verify', 'purge', 'post', 'automaton'] as const;
 export const getAdminSeasonState = (signal?: AbortSignal): Promise<AdminSeasonState> =>
   api.get<AdminSeasonState>('/api/admin/seasons/state', { signal });
 

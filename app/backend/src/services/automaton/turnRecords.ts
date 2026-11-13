@@ -19,7 +19,7 @@ import type { ExecutedChargedStep } from './executionSteps';
 import type { FreeUpkeepIssue } from './upkeep/freeUpkeep';
 
 /** Longest stored reason (`automaton_turns.reason` is VarChar(40)). */
-export const TURN_REASON_MAX_LENGTH = 40;
+const TURN_REASON_MAX_LENGTH = 40;
 
 /** Reason of a turn skipped while the Program_Switch is off (R2.7). */
 export const PROGRAM_OFF = 'program_off';
@@ -106,7 +106,7 @@ export async function claimTurnRecord(input: TurnRecordClaimInput): Promise<Clai
   return { alreadyFinal: false, id: reopened.id, attempt: reopened.attempt };
 }
 
-export function clampReason(reason: string | null): string | null {
+function clampReason(reason: string | null): string | null {
   return reason === null ? null : reason.slice(0, TURN_REASON_MAX_LENGTH);
 }
 

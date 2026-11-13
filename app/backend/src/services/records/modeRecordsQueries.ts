@@ -34,7 +34,7 @@ import {
  * Highest Avg Zone Score only ranks robots with at least this many KotH matches,
  * so one lucky match cannot top the list (the frontend states the same floor).
  */
-export const KOTH_AVG_ZONE_SCORE_MIN_MATCHES = 10;
+const KOTH_AVG_ZONE_SCORE_MIN_MATCHES = 10;
 
 // ─── KotH Records ───────────────────────────────────────────────────
 

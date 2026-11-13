@@ -147,4 +147,3 @@ function BandStrip({ bands, end, mode }: { bands: readonly TierBand[]; end: numb
   );
 }
 
-export default HistorySection;

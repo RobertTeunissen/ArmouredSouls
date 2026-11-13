@@ -52,7 +52,7 @@ import {
 // ─── Cached-Data Helpers (no DB queries) ────────────────────────────
 
 /** Check a robot stat from the pre-fetched cached robot (no DB query). */
-export function checkRobotStatCached(
+function checkRobotStatCached(
   cachedRobot: Record<string, unknown> | null,
   field: string,
   threshold?: number,
@@ -62,7 +62,7 @@ export function checkRobotStatCached(
 }
 
 /** Check a user stat from the pre-fetched cached user (no DB query). */
-export function checkUserStatCached(
+function checkUserStatCached(
   cachedUser: Record<string, unknown> | null,
   field: string,
   threshold?: number,
@@ -72,7 +72,7 @@ export function checkUserStatCached(
 }
 
 /** Check loadout wins from cached robot (no DB query). */
-export function checkLoadoutWinsCached(
+function checkLoadoutWinsCached(
   cachedRobot: Record<string, unknown>,
   loadoutType: string,
   threshold?: number,
@@ -85,7 +85,7 @@ export function checkLoadoutWinsCached(
 }
 
 /** Check stance wins from cached robot (no DB query). */
-export function checkStanceWinsCached(
+function checkStanceWinsCached(
   cachedRobot: Record<string, unknown>,
   stance: string,
   threshold?: number,

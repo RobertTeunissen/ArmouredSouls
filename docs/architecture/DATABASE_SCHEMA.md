@@ -942,7 +942,7 @@ model RequestMetric {
 
 Admin Security & Moderation pages (migration `20261101120000_security_events_uploaded_images`). Neither has a foreign key to `users`: a signal outlives a deleted stable for its 90 days, and account removal deletes the upload rows itself.
 
-- `security_events`: one row per security signal (`signal` is a `SECURITY_SIGNALS` value from `src/types/securityTypes.ts`), `user_id` (the acting player, or the account a failed login targeted), `source_ip`, `endpoint` (path without query string), `details` jsonb (`SecurityEventDetails`, never submitted values), `occurred_at`. Indexed by time, signal, user and IP. Deleted after 90 days by `securityEventRetentionService` (01:50 UTC); not truncated at Season_Rollover.
+- `security_events`: one row per security signal (`signal` is a `SecuritySignal` value, `app/shared/types/admin-security.ts`), `user_id` (the acting player, or the account a failed login targeted), `source_ip`, `endpoint` (path without query string), `details` jsonb (`SecurityEventDetails`, never submitted values), `occurred_at`. Indexed by time, signal, user and IP. Deleted after 90 days by `securityEventRetentionService` (01:50 UTC); not truncated at Season_Rollover.
 - `uploaded_images`: one row per file under `uploads/user-robots/` (`image_url` unique, owner `user_id`, `uploaded_at`, `file_size`), with `moderation_scores` jsonb (`ModerationScores`), `robot_likeness_score` and `uploaded_anyway` from the upload. Files older than the table were backfilled from the disk without scores. Kept in step with the disk by `uploadedImageService`.
 
 ### SearchAnalyticsEvent selection columns (2026-10-22)

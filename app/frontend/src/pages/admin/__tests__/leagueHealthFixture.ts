@@ -15,7 +15,7 @@ import type {
 
 const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 
-export function instance(overrides: Partial<LeagueHealthInstance> = {}): LeagueHealthInstance {
+function instance(overrides: Partial<LeagueHealthInstance> = {}): LeagueHealthInstance {
   return {
     id: 'gold_1',
     total: 90,

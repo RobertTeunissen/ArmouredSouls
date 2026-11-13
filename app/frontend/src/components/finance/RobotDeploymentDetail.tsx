@@ -110,4 +110,3 @@ export function RobotDeploymentDetail({ response, onPageChange }: RobotDeploymen
   );
 }
 
-export default RobotDeploymentDetail;

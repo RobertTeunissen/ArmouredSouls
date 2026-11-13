@@ -163,17 +163,11 @@ jest.mock('../../../src/services/standings/standingsService', () => ({
 // Mock leagueEngine for adapter tests
 const mockRebalanceAllTiers = jest.fn();
 const mockDeterminePromotionsForInstance = jest.fn();
-const mockDetermineDemotionsForInstance = jest.fn();
-const mockPromoteEntity = jest.fn();
-const mockDemoteEntity = jest.fn();
 
 jest.mock('../../../src/services/league/leagueEngine', () => ({
   __esModule: true,
   rebalanceAllTiers: (...args: unknown[]) => mockRebalanceAllTiers(...args),
   determinePromotionsForInstance: (...args: unknown[]) => mockDeterminePromotionsForInstance(...args),
-  determineDemotionsForInstance: (...args: unknown[]) => mockDetermineDemotionsForInstance(...args),
-  promoteEntity: (...args: unknown[]) => mockPromoteEntity(...args),
-  demoteEntity: (...args: unknown[]) => mockDemoteEntity(...args),
 }));
 
 jest.mock('../../../src/services/league/leaguePromotionThresholds', () => ({
@@ -194,10 +188,6 @@ import {
   teamBattleAdapter,
   TEAM_BATTLE_LEAGUE_CONFIG,
   TEAM_BATTLE_LEAGUE_TIERS,
-  determineTeamBattlePromotions,
-  determineTeamBattleDemotions,
-  promoteTeamBattle,
-  demoteTeamBattle,
   rebalanceTeamBattleLeagues,
 } from '../../../src/services/team-battle/teamBattleAdapter';
 import { TeamBattleResult } from '../../../src/types/teamBattleLogTypes';
@@ -1160,75 +1150,7 @@ describe('teamBattleAdapter', () => {
   });
 
   describe('promotion/demotion logic (R8.2–R8.8)', () => {
-    it('should delegate promotions to leagueEngine determinePromotionsForInstance', async () => {
-      const promotedTeams = [{ id: 1 }];
-      mockDeterminePromotionsForInstance.mockResolvedValue(promotedTeams);
 
-      const result = await determineTeamBattlePromotions('bronze_1');
-
-      expect(mockDeterminePromotionsForInstance).toHaveBeenCalledWith(
-        'bronze_1',
-        TEAM_BATTLE_LEAGUE_CONFIG,
-        teamBattleAdapter,
-        new Set(),
-      );
-      expect(result).toEqual(promotedTeams);
-    });
-
-    it('should delegate demotions to leagueEngine determineDemotionsForInstance', async () => {
-      const demotedTeams = [{ id: 2 }];
-      mockDetermineDemotionsForInstance.mockResolvedValue(demotedTeams);
-
-      const result = await determineTeamBattleDemotions('silver_1');
-
-      expect(mockDetermineDemotionsForInstance).toHaveBeenCalledWith(
-        'silver_1',
-        TEAM_BATTLE_LEAGUE_CONFIG,
-        teamBattleAdapter,
-        new Set(),
-      );
-      expect(result).toEqual(demotedTeams);
-    });
-
-    it('should pass excludeTeamIds to promotion determination', async () => {
-      mockDeterminePromotionsForInstance.mockResolvedValue([]);
-      const excludeIds = new Set([10, 20, 30]);
-
-      await determineTeamBattlePromotions('gold_1', excludeIds);
-
-      expect(mockDeterminePromotionsForInstance).toHaveBeenCalledWith(
-        'gold_1',
-        TEAM_BATTLE_LEAGUE_CONFIG,
-        teamBattleAdapter,
-        excludeIds,
-      );
-    });
-
-    it('should delegate promoteTeamBattle to leagueEngine promoteEntity', async () => {
-      const team = { id: 1 };
-      mockPromoteEntity.mockResolvedValue(undefined);
-
-      await promoteTeamBattle(team as any);
-
-      expect(mockPromoteEntity).toHaveBeenCalledWith(
-        team,
-        TEAM_BATTLE_LEAGUE_CONFIG,
-        teamBattleAdapter,
-      );
-    });
-
-    it('should delegate demoteTeamBattle to leagueEngine demoteEntity', async () => {
-      const team = { id: 2 };
-      mockDemoteEntity.mockResolvedValue(undefined);
-
-      await demoteTeamBattle(team as any);
-
-      expect(mockDemoteEntity).toHaveBeenCalledWith(
-        team,
-        TEAM_BATTLE_LEAGUE_CONFIG,
-        teamBattleAdapter,
-      );
-    });
   });
 
   describe('league history recording via rebalanceTeamBattleLeagues', () => {

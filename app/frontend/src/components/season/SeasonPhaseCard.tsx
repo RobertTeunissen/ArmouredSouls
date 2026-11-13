@@ -26,7 +26,7 @@ function cycles(count: number): string {
   return `${count} ${count === 1 ? 'cycle' : 'cycles'}`;
 }
 
-export function SeasonPhaseCard(): JSX.Element | null {
+function SeasonPhaseCard(): JSX.Element | null {
   const season = useSeasonStore(selectSeason);
   const failed = useSeasonStore(selectSeasonFailed);
 

@@ -71,7 +71,7 @@ export interface StableAccolade {
 }
 
 export const RECENT_RESULTS_LIMIT = 5;
-export const TOP_ACCOLADES_LIMIT = 5;
+const TOP_ACCOLADES_LIMIT = 5;
 
 /** Participant rows read per wanted battle; a 3v3 battle has 3 of the stable's robots. */
 const PARTICIPANTS_PER_BATTLE_SCAN = 6;

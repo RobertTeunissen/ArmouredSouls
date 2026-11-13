@@ -15,11 +15,6 @@ export type StableFilter = typeof STABLE_FILTERS[number];
 /** A human player's stable: the admin "Players" filter, minus seeded generated stables. */
 export const PLAYER_STABLE = { stableType: 'human', isGenerated: false } as const;
 
-/** Whether a stable row is a human player's (the same rule as `PLAYER_STABLE`). */
-export function isPlayerStable(user: { stableType: string; isGenerated: boolean }): boolean {
-  return user.stableType === PLAYER_STABLE.stableType && user.isGenerated === PLAYER_STABLE.isGenerated;
-}
-
 /** Entity ids (robots or teams, per the standings' entity type) owned by a player stable. */
 export async function playerOwnedEntityIds(
   entityType: string,

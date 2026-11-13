@@ -20,8 +20,8 @@ import {
 } from '../utils/adminSearchAnalyticsApi';
 import { periodToQuery, type SearchAnalyticsUrlState } from '../utils/adminSearchAnalyticsFormat';
 
-export const SEARCHERS_PAGE_SIZE = 25;
-export const PHRASES_PAGE_SIZE = 20;
+const SEARCHERS_PAGE_SIZE = 25;
+const PHRASES_PAGE_SIZE = 20;
 
 export interface AsyncSection<T> {
   data: T | null;

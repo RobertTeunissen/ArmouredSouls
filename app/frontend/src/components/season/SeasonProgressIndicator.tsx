@@ -17,7 +17,7 @@ interface SeasonProgressIndicatorProps {
   className?: string;
 }
 
-export function SeasonProgressIndicator({
+function SeasonProgressIndicator({
   compact = false,
   className = '',
 }: SeasonProgressIndicatorProps) {

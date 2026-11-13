@@ -45,7 +45,7 @@ function filenameOf(path: string): string {
   return path.split('/').pop() ?? path;
 }
 
-export function ImageLibrary({ onSelect, selectedPath }: ImageLibraryProps) {
+function ImageLibrary({ onSelect, selectedPath }: ImageLibraryProps) {
   const [data, setData] = useState<ImageLibraryResponse | null>(null);
   const [pendingDelete, setPendingDelete] = useState<DeleteImpact | null>(null);
   const [busy, setBusy] = useState(false);

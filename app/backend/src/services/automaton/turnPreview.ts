@@ -23,7 +23,7 @@ import prisma from '../../lib/prisma';
 import { AutomatonError, AutomatonErrorCode } from '../../errors/automatonErrors';
 import type { StrategyParametersV1 } from '../../types/automaton';
 import type { PlannedAction } from './goals/goalTypes';
-import { simulateTurn, type SimulatedTurn } from './turnPlanner';
+import { simulateTurn } from './turnPlanner';
 import { projectAction, ProjectionError } from './factProjector';
 import {
   loadBlueprintFacts,
@@ -41,10 +41,8 @@ import type { StrategyRegistry } from './strategies/registry';
 import type { UpgradeStrategy } from './strategies/strategyTypes';
 import { profileTeamNames } from './automatonProfileRules';
 import type {
-  BlockedReason,
   GoalDetail,
   PreviewGoal,
-  PreviewGoalStatus,
   ProfileTurnPreview,
   TeamNames,
   TurnPreviewResult,
@@ -176,7 +174,7 @@ export function buildTurnPreview(facts: StableFacts, strategy: Pick<UpgradeStrat
 }
 
 /** Current season, read without the lazy creation `getCurrentSeason` performs. */
-export async function readSeasonFacts(): Promise<SeasonFacts> {
+async function readSeasonFacts(): Promise<SeasonFacts> {
   const season = await prisma.season.findFirst({
     where: { phase: { not: 'completed' } },
     orderBy: { seasonNumber: 'desc' },

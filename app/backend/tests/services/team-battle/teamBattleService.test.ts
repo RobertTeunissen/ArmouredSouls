@@ -72,7 +72,6 @@ jest.mock('../../../src/config/logger', () => ({
 const mockHasSubscription = jest.fn();
 jest.mock('../../../src/services/subscription/subscriptionService', () => ({
   __esModule: true,
-  hasSubscription: (...args: unknown[]) => mockHasSubscription(...args),
 }));
 
 // Placement has its own suites (standingPlacement*.test.ts); here we only pin

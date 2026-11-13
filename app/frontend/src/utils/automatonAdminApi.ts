@@ -56,7 +56,7 @@ export function setProgramSwitch(turnsEnabled: boolean): Promise<ProgramSwitchCh
   return api.put<ProgramSwitchChange>(`${BASE}/program`, { turnsEnabled });
 }
 
-export function listProfiles(query: ProfileListQuery = {}): Promise<ProfileListPage> {
+function listProfiles(query: ProfileListQuery = {}): Promise<ProfileListPage> {
   const params: Record<string, unknown> = {};
   if (query.status) params.status = query.status;
   if (query.strategy) params.strategy = query.strategy;
@@ -67,7 +67,7 @@ export function listProfiles(query: ProfileListQuery = {}): Promise<ProfileListP
 }
 
 /** Largest page the list endpoint serves (`PROFILE_LIST_MAX_LIMIT`): one request for 500 stables. */
-export const PROFILE_PAGE_LIMIT = 1000;
+const PROFILE_PAGE_LIMIT = 1000;
 
 /** Every profile; a second page only past the limit. */
 export async function listAllProfiles(): Promise<ProfileListItem[]> {

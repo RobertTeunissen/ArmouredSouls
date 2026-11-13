@@ -192,7 +192,7 @@ export function profileEventOrder(profile: { eventOrder: unknown }): string[] {
   return Array.isArray(raw) ? raw.filter((e): e is string => typeof e === 'string') : [];
 }
 
-export const AUTOMATON_USERNAME_PREFIX = 'automaton_';
+const AUTOMATON_USERNAME_PREFIX = 'automaton_';
 
 /** Username of an Activated stable (R2.2). */
 export function automatonUsername(catalogueKey: string): string {

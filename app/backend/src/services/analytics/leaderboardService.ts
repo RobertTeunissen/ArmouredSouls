@@ -194,7 +194,7 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
  * Mirrors the `StandingsMode` enum. Every value is a valid enum member, so the
  * pivot below interpolates them into SQL safely.
  */
-export const KILL_MODES = [
+const KILL_MODES = [
   'league_1v1',
   'league_2v2',
   'league_3v3',

@@ -33,7 +33,7 @@ export interface AdminActionsFilters {
   page: number;
 }
 
-export const ADMIN_ACTIONS_PAGE_SIZE = 50;
+const ADMIN_ACTIONS_PAGE_SIZE = 50;
 
 export const getAdminActions = (query: AdminActionsFilters, options: { signal?: AbortSignal } = {}): Promise<AdminActionsPage> =>
   api.get<AdminActionsPage>('/api/admin/actions', {

@@ -100,38 +100,6 @@ export async function getTutorialState(): Promise<TutorialState> {
 }
 
 /**
- * Skip the tutorial for the authenticated user.
- *
- * @returns Promise resolving when tutorial is skipped
- * @throws Error if request fails
- *
- * @example
- * await skipTutorial();
- * console.log('Tutorial skipped');
- *
- * Requirements: 1.6
- */
-export async function skipTutorial(): Promise<void> {
-  try {
-    const response = await api.post<ApiResponse<{ message: string }>>(
-      '/api/onboarding/skip'
-    );
-
-    if (!response.success) {
-      throw new Error(response.error || 'Failed to skip tutorial');
-    }
-  } catch (error: unknown) {
-    if (error instanceof ApiError) {
-      throw new Error(error.message || 'Failed to skip tutorial', { cause: error });
-    }
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('Failed to skip tutorial', { cause: error });
-  }
-}
-
-/**
  * Replay the tutorial from the beginning without affecting actual game state.
  * Resets the tutorial step to 1 and sets isReplay flag in choices to prevent
  * actual purchases during the replay walkthrough.

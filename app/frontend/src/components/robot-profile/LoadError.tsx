@@ -18,4 +18,3 @@ export function LoadError({ message, onRetry }: LoadErrorProps) {
   );
 }
 
-export default LoadError;

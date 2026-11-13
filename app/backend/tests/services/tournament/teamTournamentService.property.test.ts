@@ -55,9 +55,8 @@ jest.mock('../../../src/services/tournament/tournamentService', () => ({
 
 import * as fc from 'fast-check';
 import { checkSchedulingReadiness } from '../../../src/services/analytics/matchmakingService';
-import { createTeamTournament, getEligibleTeamsForTournament, autoCreateNextTeamTournament } from '../../../src/services/tournament/teamTournamentService';
+import { getEligibleTeamsForTournament, autoCreateNextTeamTournament } from '../../../src/services/tournament/teamTournamentService';
 import { resolveOutstandingEventsForRobot } from '../../../src/services/scheduling/eventScheduleScope';
-import { TournamentError, TournamentErrorCode } from '../../../src/errors/tournamentErrors';
 
 const mockCheckSchedulingReadiness = checkSchedulingReadiness as jest.MockedFunction<typeof checkSchedulingReadiness>;
 
@@ -92,76 +91,6 @@ describe('Feature: team-battle-tournaments, Property 7: Tournament created iff e
   beforeEach(() => {
     jest.clearAllMocks();
     mockCheckSchedulingReadiness.mockReturnValue({ isReady: true, reasons: [], hpCheck: true, weaponCheck: true } as any);
-  });
-
-  /**
-   * **Validates: Requirements 2.1, 2.8**
-   *
-   * For any team size (2 or 3) and set of eligible teams of that size, a tournament
-   * SHALL be created if and only if the eligible count is ≥ 4. When the count is < 4,
-   * no tournament is created and no error is raised (for auto-create; the direct
-   * `createTeamTournament` throws INSUFFICIENT_PARTICIPANTS).
-   */
-  it('should create tournament when eligible count >= 4 (createTeamTournament)', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.integer({ min: 4, max: 100 }),
-        fc.constantFrom(2, 3) as fc.Arbitrary<2 | 3>,
-        async (eligibleCount, teamSize) => {
-          // Create mock teams
-          const teams = Array.from({ length: eligibleCount }, (_, i) =>
-            createMockTeam(i + 1, teamSize, Array.from({ length: teamSize }, (_, j) => i * teamSize + j + 1))
-          );
-
-          // Setup mocks: all teams are eligible, subscribed, and ready
-          mockTeamBattleFindMany.mockResolvedValue(teams);
-          const allRobotIds = teams.flatMap(t => t.members.map(m => m.robotId));
-          mockSubscriptionFindMany.mockResolvedValue(
-            allRobotIds.map(robotId => ({ robotId }))
-          );
-          mockTournamentCount.mockResolvedValue(0);
-
-          // createTeamTournament should succeed (not throw)
-          const result = await createTeamTournament(teamSize);
-          expect(result).toBeDefined();
-          expect(result.tournament).toBeDefined();
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
-
-  it('should throw INSUFFICIENT_PARTICIPANTS when eligible count < 4 (createTeamTournament)', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.integer({ min: 0, max: 3 }),
-        fc.constantFrom(2, 3) as fc.Arbitrary<2 | 3>,
-        async (eligibleCount, teamSize) => {
-          // Create mock teams (fewer than 4)
-          const teams = Array.from({ length: eligibleCount }, (_, i) =>
-            createMockTeam(i + 1, teamSize, Array.from({ length: teamSize }, (_, j) => i * teamSize + j + 1))
-          );
-
-          // Setup mocks
-          mockTeamBattleFindMany.mockResolvedValue(teams);
-          const allRobotIds = teams.flatMap(t => t.members.map(m => m.robotId));
-          mockSubscriptionFindMany.mockResolvedValue(
-            allRobotIds.map(robotId => ({ robotId }))
-          );
-
-          // createTeamTournament should throw INSUFFICIENT_PARTICIPANTS
-          await expect(createTeamTournament(teamSize)).rejects.toThrow(TournamentError);
-
-          try {
-            await createTeamTournament(teamSize);
-          } catch (error) {
-            expect(error).toBeInstanceOf(TournamentError);
-            expect((error as TournamentError).code).toBe(TournamentErrorCode.INSUFFICIENT_PARTICIPANTS);
-          }
-        },
-      ),
-      { numRuns: 100 },
-    );
   });
 
   it('should return null without error when eligible count < 4 (autoCreateNextTeamTournament)', async () => {

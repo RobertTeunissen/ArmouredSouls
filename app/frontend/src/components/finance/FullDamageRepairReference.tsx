@@ -28,4 +28,3 @@ export function FullDamageRepairReference({ reference }: { reference: RepairRefe
   );
 }
 
-export default FullDamageRepairReference;

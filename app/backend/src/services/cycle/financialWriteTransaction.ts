@@ -18,7 +18,7 @@ export interface FinancialWriteRetryPolicy {
   delay?: (milliseconds: number) => Promise<void>;
 }
 
-export const DEFAULT_FINANCIAL_WRITE_RETRY_POLICY: Readonly<FinancialWriteRetryPolicy> = {
+const DEFAULT_FINANCIAL_WRITE_RETRY_POLICY: Readonly<FinancialWriteRetryPolicy> = {
   maxAttempts: 61,
   delayMs: 500,
 };

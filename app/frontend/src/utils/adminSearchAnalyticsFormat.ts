@@ -26,7 +26,7 @@ export interface SearchAnalyticsUrlState {
   page: number;
 }
 
-export const DEFAULT_SEARCH_ANALYTICS_STATE: SearchAnalyticsUrlState = {
+const DEFAULT_SEARCH_ANALYTICS_STATE: SearchAnalyticsUrlState = {
   period: 'last7',
   from: null,
   to: null,

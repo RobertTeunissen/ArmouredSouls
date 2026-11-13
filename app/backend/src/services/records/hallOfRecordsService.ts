@@ -31,7 +31,7 @@ import {
 } from './modeRecordsQueries';
 
 /** How old the payload may get before a request triggers a background rebuild. */
-export const HALL_OF_RECORDS_TTL_MS = 5 * 60 * 1000;
+const HALL_OF_RECORDS_TTL_MS = 5 * 60 * 1000;
 
 export type HallOfRecordsPayload = Record<string, unknown>;
 
@@ -39,7 +39,7 @@ export type HallOfRecordsPayload = Record<string, unknown>;
  * Build one payload from the database: every stable's top 10 per record, or,
  * with `stables: 'players'`, the players' top 10 with their places.
  */
-export async function buildHallOfRecords(stables: StableFilter = 'all'): Promise<HallOfRecordsPayload> {
+async function buildHallOfRecords(stables: StableFilter = 'all'): Promise<HallOfRecordsPayload> {
   const startedAt = Date.now();
   const players: PlayerSets | undefined = stables === 'players' ? await loadPlayerSets() : undefined;
   const [combat, upsets, career, economic, prestige, kothRecords, teamBattleRecords, tournamentChampions, grandMeleeRecords, winStreaks] = await Promise.all([

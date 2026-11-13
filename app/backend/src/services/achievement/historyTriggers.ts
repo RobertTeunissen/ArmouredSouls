@@ -18,13 +18,13 @@ import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
 import { getAchievementCounterStart } from './achievementCounterWindow';
 
 /** Battle types where `battles.winner_id` is the winning robot. */
-export const ONE_VS_ONE_BATTLE_TYPES = ['league_1v1', 'tournament_1v1'] as const;
+const ONE_VS_ONE_BATTLE_TYPES = ['league_1v1', 'tournament_1v1'] as const;
 
 /** Battle types where the winner is a side (`winning_side` + participant `team`). */
 const TEAM_BATTLE_TYPES = ['league_2v2', 'league_3v3', 'tag_team', 'tournament_2v2', 'tournament_3v3'];
 
 /** League tiers, lowest first. */
-export const LEAGUE_TIER_ORDER = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
+const LEAGUE_TIER_ORDER = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 
 /** Whether a battle type is a 1v1 mode. */
 export function isOneVsOne(battleType: unknown): boolean {
@@ -181,7 +181,7 @@ async function ledgerWhere(userId: number): Promise<{ userId: number; createdAt?
 }
 
 /** Sum of a ledger transaction type for a user (season-scoped, since the latest reset). */
-export async function sumLedger(userId: number, transactionType: string): Promise<number> {
+async function sumLedger(userId: number, transactionType: string): Promise<number> {
   const result = await prisma.financialLedger.aggregate({
     where: { ...(await ledgerWhere(userId)), transactionType },
     _sum: { amount: true },

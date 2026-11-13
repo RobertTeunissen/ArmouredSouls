@@ -35,7 +35,7 @@ import type { EventOrder } from '../../../types/automaton';
 export const SOLO_EVENT_TYPES: readonly SubscribableEventType[] = ['league_1v1', 'koth', 'grand_melee', 'tournament_1v1'];
 
 /** League events: the promotion paths, one of which is pinned per robot. */
-export const LEAGUE_EVENT_TYPES: readonly SubscribableEventType[] = ['league_1v1', 'league_2v2', 'league_3v3', 'tag_team'];
+const LEAGUE_EVENT_TYPES: readonly SubscribableEventType[] = ['league_1v1', 'league_2v2', 'league_3v3', 'tag_team'];
 
 /** Team size of each team event. */
 export const TEAM_EVENT_SIZE: Readonly<Partial<Record<SubscribableEventType, 2 | 3>>> = {

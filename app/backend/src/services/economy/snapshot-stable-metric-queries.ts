@@ -26,7 +26,7 @@ import prisma from '../../lib/prisma';
 import { CYCLE_REPAIR_SPEND_KEY, LEGACY_CYCLE_REPAIR_SPEND_KEY } from './repairPayloadKeys';
 
 /** How many of the oldest snapshots the purchase-cycle fallback inspects. */
-export const EARLIEST_ACTIVITY_SNAPSHOT_LIMIT = 100;
+const EARLIEST_ACTIVITY_SNAPSHOT_LIMIT = 100;
 
 /** The stable's snapshot totals over one cycle window. */
 export interface StableSnapshotTotals {

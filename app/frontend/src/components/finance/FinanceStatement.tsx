@@ -142,4 +142,3 @@ export function FinanceStatement({
   );
 }
 
-export default FinanceStatement;

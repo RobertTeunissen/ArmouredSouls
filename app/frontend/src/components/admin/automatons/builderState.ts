@@ -17,7 +17,7 @@ export function goalLabel(goal: FileGoalReference): string {
 }
 
 /** A new Goal with a valid default and bounds for its type. */
-export function newGoal(goal: FileGoalReference): Omit<FileBuildOrderEntry, 'position'> {
+function newGoal(goal: FileGoalReference): Omit<FileBuildOrderEntry, 'position'> {
   switch (goal.type) {
     case 'robots':
       return { goal, defaultTarget: 1, bounds: { min: 1, max: 11 } };
@@ -41,7 +41,7 @@ export interface BuilderRow {
 }
 
 /** Positions 1, 2, 3 … in list order. */
-export function renumber(rows: readonly BuilderRow[]): BuilderRow[] {
+function renumber(rows: readonly BuilderRow[]): BuilderRow[] {
   return rows.map((row, index) => (row.entry.position === index + 1 ? row : { ...row, entry: { ...row.entry, position: index + 1 } }));
 }
 

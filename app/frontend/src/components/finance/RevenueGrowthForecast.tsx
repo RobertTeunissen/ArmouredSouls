@@ -55,4 +55,3 @@ export function RevenueGrowthForecast({ growth }: RevenueGrowthForecastProps): R
   );
 }
 
-export default RevenueGrowthForecast;

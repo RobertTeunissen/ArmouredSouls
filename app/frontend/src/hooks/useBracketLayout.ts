@@ -8,7 +8,7 @@ const COLUMN_GAP = 56;
 const COLUMN_WIDTH = 184;
 const LABEL_HEIGHT = 32;
 
-export { CARD_HEIGHT, BASE_GAP, COLUMN_GAP, COLUMN_WIDTH, LABEL_HEIGHT };
+export { CARD_HEIGHT, COLUMN_GAP, COLUMN_WIDTH, LABEL_HEIGHT };
 
 interface BracketLayoutResult {
   bracketTree: Map<number, TournamentMatchWithRobots[]>;

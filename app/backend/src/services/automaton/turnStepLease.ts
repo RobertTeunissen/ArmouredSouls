@@ -33,7 +33,7 @@ export const TURN_STEP_LEASE_TTL_MS = 120_000;
 /** How often the holder renews its lease while the step runs ("Heartbeat lease"). */
 export const TURN_STEP_LEASE_RENEW_MS = 30_000;
 /** How often a waiting caller retries the lease (design §11.1). */
-export const TURN_STEP_LEASE_POLL_MS = 1_000;
+const TURN_STEP_LEASE_POLL_MS = 1_000;
 
 /** What the step sees of its lease while it runs. */
 export interface TurnStepLease {

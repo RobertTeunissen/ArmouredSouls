@@ -15,7 +15,6 @@ import type {
   LayerKey,
   LayerToggles,
   Loadout,
-  MatchupView,
   RangeBand,
   UsageTier,
 } from '../../../shared/types';
@@ -109,8 +108,6 @@ export const LOADOUTS = ['single', 'weapon_shield', 'two_handed', 'dual_wield'] 
 
 export const ARCHETYPES: readonly ArchetypeKey[] = RANGE_BANDS.flatMap((band) => LOADOUTS.map((loadout) => `${band}+${loadout}` as ArchetypeKey));
 
-/** Matchup grids: by range band, by loadout, or between the most used archetypes. */
-export const MATCHUP_VIEWS = ['bands', 'loadouts', 'archetypes'] as const satisfies readonly MatchupView[];
 export const MATCHUP_TOP_ARCHETYPES = 6;
 
 /** Tier rows of the usage bars, lowest first; tournaments have no tier and get their own row. */

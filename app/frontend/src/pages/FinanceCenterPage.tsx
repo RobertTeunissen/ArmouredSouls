@@ -71,7 +71,7 @@ function signedCurrency(amount: number): string {
   return `${amount >= 0 ? '+' : '−'}${formatCurrency(Math.abs(amount))}`;
 }
 
-export function FinanceCenterPage(): React.ReactElement {
+function FinanceCenterPage(): React.ReactElement {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = parseTab(searchParams.get('tab'));

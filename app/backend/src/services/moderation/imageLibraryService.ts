@@ -146,7 +146,7 @@ export async function listImages(userId: number): Promise<RetainedImage[]> {
 }
 
 /** Count the caller's retained images. */
-export async function countImages(userId: number): Promise<number> {
+async function countImages(userId: number): Promise<number> {
   return (await listImages(userId)).length;
 }
 

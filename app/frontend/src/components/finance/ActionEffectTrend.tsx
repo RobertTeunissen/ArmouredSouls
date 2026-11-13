@@ -33,4 +33,3 @@ export function ActionEffectTrend({ drivers }: { drivers: RecordedDriver[] }): R
   );
 }
 
-export default ActionEffectTrend;

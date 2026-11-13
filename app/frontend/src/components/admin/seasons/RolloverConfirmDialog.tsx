@@ -9,7 +9,7 @@ import { formatCount } from '../../../utils/adminSeasonFormat';
 import { ActionButton, Dialog, INPUT_CLASS } from '../automatons/ui';
 import type { RolloverPreview } from '@shared/types';
 
-export const CONFIRM_PHRASE = 'CONFIRM_ROLLOVER';
+const CONFIRM_PHRASE = 'CONFIRM_ROLLOVER';
 
 const plural = (count: number, noun: string): string => `${formatCount(count)} ${noun}${count === 1 ? '' : 's'}`;
 

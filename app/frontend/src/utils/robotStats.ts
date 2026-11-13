@@ -9,9 +9,6 @@
 export {
   LOADOUT_BONUSES,
   STANCE_MODIFIERS,
-  BASE_HP,
-  HP_MULTIPLIER,
-  SHIELD_MULTIPLIER,
   calculateAttributeBonus,
   getLoadoutBonus,
   getStanceModifier,
@@ -27,8 +24,6 @@ export {
   formatLoadoutName,
   getLoadoutDescription,
   getAttributeDisplay,
-  isValidStance,
-  isValidYieldThreshold,
   type WeaponBonuses,
   type WeaponInventoryLike,
   type RobotStatsInput,

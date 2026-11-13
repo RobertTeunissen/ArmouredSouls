@@ -18,7 +18,7 @@ import type { StableType } from '../types/stable';
  *   `surface` or `surface-elevated` would drop below it).
  */
 
-export const AUTOMATON_BADGE_LABEL = 'Automaton';
+const AUTOMATON_BADGE_LABEL = 'Automaton';
 
 /** Opaque 15% `info` tint over the page background (see the contrast note above). */
 export const AUTOMATON_BADGE_BACKGROUND_CLASS =

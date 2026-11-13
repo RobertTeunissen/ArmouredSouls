@@ -147,7 +147,7 @@ interface RawBattleRow {
   created_at: Date;
 }
 
-export function toCoreRow(r: RawBattleRow): BattleCoreRow {
+function toCoreRow(r: RawBattleRow): BattleCoreRow {
   return {
     id: r.id,
     battleType: r.battle_type,

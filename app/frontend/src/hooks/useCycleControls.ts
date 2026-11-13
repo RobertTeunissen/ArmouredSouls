@@ -26,9 +26,9 @@ import type {
   SchedulerOverview,
 } from '@shared/types';
 
-export const BUSY_POLL_MS = 10_000;
-export const IDLE_POLL_MS = 60_000;
-export const HISTORY_PAGE_SIZE = 25;
+const BUSY_POLL_MS = 10_000;
+const IDLE_POLL_MS = 60_000;
+const HISTORY_PAGE_SIZE = 25;
 
 export interface Section<T> {
   data: T | null;

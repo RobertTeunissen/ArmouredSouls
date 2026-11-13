@@ -19,7 +19,7 @@ import logger from '../../config/logger';
 export const SLOW_REQUEST_MS = 2_000;
 /** Rows older than this are deleted. */
 export const REQUEST_METRICS_RETENTION_DAYS = 30;
-export const REQUEST_METRICS_FLUSH_MS = 60_000;
+const REQUEST_METRICS_FLUSH_MS = 60_000;
 /** Distinct buckets kept in memory between flushes; more are dropped (and counted). */
 const MAX_BUCKETS = 500;
 const PRUNE_EVERY_MS = 60 * 60 * 1000;

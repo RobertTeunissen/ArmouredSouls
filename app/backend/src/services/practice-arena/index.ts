@@ -9,11 +9,7 @@
 export {
   executePracticeBattle,
   executePracticeBatch,
-  buildOwnedRobot,
-  buildSparringPartner,
   getSparringPartnerDefinitions,
-  ULTIMATE_BOT_CONFIG,
-  resetSyntheticIdCounter,
   type BotTier,
   type SparringPartnerConfig,
   type WhatIfOverrides,
@@ -26,7 +22,5 @@ export {
 
 export {
   recordPracticeRequest,
-  classifyRequest,
-  getPracticeArenaOverview,
   type PracticeOutcome,
 } from './practiceArenaUsageService';

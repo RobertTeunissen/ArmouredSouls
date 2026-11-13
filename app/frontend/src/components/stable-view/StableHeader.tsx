@@ -115,4 +115,3 @@ function StableHeadingName({ name, stableType }: { name: string; stableType?: St
   );
 }
 
-export default StableHeader;

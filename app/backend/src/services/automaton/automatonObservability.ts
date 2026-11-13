@@ -28,19 +28,17 @@ import { sendMonitoringAlert } from '../../utils/monitoringWebhook';
 import type { AutomatonTurnTrigger } from '../../../generated/prisma';
 import type { TurnStepDeadlineSource } from './turnBudget';
 
-export const AUTOMATON_ALERT_KINDS = [
-  'automaton_turn_failed',
-  'automaton_step_budget_exhausted',
-  'automaton_saving_streak',
-  'automaton_negative_balance',
-  'automaton_balance_recovered',
-  'automaton_invalid_parameters',
-  'automaton_upkeep_issues',
-  'automaton_turn_step_failed',
-  'automaton_upgrade_rejected',
-  'automaton_catalogue_sync_conflicts',
-] as const;
-export type AutomatonAlertKind = (typeof AUTOMATON_ALERT_KINDS)[number];
+export type AutomatonAlertKind =
+  | 'automaton_turn_failed'
+  | 'automaton_step_budget_exhausted'
+  | 'automaton_saving_streak'
+  | 'automaton_negative_balance'
+  | 'automaton_balance_recovered'
+  | 'automaton_invalid_parameters'
+  | 'automaton_upkeep_issues'
+  | 'automaton_turn_step_failed'
+  | 'automaton_upgrade_rejected'
+  | 'automaton_catalogue_sync_conflicts';
 
 /** Longest free-text part of an alert (error messages, issue lists). */
 export const ALERT_TEXT_LIMIT = 300;
@@ -69,7 +67,7 @@ export function truncate(text: string, limit = ALERT_TEXT_LIMIT): string {
   return text.length > limit ? `${text.slice(0, limit - 1)}…` : text;
 }
 
-export function describeTurn(turn: TurnLabel): string {
+function describeTurn(turn: TurnLabel): string {
   switch (turn.trigger) {
     case 'settlement':
       return `season ${turn.seasonNumber} cycle ${turn.slot}`;

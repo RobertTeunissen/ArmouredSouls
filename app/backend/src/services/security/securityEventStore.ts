@@ -25,7 +25,7 @@ const MAX_ENDPOINT = 200;
 const MAX_IP = 64;
 
 /** Request path without the query string, cut to the column size. */
-export function normaliseEndpoint(endpoint: string | undefined): string | null {
+function normaliseEndpoint(endpoint: string | undefined): string | null {
   if (!endpoint) return null;
   const path = endpoint.split('?')[0];
   return path.length > MAX_ENDPOINT ? path.slice(0, MAX_ENDPOINT) : path;

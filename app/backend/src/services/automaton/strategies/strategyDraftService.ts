@@ -49,10 +49,8 @@ import type {
   DraftValidation,
   DraftView,
   FileBuildOrderEntry,
-  ScenarioPurchase,
   StrategyDefinitionFile,
   StrategyRuleIssue,
-  TurnPreviewResult,
   UpgradeWarningEntry,
 } from '../../../shared/types';
 
@@ -62,7 +60,7 @@ import type {
  * Upper bound on a stored Build_Order. Above the 40-Goal builder rule, so the
  * builder can show "40 goals at most." instead of refusing the save.
  */
-export const DRAFT_MAX_STORED_GOALS = 100;
+const DRAFT_MAX_STORED_GOALS = 100;
 
 /** A draft's Build_Order as stored: structurally valid entries, builder rules not applied. */
 export const draftBuildOrderSchema = z.array(buildOrderEntrySchema).max(DRAFT_MAX_STORED_GOALS);

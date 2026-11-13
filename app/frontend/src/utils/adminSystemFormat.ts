@@ -54,7 +54,7 @@ export interface SystemCard {
 }
 
 /** Below this share of memory available the Memory card turns amber. */
-export const MEMORY_LOW_SHARE = 0.15;
+const MEMORY_LOW_SHARE = 0.15;
 
 function diskCard(disk: SystemOverview['disk']): SystemCard {
   const base = { key: 'disk' as const, label: 'Disk' };
@@ -134,7 +134,7 @@ export function deriveSystemCards(overview: SystemOverview, now: Date): SystemCa
 }
 
 /** A slowest run this much longer than the median is highlighted. */
-export const SLOW_RUN_FACTOR = 1.5;
+const SLOW_RUN_FACTOR = 1.5;
 
 export function isSlowOutlier(job: Pick<SystemJob, 'slowest' | 'medianMs'>): boolean {
   return job.slowest !== null && job.medianMs !== null && job.medianMs > 0 && job.slowest.durationMs > job.medianMs * SLOW_RUN_FACTOR;

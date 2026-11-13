@@ -24,7 +24,7 @@ import { readStableCashflow } from '../admin/stableCashflow';
 import type { StableCashflow, StrategyEconomy, StrategyEconomyRow } from '../../shared/types';
 
 /** Closed cycles the per-cycle flows cover. */
-export const STRATEGY_ECONOMY_WINDOW_CYCLES = 7;
+const STRATEGY_ECONOMY_WINDOW_CYCLES = 7;
 const CACHE_TTL_MS = 60_000;
 
 interface FlowRow {

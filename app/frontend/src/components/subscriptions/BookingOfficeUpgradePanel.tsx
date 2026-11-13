@@ -46,7 +46,7 @@ export interface BookingOfficeUpgradePanelProps {
   onUpgraded: () => void;
 }
 
-export function BookingOfficeUpgradePanel({ onUpgraded }: BookingOfficeUpgradePanelProps) {
+function BookingOfficeUpgradePanel({ onUpgraded }: BookingOfficeUpgradePanelProps) {
   const [facility, setFacility] = useState<FacilityEntry | null>(null);
   const [currency, setCurrency] = useState(0);
   const [prestige, setPrestige] = useState(0);

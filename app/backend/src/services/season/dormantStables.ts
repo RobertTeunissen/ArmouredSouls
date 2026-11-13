@@ -19,7 +19,7 @@ import type { Prisma } from '../../../generated/prisma';
 import { buildUserFilter } from '../../utils/buildUserFilter';
 
 /** Most dormant stable names the rollover preview lists. */
-export const DORMANT_PREVIEW_NAME_LIMIT = 50;
+const DORMANT_PREVIEW_NAME_LIMIT = 50;
 
 /** The dormant predicate for a season that started at `seasonStartedAt`. */
 export function dormantHumanStableWhere(seasonStartedAt: Date): Prisma.UserWhereInput {

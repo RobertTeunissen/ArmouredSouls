@@ -2,10 +2,10 @@ import { Standing, StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { achievementService } from '../achievement';
 
-import { 
+import {
   assignLeagueInstance,
   assignLeagueInstanceWithLock,
-  rebalanceInstances, 
+  rebalanceInstances,
   LeagueTier,
   MAX_ROBOTS_PER_INSTANCE,
   InstanceOptions,
@@ -16,15 +16,11 @@ import {
   InstanceInfo,
   rebalanceAllTiers,
   determinePromotionsForInstance,
-  determineDemotionsForInstance,
-  promoteEntity,
-  demoteEntity,
 } from './leagueEngine';
 
 import { HEAD_TO_HEAD_LEAGUE_RULES, PLACEMENT_LEAGUE_RULES } from './league-rules';
 
 // Re-export for consumers that need the helper
-export { getMinLPForPromotion } from './leaguePromotionThresholds';
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 
@@ -73,31 +69,6 @@ export interface FullRebalancingSummary {
  */
 export async function determinePromotions(instanceId: string, excludeRobotIds: Set<number> = new Set()): Promise<Standing[]> {
   return determinePromotionsForInstance(instanceId, ROBOT_LEAGUE_CONFIG, robotAdapter, excludeRobotIds);
-}
-
-/**
- * Determine which robots should be demoted from a SPECIFIC INSTANCE
- */
-export async function determineDemotions(instanceId: string, excludeRobotIds: Set<number> = new Set()): Promise<Standing[]> {
-  return determineDemotionsForInstance(instanceId, ROBOT_LEAGUE_CONFIG, robotAdapter, excludeRobotIds);
-}
-
-/**
- * Promote a robot to the next tier
- * LP retention - league points are NOT reset to 0
- *
- * Takes the robot's `Standing` row, which is what `determinePromotions` hands back.
- */
-export async function promoteRobot(standing: Standing): Promise<void> {
-  return promoteEntity(standing, ROBOT_LEAGUE_CONFIG, robotAdapter);
-}
-
-/**
- * Demote a robot to the previous tier
- * LP retention - league points are NOT reset to 0
- */
-export async function demoteRobot(standing: Standing): Promise<void> {
-  return demoteEntity(standing, ROBOT_LEAGUE_CONFIG, robotAdapter);
 }
 
 /**

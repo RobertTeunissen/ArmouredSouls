@@ -5,5 +5,4 @@ export { TierUsageBars } from './TierUsageBars';
 export { WeaponsTable } from './WeaponsTable';
 export { PriceEffectScatter } from './PriceEffectScatter';
 export { RefinementsCoverage } from './RefinementsCoverage';
-export { EffectBar } from './EffectBar';
 export type * from './types';

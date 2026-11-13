@@ -94,4 +94,3 @@ export function SeasonModeCards({ standings, failed, onRetry }: SeasonModeCardsP
   );
 }
 
-export default SeasonModeCards;

@@ -56,13 +56,12 @@ import type {
 
 const MAX_RESULTS = 32;
 /** Profiles need this many comparisons in a column before a win rate is shown. */
-export const MIN_PROFILE_COMPARISONS = 50;
+const MIN_PROFILE_COMPARISONS = 50;
 /** Comparisons the layer-fit table trains on at most. */
 const LAYER_FIT_TRAIN_CAP = 60_000;
 
-export const SHARE_STEP = 0.05;
-export const PAIR_STEP = 0.1;
-export { INVESTMENT_STEP };
+const SHARE_STEP = 0.05;
+const PAIR_STEP = 0.1;
 
 export interface AttributeAnalysisParams {
   range: AnalysisRange;

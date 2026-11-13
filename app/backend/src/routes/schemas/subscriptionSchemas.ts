@@ -21,7 +21,7 @@ export const robotIdParamSchema = z.object({
  * Validated against the event registry rather than a loose string, so an unknown
  * mode is rejected at the boundary instead of deep inside the service.
  */
-export const eventTypeSchema = z.enum(SUBSCRIBABLE_EVENT_TYPES);
+const eventTypeSchema = z.enum(SUBSCRIBABLE_EVENT_TYPES);
 
 export const subscribeBodySchema = z.object({
   eventType: eventTypeSchema,

@@ -157,7 +157,7 @@ function SearchStateContent({
  * Search-only dialog shell. Search execution, ranking, result navigation, and
  * debounce behavior are intentionally supplied by the surrounding controller.
  */
-export function SearchPalette({
+function SearchPalette({
   isOpen,
   query,
   state,

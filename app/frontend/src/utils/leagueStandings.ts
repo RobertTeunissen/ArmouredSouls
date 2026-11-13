@@ -107,7 +107,7 @@ export function tierAbove(tier: string): string | null {
   return next > 0 && next < LEAGUE_TIERS.length ? LEAGUE_TIERS[next] : null;
 }
 
-export function tierBelow(tier: string): string | null {
+function tierBelow(tier: string): string | null {
   const below = tierIndex(tier) - 1;
   return below >= 0 ? LEAGUE_TIERS[below] : null;
 }

@@ -14,7 +14,7 @@ import {
 import { getAllModesBattleCounts, getTopRobotsByAllModesBattleCount } from '../robot/all-modes-battle-count';
 
 /** Highest Win Rate only ranks robots with at least this many win/loss-mode battles. */
-export const WIN_RATE_MIN_BATTLES = 50;
+const WIN_RATE_MIN_BATTLES = 50;
 
 
 // Helper to get display name (stableName or username fallback)
@@ -54,7 +54,7 @@ export const getRecordOwner = (user: RecordOwnerUser | null | undefined): Record
 );
 
 // byeRobotFilter removed — Spec #41 (no persistent Bye Robot)
-export const byeRobotFilter = {};
+const byeRobotFilter = {};
 
 // ─── Participant-based battle helpers ───────────────────────────────
 

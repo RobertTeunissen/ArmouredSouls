@@ -40,7 +40,7 @@ export const ECONOMY_WINDOWS = ['7', '14', '30', 'season'] as const satisfies re
 const STABLE_KINDS: readonly EconomyStableKind[] = ['players', 'automatons', 'generated'];
 
 /** The per-cycle chart shows at least this many cycles, whatever the window. */
-export const ECONOMY_CHART_MIN_CYCLES = 15;
+const ECONOMY_CHART_MIN_CYCLES = 15;
 const CACHE_TTL_MS = 60_000;
 
 /** Ledger transaction types that bring credits in, with their labels, in display order. */

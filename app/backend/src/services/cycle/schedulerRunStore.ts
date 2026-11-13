@@ -16,7 +16,7 @@ import { Prisma } from '../../../generated/prisma';
 import type { SchedulerRunStatus, SchedulerRunSummary, SchedulerRunTrigger } from '../../shared/types';
 
 /** How often the running process proves it is alive. */
-export const SCHEDULER_HEARTBEAT_INTERVAL_MS = 60_000;
+const SCHEDULER_HEARTBEAT_INTERVAL_MS = 60_000;
 
 /** Stored errors are trimmed to the column width. */
 const MAX_ERROR_LENGTH = 500;
@@ -94,7 +94,7 @@ function startHeartbeat(processId: number): void {
 }
 
 /** Stop the heartbeat (graceful shutdown and tests). */
-export function stopHeartbeat(): void {
+function stopHeartbeat(): void {
   if (heartbeat) clearInterval(heartbeat);
   heartbeat = null;
 }

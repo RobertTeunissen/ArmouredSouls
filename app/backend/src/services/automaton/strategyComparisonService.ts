@@ -25,14 +25,13 @@ import type { StrategyRegistry } from './strategies/registry';
 import { storedParameters } from './automatonProfileRules';
 import { bestTiersForUsers, LEAGUE_TIER_ORDER, PLAYED_STANDING_SQL, TIERED_MODE_SQL, type LeagueTier } from './standingsTier';
 import type { HighestTier } from '../../shared/utils/automatonStandingsTier';
-import { buildModePerformance, readModeAggregates, winPercentage } from './strategyModePerformance';
-import type { ComparisonRow, ModePerformance, StrategyComparison } from '../../shared/types';
+import { buildModePerformance, readModeAggregates } from './strategyModePerformance';
+import type { ComparisonRow, StrategyComparison } from '../../shared/types';
 
-export { winPercentage };
 
-export const COMPARISON_CACHE_TTL_MS = 60_000;
+const COMPARISON_CACHE_TTL_MS = 60_000;
 
-export const HUMAN_REFERENCE_LABEL = 'Human stables (reference)';
+const HUMAN_REFERENCE_LABEL = 'Human stables (reference)';
 
 /** A row before its per-mode block is attached. */
 type ComparisonRowBase = Omit<ComparisonRow, 'modes'>;
@@ -54,7 +53,7 @@ function average(values: readonly number[], decimals = 1): number {
 }
 
 /** The best tier over stables' own highest tiers and how many stables hold it. */
-export function bestTierOf(tiers: readonly (Pick<HighestTier, 'tier'> | null)[]): { tier: LeagueTier; stables: number } | null {
+function bestTierOf(tiers: readonly (Pick<HighestTier, 'tier'> | null)[]): { tier: LeagueTier; stables: number } | null {
   let best = -1;
   let count = 0;
   for (const highest of tiers) {

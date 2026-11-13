@@ -38,7 +38,7 @@ export const LEAGUE_POINTS_DRAW = 1;
 /**
  * Calculate prestige award for a battle win
  */
-export function calculatePrestigeForBattle(leagueType: string, isDraw: boolean, isByeMatch: boolean): number {
+function calculatePrestigeForBattle(leagueType: string, isDraw: boolean, isByeMatch: boolean): number {
   if (isDraw || isByeMatch) return 0; // No prestige for draws or bye matches
   
   const prestigeByLeague: Record<string, number> = {
@@ -56,7 +56,7 @@ export function calculatePrestigeForBattle(leagueType: string, isDraw: boolean, 
 /**
  * Calculate fame award for a battle win
  */
-export function calculateFameForBattle(
+function calculateFameForBattle(
   leagueType: string,
   winnerRobot: Robot,
   winnerFinalHP: number,

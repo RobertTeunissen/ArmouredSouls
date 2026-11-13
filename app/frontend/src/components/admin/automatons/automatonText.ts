@@ -51,7 +51,7 @@ export const EVENT_LABELS: Readonly<Record<string, string>> = {
 };
 
 /** Facility names as the facilities page shows them (`config/facilities.ts`). */
-export const FACILITY_LABELS: Readonly<Record<string, string>> = {
+const FACILITY_LABELS: Readonly<Record<string, string>> = {
   repair_bay: 'Repair Bay',
   training_facility: 'Training Facility',
   weapons_workshop: 'Weapons Workshop',

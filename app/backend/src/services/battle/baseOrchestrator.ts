@@ -14,19 +14,16 @@ import { getActiveFinancialCycleNumber } from '../cycle/canonicalCycleIdentity';
 // ─── Shared Types ────────────────────────────────────────────────────
 
 /** All supported battle mode identifiers. */
-export const ALL_BATTLE_TYPES = [
-  'league_1v1',
-  'tournament_1v1',
-  'tag_team',
-  'koth',
-  'league_2v2',
-  'league_3v3',
-  'tournament_2v2',
-  'tournament_3v3',
-  'grand_melee',
-] as const;
-
-export type BattleType = typeof ALL_BATTLE_TYPES[number];
+export type BattleType =
+  | 'league_1v1'
+  | 'tournament_1v1'
+  | 'tag_team'
+  | 'koth'
+  | 'league_2v2'
+  | 'league_3v3'
+  | 'tournament_2v2'
+  | 'tournament_3v3'
+  | 'grand_melee';
 
 /** Minimal context every battle mode needs before simulation. */
 export interface BattleContext {

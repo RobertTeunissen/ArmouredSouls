@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-export const MAX_FINANCE_REPORT_RANGE = 100;
-export const MAX_FINANCE_EVENT_PAGE_SIZE = 100;
+const MAX_FINANCE_REPORT_RANGE = 100;
+const MAX_FINANCE_EVENT_PAGE_SIZE = 100;
 
 const presetScopeSchema = z.enum(
   ['current', 'last_completed', 'last_seven', 'season_to_date'],

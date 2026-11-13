@@ -122,4 +122,3 @@ export function TrophyCabinet({ achievements, accolades, isOwner, onPinnedChange
   );
 }
 
-export default TrophyCabinet;

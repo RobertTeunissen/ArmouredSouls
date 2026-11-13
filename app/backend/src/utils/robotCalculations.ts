@@ -31,11 +31,6 @@ export {
   BASE_HP,
   HP_MULTIPLIER,
   SHIELD_MULTIPLIER,
-  getLoadoutBonus,
-  getLoadoutModifiedAttributes,
-  getStanceModifier,
-  isValidStance,
-  isValidYieldThreshold,
 } from '../shared/utils/robotStats';
 
 import {

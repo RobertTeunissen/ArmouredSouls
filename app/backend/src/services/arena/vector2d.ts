@@ -68,20 +68,6 @@ export function lerp(a: Position, b: Position, t: number): Position {
 }
 
 /**
- * Clamp a vector's magnitude to a maximum value.
- * Returns the original vector if its magnitude is already ≤ max.
- * Returns {x: 0, y: 0} for zero-length vectors.
- */
-export function clampMagnitude(v: Vector2D, max: number): Vector2D {
-  const mag = Math.sqrt(v.x * v.x + v.y * v.y);
-  if (mag === 0 || mag <= max) {
-    return { x: v.x, y: v.y };
-  }
-  const scale = max / mag;
-  return { x: v.x * scale, y: v.y * scale };
-}
-
-/**
  * Calculate the angle in degrees between two positions,
  * measured from a to b. Returns the angle in the range (-180, 180].
  * Returns 0 when both positions are identical.
@@ -120,11 +106,4 @@ export function sign(n: number): number {
   if (n > 0) return 1;
   if (n < 0) return -1;
   return 0;
-}
-
-/**
- * Calculate the dot product of two vectors.
- */
-export function dotProduct(a: Vector2D, b: Vector2D): number {
-  return a.x * b.x + a.y * b.y;
 }

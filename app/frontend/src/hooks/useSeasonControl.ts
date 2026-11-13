@@ -22,8 +22,8 @@ import {
 import type { Section, StartResult } from './useCycleControls';
 import type { AdminSeasonState, RolloverPreview, SeasonRolloverHistory } from '@shared/types';
 
-export const ACTIVE_POLL_MS = 5_000;
-export const IDLE_POLL_MS = 60_000;
+const ACTIVE_POLL_MS = 5_000;
+const IDLE_POLL_MS = 60_000;
 
 export interface SeasonControlData {
   state: Section<AdminSeasonState>;

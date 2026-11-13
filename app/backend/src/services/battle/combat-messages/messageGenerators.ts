@@ -17,7 +17,7 @@ import * as T from './messageTemplates';
 
 // ── Utility Functions ────────────────────────────────────────────────────
 
-export function interpolate(template: string, values: object): string {
+function interpolate(template: string, values: object): string {
   const record = values as Record<string, unknown>;
   return template.replace(/{(\w+)}/g, (match, key) => {
     const val = record[key];
@@ -27,11 +27,11 @@ export function interpolate(template: string, values: object): string {
   });
 }
 
-export function selectRandom<V>(messages: V[]): V {
+function selectRandom<V>(messages: V[]): V {
   return messages[Math.floor(Math.random() * messages.length)];
 }
 
-export function getDamageDescriptor(damage: number, maxHP: number = 100): string {
+function getDamageDescriptor(damage: number, maxHP: number = 100): string {
   const percentage = (damage / maxHP) * 100;
   if (percentage >= 25) return 'a devastating blow';
   if (percentage >= 15) return 'a heavy strike';
@@ -41,7 +41,7 @@ export function getDamageDescriptor(damage: number, maxHP: number = 100): string
   return 'a minor scratch';
 }
 
-export function getHPDescriptor(currentHP: number, maxHP: number): string {
+function getHPDescriptor(currentHP: number, maxHP: number): string {
   const percent = (currentHP / maxHP) * 100;
   if (percent >= 90) return 'nearly full hull integrity';
   if (percent >= 70) return 'strong hull integrity';

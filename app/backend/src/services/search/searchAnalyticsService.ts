@@ -237,10 +237,4 @@ export async function getActiveSearchSeasonContext(): Promise<ActiveSeasonContex
 
 export const searchAnalyticsService = new SearchAnalyticsService();
 
-export async function recordExecutedSearch(
-  input: RecordExecutedSearchInput,
-): Promise<SearchAnalyticsRecordResult> {
-  return searchAnalyticsService.recordExecutedSearch(input);
-}
 
-export default searchAnalyticsService;

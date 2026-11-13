@@ -16,7 +16,7 @@ import { layerBuild } from './attributeLayers';
 import { addBattle, emptyComparisonSet, PLACEMENT_PAIR_CAP, type AnalysisBattle, type AnalysisParticipant, type ComparisonSet } from './comparisons';
 
 /** Comparisons the models are fitted on at most; longer windows are sampled. */
-export const COMPARISON_CAP = 100_000;
+const COMPARISON_CAP = 100_000;
 
 const PAGE_SIZE = 2_000;
 const HASH_MODULUS = 4_294_967_296;
@@ -71,7 +71,7 @@ interface RawBattle {
 /** League tiers as stored in `league_type`; tournaments become 'tournament', anything else null. */
 const LEAGUE_TIER_VALUES = new Set(['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion', 'tournament']);
 
-export function normaliseTier(value: string | null): string | null {
+function normaliseTier(value: string | null): string | null {
   return value !== null && LEAGUE_TIER_VALUES.has(value) ? value : null;
 }
 

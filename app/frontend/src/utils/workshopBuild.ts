@@ -92,7 +92,7 @@ export const ATTRIBUTE_CATEGORIES: readonly AttributeCategory[] = [
 export const ALL_ATTRIBUTES: readonly AttributeDef[] = ATTRIBUTE_CATEGORIES.flatMap((c) => c.attributes);
 
 /** Points of tuning allowed above the academy cap (backend overclock window). */
-export const TUNING_OVERCLOCK = 5;
+const TUNING_OVERCLOCK = 5;
 
 export interface PlannedUpgrade {
   currentLevel: number;

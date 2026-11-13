@@ -15,19 +15,10 @@ jest.mock('../../../lib/prisma', () => ({
   },
 }));
 
-import { countPlayersPerInstance, isPlayerStable, PLAYER_STABLE, playerOwnedEntityIds } from '../playerStables';
+import { countPlayersPerInstance, PLAYER_STABLE, playerOwnedEntityIds } from '../playerStables';
 
 beforeEach(() => {
   jest.clearAllMocks();
-});
-
-describe('isPlayerStable', () => {
-  it('is true only for a human stable that is not generated', () => {
-    expect(isPlayerStable({ stableType: 'human', isGenerated: false })).toBe(true);
-    expect(isPlayerStable({ stableType: 'automaton', isGenerated: false })).toBe(false);
-    expect(isPlayerStable({ stableType: 'generated', isGenerated: true })).toBe(false);
-    expect(isPlayerStable({ stableType: 'human', isGenerated: true })).toBe(false);
-  });
 });
 
 describe('playerOwnedEntityIds', () => {

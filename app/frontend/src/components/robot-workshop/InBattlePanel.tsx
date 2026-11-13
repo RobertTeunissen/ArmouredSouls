@@ -66,4 +66,3 @@ export function InBattlePanel({ values, tuning, bonuses, loadoutType, stance, ma
   );
 }
 
-export default InBattlePanel;

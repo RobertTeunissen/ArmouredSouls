@@ -7,8 +7,7 @@
  */
 
 import * as fc from 'fast-check';
-import { validateParticipantType, ParticipantType } from '../../../src/services/tournament/tournamentParticipantResolver';
-import { TournamentError, TournamentErrorCode } from '../../../src/errors/tournamentErrors';
+import { ParticipantType } from '../../../src/services/tournament/tournamentParticipantResolver';
 import { TournamentParticipant } from '../../../src/services/tournament/tournamentService';
 import { seedParticipantsByELO, generateStandardSeedOrder } from '../../../src/services/tournament/tournamentBracket';
 
@@ -110,51 +109,6 @@ describe('Feature: team-battle-tournaments, Property 1: For any tournament, all 
           );
 
           expect(isConsistent).toBe(false);
-        }
-      ),
-      { numRuns: 100 }
-    );
-  });
-});
-
-// Feature: team-battle-tournaments, Property 2: For any invalid participantType string, validateParticipantType throws TournamentError
-describe('Feature: team-battle-tournaments, Property 2: For any invalid participantType string, validateParticipantType throws TournamentError', () => {
-  /**
-   * **Validates: Requirements 1.9**
-   *
-   * For any string that is not one of 'robot', 'team_2v2', or 'team_3v3',
-   * attempting to validate that participantType value SHALL produce a
-   * TournamentError with code INVALID_PARTICIPANT_TYPE.
-   */
-  it('should throw TournamentError with INVALID_PARTICIPANT_TYPE for any invalid string', () => {
-    fc.assert(
-      fc.property(
-        // Generate random strings that are NOT valid participant types
-        fc.string().filter((s) => !VALID_PARTICIPANT_TYPES.includes(s as any)),
-        (invalidType) => {
-          expect(() => validateParticipantType(invalidType)).toThrow(TournamentError);
-
-          try {
-            validateParticipantType(invalidType);
-          } catch (error) {
-            expect(error).toBeInstanceOf(TournamentError);
-            expect((error as TournamentError).code).toBe(
-              TournamentErrorCode.INVALID_PARTICIPANT_TYPE
-            );
-          }
-        }
-      ),
-      { numRuns: 100 }
-    );
-  });
-
-  it('should NOT throw for any valid participantType string', () => {
-    fc.assert(
-      fc.property(
-        fc.constantFrom(...VALID_PARTICIPANT_TYPES),
-        (validType) => {
-          // Should not throw for valid types
-          expect(() => validateParticipantType(validType)).not.toThrow();
         }
       ),
       { numRuns: 100 }

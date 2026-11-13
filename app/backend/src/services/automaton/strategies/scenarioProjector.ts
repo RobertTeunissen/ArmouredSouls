@@ -19,7 +19,7 @@ import type { ScenarioPurchase } from '../../../shared/types';
 export const SCENARIO_STARTING_BALANCE = 3_000_000;
 
 /** The opening: two preparation turns, then the first competitive turn (design §14.0b). */
-export const OPENING_PHASES: readonly StableFacts['phase'][] = ['preparation', 'preparation', 'competitive'];
+const OPENING_PHASES: readonly StableFacts['phase'][] = ['preparation', 'preparation', 'competitive'];
 
 /** A stable with no robots, no facilities and `balance` credits. */
 export function freshStableFacts(balance: number = SCENARIO_STARTING_BALANCE): StableFacts {

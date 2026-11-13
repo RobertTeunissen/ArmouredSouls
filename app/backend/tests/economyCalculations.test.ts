@@ -3,13 +3,8 @@
  * Tests for economyCalculations.ts utilities
  */
 
-import {
-  calculateFacilityOperatingCost,
-  getMerchandisingBaseRate,
-  calculateMerchandisingIncome,
-  getLeagueWinReward,
-  getParticipationReward,
-} from '../src/utils/economyCalculations';
+import { calculateFacilityOperatingCost, calculateMerchandisingIncome, getLeagueWinReward, getParticipationReward } from '../src/utils/economyCalculations';
+import { getMerchandisingBaseRate } from '../src/utils/economyFormulas';
 
 describe('Economy Calculations', () => {
   afterAll(() => {

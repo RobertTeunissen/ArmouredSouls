@@ -201,4 +201,3 @@ function Thumb({ imageUrl }: { imageUrl: string | null }) {
   );
 }
 
-export default RosterSection;

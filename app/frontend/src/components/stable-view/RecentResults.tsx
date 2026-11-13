@@ -55,4 +55,3 @@ export function RecentResults({ results, isOwner }: RecentResultsProps) {
   );
 }
 
-export default RecentResults;

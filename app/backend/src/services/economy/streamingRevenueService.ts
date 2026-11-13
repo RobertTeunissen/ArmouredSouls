@@ -193,7 +193,7 @@ export function applyStreamingTeamShare(
  * @param userId - User ID to query
  * @returns Streaming Studio level (0-10), or 0 if not found
  */
-export async function getStreamingStudioLevel(userId: number): Promise<number> {
+async function getStreamingStudioLevel(userId: number): Promise<number> {
   const facility = await prisma.facility.findUnique({
     where: {
       userId_facilityType: {

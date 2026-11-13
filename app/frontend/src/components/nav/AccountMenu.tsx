@@ -153,4 +153,3 @@ export function AccountMenu({
   );
 }
 
-export default AccountMenu;

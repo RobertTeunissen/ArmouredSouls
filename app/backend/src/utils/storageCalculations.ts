@@ -13,14 +13,6 @@ export function calculateStorageCapacity(storageFacilityLevel: number): number {
 }
 
 /**
- * Check if user has available storage space
- */
-export function hasStorageSpace(currentWeaponCount: number, storageFacilityLevel: number): boolean {
-  const maxCapacity = calculateStorageCapacity(storageFacilityLevel);
-  return currentWeaponCount < maxCapacity;
-}
-
-/**
  * Get storage status information
  */
 export function getStorageStatus(currentWeaponCount: number, storageFacilityLevel: number): {

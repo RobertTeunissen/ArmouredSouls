@@ -49,7 +49,7 @@ function stepIsApplicable(step: RefinementStep, rows: readonly RefinementRow[], 
  * The robot's next not-done step among the first `withinTarget` plan steps,
  * for a robot on its final stage (design §8.6 item 7).
  */
-export function nextRefinementStep(
+function nextRefinementStep(
   facts: StableFacts,
   ctx: GoalContext,
   robot: RobotFacts,

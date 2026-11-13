@@ -21,13 +21,13 @@ export interface DirectWriterCoverageResult {
  * current-season credits. The shared mutation service is the only other
  * permitted production assignment.
  */
-export const OPENING_BALANCE_BOUNDARY_FILES = [
+const OPENING_BALANCE_BOUNDARY_FILES = [
   'app/backend/src/utils/userGeneration.ts',
   'app/backend/src/services/common/resetService.ts',
   'app/backend/src/services/season/seasonPurgeService.ts',
 ] as const;
 
-export const SHARED_CREDIT_SERVICE_FILE =
+const SHARED_CREDIT_SERVICE_FILE =
   'app/backend/src/services/financial/creditMutationService.ts';
 
 const USER_WRITE_METHODS = new Set(['create', 'update', 'updateMany', 'upsert']);

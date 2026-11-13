@@ -34,10 +34,10 @@ export const GROUP_PAIRS: ReadonlyArray<readonly [number, number]> = ATTRIBUTE_G
 );
 
 /** "Comparable investment": totals within about ±10%. */
-export const COMPARABLE_LOG_TOTAL = 0.1;
+const COMPARABLE_LOG_TOTAL = 0.1;
 
 /** Stance features (offensive, defensive) appended when the stance toggle is on. */
-export const STANCE_FEATURES = 2;
+const STANCE_FEATURES = 2;
 
 function baseFeatureCount(kind: ModelKind): number {
   if (kind === 'attributes') return 1 + ATTRIBUTE_COUNT;
@@ -93,7 +93,7 @@ function profileOfValues(values: Float64Array): SideProfile {
   return { total, shares, groupShares, offensive: 0, defensive: 0 };
 }
 
-export function sideProfile(builds: readonly LayeredBuild[], cache: LayeredValueCache): SideProfile {
+function sideProfile(builds: readonly LayeredBuild[], cache: LayeredValueCache): SideProfile {
   const mean = new Float64Array(ATTRIBUTE_COUNT);
   for (const build of builds) {
     const v = cache.get(build);
@@ -176,8 +176,8 @@ export function penaltyMask(kind: ModelKind, withStance = false): boolean[] {
 // ── Build profiles ───────────────────────────────────────────────────
 
 /** A group is "heavy" at ≥ 1.5× the share an even spread gives it; a pair needs both ≥ 1.25×. */
-export const HEAVY_RATIO = 1.5;
-export const PAIR_RATIO = 1.25;
+const HEAVY_RATIO = 1.5;
+const PAIR_RATIO = 1.25;
 
 export type ProfileKey = 'balanced' | AttributeGroup | `${AttributeGroup}+${AttributeGroup}`;
 

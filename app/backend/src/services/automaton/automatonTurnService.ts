@@ -116,13 +116,10 @@ import {
 } from './turnStepLease';
 
 export {
-  TURN_ACTION_LIMIT,
-  TURN_TIME_BUDGET_MS,
-  TURN_STEP_MIN_BUDGET_MS,
   TURN_BUDGET_EXHAUSTED,
   STEP_BUDGET_EXHAUSTED,
 } from './turnBudget';
-export { claimTurnRecord, CUTOVER_IN_PROGRESS, PROGRAM_OFF, INVALID_PARAMETERS } from './turnRecords';
+export { CUTOVER_IN_PROGRESS } from './turnRecords';
 export type { TurnStepSummary } from './automatonObservability';
 
 export type TurnStepSource = TurnStepSummary['source'];
@@ -166,7 +163,6 @@ export interface TurnStepDependencies {
 
 // ─── Strategy_Registry ───────────────────────────────────────────────
 
-export { getStrategyRegistry };
 
 // ─── Cohort ──────────────────────────────────────────────────────────
 
@@ -185,7 +181,7 @@ export interface CohortProfile {
 }
 
 /** Active_Automatons in ascending `User.id` order (R7.9). */
-export async function listActiveProfilesOrderedByUserId(): Promise<CohortProfile[]> {
+async function listActiveProfilesOrderedByUserId(): Promise<CohortProfile[]> {
   const rows = await prisma.automatonProfile.findMany({
     where: { status: 'active', userId: { not: null } },
     select: {
@@ -279,7 +275,7 @@ function countByKind(kinds: readonly string[]): Record<string, number> {
  * One Automaton_Turn (design §11.2). Writes its own Turn_Record outcome and
  * alerts; throws only when that write itself fails.
  */
-export async function runAutomatonTurn(
+async function runAutomatonTurn(
   profile: CohortProfile,
   record: Extract<ClaimedTurnRecord, { alreadyFinal: false }>,
   turn: TurnLabel,

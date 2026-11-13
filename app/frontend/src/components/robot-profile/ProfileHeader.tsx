@@ -107,4 +107,3 @@ function Figure({ label, value, className = 'text-white' }: { label: string; val
   );
 }
 
-export default ProfileHeader;

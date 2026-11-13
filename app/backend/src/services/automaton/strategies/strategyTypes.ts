@@ -12,8 +12,6 @@ import type { Goal } from '../goals/goalTypes';
 import type { FacilityType } from '../stableFacts';
 import type { GoalType, StrategyDefinitionFile, TargetBounds } from '../../../shared/types';
 
-/** Goal_Library types a Build_Order entry can reference. */
-export const GOAL_TYPES = ['robots', 'facility', 'attributes', 'weapons', 'refine', 'economy'] as const;
 /** A Build_Order entry with its derived id and numeric targets (no Goal instance). */
 export interface GoalSpec {
   /** `{key}.v{version}.{position:02}.{type}[.{facilityType}]`. */

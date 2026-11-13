@@ -16,7 +16,8 @@ jest.mock('../../season/dormantStables', () => ({
 
 import type { AchievementDefinition } from '../../../config/achievements';
 import { buildStableScopeFilter } from '../../../utils/stableScope';
-import { getAchievementAnalytics, seasonDay, summarizeAchievements } from '../achievements';
+import { getAchievementAnalytics } from '../achievements';
+import { seasonDay, summarizeAchievements } from '../achievements/achievementAnalyticsService';
 
 const START = new Date('2026-08-01T00:00:00Z');
 const at = (iso: string): Date => new Date(iso);

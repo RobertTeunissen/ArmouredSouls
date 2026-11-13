@@ -80,9 +80,3 @@ export const createLogger = (name: string): Logger => ({
     }
   },
 });
-
-/**
- * Default logger for one-off call sites that don't justify a named instance.
- * Prefer `createLogger('YourComponent')` so messages are filterable.
- */
-export const logger = createLogger('app');

@@ -354,24 +354,3 @@ export async function executeTeam3v3TournamentCycle(): Promise<JobContext> {
 
 // --- Reserved-slot stub handler factory ---
 
-/**
- * Creates a no-op handler for a reserved cron slot.
- * The stub logs an info message with the event name and cycle number,
- * then returns successfully. It does NOT trigger monitoring alerts or
- * count as a failure — the notification system only dispatches for
- * known JobName values, so unknown names fall through silently.
- *
- * Future specs replace these stubs with real handlers without modifying
- * env.ts or the slot map.
- */
-export function createReservedSlotHandler(eventName: string): () => Promise<JobContext> {
-  return async (): Promise<JobContext> => {
-    const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-    const cycleNumber = cycleMetadata?.totalCycles ?? 0;
-    logger.info(
-      `Scheduler: reserved slot "${eventName}" fired (cycle ${cycleNumber}) — reserved slot, no handler implemented yet`
-    );
-    return { jobName: eventName as JobContext['jobName'] };
-  };
-}
-

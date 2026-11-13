@@ -292,23 +292,6 @@ export async function getActiveTournaments(): Promise<Tournament[]> {
 }
 
 /**
- * Get tournament by ID with all matches
- */
-export async function getTournamentById(tournamentId: number): Promise<Tournament | null> {
-  return prisma.tournament.findUnique({
-    where: { id: tournamentId },
-    include: {
-      matches: {
-        orderBy: [{ round: 'asc' }, { matchNumber: 'asc' }],
-        include: {
-          battle: true,
-        },
-      },
-    },
-  });
-}
-
-/**
  * Get current round matches for a tournament
  */
 export async function getCurrentRoundMatches(tournamentId: number): Promise<ScheduledTournamentMatch[]> {
