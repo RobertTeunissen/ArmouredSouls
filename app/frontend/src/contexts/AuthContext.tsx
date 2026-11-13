@@ -25,6 +25,7 @@ interface User {
   currency: number;
   prestige: number;
   stableName?: string | null;
+  stableNote?: string | null;
 }
 
 /**

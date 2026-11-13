@@ -35,6 +35,7 @@ model User {
   notificationsBattle Boolean @default(true) @map("notifications_battle")
   notificationsLeague Boolean @default(true) @map("notifications_league")
   themePreference     String  @default("dark") @map("theme_preference") @db.VarChar(20)
+  stableNote          String? @map("stable_note") @db.Text // Free-text strategy note, up to 2000 chars (enforced in validation)
 
   // ===== AUTH =====
   tokenVersion Int @default(0) @map("token_version") // Incremented on password change to invalidate JWTs
