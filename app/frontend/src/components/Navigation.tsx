@@ -133,10 +133,10 @@ function Navigation({ onOpenSearch }: NavigationProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex min-w-0 items-center gap-4">
             <SearchTrigger onOpenSearch={onOpenSearch} />
             <SeasonProgressIndicator />
-            <div className="flex items-center gap-2 bg-surface border border-white/10 px-3 py-2 rounded-md">
+            <div className="flex flex-shrink-0 items-center gap-2 bg-surface border border-white/10 px-3 py-2 rounded-md">
               <span className="text-primary">₡</span>
               <span className="text-primary font-medium">{user.currency.toLocaleString()}</span>
             </div>
