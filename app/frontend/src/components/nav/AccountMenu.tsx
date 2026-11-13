@@ -72,17 +72,19 @@ export function AccountMenu({
         type="button"
         onClick={() => (isOpen ? close() : open())}
         aria-haspopup="menu"
-        aria-expanded={isOpen}
-        className="flex min-w-0 shrink items-center gap-1 max-w-[9rem] px-2 py-2 rounded-md transition-all duration-150 text-secondary hover:text-primary hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-elevated"
+        aria-label={`Account menu, signed in as ${currentLabel}`}
         title={currentLabel}
+        className="flex min-h-11 min-w-11 items-center justify-center gap-1 px-2 py-2 rounded-md border border-white/10 transition-all duration-150 text-secondary hover:text-primary hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-elevated"
       >
-        {/* Only the label truncates; the icon and caret stay fixed-size. The
-            button can shrink (`min-w-0 shrink`) and its label truncates, so a
-            long stable name — or a tight 1280px desktop row — never pushes the
-            fixed top bar into horizontal overflow. `min-w-0` on both the button
-            and the label is required for `truncate` to shrink inside a flex row. */}
+        {/* The desktop top bar has no spare width below ~1536px: it previously
+            ended in a compact "Logout" button, and anything wider pushes the row
+            into horizontal overflow (or, if the groups are allowed to shrink,
+            makes the nav links overlap the search trigger). So the trigger is
+            icon + caret only — narrower than the old Logout button — and the
+            stable name appears beside it only on 2xl screens. The full name is
+            always in the accessible label, the tooltip, and the open menu. */}
         <span className="flex-shrink-0" aria-hidden="true">👤</span>
-        <span className="min-w-0 truncate">{currentLabel}</span>
+        <span className="hidden 2xl:inline max-w-[12rem] truncate" aria-hidden="true">{currentLabel}</span>
         <span className="flex-shrink-0" aria-hidden="true">▾</span>
       </button>
 

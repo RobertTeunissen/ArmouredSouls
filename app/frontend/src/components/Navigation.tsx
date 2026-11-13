@@ -98,11 +98,11 @@ function Navigation({ onOpenSearch }: NavigationProps) {
     <>
       {/* Desktop Navigation - ≥1024px */}
       <nav className="hidden lg:block fixed top-0 left-0 right-0 bg-surface-elevated border-b border-white/10 z-[1000]">
-        <div className="h-16 px-6 flex items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-6">
+        <div className="h-16 px-6 flex items-center justify-between">
+          <div className="flex items-center gap-6">
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex flex-shrink-0 items-center gap-4 transition-opacity hover:opacity-80"
+              className="flex items-center gap-4 transition-opacity hover:opacity-80"
               aria-label="Armoured Souls Home"
             >
               <LogoB className="w-10 h-10 text-primary" />
@@ -133,10 +133,10 @@ function Navigation({ onOpenSearch }: NavigationProps) {
             </div>
           </div>
 
-          <div className="flex min-w-0 items-center gap-4">
+          <div className="flex items-center gap-4">
             <SearchTrigger onOpenSearch={onOpenSearch} />
             <SeasonProgressIndicator />
-            <div className="flex flex-shrink-0 items-center gap-2 bg-surface border border-white/10 px-3 py-2 rounded-md">
+            <div className="flex items-center gap-2 bg-surface border border-white/10 px-3 py-2 rounded-md">
               <span className="text-primary">₡</span>
               <span className="text-primary font-medium">{user.currency.toLocaleString()}</span>
             </div>

@@ -45,9 +45,12 @@ cross-account store data is left behind.
 ## UI
 
 - **Desktop:** `components/nav/AccountMenu.tsx` — a hover/click dropdown in the
-  top-right of `Navigation.tsx` showing the current stable label, the other saved
-  accounts to switch to, "Add account", and "Logout". This is the only place the
-  navbar displays the account's stable name/username.
+  top-right of `Navigation.tsx`. The open menu shows the current stable name, the
+  other saved accounts to switch to, "Add account", and "Logout". The trigger is
+  👤 ▾ only (narrower than the old Logout button) because the desktop top bar has
+  no spare width below ~1536px: anything wider pushed the row into horizontal
+  overflow at the 1280px E2E viewport. The stable name is added beside the icon
+  on `2xl` screens and is always in the trigger's accessible label and tooltip.
 - **Mobile:** the same actions in the `MobileDrawer` "Settings & Admin" section,
   threaded from `Navigation` via `onSwitchAccount` / `onAddAccount` props
   (mirroring the existing `onLogout`).
