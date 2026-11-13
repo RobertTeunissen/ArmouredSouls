@@ -1,7 +1,7 @@
 import type { NSFWJS, PredictionType } from 'nsfwjs';
 import type { Tensor3D } from '@tensorflow/tfjs-node';
 import logger from '../../config/logger';
-import type { ModerationThresholds } from '../../shared/types';
+import type { ModerationAvailability, ModerationAvailabilityStatus, ModerationThresholds } from '../../shared/types';
 
 export interface ModerationResult {
   safe: boolean;
@@ -15,14 +15,6 @@ export interface ModerationResult {
   };
   robotLikenessScore: number;
   reason?: string;
-}
-
-export type ModerationAvailabilityStatus = 'starting' | 'ready' | 'unavailable';
-
-/** Player-safe availability data; operational failures are never exposed here. */
-export interface ModerationAvailability {
-  status: ModerationAvailabilityStatus;
-  changedAt: string;
 }
 
 /** A score at or above any of these blocks the upload (NSFW hard block). */

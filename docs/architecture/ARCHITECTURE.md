@@ -233,7 +233,7 @@ Code used by both the backend and the frontend lives in `app/shared` and is depl
 
 Contract types describe the wire format, so dates are ISO 8601 strings. They are imported with `import type` and contain no runtime code. The backend service returns the shared type and the frontend API call uses it, so a field change on either side fails `tsc` on the other. Response shapes that only one app uses stay local. Where a contract lists values the backend keeps in a runtime tuple (transaction types, subscribable events), the tuple is declared `as const satisfies readonly <SharedUnion>[]`, so the backend cannot send a value the contract lacks.
 
-Current contracts (#592 moved the facilities, finance, battle log, subscription, season and admin ones):
+Current contracts (#592 moved the facilities, finance, battle log, subscription, season and admin ones; #609 the remaining player-facing ones):
 
 | File | Endpoints |
 |------|-----------|
@@ -246,7 +246,18 @@ Current contracts (#592 moved the facilities, finance, battle log, subscription,
 | `subscriptions.ts` | `/api/subscriptions/overview`, `/registry`, subscribe/unsubscribe/replace |
 | `seasons.ts` | `/api/seasons/*` (state, archive, stable history) and admin Season Control |
 | `robot-setup.ts` | scheduling eligibility report |
-| `achievements.ts` | `AchievementTier`, `AchievementCategory` |
+| `achievements.ts` | `AchievementTier`, `AchievementCategory`; `/api/achievements` (`AchievementsResponse`), unlock toasts (`UnlockedAchievement`), the stable page's pins and showcase |
+| `guide.ts` | `/api/guide/sections`, `/articles/:sectionSlug/:articleSlug`, `/search-index` |
+| `search.ts` | `/api/search` |
+| `dashboard.ts` | `/api/dashboard/current-cycle` |
+| `stable-view.ts` | `/api/stables/:userId` standings, recent results, accolades |
+| `robot-profile.ts` | `/api/robots/:id/profile` |
+| `league-standings.ts` | `/api/leagues/my-standings`, standings status and pagination |
+| `onboarding.ts` | `/api/onboarding/state` (`TutorialState`, `OnboardingChoices`) |
+| `robot-settings.ts` | `/api/robots/:id/tuning-allocation`, tuning summaries, image moderation availability |
+| `practice-arena.ts` | Practice Arena What-If overrides, academy levels |
+| `tournaments.ts` | `/api/tournaments/:id/seedings`, resolved bracket participants |
+| `hall-of-records.ts` | `/api/records` record owner and win streak lists |
 | `stable.ts` | `StableType`, used by the contracts above |
 | `admin-*.ts` | Admin portal pages: `admin-dashboard`, `admin-players`, `admin-economy`, `admin-battles`, `admin-league-health`, `admin-tournaments`, `admin-scheduler` (Cycle Controls; also the stored `scheduler_job_runs.summary`), `admin-analysis` (Attributes, Weapons, Meta), `admin-achievements`, `admin-practice-arena`, `admin-images`, `admin-security`, `admin-system`, `admin-actions`, `admin-automatons` (request bodies included) |
 

@@ -7,7 +7,7 @@ import { validateRequest, validated } from '../middleware/schemaValidator';
 import { positiveIntParam, safeName } from '../utils/securityValidation';
 import { verifyWeaponOwnership } from '../middleware/ownership';
 import { securityMonitor } from '../services/security/securityMonitor';
-import { achievementService, type UnlockedAchievement } from '../services/achievement';
+import { achievementService } from '../services/achievement';
 import { ROBOT_ATTRIBUTES } from '../shared/utils/robotAttributes';
 import { getIdempotencyKey, idempotencyHeadersSchema } from '../utils/idempotency';
 import { purchaseWeapon } from '../services/economy/weaponPurchaseService';
@@ -18,6 +18,7 @@ import {
   listWeaponInventory,
   setWeaponCustomName,
 } from '../services/economy/weaponInventoryQueryService';
+import type { UnlockedAchievement } from '../shared/types';
 
 const router = express.Router();
 

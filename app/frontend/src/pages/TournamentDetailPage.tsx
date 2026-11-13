@@ -1,11 +1,12 @@
 import { useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getTournamentDetails, TournamentDetails, SeedEntry, ParticipantType } from '../utils/tournamentApi';
+import { getTournamentDetails, TournamentDetails, ParticipantType } from '../utils/tournamentApi';
 import { useRobotStore } from '../stores';
 import BracketView from '../components/tournament/BracketView';
 import { useApiQuery } from '../hooks/useApiQuery';
 import { ApiError } from '../utils/ApiError';
+import type { SeedEntry } from '@shared/types';
 
 /**
  * Tournament Detail Page — displays full tournament info and bracket visualization.

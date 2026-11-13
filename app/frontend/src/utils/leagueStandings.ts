@@ -6,6 +6,7 @@
  * status chip and instance summary. Pure, so the page and its tests share it.
  */
 import { LEAGUE_TIERS, getTierName } from './tierHelpers';
+import type { MyStandingEntry, StandingStatus } from '@shared/types';
 
 // ─── Modes ──────────────────────────────────────────────────────────
 
@@ -52,15 +53,6 @@ export function instanceLabel(instanceId: string): string {
 }
 
 // ─── Status ─────────────────────────────────────────────────────────
-
-export type StandingStatusKind = 'promotes' | 'demotes' | 'held_lp' | 'held_cycles' | 'held_cohort';
-
-export interface StandingStatus {
-  kind: StandingStatusKind;
-  zone: 'promotion' | 'demotion';
-  cyclesToGo?: number;
-  minLP?: number;
-}
 
 export type StatusTone = 'success' | 'error' | 'warning' | 'neutral';
 
@@ -113,21 +105,6 @@ function tierBelow(tier: string): string | null {
 }
 
 // ─── The viewer's entries ───────────────────────────────────────────
-
-export interface MyStandingEntry {
-  mode: LeagueApiMode;
-  entityType: 'robot' | 'team';
-  entityId: number;
-  name: string;
-  tier: string;
-  leagueInstanceId: string;
-  place: number;
-  instanceSize: number;
-  leaguePoints: number;
-  cyclesInTier: number;
-  minCycles: number;
-  status: StandingStatus | null;
-}
 
 /** Entries of one mode, best first: highest tier, then best place. */
 export function entriesForMode(entries: readonly MyStandingEntry[], mode: LeagueModeKey): MyStandingEntry[] {

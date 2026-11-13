@@ -14,9 +14,9 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
-import type { TuningAttributeMap } from '../tuning-pool';
 import { applyLoadoutFallbacks, type CombatEntryDecision } from './combatReadiness';
 import type { RobotWithWeapons } from './combatSimulator';
+import type { TuningAttributeMap } from '../../shared/types';
 
 /**
  * Weapon relations a robot needs for combat. Spec #34: refinements are

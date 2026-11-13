@@ -2,8 +2,9 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { TournamentMatchWithRobots, getRoundLabel } from '../../utils/bracketUtils';
 import { useBracketLayout, CARD_HEIGHT, COLUMN_GAP, COLUMN_WIDTH, LABEL_HEIGHT } from '../../hooks/useBracketLayout';
 import { useZoomPan } from '../../hooks/useZoomPan';
-import type { ParticipantType, ResolvedParticipant } from '../../utils/tournamentApi';
+import type { ParticipantType } from '../../utils/tournamentApi';
 import MatchCard from './MatchCard';
+import type { ResolvedParticipant } from '@shared/types';
 
 interface DesktopBracketProps {
   matches: TournamentMatchWithRobots[];

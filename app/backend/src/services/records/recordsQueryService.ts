@@ -12,6 +12,7 @@ import {
   type PlayerSets,
 } from './recordScope';
 import { getAllModesBattleCounts, getTopRobotsByAllModesBattleCount } from '../robot/all-modes-battle-count';
+import type { RecordOwnerDisplay } from '../../shared/types';
 
 /** Highest Win Rate only ranks robots with at least this many win/loss-mode battles. */
 const WIN_RATE_MIN_BATTLES = 50;
@@ -38,14 +39,6 @@ interface RecordOwnerUser {
 }
 
 /** Display name, id and Stable_Type of a record holder's stable. */
-export interface RecordOwnerDisplay {
-  /** The owning stable's user id (links to `/stables/:id`); null when unknown. */
-  userId: number | null;
-  username: string;
-  /** Spec #55 decision 42: drives the Automaton_Badge on every Hall of Records record. */
-  stableType: StableType | null;
-}
-
 /** The owning stable as every record mapping ships it (decision 42). */
 export const getRecordOwner = (user: RecordOwnerUser | null | undefined): RecordOwnerDisplay => (
   user

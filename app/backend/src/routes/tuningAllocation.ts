@@ -18,7 +18,8 @@ import { validateRequest, validated } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import { getTuningAllocation, getTuningAllocationSummaries, setTuningAllocation } from '../services/tuning-pool';
 import { ROBOT_ATTRIBUTES, type RobotAttribute } from '../services/tuning-pool/tuningPoolConfig';
-import { achievementService, type UnlockedAchievement } from '../services/achievement';
+import { achievementService } from '../services/achievement';
+import type { UnlockedAchievement } from '../shared/types';
 
 const router = express.Router();
 

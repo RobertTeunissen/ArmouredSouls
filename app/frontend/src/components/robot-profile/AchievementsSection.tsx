@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import AchievementBadge from '../AchievementBadge';
-import type { ProfileAchievement } from './useRobotProfile';
+import type { ProfileAchievement } from '@shared/types';
 
 /** Badges shown before "+N more". */
 const VISIBLE = 6;

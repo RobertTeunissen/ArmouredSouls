@@ -6,10 +6,10 @@ import {
   skipTutorial,
   advanceStep,
   updatePlayerChoices,
-  OnboardingChoices,
 } from '../src/services/onboarding/onboardingService';
 import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
+import type { OnboardingChoices } from '../src/shared/types';
 
 describe('Onboarding Service - initializeTutorialState', () => {
   const createdUserIds: number[] = [];

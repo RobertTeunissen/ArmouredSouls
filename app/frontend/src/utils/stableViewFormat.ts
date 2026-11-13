@@ -12,9 +12,8 @@ import {
   tierRank,
   type TieredStandingsMode,
 } from '@shared/utils/automatonStandingsTier';
-import type { PublicRobotStanding, RecentResultEntry } from '../components/stable-view/types';
 import { getTierName } from './tierHelpers';
-import type { ArchivedAccolade, ArchivedRobot } from '@shared/types';
+import type { ArchivedAccolade, ArchivedRobot, PublicRobotStanding, RecentResultEntry } from '@shared/types';
 
 export const ROSTER_MODES: readonly TieredStandingsMode[] = TIERED_STANDINGS_MODES;
 

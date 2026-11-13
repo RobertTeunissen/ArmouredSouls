@@ -29,7 +29,7 @@ import {
 import { eventLogger } from '../common/eventLogger';
 import { EventType } from '../common/auditEventTypes';
 import { getCurrentCycleNumber } from './baseOrchestrator';
-import { achievementService, type AchievementEvent, type UnlockedAchievement } from '../achievement';
+import { achievementService, type AchievementEvent } from '../achievement';
 import { applyCreditMutation, applyCreditMutationInTransaction } from '../financial/creditMutationService';
 import { buildBattleIncomeEventId, buildBattlePrestigeEventId, buildStreamingEventId } from '../financial/financialEventIdentity';
 import { applyPrestigeAward, applyPrestigeAwardInTransaction } from '../financial/prestigeService';
@@ -38,6 +38,7 @@ import type {
   PlacementRewardComponent,
   PrestigeAwardBreakdown,
 } from '../../types';
+import type { UnlockedAchievement } from '../../shared/types';
 
 // ─── Shared Types ────────────────────────────────────────────────────
 

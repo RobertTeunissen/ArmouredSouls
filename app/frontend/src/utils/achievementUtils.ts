@@ -1,59 +1,8 @@
+import type { AchievementWithProgress } from '@shared/types';
 // Achievement utility functions and types for the frontend.
 // Pure functions used by AchievementsPage, StableViewPage, and battle report components.
 
 // --- Types matching the backend API response ---
-
-export interface AchievementWithProgress {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  tier: string;
-  rewardCredits: number;
-  rewardPrestige: number;
-  badgeIconFile: string;
-  /** Recognition only: no credits or prestige (issue #446). */
-  trophy?: boolean;
-  hidden: boolean;
-  unlocked: boolean;
-  unlockedAt: string | null;
-  robotId: number | null;
-  robotName: string | null;
-  progress: {
-    current: number;
-    target: number;
-    label: string;
-    bestRobotName?: string;
-  } | null;
-  isPinned: boolean;
-}
-
-export interface AchievementsResponse {
-  achievements: AchievementWithProgress[];
-  summary: {
-    total: number;
-    unlocked: number;
-    byTier: Record<string, { total: number; unlocked: number }>;
-  };
-  rarity: {
-    counts: Record<string, number>;
-    totalActivePlayers: number;
-  };
-}
-
-export interface UnlockedAchievement {
-  id: string;
-  name: string;
-  description: string;
-  tier: string;
-  rewardCredits: number;
-  rewardPrestige: number;
-  badgeIconFile: string;
-  /** Recognition only: no credits or prestige (issue #446). */
-  trophy?: boolean;
-  robotId: number | null;
-  robotName: string | null;
-}
 
 export type AchievementTier = 'easy' | 'medium' | 'hard' | 'very_hard' | 'secret';
 export type AchievementSortOption = 'default' | 'rarity_asc' | 'rarity_desc' | 'status_locked' | 'status_unlocked' | 'tier_hard' | 'tier_easy' | 'date_newest' | 'date_oldest';

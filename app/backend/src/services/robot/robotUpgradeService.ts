@@ -36,13 +36,6 @@ export interface UpgradeOperation {
   cost: number;
 }
 
-export interface AcademyLevels {
-  combat_training_academy: number;
-  defense_training_academy: number;
-  mobility_training_academy: number;
-  ai_training_academy: number;
-}
-
 export interface ValidateUpgradesResult {
   totalCost: number;
   upgradeOperations: UpgradeOperation[];
@@ -246,6 +239,7 @@ import {
   type EconomicServiceOptions,
 } from '../financial/economicRequestReplayService';
 import { buildPurchaseBreakdown } from '../financial/financialBreakdowns';
+import type { AcademyLevels } from '../../shared/types';
 
 const FACILITY_TYPES = [
   'training_facility',

@@ -12,31 +12,11 @@ import prisma from '../../lib/prisma';
 import type { Prisma, StandingsMode } from '../../../generated/prisma';
 import { buildLeagueTierPreview, nextTierOf, type PlannableStanding } from './league-rebalancing-preview';
 import { getLeagueRulesForMode, TIERED_LEAGUE_MODES, type TieredLeagueMode } from './league-rules';
-import { buildStandingStatuses, type StandingStatus } from './standing-status';
+import { buildStandingStatuses } from './standing-status';
+import type { MyStandingEntry, MyStandings, StandingStatus } from '../../shared/types';
 
 const ROBOT_MODES: readonly TieredLeagueMode[] = ['league_1v1', 'koth', 'grand_melee'];
 const TEAM_MODES: readonly TieredLeagueMode[] = ['league_2v2', 'league_3v3', 'tag_team'];
-
-export interface MyStandingEntry {
-  mode: TieredLeagueMode;
-  entityType: 'robot' | 'team';
-  entityId: number;
-  name: string;
-  tier: string;
-  leagueInstanceId: string;
-  /** Place in its instance (1 = most LP; entity id breaks ties, as in the planner). */
-  place: number;
-  instanceSize: number;
-  leaguePoints: number;
-  cyclesInTier: number;
-  /** Cycles in a tier before the rebalance may move it (5; KotH and Grand Melee 10). */
-  minCycles: number;
-  status: StandingStatus | null;
-}
-
-export interface MyStandings {
-  entries: MyStandingEntry[];
-}
 
 type TierRow = PlannableStanding & { mode: StandingsMode; tier: string };
 

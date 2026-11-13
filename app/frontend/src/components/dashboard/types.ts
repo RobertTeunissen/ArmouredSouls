@@ -1,8 +1,8 @@
 /**
  * View-model types for the Overview_Row — Spec #48.
  */
+import type { CycleProgressSummary } from '@shared/types';
 
-import type { CycleProgressSummary } from '../../utils/dashboardApi';
 
 /** Everything the Overview_Row needs, assembled by `useDashboardData`. */
 export interface OverviewRowData {

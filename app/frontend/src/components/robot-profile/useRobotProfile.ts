@@ -1,44 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../utils/api';
 import { createLogger } from '../../utils/logger';
-import type { PublicRobotStanding, RecentResult } from '../stable-view/types';
+import type { RobotProfile } from '@shared/types';
 
 const log = createLogger('useRobotProfile');
 
-/** `GET /api/robots/:id/profile` (#504). */
-export interface ProfileStanding extends PublicRobotStanding {
-  rank: number;
-  instanceSize: number;
-}
-
-export interface ProfileAchievement {
-  id: string;
-  name: string;
-  tier: string;
-  badgeIconFile: string;
-  unlockedAt: string;
-  holders: number | null;
-}
-
-export interface ProfileAccolade {
-  seasonNumber: number;
-  category: string;
-  rank: number;
-  value: number;
-  valueLabel: string;
-  mode: string | null;
-}
-
-export interface RobotProfileData {
-  standings: ProfileStanding[];
-  form: RecentResult[];
-  achievements: ProfileAchievement[];
-  accolades: ProfileAccolade[];
-}
-
 export interface RobotProfileState {
   /** Null while loading or when the request failed. */
-  profile: RobotProfileData | null;
+  profile: RobotProfile | null;
   failed: boolean;
   /** Requests the profile again (after a failure). */
   reload: () => void;
@@ -46,7 +15,7 @@ export interface RobotProfileState {
 
 /** The public profile sections for one robot. */
 export function useRobotProfile(robotId: number | undefined): RobotProfileState {
-  const [profile, setProfile] = useState<RobotProfileData | null>(null);
+  const [profile, setProfile] = useState<RobotProfile | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const reload = useCallback(() => setAttempt((n) => n + 1), []);
@@ -56,7 +25,7 @@ export function useRobotProfile(robotId: number | undefined): RobotProfileState 
     let cancelled = false;
     setProfile(null);
     setFailed(false);
-    api.get<RobotProfileData>(`/api/robots/${robotId}/profile`)
+    api.get<RobotProfile>(`/api/robots/${robotId}/profile`)
       .then((data) => { if (!cancelled) setProfile(data); })
       .catch((error: unknown) => {
         log.error('Failed to load robot profile', error);

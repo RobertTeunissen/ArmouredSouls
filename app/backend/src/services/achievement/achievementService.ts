@@ -25,15 +25,7 @@ import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction
 import { buildAchievementRewardEventId, buildAchievementPrestigeEventId } from '../financial/financialEventIdentity';
 import { buildAchievementRewardBreakdown } from '../financial/financialBreakdowns';
 
-import {
-  type AchievementEvent,
-  type UnlockedAchievement,
-  type AchievementsResponse,
-  type StableAchievementData,
-  type AchievementRarityCache,
-  type IAchievementService,
-  EVENT_TRIGGER_MAP,
-} from './achievementTypes';
+import { type AchievementEvent, type AchievementRarityCache, type IAchievementService, EVENT_TRIGGER_MAP } from './achievementTypes';
 
 import { evaluateTrigger } from './triggerEvaluator';
 import { resolveTeamModeWinsForRobot, emptyTeamModeWins } from './teamModeWins';
@@ -46,17 +38,12 @@ import {
   refreshRarityCache as _refreshRarityCache,
   getRarityLabel,
 } from './achievementQueries';
+import type { AchievementsResponse, StableAchievementData, UnlockedAchievement } from '../../shared/types';
 
 // Re-export all types for barrel compatibility
 export {
   type AchievementEvent,
   type AchievementEventType,
-  type UnlockedAchievement,
-  type AchievementsResponse,
-  type AchievementWithProgress,
-  type PinnedAchievement,
-  type ShowcaseAchievement,
-  type StableAchievementData,
   type AchievementRarityCache,
   type IAchievementService,
 } from './achievementTypes';

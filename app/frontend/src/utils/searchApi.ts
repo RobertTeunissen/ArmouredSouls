@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { SearchResponse, SearchResult } from './searchTypes';
+import type { SearchResponse, SearchResult } from '@shared/types';
 
 /**
  * Search robots, stables, and guide articles through the single authenticated

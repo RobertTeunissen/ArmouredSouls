@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { StandingsPagination } from '../../utils/leagueStandingsApi';
+import type { StandingsPagination } from '@shared/types';
 
 export interface StandingsPagerProps {
   pagination: StandingsPagination;

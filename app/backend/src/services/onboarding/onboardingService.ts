@@ -2,6 +2,7 @@ import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import { OnboardingError, OnboardingErrorCode } from '../../errors/onboardingErrors';
 import logger from '../../config/logger';
+import type { OnboardingChoices, TutorialState } from '../../shared/types';
 
 /**
  * Onboarding Service
@@ -18,28 +19,9 @@ const MIN_STEP = 1;
 const MAX_STEP = 9;
 
 /**
- * Player choices made during onboarding
- */
-export interface OnboardingChoices {
-  rosterStrategy?: '1_mighty' | '2_average' | '3_flimsy';
-  robotsCreated?: number[];
-  weaponsPurchased?: number[];
-  facilitiesPurchased?: string[];
-  loadoutType?: 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield';
-  preferredStance?: 'offensive' | 'defensive' | 'balanced';
-  weaponTypesSelected?: string[];
-  budgetSpent?: {
-    facilities: number;
-    robots: number;
-    weapons: number;
-    attributes: number;
-  };
-}
-
-/**
  * Tutorial state data structure
  */
-export interface TutorialState {
+export interface TutorialStateRow {
   userId: number;
   hasCompletedOnboarding: boolean;
   onboardingSkipped: boolean;
@@ -48,6 +30,19 @@ export interface TutorialState {
   onboardingChoices: OnboardingChoices;
   onboardingStartedAt: Date | null;
   onboardingCompletedAt: Date | null;
+}
+
+/** The wire shape of a tutorial state row (`GET`/`POST /api/onboarding/state`). */
+export function toTutorialState(row: TutorialStateRow): TutorialState {
+  return {
+    currentStep: row.onboardingStep,
+    hasCompletedOnboarding: row.hasCompletedOnboarding,
+    onboardingSkipped: row.onboardingSkipped,
+    strategy: row.onboardingStrategy,
+    choices: row.onboardingChoices,
+    startedAt: row.onboardingStartedAt?.toISOString() ?? null,
+    completedAt: row.onboardingCompletedAt?.toISOString() ?? null,
+  };
 }
 
 /**
@@ -74,7 +69,7 @@ export interface TutorialStateUpdates {
  *
  * Requirements: 1.1, 1.2, 1.4
  */
-export async function initializeTutorialState(userId: number): Promise<TutorialState> {
+export async function initializeTutorialState(userId: number): Promise<TutorialStateRow> {
   const user = await prisma.user.update({
     where: { id: userId },
     data: {
@@ -115,7 +110,7 @@ export async function initializeTutorialState(userId: number): Promise<TutorialS
  *
  * Requirements: 1.3, 1.4
  */
-export async function getTutorialState(userId: number): Promise<TutorialState | null> {
+export async function getTutorialState(userId: number): Promise<TutorialStateRow | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -194,7 +189,7 @@ function validateStrategy(strategy: string): void {
 export async function updateTutorialState(
   userId: number,
   updates: TutorialStateUpdates
-): Promise<TutorialState> {
+): Promise<TutorialStateRow> {
   // Validate step if provided
   if (updates.onboardingStep !== undefined) {
     validateStep(updates.onboardingStep);
@@ -337,7 +332,7 @@ export async function skipTutorial(userId: number): Promise<void> {
  *
  * Requirements: 2.3
  */
-export async function advanceStep(userId: number): Promise<TutorialState> {
+export async function advanceStep(userId: number): Promise<TutorialStateRow> {
   const currentState = await getTutorialState(userId);
   if (!currentState) {
     throw new OnboardingError(
@@ -381,7 +376,7 @@ export async function advanceStep(userId: number): Promise<TutorialState> {
 export async function updatePlayerChoices(
   userId: number,
   choices: Partial<OnboardingChoices>
-): Promise<TutorialState> {
+): Promise<TutorialStateRow> {
   if (!choices || typeof choices !== 'object') {
     throw new OnboardingError(
       OnboardingErrorCode.INVALID_CHOICES,

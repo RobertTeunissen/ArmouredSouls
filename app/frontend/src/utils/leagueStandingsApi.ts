@@ -9,7 +9,8 @@
 import { api } from './api';
 import type { StableType } from '../types/stable';
 import type { StableFilter } from './stableFilter';
-import { modeInfo, type LeagueModeKey, type MyStandingEntry, type StandingStatus, type ZoneMeta } from './leagueStandings';
+import { modeInfo, type LeagueModeKey, type ZoneMeta } from './leagueStandings';
+import type { MyStandingEntry, StandingStatus, StandingsPagination } from '@shared/types';
 
 export interface StandingsRowMember {
   robotId: number;
@@ -37,13 +38,6 @@ export interface StandingsRow {
   instanceId: string | null;
   isSubscribed: boolean;
   status: StandingStatus | null;
-}
-
-export interface StandingsPagination {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
 }
 
 export interface StandingsPage {

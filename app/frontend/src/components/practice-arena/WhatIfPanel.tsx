@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { getCapForLevel } from '../../../../shared/utils/academyCaps';
 import { calculateBaseCost, calculateTrainingDiscountedUpgradeCost } from '../../../../shared/utils/upgradeCosts';
 import { calculateTrainingFacilityDiscount } from '../../../../shared/utils/discounts';
-import type { OwnedRobot, WhatIfOverrides, AcademyLevels } from './types';
+import type { OwnedRobot, WhatIfSettings } from './types';
 import { STANCE_OPTIONS } from './constants';
 import { ConfigSelect } from './ConfigSelect';
+import type { AcademyLevels } from '@shared/types';
 
 /** Category config matching UpgradePlanner — with academy mapping */
 const WHATIF_CATEGORIES: Record<string, {
@@ -78,8 +79,8 @@ export type TuningAllocations = Record<string, number>;
 
 export interface WhatIfPanelProps {
   robot: OwnedRobot;
-  overrides: WhatIfOverrides;
-  onChange: (o: WhatIfOverrides) => void;
+  overrides: WhatIfSettings;
+  onChange: (o: WhatIfSettings) => void;
   trainingLevel: number;
   /** Roster_Capacity — shrinks the Training Facility discount rate (Spec #46 R11). */
   rosterCapacity: number;

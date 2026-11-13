@@ -1,10 +1,11 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { TournamentMatchWithRobots, getUserFuturePath, getRoundLabel } from '../../utils/bracketUtils';
 import { useIsMobile } from '../../hooks/useMediaQuery';
-import type { SeedEntry, ParticipantType, ResolvedParticipant } from '../../utils/tournamentApi';
+import type { ParticipantType } from '../../utils/tournamentApi';
 import DesktopBracket from './DesktopBracket';
 import MobileBracket from './MobileBracket';
 import SeedingList from './SeedingList';
+import type { ResolvedParticipant, SeedEntry } from '@shared/types';
 
 interface BracketViewProps {
   matches: TournamentMatchWithRobots[];

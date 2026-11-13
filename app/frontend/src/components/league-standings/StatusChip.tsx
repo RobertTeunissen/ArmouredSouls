@@ -1,4 +1,5 @@
-import { statusText, tierAbove, type StandingStatus, type StatusTone } from '../../utils/leagueStandings';
+import { statusText, tierAbove, type StatusTone } from '../../utils/leagueStandings';
+import type { StandingStatus } from '@shared/types';
 
 const TONE_CLASSES: Record<StatusTone, string> = {
   success: 'border-success/50 bg-success/15 text-success',

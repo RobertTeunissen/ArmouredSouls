@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { UnlockedAchievement } from '../utils/achievementUtils';
 import { useAuth } from '../contexts/AuthContext';
 import { api, subscribeResponse } from '../utils/api';
+import type { UnlockedAchievement } from '@shared/types';
 
 const LAST_SEEN_KEY = 'achievementLastSeen';
 

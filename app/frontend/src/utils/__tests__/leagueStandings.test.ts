@@ -1,22 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
-import {
-  bestInstanceIn,
-  countBy,
-  entriesForMode,
-  instanceLabel,
-  modeFromParam,
-  modeInfo,
-  openingView,
-  statusText,
-  summariseLeagues,
-  tierFromParam,
-  zoneSummary,
-  zoneWarning,
-  type MyStandingEntry,
-  type StandingStatus,
-  type ZoneMeta,
-} from '../leagueStandings';
+import { bestInstanceIn, countBy, entriesForMode, instanceLabel, modeFromParam, modeInfo, openingView, statusText, summariseLeagues, tierFromParam, zoneSummary, zoneWarning, type ZoneMeta } from '../leagueStandings';
+import type { MyStandingEntry, StandingStatus } from '@shared/types';
 
 const entry = (over: Partial<MyStandingEntry>): MyStandingEntry => ({
   mode: 'league_1v1', entityType: 'robot', entityId: 1, name: 'R', tier: 'gold', leagueInstanceId: 'gold_1',

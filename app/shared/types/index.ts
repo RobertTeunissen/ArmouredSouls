@@ -177,6 +177,12 @@ export type {
 export type {
   AchievementCategory,
   AchievementTier,
+  AchievementWithProgress,
+  AchievementsResponse,
+  PinnedAchievement,
+  ShowcaseAchievement,
+  StableAchievementData,
+  UnlockedAchievement,
 } from './achievements';
 export type {
   AchievementAnalytics,
@@ -399,3 +405,72 @@ export type {
   StableSeasonSummary,
   StableTypeCounts,
 } from './seasons';
+export type {
+  ArticleHeading,
+  GuideArticle,
+  GuideArticleLink,
+  GuideArticleSummary,
+  GuideSection,
+  RelatedArticleLink,
+  SearchIndexEntry,
+} from './guide';
+export type {
+  GuideSearchResult,
+  RobotSearchResult,
+  SearchCategory,
+  SearchResponse,
+  SearchResult,
+  StableSearchResult,
+} from './search';
+export type {
+  BestPlacement,
+  CycleComparison,
+  CycleProgressSummary,
+  CycleWindow,
+  RepairSpendByType,
+  WinLossDraw,
+} from './dashboard';
+export type {
+  PublicRobotStanding,
+  RecentResult,
+  RecentResultEntry,
+  ResultOutcome,
+  StableAccolade,
+} from './stable-view';
+export type {
+  ProfileAccolade,
+  ProfileAchievement,
+  ProfileStanding,
+  RobotProfile,
+} from './robot-profile';
+export type {
+  MyStandingEntry,
+  MyStandings,
+  StandingStatus,
+  StandingStatusKind,
+  StandingsPagination,
+} from './league-standings';
+export type {
+  OnboardingChoices,
+  TutorialState,
+} from './onboarding';
+export type {
+  ModerationAvailability,
+  ModerationAvailabilityStatus,
+  TuningAllocationState,
+  TuningAllocationSummary,
+  TuningAttributeMap,
+} from './robot-settings';
+export type {
+  AcademyLevels,
+  WhatIfOverrides,
+} from './practice-arena';
+export type {
+  ResolvedParticipant,
+  SeedEntry,
+} from './tournaments';
+export type {
+  RecordOwnerDisplay,
+  WinStreakEntry,
+  WinStreakMode,
+} from './hall-of-records';

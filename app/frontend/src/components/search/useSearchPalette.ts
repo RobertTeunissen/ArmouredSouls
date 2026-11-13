@@ -9,7 +9,7 @@ import {
   readRecentSearches,
   writeRecentSearches,
 } from '../../utils/searchHistory';
-import type { SearchResponse, SearchResult } from '../../utils/searchTypes';
+import type { SearchResponse, SearchResult } from '@shared/types';
 
 /** The delay between the latest eligible input change and a search request. */
 export const SEARCH_DEBOUNCE_MS = 200;

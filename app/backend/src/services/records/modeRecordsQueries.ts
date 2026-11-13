@@ -29,6 +29,7 @@ import {
   userSelect,
   type BattleWithParticipants,
 } from './recordsQueryService';
+import type { WinStreakEntry, WinStreakMode } from '../../shared/types';
 
 /**
  * Highest Avg Zone Score only ranks robots with at least this many KotH matches,
@@ -460,27 +461,10 @@ export async function fetchGrandMeleeRecords(players?: PlayerSets): Promise<Reco
  * would sit near zero for everyone. Listing them beside a 1v1 league streak of
  * 15 invites a comparison that means nothing.
  */
-export const WIN_STREAK_MODES = ['league_1v1', 'league_2v2', 'league_3v3', 'tag_team'] as const;
-
-export type WinStreakMode = typeof WIN_STREAK_MODES[number];
+export const WIN_STREAK_MODES = ['league_1v1', 'league_2v2', 'league_3v3', 'tag_team'] as const satisfies readonly WinStreakMode[];
 
 /** Modes whose `standings.entity_id` references a `TeamBattle` rather than a `Robot`. */
 const TEAM_STREAK_MODES = new Set<string>(['league_2v2', 'league_3v3', 'tag_team']);
-
-export interface WinStreakEntry {
-  /** Players' list only (#595): the place among every stable's entries. */
-  place?: number;
-  entityId: number;
-  entityName: string;
-  username: string;
-  /** Spec #55 decision 42: Stable_Type of the owning stable (Automaton_Badge). */
-  stableType: StableType | null;
-  bestWinStreak: number;
-  currentWinStreak: number;
-  /** True when the best streak is the one currently running. */
-  isActive: boolean;
-  wins: number;
-}
 
 /**
  * Longest league win streaks, one list per League_Mode.

@@ -11,10 +11,11 @@ import {
 import { AUTOMATON_FACILITY_TYPES } from '../stableFacts';
 import { FACILITY_TYPES, getFacilityUpgradeCost } from '../../../config/facilities';
 import { ROBOT_CREATION_COST } from '../../robot/robotCreationService';
-import { validateAndCalculateUpgrades, type AcademyLevels } from '../../robot/robotUpgradeService';
+import { validateAndCalculateUpgrades } from '../../robot/robotUpgradeService';
 import { calculateRefinementCost } from '../../../shared/utils/weaponRefinement';
 import { PRESTIGE_GATES } from '../../../shared/utils/prestigeGates';
 import { attributesAt } from './helpers/automatonFixtures';
+import type { AcademyLevels } from '../../../shared/types';
 
 const MAX_ACADEMIES: AcademyLevels = {
   combat_training_academy: 10,

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { formItems, successRate, tierBands } from '../robotProfileFormat';
 import { robotPath, workshopPath, workshopPathForTab } from '../robotRoutes';
-import type { RecentResult } from '../../components/stable-view/types';
+import type { RecentResult } from '@shared/types';
 
 describe('tierBands', () => {
   it('starts one tier below the first promotion and ends at the current cycle', () => {

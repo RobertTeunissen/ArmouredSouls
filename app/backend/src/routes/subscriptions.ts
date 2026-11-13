@@ -24,9 +24,10 @@ import {
   getStableOverview,
 } from '../services/subscription/subscriptionService';
 import { getEligibleEvents } from '../services/subscription/rosterEligibilityFilter';
-import { achievementService, type UnlockedAchievement } from '../services/achievement';
+import { achievementService } from '../services/achievement';
 import logger from '../config/logger';
 import prisma from '../lib/prisma';
+import type { UnlockedAchievement } from '../shared/types';
 
 const router = express.Router();
 

@@ -1,27 +1,10 @@
 import { api } from './api';
 import type { TournamentMatchWithRobots } from './bracketUtils';
+import type { ResolvedParticipant, SeedEntry } from '@shared/types';
 
 // Types
 
 export type ParticipantType = 'robot' | 'team_2v2' | 'team_3v3';
-
-export interface SeedEntry {
-  seed: number;
-  robotId: number;
-  robotName: string;
-  elo: number;
-  eliminated: boolean;
-}
-
-export interface ResolvedParticipant {
-  id: number;
-  displayName: string;
-  leagueTier: string;
-  elo: number;
-  ownerId: number;
-  ownerStableName?: string;
-  members?: { robotId: number; robotName: string; elo: number }[];
-}
 
 export interface Tournament {
   id: number;

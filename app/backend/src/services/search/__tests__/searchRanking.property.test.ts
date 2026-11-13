@@ -19,15 +19,8 @@ import {
   rankRobotSources,
   rankStableSources,
 } from '../searchRanking';
-import {
-  GuideSearchSource,
-  MATCH_RANK_ORDER,
-  MAX_RESULTS_PER_CATEGORY,
-  MAX_TOTAL_RESULTS,
-  RobotSearchSource,
-  SearchResponse,
-  StableSearchSource,
-} from '../searchTypes';
+import { GuideSearchSource, MATCH_RANK_ORDER, MAX_RESULTS_PER_CATEGORY, MAX_TOTAL_RESULTS, RobotSearchSource, StableSearchSource } from '../searchTypes';
+import type { SearchResponse } from '../../../shared/types';
 
 const edgeWhitespaceArbitrary = fc.array(
   fc.constantFrom(' ', '\t', '\n', '\r'),

@@ -12,8 +12,6 @@ export type {
   RecordVariant,
   MyPlace,
   DamageRecordMode,
-  WinStreakMode,
-  WinStreakEntry,
 } from './types';
 export { RECORD_GROUPS } from './types';
 export type { RecordStableRef, RecordHolder } from './types';

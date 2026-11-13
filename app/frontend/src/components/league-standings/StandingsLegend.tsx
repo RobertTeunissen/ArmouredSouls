@@ -1,5 +1,5 @@
 import { StatusChip } from './StatusChip';
-import type { StandingStatus } from '../../utils/leagueStandings';
+import type { StandingStatus } from '@shared/types';
 
 const EXAMPLES: Array<{ status: StandingStatus; text: string }> = [
   { status: { kind: 'promotes', zone: 'promotion' }, text: 'moves up at the next rebalance' },

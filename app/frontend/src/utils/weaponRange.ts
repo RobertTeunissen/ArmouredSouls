@@ -10,7 +10,7 @@
 export type RangeBand = 'melee' | 'short' | 'mid' | 'long';
 
 /** Minimal weapon shape needed for range classification */
-export interface WeaponLike {
+export interface WeaponRangeInput {
   name: string;
   rangeBand: RangeBand;
 }
@@ -20,7 +20,7 @@ export interface WeaponLike {
  *
  * Returns the stored rangeBand value directly — no derivation needed.
  */
-export function getWeaponOptimalRange(weapon: WeaponLike): RangeBand {
+export function getWeaponOptimalRange(weapon: WeaponRangeInput): RangeBand {
   return weapon.rangeBand;
 }
 

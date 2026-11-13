@@ -14,10 +14,10 @@ import {
   getTutorialState,
   initializeTutorialState,
   updateTutorialState,
+  toTutorialState,
   completeTutorial,
   skipTutorial,
   updatePlayerChoices,
-  OnboardingChoices,
 } from '../services/onboarding/onboardingService';
 import { OnboardingError, OnboardingErrorCode } from '../errors/onboardingErrors';
 import {
@@ -28,8 +28,9 @@ import onboardingAnalyticsRouter from './onboardingAnalytics';
 import logger from '../config/logger';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { z } from 'zod';
-import { achievementService, type UnlockedAchievement } from '../services/achievement';
+import { achievementService } from '../services/achievement';
 import { validateRequest } from '../middleware/schemaValidator';
+import type { OnboardingChoices, UnlockedAchievement } from '../shared/types';
 
 const router = express.Router();
 
@@ -105,15 +106,7 @@ router.get('/state', authenticateToken, validateRequest({}), async (req: AuthReq
 
   res.json({
     success: true,
-    data: {
-      currentStep: state.onboardingStep,
-      hasCompletedOnboarding: state.hasCompletedOnboarding,
-      onboardingSkipped: state.onboardingSkipped,
-      strategy: state.onboardingStrategy,
-      choices: state.onboardingChoices,
-      startedAt: state.onboardingStartedAt,
-      completedAt: state.onboardingCompletedAt,
-    },
+    data: toTutorialState(state),
   });
 });
 
@@ -200,15 +193,7 @@ router.post('/state', authenticateToken, validateRequest({ body: updateStateBody
 
   res.json({
     success: true,
-    data: {
-      currentStep: state.onboardingStep,
-      hasCompletedOnboarding: state.hasCompletedOnboarding,
-      onboardingSkipped: state.onboardingSkipped,
-      strategy: state.onboardingStrategy,
-      choices: state.onboardingChoices,
-      startedAt: state.onboardingStartedAt,
-      completedAt: state.onboardingCompletedAt,
-    },
+    data: toTutorialState(state),
   });
 });
 

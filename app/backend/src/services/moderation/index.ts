@@ -5,8 +5,6 @@ export type { FileValidationResult } from './fileValidationService';
 
 export { contentModerationService } from './contentModerationService';
 export type {
-  ModerationAvailability,
-  ModerationAvailabilityStatus,
   ModerationResult,
 } from './contentModerationService';
 

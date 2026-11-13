@@ -53,10 +53,11 @@ import {
   handleImageConfirm,
 } from '../services/moderation';
 import { assertSelectable } from '../services/moderation/imageLibraryService';
-import { achievementService, type UnlockedAchievement } from '../services/achievement';
+import { achievementService } from '../services/achievement';
 import { getEntityHistory } from '../services/league/leagueHistoryService';
 import { computeSchedulingEligibility } from '../services/robot/robotSchedulingEligibilityService';
 import { updateStance, updateYieldThreshold } from '../services/robot/robotSettingsService';
+import type { UnlockedAchievement } from '../shared/types';
 
 // Re-export for backward compatibility (stables.ts imports from here)
 export { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS };

@@ -12,7 +12,6 @@ export {
   getSparringPartnerDefinitions,
   type BotTier,
   type SparringPartnerConfig,
-  type WhatIfOverrides,
   type BattleSlot,
   type PracticeBattleRequest,
   type PracticeBattleResult,

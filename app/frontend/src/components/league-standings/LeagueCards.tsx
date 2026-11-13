@@ -1,14 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ScrollRow } from '../hall-of-records/ScrollRow';
-import {
-  LEAGUE_MODES,
-  entityCount,
-  instanceLabel,
-  summariseLeagues,
-  type LeagueModeKey,
-  type MyStandingEntry,
-  type StatusTone,
-} from '../../utils/leagueStandings';
+import { LEAGUE_MODES, entityCount, instanceLabel, summariseLeagues, type LeagueModeKey, type StatusTone } from '../../utils/leagueStandings';
+import type { MyStandingEntry } from '@shared/types';
 
 const TONE_TEXT: Record<StatusTone, string> = {
   success: 'text-success',

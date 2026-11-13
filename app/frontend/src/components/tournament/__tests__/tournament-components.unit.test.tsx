@@ -17,7 +17,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import type { TournamentMatchWithRobots } from '../../../utils/bracketUtils';
-import type { SeedEntry } from '../../../utils/tournamentApi';
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -472,6 +471,7 @@ vi.mock('../../Navigation', () => ({
 import TournamentDetailPage from '../../../pages/TournamentDetailPage';
 import { getTournamentDetails } from '../../../utils/tournamentApi';
 import { ApiError } from '../../../utils/ApiError';
+import type { SeedEntry } from '@shared/types';
 
 const mockGetTournamentDetails = vi.mocked(getTournamentDetails);
 

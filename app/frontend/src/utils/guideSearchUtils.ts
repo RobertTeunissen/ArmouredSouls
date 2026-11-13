@@ -1,5 +1,5 @@
-import { SearchIndexEntry } from './guideApi';
 import { SearchResult } from '../components/guide/GuideSearchResults';
+import type { SearchIndexEntry } from '@shared/types';
 
 export function filterAndRankResults(
   entries: SearchIndexEntry[],

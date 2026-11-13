@@ -9,11 +9,7 @@ import {
   ACHIEVEMENTS,
   type AchievementDefinition,
 } from '../../config/achievements';
-import type {
-  AchievementsResponse,
-  AchievementWithProgress,
-  AchievementRarityCache,
-} from './achievementTypes';
+import type { AchievementRarityCache } from './achievementTypes';
 import { resolveTeamModeWins, emptyTeamModeWins } from './teamModeWins';
 import { getAllModesBattleCounts } from '../robot/all-modes-battle-count';
 import {
@@ -29,6 +25,7 @@ import {
   buildAuditCounterWhere,
   getAchievementCounterStart,
 } from './achievementCounterWindow';
+import type { AchievementWithProgress, AchievementsResponse } from '../../shared/types';
 
 // ─── Progress Computation ───────────────────────────────────────────
 

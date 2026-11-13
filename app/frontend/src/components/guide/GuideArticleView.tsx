@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { GuideArticle } from '../../utils/guideApi';
 import GuideBreadcrumb from './GuideBreadcrumb';
 import GuideTableOfContents from './GuideTableOfContents';
 import ContentRenderer from './ContentRenderer';
 import GuideRelatedArticles from './GuideRelatedArticles';
+import type { GuideArticle } from '@shared/types';
 
 interface GuideArticleViewProps {
   article: GuideArticle;

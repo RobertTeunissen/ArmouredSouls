@@ -10,20 +10,11 @@
 
 import { StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
+import type { ResolvedParticipant } from '../../shared/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type ParticipantType = 'robot' | 'team_2v2' | 'team_3v3';
-
-export interface ResolvedParticipant {
-  id: number;
-  displayName: string;
-  leagueTier: string;
-  elo: number;
-  ownerId: number;
-  ownerStableName?: string;
-  members?: { robotId: number; robotName: string; elo: number }[];
-}
 
 // ─── Validation ──────────────────────────────────────────────────────────────
 

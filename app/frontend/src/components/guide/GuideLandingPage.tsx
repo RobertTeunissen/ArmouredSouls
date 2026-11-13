@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { GuideSection } from '../../utils/guideApi';
+import type { GuideSection } from '@shared/types';
 
 interface GuideLandingPageProps {
   sections: GuideSection[];

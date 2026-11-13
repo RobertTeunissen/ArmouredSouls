@@ -1,5 +1,5 @@
 import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import type { SearchResponse, SearchResult } from '../../utils/searchTypes';
+import type { SearchResponse, SearchResult } from '@shared/types';
 
 export interface SearchResultListProps {
   /** The bounded, player-safe groups returned by the universal search endpoint. */

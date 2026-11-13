@@ -8,14 +8,9 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { ACHIEVEMENTS, getAchievementById } from '../../config/achievements';
 import { AchievementError, AchievementErrorCode } from '../../errors/achievementErrors';
-import type {
-  UnlockedAchievement,
-  PinnedAchievement,
-  ShowcaseAchievement,
-  StableAchievementData,
-  AchievementRarityCache,
-} from './achievementTypes';
+import type { AchievementRarityCache } from './achievementTypes';
 import { holderCount } from './rarityHolders';
+import type { PinnedAchievement, ShowcaseAchievement, StableAchievementData, UnlockedAchievement } from '../../shared/types';
 
 // ─── Recent Unlocks ──────────────────────────────────────────────────
 

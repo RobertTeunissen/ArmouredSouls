@@ -23,10 +23,10 @@ import {
   type RobotRecordBase,
   type TournamentChampionRecord,
   type DamageRecordMode,
-  type WinStreakMode,
 } from '../components/hall-of-records/types';
 import { PLACEMENT_MODES_RECORD_NOTE } from '../components/PlacementModesRecordNote';
 import { formatCurrency } from './formatters';
+import type { WinStreakMode } from '@shared/types';
 
 /** Mirrors the backend `KOTH_AVG_ZONE_SCORE_MIN_MATCHES` (recordsQueryService). */
 const KOTH_AVG_ZONE_SCORE_MIN_MATCHES = 10;

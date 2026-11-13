@@ -23,10 +23,9 @@ import type {
   RecordDefinition,
   RecordGroupKey,
   RecordRow,
-  WinStreakMode,
 } from '../components/hall-of-records/types';
 import type { StableType } from '../types/stable';
-import type { SeasonDetail } from '@shared/types';
+import type { SeasonDetail, WinStreakMode } from '@shared/types';
 
 type ArchivedRecord = SeasonDetail['accolades'][number];
 

@@ -4,7 +4,7 @@ import {
   getRangeBandColor,
   getRangeBandBgColor,
   getRangeBandLabel,
-  type WeaponLike,
+  type WeaponRangeInput,
   type RangeBand,
 } from '../weaponRange';
 
@@ -12,7 +12,7 @@ describe('getWeaponOptimalRange', () => {
   it('should return the stored rangeBand value directly', () => {
     const bands: RangeBand[] = ['melee', 'short', 'mid', 'long'];
     for (const band of bands) {
-      const weapon: WeaponLike = { name: `Test ${band}`, rangeBand: band };
+      const weapon: WeaponRangeInput = { name: `Test ${band}`, rangeBand: band };
       expect(getWeaponOptimalRange(weapon)).toBe(band);
     }
   });

@@ -1,5 +1,6 @@
 import yaml from 'js-yaml';
 import logger from '../../config/logger';
+import type { ArticleHeading } from '../../shared/types';
 
 /**
  * Matches a leading YAML frontmatter block: `---` on its own first line, the
@@ -49,15 +50,6 @@ export function splitFrontmatter(raw: string): {
       : {};
 
   return { data, content: text.slice(match[0].length) };
-}
-
-/**
- * Represents a heading extracted from Markdown content.
- */
-export interface ArticleHeading {
-  level: number; // 2 or 3
-  text: string;
-  id: string; // slugified anchor
 }
 
 /**

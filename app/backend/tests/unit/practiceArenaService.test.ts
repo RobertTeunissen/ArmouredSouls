@@ -98,10 +98,11 @@ import {
   ULTIMATE_BOT_CONFIG,
 } from '../../src/services/practice-arena/practiceArenaService';
 import type { SparringPartnerConfig } from '../../src/services/practice-arena/practiceArenaService';
-import { achievementService, type UnlockedAchievement } from '../../src/services/achievement';
+import { achievementService } from '../../src/services/achievement';
 import { AppError } from '../../src/errors';
 import { TIER_CONFIGS } from '../../src/utils/tierConfig';
 import type { WeaponRecord } from '../../src/utils/weaponSelection';
+import type { UnlockedAchievement } from '../../src/shared/types';
 
 // ---------------------------------------------------------------------------
 // Test Fixtures

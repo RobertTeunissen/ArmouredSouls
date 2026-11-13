@@ -10,9 +10,8 @@ import AchievementToast from '../AchievementToast';
 import KothMatchCard from '../match-cards/KothMatchCard';
 import { RobotSelector } from '../battle-detail/RobotSelector';
 import { PlaybackUnavailableNotice } from '../battle-detail/PlaybackUnavailableNotice';
-import type { UnlockedAchievement } from '../../utils/achievementUtils';
 import type { ScheduledMatch } from '../../utils/matchmakingApi';
-import type { BattleLogParticipant } from '@shared/types';
+import type { BattleLogParticipant, UnlockedAchievement } from '@shared/types';
 
 afterEach(() => {
   vi.useRealTimers();

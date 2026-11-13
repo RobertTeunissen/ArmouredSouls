@@ -1,4 +1,5 @@
-import { Position, AttackIndicator, RangeBand } from './types';
+import { AttackIndicator, RangeBand } from './types';
+import type { ArenaPoint } from '@shared/types';
 
 /** Team colors: indexes 0-19 for Grand Melee (20 participants), 0-5 for KotH, 0-1 for 1v1/tag team */
 const TEAM_COLORS = [
@@ -294,7 +295,7 @@ export function renderAttackIndicator(
   ctx: CanvasRenderingContext2D,
   indicator: AttackIndicator,
   currentTime: number,
-  toPixel: (pos: Position) => { x: number; y: number }
+  toPixel: (pos: ArenaPoint) => { x: number; y: number }
 ): void {
   const elapsed = currentTime - indicator.timestamp;
   if (elapsed < 0 || elapsed > indicator.duration) return;
@@ -378,7 +379,7 @@ export function renderTargetLine(
 
 /** Convert arena coordinates to pixel coordinates */
 export function arenaToPixel(
-  arenaPos: Position,
+  arenaPos: ArenaPoint,
   canvasWidth: number,
   canvasHeight: number,
   arenaRadius: number

@@ -1,13 +1,6 @@
 import React, { useRef, useEffect, useCallback } from 'react';
-import {
-  InterpolatedFrame,
-  PlaybackRobotInfo,
-  AttackIndicator,
-  RangeBand,
-  Position,
-  KothZoneState,
-  KothScoreEntry,
-} from './types';
+import { InterpolatedFrame, PlaybackRobotInfo, AttackIndicator, RangeBand, PlaybackZoneState, KothScoreEntry } from './types';
+import type { ArenaPoint } from '@shared/types';
 import {
   renderArenaBackground,
   renderArenaBoundary,
@@ -35,7 +28,7 @@ interface ArenaCanvasProps {
   /** Map of robot name → target robot name (for drawing target lines) */
   robotTargets?: Record<string, string>;
   /** KotH zone state (only present for KotH battles) */
-  kothZone?: KothZoneState;
+  kothZone?: PlaybackZoneState;
   /** KotH scores for scoreboard */
   kothScores?: KothScoreEntry[];
   /** KotH score threshold */
@@ -169,8 +162,8 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
     // Range band indicator between the two currently active robots
     if (rangeBand) {
-      let pos1: Position | undefined;
-      let pos2: Position | undefined;
+      let pos1: ArenaPoint | undefined;
+      let pos2: ArenaPoint | undefined;
       if (activePair) {
         pos1 = f.positions[activePair[0]];
         pos2 = f.positions[activePair[1]];

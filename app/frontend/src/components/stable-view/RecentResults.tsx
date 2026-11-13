@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { getTierName } from '../../utils/tierHelpers';
 import { battleTypeLabel, isSuccess, resultLabel } from '../../utils/stableViewFormat';
-import type { RecentResult } from './types';
+import type { RecentResult } from '@shared/types';
 
 interface RecentResultsProps {
   results: readonly RecentResult[];

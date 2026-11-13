@@ -4,8 +4,9 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { validateRequest, validated } from '../middleware/schemaValidator';
 import { getIdempotencyKey, idempotencyHeadersSchema } from '../utils/idempotency';
 import { upgradeFacility } from '../services/economy/facilityUpgradeService';
-import { achievementService, type UnlockedAchievement } from '../services/achievement';
+import { achievementService } from '../services/achievement';
 import { getFacilityOverview } from '../services/economy/facilityOverviewService';
+import type { UnlockedAchievement } from '../shared/types';
 
 const router = express.Router();
 

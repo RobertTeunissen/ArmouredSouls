@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TournamentMatchWithRobots } from '../../utils/bracketUtils';
-import type { ResolvedParticipant } from '../../utils/tournamentApi';
+import type { ResolvedParticipant } from '@shared/types';
 
 interface MatchCardProps {
   match: TournamentMatchWithRobots;

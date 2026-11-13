@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { SearchIndexEntry, fetchSearchIndex } from '../../utils/guideApi';
+import { fetchSearchIndex } from '../../utils/guideApi';
 import GuideSearchResults from './GuideSearchResults';
 import { filterAndRankResults } from '../../utils/guideSearchUtils';
+import type { SearchIndexEntry } from '@shared/types';
 
 interface GuideSearchProps {
   onResultSelect?: (sectionSlug: string, articleSlug: string) => void;

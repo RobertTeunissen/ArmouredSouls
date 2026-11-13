@@ -10,7 +10,7 @@
 import express, { Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
-import { recordEvents, OnboardingAnalyticsEvent } from '../services/analytics/onboardingAnalyticsService';
+import { recordEvents, OnboardingEventRecord } from '../services/analytics/onboardingAnalyticsService';
 import { AppError } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
 
@@ -40,7 +40,7 @@ router.post('/', authenticateToken, validateRequest({ body: analyticsEventsBodyS
     throw new AppError('INVALID_EVENTS', 'Request body must contain a non-empty "events" array', 400);
   }
 
-  const validEvents: OnboardingAnalyticsEvent[] = [];
+  const validEvents: OnboardingEventRecord[] = [];
   for (const event of events) {
     if (typeof event.eventType !== 'string' || typeof event.timestamp !== 'string') {
       continue;

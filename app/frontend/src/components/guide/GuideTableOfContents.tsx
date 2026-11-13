@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArticleHeading } from '../../utils/guideApi';
+import type { ArticleHeading } from '@shared/types';
 
 interface GuideTableOfContentsProps {
   headings: ArticleHeading[];

@@ -7,7 +7,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { TeamBattle } from '../../utils/teamBattleApi';
-import type { AchievementWithProgress } from '../../utils/achievementUtils';
 
 vi.mock('../../utils/robotApi', () => ({
   updateLoadoutType: vi.fn().mockResolvedValue({ robot: { id: 1 } }),
@@ -29,6 +28,7 @@ import RenameTeamModal from '../team-battles/RenameTeamModal';
 import StandardMatchCard from '../match-cards/StandardMatchCard';
 import { updateLoadoutType, updateStance } from '../../utils/robotApi';
 import type { ScheduledMatch } from '../../utils/matchmakingApi';
+import type { AchievementWithProgress } from '@shared/types';
 
 beforeEach(() => {
   vi.clearAllMocks();

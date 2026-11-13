@@ -30,14 +30,8 @@ import { readRepairChargedCredits } from '../economy/repairPayloadKeys';
 import { EVENT_SCHEDULE_SCOPES } from '../scheduling/eventScheduleScope';
 import { getNextSchedulingMoment } from '../scheduling/eventCronSchedule';
 import { SUBSCRIBABLE_EVENT_TYPES } from '../subscription/eventRegistry';
-import type {
-  CycleProgressSummary,
-  CycleComparison,
-  RepairSpendByType,
-  BestPlacement,
-  WinLossDraw,
-} from '../../types/dashboardTypes';
 import type { StableMetric } from '../../types/snapshotTypes';
+import type { BestPlacement, CycleComparison, CycleProgressSummary, RepairSpendByType, WinLossDraw } from '../../shared/types';
 
 /** Outcome of one `(battleId, team)` pair. */
 export type SideOutcome = 'win' | 'loss' | 'draw';

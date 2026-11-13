@@ -1,13 +1,9 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { ApiError } from '../utils/ApiError';
-import {
-  confirmRobotImage,
-  fetchImageModerationStatus,
-  type ModerationAvailabilityStatus,
-  uploadRobotImage,
-} from '../utils/robotApi';
+import { confirmRobotImage, fetchImageModerationStatus, uploadRobotImage } from '../utils/robotApi';
 import { validateUploadFile } from './robotImageValidation';
 import ImageLibrary from './robots/ImageLibrary';
+import type { ModerationAvailabilityStatus } from '@shared/types';
 
 interface RobotImageSelectorProps {
   isOpen: boolean;

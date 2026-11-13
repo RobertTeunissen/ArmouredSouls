@@ -4,8 +4,9 @@ import {
   getRoundLabel,
   buildBracketTree,
 } from '../../utils/bracketUtils';
-import type { ParticipantType, ResolvedParticipant } from '../../utils/tournamentApi';
+import type { ParticipantType } from '../../utils/tournamentApi';
 import MatchCard from './MatchCard';
+import type { ResolvedParticipant } from '@shared/types';
 
 interface MobileBracketProps {
   matches: TournamentMatchWithRobots[];

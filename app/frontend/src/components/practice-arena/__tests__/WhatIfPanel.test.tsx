@@ -17,7 +17,8 @@ vi.mock('../../../../../shared/utils/discounts', () => ({
 }));
 
 import { WhatIfPanel } from '../WhatIfPanel';
-import type { OwnedRobot, WhatIfOverrides, AcademyLevels } from '../types';
+import type { OwnedRobot, WhatIfSettings } from '../types';
+import type { AcademyLevels } from '@shared/types';
 
 const makeRobot = (overrides: Partial<OwnedRobot> = {}): OwnedRobot => ({
   id: 1,
@@ -58,7 +59,7 @@ const defaultAcademyLevels: AcademyLevels = {
   ai_training_academy: 1,
 };
 
-const defaultOverrides: WhatIfOverrides = {};
+const defaultOverrides: WhatIfSettings = {};
 
 function renderPanel(props: Partial<Parameters<typeof WhatIfPanel>[0]> = {}) {
   const onChange = props.onChange ?? vi.fn();
@@ -122,7 +123,7 @@ describe('WhatIfPanel', () => {
   it('reset button calls onChange to clear overrides', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    const overrides: WhatIfOverrides = {
+    const overrides: WhatIfSettings = {
       attributes: { combatPower: 15 },
     };
 

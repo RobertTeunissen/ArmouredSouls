@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../api';
 import { recordSearchSelection, search } from '../searchApi';
-import type { SearchResponse } from '../searchTypes';
+import type { SearchResponse } from '@shared/types';
 
 vi.mock('../api', () => ({
   api: { get: vi.fn(), post: vi.fn() },

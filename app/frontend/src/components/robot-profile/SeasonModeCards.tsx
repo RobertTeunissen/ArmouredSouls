@@ -3,7 +3,7 @@ import { getTierColor, getTierName } from '../../utils/tierHelpers';
 import { MODE_LONG_LABELS, ROSTER_MODES } from '../../utils/stableViewFormat';
 import { successRate } from '../../utils/robotProfileFormat';
 import { LoadError } from './LoadError';
-import type { ProfileStanding } from './useRobotProfile';
+import type { ProfileStanding } from '@shared/types';
 
 interface SeasonModeCardsProps {
   standings: readonly ProfileStanding[] | null;

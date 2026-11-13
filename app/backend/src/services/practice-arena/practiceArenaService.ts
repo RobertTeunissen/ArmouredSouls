@@ -25,8 +25,9 @@ import { Prisma, Weapon } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { AppError } from '../../errors';
 import type { NarrativeEvent } from '../../types/battleLogTypes';
-import { achievementService, type UnlockedAchievement } from '../achievement';
+import { achievementService } from '../achievement';
 import logger from '../../config/logger';
+import type { UnlockedAchievement, WhatIfOverrides } from '../../shared/types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -42,17 +43,6 @@ export interface SparringPartnerConfig {
   rangeBand: 'melee' | 'short' | 'mid' | 'long';
   stance: 'offensive' | 'defensive' | 'balanced';
   yieldThreshold: number; // 0-50
-}
-
-/** What-If overrides for an owned robot */
-export interface WhatIfOverrides {
-  attributes?: Partial<Record<string, number>>; // any of 23 attributes, each 1-50
-  loadoutType?: 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield';
-  stance?: 'offensive' | 'defensive' | 'balanced';
-  yieldThreshold?: number;
-  mainWeaponId?: number;
-  offhandWeaponId?: number;
-  tuningBonuses?: Partial<Record<string, number>>; // override tuning allocation for this practice battle
 }
 
 /** A battle slot is either an owned robot ID or a sparring partner config */

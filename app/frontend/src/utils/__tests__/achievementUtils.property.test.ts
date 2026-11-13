@@ -9,7 +9,8 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { getRarityLabel, filterAchievements, sortAchievements } from '../achievementUtils';
-import type { AchievementWithProgress, AchievementFilters, AchievementSortOption } from '../achievementUtils';
+import type { AchievementFilters, AchievementSortOption } from '../achievementUtils';
+import type { AchievementWithProgress } from '@shared/types';
 
 // ─── Generators ──────────────────────────────────────────────────────────────
 

@@ -12,6 +12,7 @@
 import { Robot, ScheduledTournamentMatch } from '../../../generated/prisma';
 import { ParticipantType } from './tournamentParticipantResolver';
 import type { TournamentParticipant } from './tournamentService';
+import type { SeedEntry } from '../../shared/types';
 
 
 /**
@@ -161,17 +162,6 @@ export function generateStandardSeedOrder(bracketSize: number): number[] {
   }
   
   return result;
-}
-
-/**
- * Seed entry representing a robot's seeding in a tournament bracket
- */
-export interface SeedEntry {
-  seed: number;       // 1-based seed number
-  robotId: number;
-  robotName: string;
-  elo: number;
-  eliminated: boolean; // true if robot has lost a match
 }
 
 /**

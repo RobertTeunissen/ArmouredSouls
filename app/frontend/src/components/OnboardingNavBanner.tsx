@@ -16,7 +16,8 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getTutorialState, TutorialState } from '../utils/onboardingApi';
+import { getTutorialState } from '../utils/onboardingApi';
+import type { TutorialState } from '@shared/types';
 
 /** Step metadata: name and relevant action buttons */
 const STEP_CONFIG: Record<number, {

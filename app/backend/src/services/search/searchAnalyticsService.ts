@@ -1,17 +1,14 @@
 import { getCurrentSeason } from '../season/seasonService';
 import { logSearchPersistenceFailure } from './searchAnalyticsDiagnostics';
 import searchAnalyticsStore from './searchAnalyticsStore';
-import {
-  MAXIMUM_QUERY_LENGTH,
-  MINIMUM_QUERY_LENGTH,
-  type SearchResponse,
-} from './searchTypes';
+import { MAXIMUM_QUERY_LENGTH, MINIMUM_QUERY_LENGTH } from './searchTypes';
 import type {
   ActiveSeasonContext,
   SearchAnalyticsLimitation,
   SearchAnalyticsStore,
 } from './searchAnalyticsTypes';
 import type { SearchPersistenceFailureContext } from './searchAnalyticsDiagnostics';
+import type { SearchResponse } from '../../shared/types';
 
 /** Input assembled by the authenticated Search_Endpoint after grouped search completion. */
 export interface RecordExecutedSearchInput {

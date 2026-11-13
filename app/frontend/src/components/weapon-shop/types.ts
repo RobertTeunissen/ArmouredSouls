@@ -97,18 +97,3 @@ export interface WeaponRefinementItem {
   slotIndex: number;
   createdAt: string;
 }
-
-/** Achievement unlock returned in the response body of a sale. */
-export interface UnlockedAchievement {
-  id: string;
-  name: string;
-  description: string;
-  tier: string;
-  rewardCredits: number;
-  rewardPrestige: number;
-  badgeIconFile: string;
-  /** Recognition only: no credits or prestige (issue #446). */
-  trophy?: boolean;
-  robotId: number | null;
-  robotName: string | null;
-}

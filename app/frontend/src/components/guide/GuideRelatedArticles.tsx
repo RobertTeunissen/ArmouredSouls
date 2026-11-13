@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { RelatedArticleLink } from '../../utils/guideApi';
+import type { RelatedArticleLink } from '@shared/types';
 
 interface GuideRelatedArticlesProps {
   relatedArticles: RelatedArticleLink[];

@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import useSearchPalette from '../useSearchPalette';
 import { recordSearchSelection, search } from '../../../utils/searchApi';
-import type { SearchResponse } from '../../../utils/searchTypes';
+import type { SearchResponse } from '@shared/types';
 
 vi.mock('../../../utils/searchApi', () => ({
   search: vi.fn(),

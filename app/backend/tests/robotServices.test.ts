@@ -6,12 +6,9 @@
 
 import { calculateCategorySum, calculateRanking, COMBAT_ATTRIBUTES } from '../src/services/robot/robotRankingService';
 import { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS } from '../src/services/robot/robotSanitizer';
-import {
-  validateAndCalculateUpgrades,
-  VALID_ATTRIBUTES,
-  type AcademyLevels,
-} from '../src/services/robot/robotUpgradeService';
+import { validateAndCalculateUpgrades, VALID_ATTRIBUTES } from '../src/services/robot/robotUpgradeService';
 import { RobotError } from '../src/errors/robotErrors';
+import type { AcademyLevels } from '../src/shared/types';
 
 // ── calculateCategorySum ─────────────────────────────────────────────
 

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import GuideArticleView from '../GuideArticleView';
-import { GuideArticle } from '../../../utils/guideApi';
+import type { GuideArticle } from '@shared/types';
 
 // Mock mermaid to avoid rendering issues in tests
 vi.mock('mermaid', () => ({

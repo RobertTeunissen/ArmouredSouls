@@ -9,13 +9,8 @@ import {
   filterAchievements,
   sortAchievements,
 } from '../utils/achievementUtils';
-import type {
-  AchievementsResponse,
-  AchievementWithProgress,
-  AchievementFilters,
-  AchievementSortOption,
-  AchievementTier,
-} from '../utils/achievementUtils';
+import type { AchievementFilters, AchievementSortOption, AchievementTier } from '../utils/achievementUtils';
+import type { AchievementWithProgress, AchievementsResponse } from '@shared/types';
 
 const TIER_OPTIONS: Array<{ value: AchievementTier | 'all'; label: string }> = [
   { value: 'all', label: 'All Tiers' },

@@ -1,6 +1,6 @@
 import type { SearchAnalyticsStore } from '../searchAnalyticsTypes';
 import { SearchAnalyticsService } from '../searchAnalyticsService';
-import type { SearchResponse } from '../searchTypes';
+import type { SearchResponse } from '../../../shared/types';
 
 const completedResponse: SearchResponse = {
   robots: [{ category: 'robots', id: 1, label: 'Atlas' }],
