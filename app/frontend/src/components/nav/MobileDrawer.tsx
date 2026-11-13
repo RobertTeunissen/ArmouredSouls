@@ -3,6 +3,7 @@ import { DrawerMenuItem } from './DrawerMenuItem';
 import { allPages, implementedPages, isNavPageImplemented, stableNavItems } from './types';
 import type { UserRobot } from './types';
 import { workshopPath } from '../../utils/robotRoutes';
+import type { SavedAccount } from '../../utils/savedAccounts';
 
 interface DrawerSectionProps {
   emoji: string;
@@ -32,9 +33,27 @@ export interface MobileDrawerProps {
   onLogout: () => void;
   /** Signed-in player: adds "My Stable" (their public stable page) to the Stable section. */
   userId?: number;
+  /** The active account's user id, to exclude it from the switch list. */
+  currentUserId?: number;
+  /** Saved accounts available for switching (includes the current one). */
+  savedAccounts?: SavedAccount[];
+  onSwitchAccount?: (account: SavedAccount) => void;
+  onAddAccount?: () => void;
 }
 
-export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, onLogout, userId }: MobileDrawerProps): React.ReactElement | null {
+export function MobileDrawer({
+  isOpen,
+  onClose,
+  isActive,
+  userRobots,
+  isAdmin,
+  onLogout,
+  userId,
+  currentUserId,
+  savedAccounts = [],
+  onSwitchAccount,
+  onAddAccount,
+}: MobileDrawerProps): React.ReactElement | null {
   if (!isOpen) return null;
 
   return (
@@ -169,6 +188,31 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
                   onNavigate={onClose}
                   isActive={isActive('/admin')}
                 />
+              )}
+
+              {/* Account switching: list other saved accounts, then add + logout. */}
+              {onSwitchAccount &&
+                savedAccounts
+                  .filter((account) => account.userId !== currentUserId)
+                  .map((account) => (
+                    <button
+                      key={account.userId}
+                      type="button"
+                      onClick={() => onSwitchAccount(account)}
+                      className="w-full px-4 py-3 text-left text-primary hover:bg-primary/5 transition-colors truncate"
+                      title={account.label}
+                    >
+                      👤 Switch to {account.label}
+                    </button>
+                  ))}
+              {onAddAccount && (
+                <button
+                  type="button"
+                  onClick={onAddAccount}
+                  className="w-full px-4 py-3 text-left text-primary hover:bg-primary/5 transition-colors"
+                >
+                  + Add account
+                </button>
               )}
               <button
                 onClick={onLogout}

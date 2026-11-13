@@ -4,6 +4,11 @@ import { ApiError } from '../utils/ApiError';
 import { createLogger } from '../utils/logger';
 import { useRobotStore } from '../stores/robotStore';
 import { useStableStore } from '../stores/stableStore';
+import {
+  saveAccount,
+  removeSavedAccount,
+  type SavedAccount,
+} from '../utils/savedAccounts';
 
 const log = createLogger('AuthContext');
 
@@ -44,6 +49,13 @@ interface AuthContextType {
   logout: () => void;
   loading: boolean;
   refreshUser: () => Promise<void>;
+  /**
+   * Switch to a previously-saved account by swapping in its token and
+   * rehydrating state. Resolves when the switch succeeds. Rejects (and leaves
+   * no stale session) when the saved token is expired or revoked — the caller
+   * should then send the player to the login form for that account.
+   */
+  switchAccount: (account: SavedAccount) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -204,6 +216,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setToken(newToken);
       setUser(userData);
       setLoading(false);
+
+      // Remember this account so the player can switch back to it later. The
+      // login response carries no stableName, so the label falls back to the
+      // username here; a later refreshUser upgrades the label if a stable name
+      // is set. Best-effort — a storage failure must not break login.
+      rememberAccount(userData, newToken);
     } catch (error) {
       // Re-throw as a plain Error so LoginForm's existing UI logic keeps
       // working (it expects `error.message`, not the structured ApiError
@@ -216,8 +234,70 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  /**
+   * Persist an account to the saved-accounts list for one-tap switching.
+   * Best-effort: a storage failure is swallowed so it never breaks auth.
+   */
+  const rememberAccount = (account: User, accountToken: string) => {
+    try {
+      saveAccount({
+        userId: account.id,
+        label: account.stableName || account.username,
+        username: account.username,
+        token: accountToken,
+      });
+    } catch (error) {
+      log.warn('Could not save account for switching', { error });
+    }
+  };
+
+  /**
+   * Switch to a saved account. The model is a scripted token swap, not a
+   * server-side session change: there is one active token in localStorage, so a
+   * switch clears the current session's cached data, installs the saved token,
+   * and re-reads the profile.
+   *
+   * On failure (the saved token is expired or `tokenVersion`-revoked, so
+   * `/api/user/profile` answers 401), the half-applied session is torn down with
+   * `logout()` and the error is re-thrown so the caller can route the player to
+   * the login form for that account.
+   */
+  const switchAccount = async (account: SavedAccount) => {
+    // Clear the outgoing session's cached store data to prevent cross-account
+    // bleed — the same teardown `logout` performs.
+    useRobotStore.getState().clear();
+    useStableStore.getState().clear();
+
+    // Install the saved token as the active one, then rehydrate from the server.
+    localStorage.setItem('token', account.token);
+    setToken(account.token);
+
+    try {
+      const userData = await api.get<User>('/api/user/profile');
+      setUser(userData);
+      setToken(account.token);
+      // Refresh the saved entry with the latest token and label (the stable name
+      // may have changed since it was last saved).
+      rememberAccount(userData, account.token);
+    } catch (error) {
+      // The saved token is no longer good. Tear the session down completely so
+      // nothing stale is left, drop the dead saved entry, and let the caller
+      // fall back to the login form.
+      log.warn('Saved account token rejected; falling back to login', { userId: account.userId });
+      logout();
+      try {
+        removeSavedAccount(account.userId);
+      } catch {
+        /* storage failure here is non-fatal */
+      }
+      throw error instanceof ApiError
+        ? new Error('Session expired for that account. Please log in again.', { cause: error })
+        : new Error('Could not switch account. Please log in again.', { cause: error });
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, login, logout, loading, refreshUser, switchAccount }}>
       {children}
     </AuthContext.Provider>
   );
