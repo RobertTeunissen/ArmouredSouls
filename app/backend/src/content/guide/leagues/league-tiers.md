@@ -2,7 +2,7 @@
 title: "League Tiers & Instances"
 description: "The six competitive tiers in Armoured Souls — from Bronze to Champion — and how the instance system keeps leagues balanced and competitive."
 order: 1
-lastUpdated: "2026-11-12"
+lastUpdated: "2026-11-19"
 relatedArticles:
   - leagues/matchmaking
   - leagues/league-points
@@ -39,11 +39,12 @@ Don't rush to leave Bronze. It's the safest place to experiment with different b
 
 Each league tier is divided into **instances** — smaller groups of robots that compete directly against each other. An instance holds a maximum of **100 robots**.
 
-When a tier has more than 100 robots, additional instances are created automatically. For example, if 250 robots are in Bronze, the system creates three instances:
+When every instance in a tier is full, the tier is split into more instances automatically. A tier is always spread so each instance keeps room for new arrivals. For example, 250 robots in Bronze are spread over four instances:
 
-- `Bronze 1` — ~83 robots
-- `Bronze 2` — ~83 robots
-- `Bronze 3` — ~84 robots
+- `Bronze 1` — ~63 robots
+- `Bronze 2` — ~63 robots
+- `Bronze 3` — ~62 robots
+- `Bronze 4` — ~62 robots
 
 ### Why Instances Exist
 
@@ -56,11 +57,14 @@ Instances serve two purposes:
 
 - **Newly subscribed robots** are placed in the Bronze instance with the most free spots.
 - **Promoted/demoted robots** are also placed in the instance with the most available space in their new tier.
-- **Rebalancing** happens after every league's daily promotions and demotions. All robots in a tier are sorted by LP, then spread round-robin over as many instances as the tier needs (one per 100 robots), so the instances stay even.
-- **At the start of a season** the tiers are also rebalanced at the rollover and on each preparation day, when no battles run. Everyone starts on 0 LP then, so robots that entered late are dealt over all the instances instead of ending up together in one.
+- **During the season your instance is fixed.** You keep the same group of opponents and only move when you are promoted or demoted, or when your tier's instances need fixing. That is checked after every league's daily promotions and demotions:
+  - **Split or uneven tier** — when every instance is full, or one instance is much bigger or smaller than the others, the whole tier is reshuffled: all robots are sorted by LP and dealt round-robin over the instances, so each gets a mix of high, medium, and low performers.
+  - **Shrinking tier** — promotions take the best robots out of every instance, so a tier (Bronze first) gets smaller over a season. Once it fits in fewer instances, the highest-numbered instance is closed and its robots join the other instances. Everyone else stays where they are.
+  - Otherwise nobody moves.
+- **At the start of a season** the tiers are reshuffled at the rollover and on each preparation day, when no battles run. Everyone starts on 0 LP then, so robots that entered late are dealt over all the instances instead of ending up together in one.
 
 ```callout-info
-Rebalancing preserves your League Points and ELO — only your instance assignment changes. Each instance ends up with a healthy mix of high, medium, and low performers, so no single instance becomes a "death group."
+A reshuffle or a closed instance preserves your League Points and ELO — only your instance changes. Because instances stay fixed, they can drift apart in strength over a season: the LP you need to reach your instance's promotion zone depends on who is in it. You will also meet the same opponents more often than in a reshuffled league, although matchmaking still avoids your most recent opponents where it can.
 ```
 
 ### Instance Independence

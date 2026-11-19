@@ -1,14 +1,15 @@
 # Product Requirements Document: League System
 
-**Last Updated**: October 15, 2026
+**Last Updated**: November 19, 2026
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: League Progression System  
-**Version**: 2.5
+**Version**: 2.7
 
 ---
 
 ## Version History
+- v2.7 (November 19, 2026) — Fixed league instances (#603): during competitive cycles a tier is only re-dealt when an instance overflows or is far off the average (including a split), and merged by dissolving its highest-numbered instances when it shrinks; otherwise nobody moves. Re-deals and merges leave about 20 free places per instance. Season rollover and preparation days still re-deal unconditionally. See [Instance Rebalancing](#instance-rebalancing).
 - v2.6 (October 29, 2026) — The placement-mode rules (KotH, Grand Melee: 10 cycles in tier, no LP gate) are declared once as `PLACEMENT_LEAGUE_RULES`, with `getLeagueRulesForMode(mode)` used by the rebalancer, the standings route and the admin League Health page. No behaviour change.
 - v2.5 (October 15, 2026) — Battle-time forfeits and the match failure policy (#536). See [Forfeits](#forfeits).
 - v2.4 (October 14, 2026) — Unified standings creation: a robot or team enters a mode's Bronze league the first time it becomes matchable by subscription, never at robot or team creation. See [Entering a League](#entering-a-league).
@@ -44,7 +45,7 @@ One rule applies to every standing-backed mode (`league_1v1`, `koth`, `grand_mel
 - **When:** a `standings` row is created the first time the entity becomes matchable in that mode through a Booking Office subscription. Creating a robot or registering a team creates no standings.
   - Robot modes (`league_1v1`, `koth`, `grand_melee`): the robot subscribes to the mode.
   - Team modes: the team is complete and every member holds the mode's subscription. 2-robot teams can enter `league_2v2` and `tag_team`, independently of each other. 3-robot teams can enter `league_3v3`. The check runs on subscription gain, team registration and member swap, whichever completes the set.
-- **Where:** Bronze, 0 LP, in the least-full Bronze instance (ties go to the lowest instance number). When every Bronze instance holds 100 entities, a new instance is opened. The instance is not permanent: tiers are redistributed after every rebalance, at the season rollover and on every preparation day (see "Instance Rebalancing").
+- **Where:** Bronze, 0 LP, in the least-full Bronze instance (ties go to the lowest instance number). When every Bronze instance holds 100 entities, a new instance is opened. At the season rollover and on every preparation day all tiers are re-dealt; during competitive cycles the instance is fixed and only changes on promotion, demotion, or when the tier is split or merged (see "Instance Rebalancing").
 - **Kept:** unsubscribing or swapping a team member keeps the row, so the entity keeps its tier, LP and record and simply stops being matched. Resubscribing picks up where it left off.
 - **Deleted:** team disband deletes the team's rows (re-registering starts fresh in Bronze), account reset deletes the user's robot and team rows, and the season rollover wipes all rows.
 
@@ -165,23 +166,38 @@ If a league match fails with an unexpected error, it is cancelled with no reward
 
 ## Instance Rebalancing
 
-### Execution
+### Fixed instances (issue #603)
 
-After each promotion/demotion run, every tier is redistributed from its complete post-movement population. The target instance count is `ceil(totalEntities / 100)` for all four head-to-head modes, and LP-descending rows are assigned round-robin. This both enforces the 100-entity capacity and corrects material population imbalances; redistribution is not overflow-only.
+Instances are fixed during competitive cycles: an entity keeps its instance and its opponents, and only moves when it is promoted or demoted (it joins the least-full instance of the new tier) or when its tier needs fixing. From 31 March 2026 (commit bfdc627a) until #603 every tier was re-dealt after every rebalance; because the deal follows LP rank, which changes every battle day, multi-instance tiers got a new set of opponents almost daily.
 
-### Algorithm
+After each promotion/demotion run, `maintainInstances` (`services/league/leagueInstanceService.ts`) checks each tier with `planInstanceMaintenance` (`services/league/league-instance-planner.ts`), in this order:
+
+| Condition | Action |
+|---|---|
+| An instance holds more than 100 | Full re-deal |
+| With 2+ instances, one is more than 20 away from `ceil(total / instances)` — this includes a split: a new instance opens only once every instance holds 100, and starts with 1 | Full re-deal |
+| The tier fits in fewer instances with at most 80 each (`ceil(total / 80)` < instances) | Merge |
+| Otherwise | Nothing moves |
+
+- **Full re-deal:** the round-robin algorithm below.
+- **Merge:** the highest-numbered instances are dissolved. Their members, by LP desc, each join the kept instance with the fewest entities at that moment. Nobody in a kept instance moves. With a mostly static population, promotions (the top 10% of every instance) make Bronze shrink over a season, and later the other tiers; the merge brings their instances back to a healthy size, and keeps them above the 10-entity minimum for promotion and demotion zones.
+- **Headroom:** a re-deal and a merge both spread the tier over `ceil(total / 80)` instances (at least `ceil(total / 100)`), so each instance keeps about 20 free places. A tier must gain about 20 per instance before it splits and lose enough to fit in one instance fewer before it merges, so a tier near a boundary does not flip back and forth.
+
+### Algorithm (full re-deal)
 
 1. Collect all entities in the tier
 2. Sort by LP (desc), then by standings row age (oldest first)
-3. Calculate target instance count: `ceil(totalEntities / 100)`
+3. Calculate target instance count: `ceil(totalEntities / 80)` (never fewer than `ceil(totalEntities / 100)`)
 4. Distribute round-robin across instances
 
 Round-robin ensures each instance gets a mix of high, medium, and low LP entities, maintaining competitive balance. The age tie-break matters at season start, when every row has 0 LP: entities entered after a bulk placement are the newest rows, so they are dealt one per instance instead of staying together.
 
+Trade-offs of fixed instances: repeat opponents come sooner than with the daily deal (the matchmaker's recent-opponent penalty still applies), and instances drift apart in strength over a season, so the LP needed to reach an instance's promotion zone differs per instance.
+
 ### When It Runs
 
-- **Competitive cycles:** the cycle scheduler calls the shared league executor after each promotion/demotion cycle. It snapshots every tier before movement, executes those fixed plans, then redistributes every tier's post-movement population.
-- **Season rollover and preparation days** (`services/league/leagueInstanceRedeal.ts`, issue #599): battle events are suspended during preparation, so nothing would redistribute the tiers before the first competitive cycle. New rows join the least-full instance and a new instance opens only when all hold 100, so the Automatons' opening build fills the instances one after another and leaves a single part-filled one; at the Season 2 start on ACC every human robot then entered 1v1 Bronze 11 and the human 2v2 teams Bronze 5. The rollover therefore redistributes every tier of every tiered mode right after the Automatons' `season_open` turn, and every preparation settlement (scheduled or admin-run) does it again after the preparation Automaton turn. Only instances change; nobody is promoted or demoted. A failing mode/tier is logged and the rest still runs.
+- **Competitive cycles:** the cycle scheduler calls the shared league executor after each promotion/demotion cycle. It snapshots every tier before movement, executes those fixed plans, then runs `maintainInstances` for every tier (re-deal, merge, or nothing, as above).
+- **Season rollover and preparation days** (`services/league/leagueInstanceRedeal.ts`, issue #599): battle events are suspended during preparation, so nothing would redistribute the tiers before the first competitive cycle. New rows join the least-full instance and a new instance opens only when all hold 100, so the Automatons' opening build fills the instances one after another and leaves a single part-filled one; at the Season 2 start on ACC every human robot then entered 1v1 Bronze 11 and the human 2v2 teams Bronze 5. The rollover therefore redistributes every tier of every tiered mode right after the Automatons' `season_open` turn, and every preparation settlement (scheduled or admin-run) does it again after the preparation Automaton turn. Only instances change; nobody is promoted or demoted. A failing mode/tier is logged and the rest still runs. This re-deal is unconditional, unlike the competitive-cycle check: nobody has fought yet, and with everyone on 0 LP existing rows keep their instance (unless the instance count changes) while each new entrant goes to the next instance in turn. Under the check, an instance up to 20 short would not trigger and the least-full placement would send the first entrants all into it.
 
 ### What's Preserved
 

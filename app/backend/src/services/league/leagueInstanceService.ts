@@ -2,6 +2,11 @@ import prisma from '../../lib/prisma';
 import { StandingsMode } from '../../../generated/prisma';
 import logger from '../../config/logger';
 import { MAX_ENTITIES_PER_INSTANCE, pickLeagueInstanceInTransaction } from './leagueInstancePlacement';
+import {
+  InstanceMaintenancePlan,
+  planInstanceMaintenance,
+  targetInstanceCount,
+} from './league-instance-planner';
 
 // League tiers in order
 export const LEAGUE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
@@ -10,9 +15,6 @@ export type LeagueTier = typeof LEAGUE_TIERS[number];
 // Maximum entities per league instance (unified across all modes)
 export const MAX_ROBOTS_PER_INSTANCE = MAX_ENTITIES_PER_INSTANCE;
 export const MAX_TEAMS_PER_INSTANCE = MAX_ENTITIES_PER_INSTANCE;
-
-// Threshold for triggering instance rebalancing
-const REBALANCE_THRESHOLD = 20;
 
 export interface LeagueInstance {
   leagueId: string;
@@ -28,7 +30,10 @@ export interface LeagueInstanceStats {
   instances: LeagueInstance[];
   totalRobots: number;
   averagePerInstance: number;
+  /** True when the nightly maintenance would re-deal or merge this tier. */
   needsRebalancing: boolean;
+  /** What the nightly maintenance would do with this tier (issue #603). */
+  plan: InstanceMaintenancePlan;
 }
 
 /** Options for mode-aware instance management */
@@ -85,25 +90,22 @@ export async function getLeagueInstanceStats(tier: LeagueTier, options: Instance
   const instances = await getInstancesForTier(tier, options);
   const totalRobots = instances.reduce((sum, inst) => sum + inst.currentRobots, 0);
   const averagePerInstance = instances.length > 0 ? totalRobots / instances.length : 0;
-
-  // Check if rebalancing is needed:
-  // 1. Any instance exceeds the maximum limit
-  // 2. Significant imbalance between instances (deviation > threshold from target)
-  const hasOverflow = instances.some((inst) => 
-    inst.currentRobots > options.maxPerInstance
+  const plan = planInstanceMaintenance(
+    instances.map((inst) => ({
+      leagueId: inst.leagueId,
+      instanceNumber: inst.instanceNumber,
+      count: inst.currentRobots,
+    })),
+    options.maxPerInstance,
   );
-  const targetPerInstance = instances.length > 0 ? Math.ceil(totalRobots / instances.length) : 0;
-  const hasImbalance = instances.length >= 2 && instances.some((inst) =>
-    Math.abs(inst.currentRobots - targetPerInstance) > REBALANCE_THRESHOLD
-  );
-  const needsRebalancing = hasOverflow || hasImbalance;
 
   return {
     tier,
     instances,
     totalRobots,
     averagePerInstance,
-    needsRebalancing,
+    needsRebalancing: plan.action !== 'none',
+    plan,
   };
 }
 
@@ -140,11 +142,14 @@ export async function assignLeagueInstanceWithLock(tier: LeagueTier, options: In
 }
 
 /**
- * Rebalance entities across instances in a tier.
- * Always redistributes entities evenly using round-robin (sorted by LP desc for competitive balance).
- * Called after promotions/demotions during league rebalancing, and by
- * `redealLeagueInstances` after bulk placements (season start).
+ * Re-deal every entity of a tier over its instances: round-robin, sorted by LP
+ * desc for competitive balance. Unconditional; the nightly rebalance goes
+ * through {@link maintainInstances}, which only re-deals when a tier needs it
+ * (issue #603). Called directly by `redealLeagueInstances` at season start.
  * Mode-aware: defaults to league_1v1 for backward compatibility.
+ *
+ * The tier is spread over `targetInstanceCount` instances, which leaves room
+ * in each for later entrants (see `league-instance-planner`).
  *
  * Equal LP is broken by standings id (oldest row first). At season start every
  * row has 0 LP, and the rows created after the bulk Automaton placement (the
@@ -172,17 +177,16 @@ export async function rebalanceInstances(tier: LeagueTier, options: InstanceOpti
     return 0;
   }
 
-  // Calculate how many instances we need
-  const targetInstanceCount = Math.ceil(allStandings.length / maxPerInstance);
+  const instanceCount = targetInstanceCount(allStandings.length, maxPerInstance);
 
-  logger.info(`[${logLabel}] Rebalancing ${tier}: ${allStandings.length} entities across ${targetInstanceCount} instances`);
+  logger.info(`[${logLabel}] Rebalancing ${tier}: ${allStandings.length} entities across ${instanceCount} instances`);
 
   // Redistribute standings ROUND-ROBIN to maintain competitive balance
   const updates: Promise<unknown>[] = [];
   
   for (let i = 0; i < allStandings.length; i++) {
     const standing = allStandings[i];
-    const targetInstanceNumber = (i % targetInstanceCount) + 1;
+    const targetInstanceNumber = (i % instanceCount) + 1;
     const targetLeagueId = `${tier}_${targetInstanceNumber}`;
 
     if (standing.leagueInstanceId !== targetLeagueId) {
@@ -204,3 +208,93 @@ export async function rebalanceInstances(tier: LeagueTier, options: InstanceOpti
   return updates.length;
 }
 
+
+/**
+ * Dissolve the `dissolve` instances of a tier into the `keep` instances.
+ *
+ * Members of the dissolved instances are taken by LP desc (oldest row first on
+ * a tie) and each joins the kept instance with the fewest entities at that
+ * moment (ties to the lowest instance number). Entities in kept instances do
+ * not move. Returns the number of standings moved.
+ */
+async function mergeInstances(
+  tier: LeagueTier,
+  mode: string,
+  keep: readonly string[],
+  dissolve: readonly string[],
+): Promise<number> {
+  if (keep.length === 0 || dissolve.length === 0) return 0;
+
+  const [keptCounts, movers] = await Promise.all([
+    prisma.standing.groupBy({
+      by: ['leagueInstanceId'],
+      where: { mode: mode as StandingsMode, tier, leagueInstanceId: { in: [...keep] } },
+      _count: { id: true },
+    }),
+    prisma.standing.findMany({
+      where: { mode: mode as StandingsMode, tier, leagueInstanceId: { in: [...dissolve] } },
+      orderBy: [{ leaguePoints: 'desc' }, { id: 'asc' }],
+      select: { id: true },
+    }),
+  ]);
+
+  const sizes = keep.map((leagueId) => ({
+    leagueId,
+    instanceNumber: parseInt(leagueId.split('_')[1] || '1'),
+    count: keptCounts.find((group) => group.leagueInstanceId === leagueId)?._count.id ?? 0,
+  }));
+
+  const updates = movers.map((standing) => {
+    const destination = sizes.reduce((best, candidate) =>
+      candidate.count < best.count
+      || (candidate.count === best.count && candidate.instanceNumber < best.instanceNumber)
+        ? candidate
+        : best,
+    );
+    destination.count += 1;
+    return prisma.standing.update({
+      where: { id: standing.id },
+      data: { leagueInstanceId: destination.leagueId },
+    });
+  });
+
+  if (updates.length > 0) {
+    await prisma.$transaction(updates);
+  }
+  return updates.length;
+}
+
+/**
+ * Nightly instance maintenance for one tier, after promotions and demotions
+ * (issue #603). Instances stay fixed unless the tier needs fixing:
+ *
+ * - an instance above the maximum, or one far off the tier average → full
+ *   round-robin re-deal ({@link rebalanceInstances});
+ * - the tier shrank enough to drop instances → the highest-numbered instances
+ *   are dissolved into the others; nobody else moves;
+ * - otherwise nothing moves.
+ *
+ * Returns the number of standings moved.
+ */
+export async function maintainInstances(tier: LeagueTier, options: InstanceOptions = DEFAULT_OPTIONS): Promise<number> {
+  const logLabel = options.mode === 'league_1v1' ? 'LeagueInstance' : `LeagueInstance:${options.mode}`;
+  const { plan, totalRobots, instances } = await getLeagueInstanceStats(tier, options);
+
+  switch (plan.action) {
+    case 'redeal':
+      logger.info(`[${logLabel}] ${tier}: re-dealing (${plan.reason}) — ${totalRobots} entities in ${instances.length} instances`);
+      return rebalanceInstances(tier, options);
+    case 'merge': {
+      const moved = await mergeInstances(tier, options.mode, plan.keep, plan.dissolve);
+      logger.info(
+        `[${logLabel}] ${tier}: merged ${plan.dissolve.join(', ')} into ${plan.keep.length} instances — moved ${moved} entities`,
+      );
+      return moved;
+    }
+    case 'none':
+      if (totalRobots > 0) {
+        logger.info(`[${logLabel}] ${tier}: instances unchanged (${totalRobots} entities in ${instances.length})`);
+      }
+      return 0;
+  }
+}

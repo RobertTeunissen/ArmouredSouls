@@ -6,6 +6,7 @@ import {
   getLeagueInstanceStats,
   MAX_ROBOTS_PER_INSTANCE,
 } from '../../src/services/league/leagueInstanceService';
+import { targetInstanceCount } from '../../src/services/league/league-instance-planner';
 import { enterRobotStandings } from '../helpers/standings';
 
 /**
@@ -127,8 +128,9 @@ describe('Bronze League Rebalancing - Integration Test', () => {
     const remainingInBronze = 331 - 33; // 298 robots
     expect(finalStats.totalRobots).toBe(remainingInBronze);
 
-    // With 298 robots and MAX_ROBOTS_PER_INSTANCE=100, we should have 3 instances
-    const expectedInstances = Math.ceil(remainingInBronze / MAX_ROBOTS_PER_INSTANCE);
+    // The overflow re-deal leaves 20 free places per instance (#603): 298 robots → 4 instances
+    const expectedInstances = targetInstanceCount(remainingInBronze, MAX_ROBOTS_PER_INSTANCE);
+    expect(expectedInstances).toBe(4);
     expect(finalStats.instances).toHaveLength(expectedInstances);
 
     // Verify no instance exceeds the maximum
