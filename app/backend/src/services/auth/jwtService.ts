@@ -8,7 +8,7 @@ import { AuthError, AuthErrorCode } from '../../errors/authErrors';
  *
  * Handles JWT token generation and verification.
  * Uses `JWT_SECRET` from environment variable and configurable expiration
- * via `JWT_EXPIRATION` (default: `'24h'`).
+ * via `JWT_EXPIRATION` (default: `'24h'`, `'30d'` on acceptance).
  */
 
 /**
@@ -69,7 +69,7 @@ function getJwtExpiration(): string | number {
  * Generate a signed JWT token for a user.
  *
  * The token payload includes `userId`, `username`, and `role`.
- * Expiration is controlled by the `JWT_EXPIRATION` environment variable (default `'24h'`).
+ * Expiration is controlled by the `JWT_EXPIRATION` environment variable (default `'24h'`, `'30d'` on acceptance).
  *
  * @param user - The user object containing `id`, `username`, and `role`
  * @returns A signed JWT token string
