@@ -107,7 +107,8 @@ const EnvSchema = z
     // ── Authentication ─────────────────────────────────────────────────
     JWT_SECRET: z.string().default('default-dev-secret'),
     FINANCE_REPORT_REFERENCE_SECRET: z.string().optional(),
-    JWT_EXPIRATION: z.string().default('24h'),
+    // Unset or empty → per-environment default (see `defaultJwtExpiration`).
+    JWT_EXPIRATION: z.string().optional(),
     BCRYPT_SALT_ROUNDS: numericString(10, { min: 4, max: 31 }),
 
     // ── Rate limiting ─────────────────────────────────────────────────
@@ -281,6 +282,19 @@ export interface EnvConfig {
   enableModeration: boolean;
 }
 
+/** Token lifetime everywhere except acceptance. */
+const DEFAULT_JWT_EXPIRATION = '24h';
+/**
+ * Token lifetime on acceptance (ACC, #615). ACC holds only test accounts, so
+ * testers stay logged in for 30 days instead of re-entering every stable's
+ * password daily. Production keeps the 24h default.
+ */
+const ACCEPTANCE_JWT_EXPIRATION = '30d';
+
+/** Default token lifetime for an environment when `JWT_EXPIRATION` is unset. */
+const defaultJwtExpiration = (nodeEnv: EnvConfig['nodeEnv']): string =>
+  nodeEnv === 'acceptance' ? ACCEPTANCE_JWT_EXPIRATION : DEFAULT_JWT_EXPIRATION;
+
 const toEnvConfig = (parsed: z.infer<typeof EnvSchema>): EnvConfig => ({
   nodeEnv: parsed.NODE_ENV,
   port: parsed.PORT,
@@ -288,7 +302,7 @@ const toEnvConfig = (parsed: z.infer<typeof EnvSchema>): EnvConfig => ({
   databaseUrl: parsed.DATABASE_URL,
   jwtSecret: parsed.JWT_SECRET,
   financeReportReferenceSecret: parsed.FINANCE_REPORT_REFERENCE_SECRET || undefined,
-  jwtExpiration: parsed.JWT_EXPIRATION,
+  jwtExpiration: parsed.JWT_EXPIRATION || defaultJwtExpiration(parsed.NODE_ENV),
   bcryptSaltRounds: parsed.BCRYPT_SALT_ROUNDS,
   corsOrigins:
     parsed.NODE_ENV === 'development'

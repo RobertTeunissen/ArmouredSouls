@@ -4,6 +4,7 @@ import {
   getLeagueInstanceStats,
   assignLeagueInstance,
   rebalanceInstances,
+  maintainInstances,
   MAX_ROBOTS_PER_INSTANCE,
 } from '../src/services/league/leagueInstanceService';
 import { enterRobotStanding, enterRobotStandings } from './helpers/standings';
@@ -156,7 +157,7 @@ describe('League Instance Service', () => {
       });
 
       const robots = [];
-      for (let i = 0; i < 150; i++) {
+      for (let i = 0; i < 210; i++) {
         robots.push({
           userId: user.id,
           name: `Robot ${i}`,
@@ -167,14 +168,30 @@ describe('League Instance Service', () => {
         });
       }
       await prisma.robot.createMany({ data: robots });
+      await placeRobots(user.id, 'bronze', (index) => (index < 70 ? 1 : index < 140 ? 2 : 3));
+
+      const stats = await getLeagueInstanceStats('bronze');
+
+      expect(stats.totalRobots).toBe(210);
+      expect(stats.instances).toHaveLength(3);
+      expect(stats.averagePerInstance).toBe(70);
+      // Even, and 210 would not fit in 2 instances of ≤ 80: nothing to do.
+      expect(stats.needsRebalancing).toBe(false);
+    });
+
+    it('should report a merge when a shrunken tier fits in fewer instances (#603)', async () => {
+      const user = await prisma.user.create({ data: { username: 'test_shrunk_user', passwordHash: 'hash' } });
+      await prisma.robot.createMany({
+        data: Array.from({ length: 150 }, (_, i) => ({
+          userId: user.id, name: `Robot ${i}`, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2,
+        })),
+      });
       await placeRobots(user.id, 'bronze', (index) => (index < 50 ? 1 : index < 100 ? 2 : 3));
 
       const stats = await getLeagueInstanceStats('bronze');
 
-      expect(stats.totalRobots).toBe(150);
-      expect(stats.instances).toHaveLength(3);
-      expect(stats.averagePerInstance).toBe(50);
-      expect(stats.needsRebalancing).toBe(false); // All instances have exactly 50 robots
+      expect(stats.needsRebalancing).toBe(true);
+      expect(stats.plan).toEqual({ action: 'merge', keep: ['bronze_1', 'bronze_2'], dissolve: ['bronze_3'] });
     });
 
     it('should detect when rebalancing is needed', async () => {
@@ -381,7 +398,7 @@ describe('League Instance Service', () => {
 
       await rebalanceInstances('champion');
 
-      // 160 robots → ceil(160/100) = 2 instances, 80 each
+      // 160 robots → ceil(160/80) = 2 instances, 80 each
       const instances = await getInstancesForTier('champion');
       expect(instances).toHaveLength(2);
       expect(instances[0].currentRobots).toBe(80);
@@ -428,6 +445,74 @@ describe('League Instance Service', () => {
         perInstance.set(standing.leagueInstanceId, (perInstance.get(standing.leagueInstanceId) ?? 0) + 1);
       }
       expect(Object.fromEntries(perInstance)).toEqual({ bronze_1: 2, bronze_2: 2, bronze_3: 2 });
+    });
+  });
+
+  /** Issue #603: the nightly maintenance keeps instances fixed unless a tier needs fixing. */
+  describe('maintainInstances', () => {
+    async function createRobots(username: string, count: number): Promise<number> {
+      const user = await prisma.user.create({ data: { username, passwordHash: 'hash' } });
+      await prisma.robot.createMany({
+        data: Array.from({ length: count }, (_, i) => ({
+          userId: user.id, name: `Robot ${i}`, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2,
+        })),
+      });
+      return user.id;
+    }
+
+    async function instanceByEntity(tier: string): Promise<Map<number, string>> {
+      const rows = await prisma.standing.findMany({
+        where: { mode: 'league_1v1', tier },
+        select: { entityId: true, leagueInstanceId: true },
+      });
+      return new Map(rows.map((row) => [row.entityId, row.leagueInstanceId]));
+    }
+
+    it('moves nobody when only LP changed', async () => {
+      const userId = await createRobots('test_fixed_user', 160);
+      await placeRobots(userId, 'gold', (index) => (index % 2 === 0 ? 1 : 2), {
+        leaguePointsFor: (index) => index,
+      });
+      const before = await instanceByEntity('gold');
+
+      // Reverse the ranking: under the old daily re-deal most robots would move.
+      const rows = await prisma.standing.findMany({ where: { mode: 'league_1v1', tier: 'gold' } });
+      for (const row of rows) {
+        await prisma.standing.update({ where: { id: row.id }, data: { leaguePoints: 500 - row.leaguePoints } });
+      }
+
+      expect(await maintainInstances('gold')).toBe(0);
+      expect(await instanceByEntity('gold')).toEqual(before);
+    });
+
+    it('dissolves the highest-numbered instance into the others when the tier shrank', async () => {
+      const userId = await createRobots('test_merge_user', 150);
+      await placeRobots(userId, 'bronze', (index) => (index < 50 ? 1 : index < 100 ? 2 : 3), {
+        leaguePointsFor: (index) => 150 - index,
+      });
+      const before = await instanceByEntity('bronze');
+
+      expect(await maintainInstances('bronze')).toBe(50);
+
+      const after = await instanceByEntity('bronze');
+      for (const [entityId, instance] of before) {
+        if (instance !== 'bronze_3') expect(after.get(entityId)).toBe(instance);
+      }
+      const instances = await getInstancesForTier('bronze');
+      expect(instances.map((instance) => [instance.leagueId, instance.currentRobots])).toEqual([
+        ['bronze_1', 75],
+        ['bronze_2', 75],
+      ]);
+    });
+
+    it('re-deals the tier when a new instance was opened because every instance was full', async () => {
+      const userId = await createRobots('test_split_user', 201);
+      await placeRobots(userId, 'silver', (index) => (index < 100 ? 1 : index < 200 ? 2 : 3));
+
+      expect(await maintainInstances('silver')).toBeGreaterThan(0);
+
+      const instances = await getInstancesForTier('silver');
+      expect(instances.map((instance) => instance.currentRobots)).toEqual([67, 67, 67]);
     });
   });
 

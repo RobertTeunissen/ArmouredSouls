@@ -353,6 +353,28 @@ describe('Environment Config Loading - Property Tests', () => {
       expect(config.jwtExpiration).toBe('24h');
     });
 
+    test('JWT_EXPIRATION defaults to 30d on acceptance and 24h in production (#615)', () => {
+      delete process.env.JWT_EXPIRATION;
+      process.env.NODE_ENV = 'acceptance';
+      expect(loadEnvConfig().jwtExpiration).toBe('30d');
+
+      process.env.JWT_EXPIRATION = '';
+      expect(loadEnvConfig().jwtExpiration).toBe('30d');
+
+      delete process.env.JWT_EXPIRATION;
+      process.env.NODE_ENV = 'production';
+      process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/db';
+      process.env.JWT_SECRET = 'non-default-production-secret';
+      process.env.FINANCE_REPORT_REFERENCE_SECRET = 'finance-reference-secret';
+      expect(loadEnvConfig().jwtExpiration).toBe('24h');
+    });
+
+    test('JWT_EXPIRATION set explicitly overrides the acceptance default', () => {
+      process.env.JWT_EXPIRATION = '24h';
+      process.env.NODE_ENV = 'acceptance';
+      expect(loadEnvConfig().jwtExpiration).toBe('24h');
+    });
+
     test('JWT_EXPIRATION uses the provided value', () => {
       fc.assert(
         fc.property(

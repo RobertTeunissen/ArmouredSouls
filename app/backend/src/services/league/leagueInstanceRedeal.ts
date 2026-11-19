@@ -7,13 +7,20 @@
  * build therefore fills the instances one after another and leaves a single
  * part-filled instance at the end, which then takes every later entrant: on ACC
  * at the start of Season 2 all human robots landed in 1v1 Bronze 11 and the
- * human 2v2 teams in Bronze 5 (issue #599). The nightly rebalance re-deals the
- * tiers, but battle events don't run during the preparation phase, so the
- * cluster stood until the first competitive cycle.
+ * human 2v2 teams in Bronze 5 (issue #599). Battle events (and their nightly
+ * instance maintenance) don't run during the preparation phase.
  *
  * Re-dealing right after the bulk placement (season rollover) and on every
  * preparation day spreads the tiers evenly, so later entrants have room in
  * every instance. No promotions or demotions happen here, only instance moves.
+ *
+ * Unlike the nightly maintenance (`maintainInstances`, issue #603), this re-deal
+ * is unconditional. Nobody has fought yet, so there is no fixed league to keep,
+ * and with everyone on 0 LP the deal follows row age: existing rows keep their
+ * instance (unless the instance count changes or an older row is deleted) and
+ * each new entrant goes to the next instance in turn. Under the
+ * nightly check an instance up to 20 short would not trigger, and the least-full
+ * placement would send the first entrants all into it.
  *
  * @module services/league/leagueInstanceRedeal
  */

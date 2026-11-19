@@ -132,8 +132,9 @@ export interface LeagueAdapter<T extends LeagueEntityBase> {
   onPromoted?(entity: T, newTier: string): Promise<void>;
 
   /**
-   * Rebalance instances for a tier (redistribute entities evenly).
-   * Called after all promotions/demotions are complete.
+   * Maintain a tier's instances after all promotions/demotions are complete.
+   * Instances stay fixed; the tier is only re-dealt or merged when it needs it
+   * (issue #603, `maintainInstances`).
    */
   rebalanceInstances(tier: string): Promise<void>;
 
@@ -504,7 +505,7 @@ export async function rebalanceAllTiers<T extends LeagueEntityBase>(
     }
   }
 
-  // Rebalance instances for each tier after all moves
+  // Check each tier's instances after all moves: re-deal or merge only where needed.
   logger.info(`\n[${config.logPrefix}] Checking instances for rebalancing...`);
   for (const tier of config.tiers) {
     try {

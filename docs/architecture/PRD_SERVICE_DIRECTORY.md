@@ -277,7 +277,8 @@ King of the Hill mode — orchestration and matchmaking.
 |---------|---------|
 | `leagueBattleOrchestrator` | League 1v1 match execution (simulate, then streaming, audit, achievements) and the scheduled-battle executor |
 | `leagueBattleRecord`, `leagueByeAndForfeit` | Battle/participant/summary rows and the per-robot update (LP, credits, prestige, fame); byes and battle-time forfeits |
-| `leagueInstanceService` | League instance management (max 100 robots per instance, assignment, rebalancing); `assignLeagueInstanceWithLock` delegates to `leagueInstancePlacement` |
+| `leagueInstanceService` | League instance management (max 100 robots per instance, assignment, rebalancing); `assignLeagueInstanceWithLock` delegates to `leagueInstancePlacement`; `maintainInstances` is the nightly per-tier step (re-deal, merge or nothing, #603) and `rebalanceInstances` the unconditional round-robin re-deal |
+| `league-instance-planner` | Pure #603 planner: `planInstanceMaintenance` (overflow/imbalance → re-deal, shrunken tier → dissolve highest-numbered instances, else none) and `targetInstanceCount` (`ceil(n / 80)`, leaving ~20 free places per instance) |
 | `leagueInstancePlacement` | Prisma-free, transaction-scoped instance picker: `MAX_ENTITIES_PER_INSTANCE` (100), `leagueInstanceLockKey`, `pickLeagueInstanceInTransaction` (mode/tier advisory lock, least-full instance, lowest number on ties, opens a new instance when all are full) |
 | `leagueInstanceRedeal` | `redealLeagueInstances`: round-robin redistribution of every tier of every tiered mode outside the nightly rebalance (season rollover, preparation days; issue #599). Never throws |
 | `leagueRebalancingService` | Instance-based promotions/demotions (top/bottom 10%, LP retention) |

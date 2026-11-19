@@ -12,11 +12,6 @@
  * modal header, battle report header.
  *
  * Spec: 34-weapon-refinement (design.md → Components and Interfaces → Frontend Components)
- *
- * TODO (Asset Checklist A2): replace the inline SVG placeholders below with
- * proper tier glyph icons (16×16 sparkle / plus / arrow / hammer). The
- * placeholders use a circle-with-letter pattern so the slot bar is readable
- * at ship time even without final art.
  */
 
 import type { WeaponRefinementItem } from '../weapon-shop/types';
@@ -82,15 +77,12 @@ function describeNextLockedTier(refinementLabLevel: number): string {
   return 'Empty refinement slot.';
 }
 
-// ── Glyph SVGs (placeholders — see Asset Checklist A2) ───────────────
+// ── Glyph SVGs ───────────────────────────────────────────────────────
 
 /**
- * Render a small inline SVG glyph identified by `iconName`. The shapes are
- * intentionally simple — the design system does not currently include a
- * formal icon library, and Asset Checklist A2 tracks replacement with
- * proper tier-glyph artwork. The placeholders use a filled circle with
- * the first letter of the tier name so the slot bar is visually distinct
- * across all four tiers without external assets.
+ * Render a small inline SVG glyph identified by `iconName`: a tinted circle
+ * with the tier's first letter (H / A / S / F). Combined with the tier color,
+ * this keeps the four tiers visually distinct without external assets.
  */
 function TierGlyph({ iconName, label, size }: { iconName: string; label: string; size: number }) {
   // Map iconName → first-letter shorthand. Defensive default keeps the SVG

@@ -5,7 +5,7 @@ import { achievementService } from '../achievement';
 import {
   assignLeagueInstance,
   assignLeagueInstanceWithLock,
-  rebalanceInstances,
+  maintainInstances,
   LeagueTier,
   MAX_ROBOTS_PER_INSTANCE,
   InstanceOptions,
@@ -190,7 +190,7 @@ export function createStandingsAdapter(mode: string, options: StandingsAdapterOp
     },
 
     async rebalanceInstances(tier) {
-      await rebalanceInstances(tier as LeagueTier, instanceOptions);
+      await maintainInstances(tier as LeagueTier, instanceOptions);
     },
 
     async countAllEntities() {
