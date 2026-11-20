@@ -287,7 +287,7 @@ The canonical-source map is:
 - Pair rule: one `financial_transaction` row per `FinancialLedger` row; the audit row is not a second currency mutation
 
 **passive_income** - Merchandising income
-- Payload: `merchandising`, `streaming` (0 on settlement rows), `totalIncome`, `facilityLevel`, `prestige`, `rosterCapacity`, `prestigePerSlot`, `winLossModeBattles` (informational: summed `robots.total_battles`, win/loss modes only; stored as `totalBattles` on rows written before the rename, read both via `readPassiveIncomeWinLossModeBattles`), `totalFame`
+- Payload: `merchandising`, `streaming` (0 on settlement rows), `totalIncome`, `facilityLevel`, `prestige`, `rosterCapacity`, `prestigePerSlot`, `winLossModeBattles` (informational: summed `robots.total_battles`, win/loss modes only; `totalBattles` on rows written before the rename), `totalFame`
 - Created by: Cycle execution (Step 4)
 - Used for: Cycle snapshots, income tracking, and compatibility with the settlement domain event
 
@@ -539,18 +539,6 @@ AuditLog domain events feed compatibility snapshots. Canonical sources are quest
 **Compatibility snapshot aggregation:**
 
 Snapshot aggregation may retain combat/display metrics from `battle_complete` and domain compatibility fields from settlement events. It must not derive Credits, streaming revenue, repair spend, or prestige from those payloads. Financial and prestige figures remain query-specific canonical records rather than snapshot inputs.
-```
-
-**Snapshot backfill capability (not financial reconstruction):**
-
-> Removed in Nov 2026 (admin redesign part 8): nothing called this endpoint.
-```typescript
-// Rebuild a derived snapshot from surviving AuditLog domain events.
-POST /api/admin/snapshots/backfill
-
-// Deletes old snapshots and recreates the derived summary from retained events.
-// It does not create FinancialLedger pairs, repair missing financialEventId values,
-// or reconstruct pre-cutover financial history.
 ```
 
 ---

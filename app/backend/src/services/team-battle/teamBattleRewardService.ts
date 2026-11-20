@@ -22,7 +22,7 @@
  * @module services/team-battle/teamBattleRewardService
  */
 
-import { getLeagueWinReward, getParticipationReward } from '../../utils/economyCalculations';
+import { getLeagueWinReward, getParticipationReward } from '../../utils/economyFormulas';
 import { applyTeamCreditPoolFactor } from '../../utils/economyFormulas';
 import {
   calculateELOChange,

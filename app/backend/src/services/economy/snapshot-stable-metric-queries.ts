@@ -23,7 +23,7 @@
 
 import { Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
-import { CYCLE_REPAIR_SPEND_KEY, LEGACY_CYCLE_REPAIR_SPEND_KEY } from './repairPayloadKeys';
+import { CYCLE_REPAIR_SPEND_KEY } from './repairPayloadKeys';
 
 /** How many of the oldest snapshots the purchase-cycle fallback inspects. */
 const EARLIEST_ACTIVITY_SNAPSHOT_LIMIT = 100;
@@ -83,20 +83,13 @@ function numericMetric(key: string): Prisma.Sql {
   `;
 }
 
-/**
- * Cycle_Repair_Spend of `m.metric`, mirroring `readCycleRepairSpend`: the
- * renamed key first, the legacy key only when the renamed one is not a finite
- * number, never both; 0 when neither is.
- */
+/** Cycle_Repair_Spend of `m.metric`, mirroring `readCycleRepairSpend`: 0 unless a finite number. */
 function cycleRepairSpend(): Prisma.Sql {
-  const finite = (key: string): Prisma.Sql => Prisma.sql`
-    jsonb_typeof(m.metric -> ${key}::text) = 'number'
-    AND abs((m.metric -> ${key}::text)::numeric) <= 1.7976931348623157e308
-  `;
   return Prisma.sql`
     CASE
-      WHEN ${finite(CYCLE_REPAIR_SPEND_KEY)} THEN (m.metric -> ${CYCLE_REPAIR_SPEND_KEY}::text)::numeric
-      WHEN ${finite(LEGACY_CYCLE_REPAIR_SPEND_KEY)} THEN (m.metric -> ${LEGACY_CYCLE_REPAIR_SPEND_KEY}::text)::numeric
+      WHEN jsonb_typeof(m.metric -> ${CYCLE_REPAIR_SPEND_KEY}::text) = 'number'
+       AND abs((m.metric -> ${CYCLE_REPAIR_SPEND_KEY}::text)::numeric) <= 1.7976931348623157e308
+      THEN (m.metric -> ${CYCLE_REPAIR_SPEND_KEY}::text)::numeric
       ELSE 0
     END
   `;

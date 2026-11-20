@@ -3,9 +3,5 @@
  */
 import type { EconomicServiceOptions } from '../financial/economicRequestReplayService';
 
-/**
- * Spending is not a security signal (rapid spending of a player's own credits
- * was removed in Nov 2026: it only flagged normal shopping), so the purchase
- * services take the replay options only.
- */
+/** Purchase services take the replay options only; spending is not a security signal. */
 export type PurchaseServiceOptions = EconomicServiceOptions;

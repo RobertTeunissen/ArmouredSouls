@@ -240,7 +240,7 @@ export async function runLeague1v1Block(steps: CycleStepRunner): Promise<{
   logger.info(`[Admin] Slot 1: 1v1 League`);
   const repair = await steps.run(
     'Repair Scheduled Robots (pre-league)', 'repair_pre_league',
-    () => repairRobotsForEvent('league_1v1', true, steps.cycleNumber),
+    () => repairRobotsForEvent('league_1v1'),
     (r) => ({ robotsRepaired: r.robotsRepaired, totalCost: r.totalFinalCost }),
   );
   const battles = await steps.run(
@@ -280,7 +280,7 @@ export async function runTeamLeagueBlock(
     // Repair (Spec #41 — was missing, must match cron behavior)
     await steps.run(
       `Repair Scheduled Robots (pre-team-${mode}-league)`, `repair_pre_team_${mode}_league`,
-      () => repairRobotsForEvent(teamSize === 2 ? 'league_2v2' : 'league_3v3', true, steps.cycleNumber),
+      () => repairRobotsForEvent(teamSize === 2 ? 'league_2v2' : 'league_3v3'),
       () => ({}),
     );
     battles = await steps.run(
@@ -315,7 +315,7 @@ export async function runTournamentBlock(
   logger.info(`[Admin] Slot 3: 1v1 Tournament`);
   const repair = await steps.run(
     'Repair Scheduled Robots (pre-tournament)', 'repair_pre_tournament',
-    () => repairRobotsForEvent('tournament_1v1', true, steps.cycleNumber),
+    () => repairRobotsForEvent('tournament_1v1'),
     (r) => ({ robotsRepaired: r.robotsRepaired, totalCost: r.totalFinalCost }),
   );
   const tournaments = await steps.run(
@@ -345,7 +345,7 @@ export async function runTagTeamBlock(steps: CycleStepRunner): Promise<{
   logger.info(`[Admin] Slot 4: Tag Team`);
   const repair = await steps.run(
     'Repair Scheduled Robots (pre-tag-team)', 'repair_pre_tag_team',
-    () => repairRobotsForEvent('tag_team', true, steps.cycleNumber),
+    () => repairRobotsForEvent('tag_team'),
     (r) => ({ robotsRepaired: r.robotsRepaired, totalCost: r.totalFinalCost }),
   );
   const battles = await steps.run(
@@ -384,7 +384,7 @@ export async function runKothBlock(
   }
   const repair = await steps.run(
     'Repair Scheduled Robots (pre-koth)', 'repair_pre_koth',
-    () => repairRobotsForEvent('koth', true, steps.cycleNumber),
+    () => repairRobotsForEvent('koth'),
     (r) => ({ robotsRepaired: r.robotsRepaired, totalCost: r.totalFinalCost }),
   );
   const battles = await steps.run(
@@ -426,7 +426,7 @@ export async function runTeamTournamentBlock(
   logger.info(`[Admin] Slot ${teamSize === 2 ? 7 : 9}: Team ${mode} Tournament`);
   const repair = await steps.run(
     `Repair Scheduled Robots (pre-team-${mode}-tournament)`, `repair_pre_team_${mode}_tournament`,
-    () => repairRobotsForEvent(teamSize === 2 ? 'tournament_2v2' : 'tournament_3v3', true, steps.cycleNumber),
+    () => repairRobotsForEvent(teamSize === 2 ? 'tournament_2v2' : 'tournament_3v3'),
     (r) => ({ robotsRepaired: r.robotsRepaired, totalCost: r.totalFinalCost }),
   );
 
@@ -486,7 +486,7 @@ export async function runGrandMeleeBlock(steps: CycleStepRunner): Promise<GrandM
     const { runGrandMeleeMatchmaking } = await import('../grand-melee/grandMeleeMatchmakingService');
     const { rebalanceGrandMeleeLeagues } = await import('../league/leagueRebalancingService');
 
-    await repairRobotsForEvent('grand_melee', true, steps.cycleNumber);
+    await repairRobotsForEvent('grand_melee');
     const execSummary = await executeScheduledGrandMeleeBattles();
     await rebalanceGrandMeleeLeagues();
     const matchesCreated = await runGrandMeleeMatchmaking();

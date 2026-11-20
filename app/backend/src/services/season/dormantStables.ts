@@ -16,7 +16,7 @@
 
 import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
-import { buildUserFilter } from '../../utils/buildUserFilter';
+import { realUserFilter } from '../../utils/realUserFilter';
 
 /** Most dormant stable names the rollover preview lists. */
 const DORMANT_PREVIEW_NAME_LIMIT = 50;
@@ -25,7 +25,7 @@ const DORMANT_PREVIEW_NAME_LIMIT = 50;
 export function dormantHumanStableWhere(seasonStartedAt: Date): Prisma.UserWhereInput {
   return {
     AND: [
-      buildUserFilter('real'),
+      realUserFilter(),
       { isGenerated: false, stableType: 'human', role: { not: 'admin' } },
       {
         OR: [

@@ -168,7 +168,6 @@ jest.mock('../../../src/services/common/eventLogger', () => ({
 // ── Import under test ────────────────────────────────────────────────
 
 import { initScheduler, resetScheduler, SchedulerConfig } from '../../../src/services/cycle/cycleScheduler';
-import * as tagTeamExports from '../../../src/services/tag-team/index';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -209,10 +208,6 @@ describe('Tag Team daily execution (R2.1, R2.2)', () => {
 
   afterEach(() => {
     resetScheduler();
-  });
-
-  test('shouldRunTagTeamMatchmaking is NOT exported from tag-team barrel', () => {
-    expect(tagTeamExports).not.toHaveProperty('shouldRunTagTeamMatchmaking');
   });
 
   test('executeTagTeamCycle runs all steps regardless of cycle number', async () => {

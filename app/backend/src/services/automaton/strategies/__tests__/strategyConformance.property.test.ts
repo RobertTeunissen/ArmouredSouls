@@ -35,7 +35,8 @@ import {
 import { GROUP_ACADEMY, groupOfAttribute } from '../../buildFocus';
 import { chargedStepCount, projectAction } from '../../factProjector';
 import type { FacilityLevelStep, GoalOutcome, PlannedAction } from '../../goals/goalTypes';
-import { facilityMaxLevel, quoteFacilityLevel, refinementLabLevelForTier, refinementStepCost } from '../../pricing';
+import { getFacilityUpgradeRequirement } from '../../../economy/facilityUpgradeService';
+import { quoteFacilityLevel, refinementLabLevelForTier, refinementStepCost } from '../../pricing';
 import {
   AUTOMATON_FACILITY_TYPES,
   matchedStageIndex,
@@ -108,7 +109,7 @@ function buildFacts(input: {
   teamFlags: boolean[];
 }): StableFacts {
   const facilities = {} as Record<FacilityType, number>;
-  AUTOMATON_FACILITY_TYPES.forEach((type, i) => { facilities[type] = Math.min(input.levels[i], facilityMaxLevel(type)); });
+  AUTOMATON_FACILITY_TYPES.forEach((type, i) => { facilities[type] = Math.min(input.levels[i], getFacilityUpgradeRequirement(type, 0).maxLevel); });
   facilities.roster_expansion = Math.max(facilities.roster_expansion, input.robotCount - 1);
 
   const inventory: InventoryFacts[] = [];
@@ -272,7 +273,7 @@ function expectFacilityStepsValid(facts: StableFacts, steps: readonly FacilityLe
   for (const step of steps) {
     expect(FACILITY_TYPE_SET.has(step.facilityType)).toBe(true);
     expect(step.toLevel).toBe(levels[step.facilityType] + 1);
-    expect(step.toLevel).toBeLessThanOrEqual(facilityMaxLevel(step.facilityType));
+    expect(step.toLevel).toBeLessThanOrEqual(getFacilityUpgradeRequirement(step.facilityType, 0).maxLevel);
     const quote = quoteFacilityLevel(step.facilityType, levels[step.facilityType], facts.prestige);
     expect(quote.kind).toBe('available');
     if (quote.kind === 'available') expect(step.cost).toBe(quote.cost);

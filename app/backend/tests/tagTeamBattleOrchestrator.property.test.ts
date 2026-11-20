@@ -13,7 +13,7 @@ import {
 
 import { Robot, Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
-import { getLeagueWinReward, getParticipationReward } from '../src/utils/economyCalculations';
+import { getLeagueWinReward, getParticipationReward } from '../src/utils/economyFormulas';
 
 
 // Test configuration

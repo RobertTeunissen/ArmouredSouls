@@ -206,7 +206,7 @@ export async function createTournamentBattleRecord(
 
 /**
  * Update robot stats after tournament battle.
- * Uses shared updateRobotCombatStats + awardCreditsToUser + awardPrestigeToUser.
+ * Uses shared updateRobotCombatStats + awardCreditsWithLedger + awardPrestigeToUser.
  */
 export async function updateRobotStatsForTournament(
   robot: Robot,

@@ -57,11 +57,6 @@ export function quoteFacilityLevel(facilityType: FacilityType, currentLevel: num
   return { kind: 'available', facilityType, toLevel, cost: requirement.cost, prestigeRequired: requirement.prestigeRequired };
 }
 
-/** Maximum level of a facility type. */
-export function facilityMaxLevel(facilityType: FacilityType): number {
-  return getFacilityUpgradeRequirement(facilityType, 0).maxLevel;
-}
-
 /** Price of one robot (`createRobotTransaction`). */
 export function robotPurchaseCost(): number {
   return ROBOT_CREATION_COST;

@@ -12,7 +12,7 @@ import type { StrategyParametersV1 } from '../../../types/automaton';
 import { facilityLabel } from './strategyDefinitionSchema';
 import type { GoalSpec } from './strategyTypes';
 import type { FacilityType } from '../stableFacts';
-import type { BuildOrderDescriptor, GoalType, TargetBounds } from '../../../shared/types';
+import type { BuildOrderDescriptor, GoalType } from '../../../shared/types';
 
 function targetSchema(spec: GoalSpec): z.ZodNumber {
   const message = spec.isMax ? 'Allowed: Max' : `Allowed ${spec.bounds.min}–${spec.bounds.max}`;

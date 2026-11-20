@@ -44,32 +44,6 @@ describe('Bug Condition: Mobile Responsiveness Defects', () => {
       });
     });
 
-    it('useIsMobile (useIsMobile.ts) should return true for any viewport in [768, 1023]', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          fc.integer({ min: 768, max: 1023 }),
-          async (viewportWidth) => {
-            // Set window.innerWidth to the generated viewport width
-            Object.defineProperty(window, 'innerWidth', {
-              writable: true,
-              configurable: true,
-              value: viewportWidth,
-            });
-
-            // Re-import to get fresh module state
-            vi.resetModules();
-            const { useIsMobile } = await import('../hooks/useIsMobile');
-
-            const { result } = renderHook(() => useIsMobile());
-
-            // Expected: hook returns true for viewports < 1024 (aligned with Navigation lg: breakpoint)
-            expect(result.current).toBe(true);
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
     it('useIsMobile (useMediaQuery.ts) should return true for any viewport in [768, 1023]', async () => {
       await fc.assert(
         fc.asyncProperty(

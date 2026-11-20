@@ -35,13 +35,6 @@ describe('Prestige Gates', () => {
       }
     });
 
-    test('no facility uses prestigeGateIsPerSlot', () => {
-      const implemented = FACILITY_TYPES.filter(f => f.implemented);
-
-      for (const config of implemented) {
-        expect(config.prestigeGateIsPerSlot).toBeFalsy();
-      }
-    });
   });
 
   describe('Prestige Requirement Validation Logic', () => {

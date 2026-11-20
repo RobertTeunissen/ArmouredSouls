@@ -237,21 +237,6 @@ const UNIT_AND_INTEGRATION: readonly TestTier[] = ['unit', 'integration'];
 
 const directCurrencyEntries: readonly CoverageManifestEntry[] = [
   {
-    id: 'currency-battle-simple-award',
-    area: 'battle-income',
-    status: 'baseline-direct-writer',
-    currentSource: {
-      file: 'app/backend/src/services/battle/battlePostCombat.ts',
-      symbol: 'awardCreditsToUser',
-    },
-    finalService: 'Credit_Mutation_Service',
-    expectedTaxonomy: ['battle_income'],
-    identityStrategy: 'source battle or scheduled match + stable user + battle_income component',
-    pairedOrDomainRecords: ['FinancialLedger', 'AuditLog:eventType=financial_transaction', 'battle_complete compatibility record'],
-    targetTestTiers: ALL_CRITICAL_TIERS,
-    notes: 'Simple battle credit helper currently mutates User.currency without a ledger pair.',
-  },
-  {
     id: 'currency-battle-ledger-award',
     area: 'battle-income',
     status: 'baseline-direct-writer',

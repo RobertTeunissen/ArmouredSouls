@@ -16,7 +16,7 @@ import { securityMonitor } from '../services/security/securityMonitor';
 import { handleMulterError } from '../middleware/handleMulterError';
 
 // Service imports
-import { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS } from '../services/robot/robotSanitizer';
+import { sanitizeRobotForPublic } from '../services/robot/robotSanitizer';
 import {
   findUserRobots,
   findRobotById,
@@ -58,9 +58,6 @@ import { getEntityHistory } from '../services/league/leagueHistoryService';
 import { computeSchedulingEligibility } from '../services/robot/robotSchedulingEligibilityService';
 import { updateStance, updateYieldThreshold } from '../services/robot/robotSettingsService';
 import type { UnlockedAchievement } from '../shared/types';
-
-// Re-export for backward compatibility (stables.ts imports from here)
-export { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS };
 
 const router = express.Router();
 

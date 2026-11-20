@@ -53,7 +53,6 @@ jest.mock('../../../src/services/league/leagueInstanceService', () => ({
 // subscriptions are written (covered in subscriptionService.test.ts).
 jest.mock('../../../src/services/subscription/subscriptionService', () => ({
   __esModule: true,
-  isRobotSubscribedTo: jest.fn().mockResolvedValue(true),
 }));
 
 import logger from '../../../src/config/logger';

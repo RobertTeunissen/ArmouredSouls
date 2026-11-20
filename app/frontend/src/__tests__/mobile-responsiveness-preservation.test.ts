@@ -39,30 +39,6 @@ describe('Preservation: Desktop Layout and Functionality Unchanged (≥1024px)',
       });
     });
 
-    it('useIsMobile (useIsMobile.ts) returns false for any viewport ≥1024', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          fc.integer({ min: 1024, max: 1920 }),
-          async (viewportWidth) => {
-            Object.defineProperty(window, 'innerWidth', {
-              writable: true,
-              configurable: true,
-              value: viewportWidth,
-            });
-
-            vi.resetModules();
-            const { useIsMobile } = await import('../hooks/useIsMobile');
-
-            const { result } = renderHook(() => useIsMobile());
-
-            // Preservation: desktop behavior unchanged — hooks return false at ≥1024px
-            expect(result.current).toBe(false);
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
     it('useIsMobile (useMediaQuery.ts) returns false for any viewport ≥1024', async () => {
       await fc.assert(
         fc.asyncProperty(

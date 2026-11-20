@@ -54,14 +54,6 @@ type ActiveTournamentRound = {
   participantType: string;
 };
 
-type _BattleWithRobotsAndUsers = Prisma.BattleGetPayload<{
-  include: {
-    participants: {
-      include: { robot: { include: { user: { select: { id: true; username: true; stableName: true } } } } };
-    };
-  };
-}>;
-
 // ─── Upcoming Matches ────────────────────────────────────────────────
 
 interface RobotAndTeamIds {

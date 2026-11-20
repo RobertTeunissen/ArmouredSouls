@@ -14,7 +14,6 @@
 import {
   registerSubscribableEvent,
   getRegisteredEvents,
-  getEventDefinition,
   isRegisteredEvent,
   SUBSCRIBABLE_EVENT_TYPES,
   _clearRegistryForTesting,
@@ -60,21 +59,6 @@ describe('eventRegistry', () => {
     });
   });
 
-  describe('getEventDefinition', () => {
-    it('should return correct definition for registered event', () => {
-      registerSubscribableEvent({ type: 'tournament_1v1', label: '1v1 Tournament' });
-
-      const def = getEventDefinition('tournament_1v1');
-
-      expect(def).toBeDefined();
-      expect(def!.type).toBe('tournament_1v1');
-      expect(def!.label).toBe('1v1 Tournament');
-    });
-
-    it('should return undefined for unregistered event', () => {
-      expect(getEventDefinition('nonexistent')).toBeUndefined();
-    });
-  });
 
   describe('isRegisteredEvent', () => {
     it('should return true for registered event', () => {

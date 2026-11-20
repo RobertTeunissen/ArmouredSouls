@@ -294,7 +294,7 @@ The scheduler picks up the new env values on restart. No database migration roll
 
 Spec 37 (Team Battles) **must not be deployed** until both Spec 35 (Booking Office) and Spec 36 (Cron Schedule Restructure) are live. The dependency chain is:
 
-1. **Spec 35 (Booking Office)** — provides the `subscriptions` table, `eventRegistry`, `isRobotSubscribedTo`, and locking predicates. Team Battle matchmaking calls `isRobotSubscribedTo` to gate pool inclusion.
+1. **Spec 35 (Booking Office)** — provides the `subscriptions` table, `eventRegistry`, and locking predicates. Team Battle matchmaking requires an active subscription to include a team in the pool.
 2. **Spec 36 (Cron Schedule Restructure)** — provides the 10-slot daily cron map with reserved stubs for `team_2v2_league` (09:00 UTC) and `team_3v3_league` (14:00 UTC). Spec 37 replaces those stubs with real handlers.
 3. **Spec 37 (Team Battles)** — registers `league_2v2` and `league_3v3` as subscribable events, adds the `TeamBattle`, `TeamBattleMember`, and `ScheduledTeamBattleMatch` tables, and activates the 2v2/3v3 cron handlers.
 

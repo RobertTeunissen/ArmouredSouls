@@ -47,7 +47,6 @@ jest.mock('../src/config/logger', () => ({
 
 // Mock all service imports to avoid database calls
 jest.mock('../src/services/economy/repairService', () => ({
-  repairAllRobots: jest.fn().mockResolvedValue(undefined),
   repairRobotsForEvent: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock('../src/services/league/leagueBattleOrchestrator', () => ({
@@ -334,8 +333,8 @@ describe('Scheduler Property Tests', () => {
 
             await runJob(jobName, async () => {
               logEntries.push({ level: 'info', message: `${name}: Step 1 — Repairing all robots` });
-              const { repairAllRobots: mockRepair } = await import('../src/services/economy/repairService');
-              await mockRepair(true);
+              const { repairRobotsForEvent: mockRepair } = await import('../src/services/economy/repairService');
+              await mockRepair('league_1v1');
               logEntries.push({ level: 'info', message: `${name}: Step 2 — Executing battles` });
             });
 

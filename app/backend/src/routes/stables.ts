@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { validated } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
-import { sanitizeRobotForPublic } from './robots';
+import { sanitizeRobotForPublic } from '../services/robot/robotSanitizer';
 import { getStableProfile } from '../services/common/stableViewService';
 import { AppError } from '../errors/AppError';
 

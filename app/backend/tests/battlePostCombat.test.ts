@@ -78,10 +78,8 @@ import {
   awardStreamingRevenueForParticipant,
   logBattleAuditEvent,
   updateRobotCombatStats,
-  awardCreditsToUser,
   awardCreditsWithLedger,
   awardPrestigeToUser,
-  awardFameToRobot,
   ParticipantOutcome,
 } from '../src/services/battle/battlePostCombat';
 import { StreamingRevenueCalculation } from '../src/services/economy/streamingRevenueService';
@@ -648,35 +646,6 @@ describe('updateRobotCombatStats', () => {
   });
 });
 
-describe('awardCreditsToUser', () => {
-  it('should apply a battle-income mutation when amount > 0', async () => {
-    await awardCreditsToUser(10, 5000);
-
-    expect(mockApplyCreditMutation).toHaveBeenCalledWith(expect.objectContaining({
-      cycleNumber: 42,
-      userId: 10,
-      transactionType: 'battle_income',
-      amount: 5000,
-      description: 'Battle reward',
-    }));
-    expect(mockPrisma.user.update).not.toHaveBeenCalled();
-  });
-
-  it('should not call the financial service when amount is 0', async () => {
-    await awardCreditsToUser(10, 0);
-
-    expect(mockApplyCreditMutation).not.toHaveBeenCalled();
-    expect(mockPrisma.user.update).not.toHaveBeenCalled();
-  });
-
-  it('should not call the financial service when amount is negative', async () => {
-    await awardCreditsToUser(10, -100);
-
-    expect(mockApplyCreditMutation).not.toHaveBeenCalled();
-    expect(mockPrisma.user.update).not.toHaveBeenCalled();
-  });
-});
-
 describe('awardCreditsWithLedger', () => {
   it('should create distinct, robot-attributed tournament income mutations for one stable', async () => {
     const options = {
@@ -758,25 +727,3 @@ describe('awardPrestigeToUser', () => {
   });
 });
 
-describe('awardFameToRobot', () => {
-  it('should increment robot fame when amount > 0', async () => {
-    await awardFameToRobot(1, 8);
-
-    expect(mockPrisma.robot.update).toHaveBeenCalledWith({
-      where: { id: 1 },
-      data: { fame: { increment: 8 } },
-    });
-  });
-
-  it('should not call prisma when amount is 0', async () => {
-    await awardFameToRobot(1, 0);
-
-    expect(mockPrisma.robot.update).not.toHaveBeenCalled();
-  });
-
-  it('should not call prisma when amount is negative', async () => {
-    await awardFameToRobot(1, -3);
-
-    expect(mockPrisma.robot.update).not.toHaveBeenCalled();
-  });
-});

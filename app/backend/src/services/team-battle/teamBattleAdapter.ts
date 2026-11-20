@@ -18,7 +18,6 @@
  * @module services/team-battle/teamBattleAdapter
  */
 
-import { TeamBattle } from '../../../generated/prisma';
 import {
   LeagueAdapter,
   LeagueEngineConfig,
@@ -74,12 +73,6 @@ export const tagTeamLeagueAdapter: LeagueAdapter<any> = createStandingsAdapter('
   entityType: 'tag_team',
   useLocking: true,
 });
-
-/**
- * Legacy adapter — aliases to teamBattle2v2Adapter.
- * @deprecated Use teamBattle2v2Adapter or teamBattle3v3Adapter instead.
- */
-export const teamBattleAdapter: LeagueAdapter<TeamBattle> = teamBattle2v2Adapter;
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 

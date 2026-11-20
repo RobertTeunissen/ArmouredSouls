@@ -152,7 +152,7 @@ function cycleAt(index: number): number {
   return state.fromCycle + index;
 }
 
-/** Valid, legacy, malformed, pre-purchase and wrong-type rows for one stable. */
+/** Valid, pre-rename (ignored), malformed, pre-purchase and wrong-type rows for one stable. */
 function buildVariedHistory(userId: number): void {
   const window = state.variedPurchaseCycle;
   // Before the purchase cycle: must not count.
@@ -312,9 +312,7 @@ function snapshotStableMetrics(index: number): Prisma.InputJsonValue {
     delete varied.attributeUpgrades;
   }
   if (index % 2 === 1 && index > 3) {
-    // Pre-rename repair-spend key only.
-    delete varied.cycleRepairCreditsPaid;
-    varied.totalRepairCosts = 900 + index;
+    varied.cycleRepairCreditsPaid = 900 + index;
   }
   if (index % 10 === 0) {
     // A later duplicate entry for the same stable is ignored (first match wins).
@@ -639,7 +637,7 @@ describe('(d) earliest-activity fallback over a controlled oldest-100 window (#5
   /** Window index of the first activity per facility type for the `early` stable. */
   const EARLY_INDEX: Record<SnapshotActivityFacilityType, number> = {
     merchandising_hub: 3,
-    repair_bay: 4, // legacy `totalRepairCosts` key only
+    repair_bay: 4,
     streaming_studio: 5,
     training_facility: 7, // index 6 has activity only in a later duplicate entry, which must be ignored
     weapons_workshop: 8,
@@ -659,10 +657,7 @@ describe('(d) earliest-activity fallback over a controlled oldest-100 window (#5
       return json([{ userId: String(early), merchandisingIncome: 1, streamingIncome: 1, attributeUpgrades: 1, weaponPurchases: 1, cycleRepairCreditsPaid: 1 }, earlyMetric, zeroMetric(late)]);
     }
     if (index === EARLY_INDEX.merchandising_hub) earlyMetric.merchandisingIncome = 100;
-    if (index === EARLY_INDEX.repair_bay) {
-      delete earlyMetric.cycleRepairCreditsPaid;
-      earlyMetric.totalRepairCosts = 50;
-    }
+    if (index === EARLY_INDEX.repair_bay) earlyMetric.cycleRepairCreditsPaid = 50;
     if (index === EARLY_INDEX.streaming_studio) earlyMetric.streamingIncome = 10;
     if (index === 6) extra.push({ ...zeroMetric(early), attributeUpgrades: 999 });
     if (index === EARLY_INDEX.training_facility) earlyMetric.attributeUpgrades = 70;

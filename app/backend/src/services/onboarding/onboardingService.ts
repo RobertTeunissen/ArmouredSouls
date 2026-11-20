@@ -319,44 +319,6 @@ export async function skipTutorial(userId: number): Promise<void> {
 }
 
 /**
- * Advance to the next step in the tutorial.
- * Increments the current step by 1, capped at step 9.
- *
- * @param userId - The user ID to advance
- * @returns The updated tutorial state
- * @throws {Error} If user not found or tutorial state not found
- *
- * @example
- * const state = await advanceStep(123);
- * console.log(state.onboardingStep); // Previous step + 1
- *
- * Requirements: 2.3
- */
-export async function advanceStep(userId: number): Promise<TutorialStateRow> {
-  const currentState = await getTutorialState(userId);
-  if (!currentState) {
-    throw new OnboardingError(
-      OnboardingErrorCode.TUTORIAL_STATE_NOT_FOUND,
-      'Tutorial state not found for this user',
-      404,
-    );
-  }
-
-  if (currentState.hasCompletedOnboarding) {
-    throw new OnboardingError(
-      OnboardingErrorCode.TUTORIAL_ALREADY_COMPLETED,
-      'Tutorial is already completed',
-    );
-  }
-
-  const nextStep = Math.min(currentState.onboardingStep + 1, MAX_STEP);
-
-  return await updateTutorialState(userId, {
-    onboardingStep: nextStep,
-  });
-}
-
-/**
  * Update player choices during onboarding.
  * Merges new choices with existing choices.
  *

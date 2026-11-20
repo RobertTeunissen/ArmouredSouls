@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import {
   getRoundLabel,
   buildBracketTree,
-  formatSeedDisplay,
   getUserFuturePath,
   TournamentMatchWithRobots,
 } from '../bracketUtils';
@@ -111,20 +110,6 @@ describe('buildBracketTree', () => {
     expect(tree.get(1)!.length).toBe(0);
     expect(tree.get(2)!.length).toBe(0);
     expect(tree.get(3)!.length).toBe(0);
-  });
-});
-
-describe('formatSeedDisplay', () => {
-  it('should prefix seed number for seeds 1-32', () => {
-    expect(formatSeedDisplay(1, 'AlphaBot')).toBe('#1 AlphaBot');
-    expect(formatSeedDisplay(16, 'BetaBot')).toBe('#16 BetaBot');
-    expect(formatSeedDisplay(32, 'GammaBot')).toBe('#32 GammaBot');
-  });
-
-  it('should return just the name for seeds > 32', () => {
-    expect(formatSeedDisplay(33, 'DeltaBot')).toBe('DeltaBot');
-    expect(formatSeedDisplay(64, 'EpsilonBot')).toBe('EpsilonBot');
-    expect(formatSeedDisplay(128, 'ZetaBot')).toBe('ZetaBot');
   });
 });
 

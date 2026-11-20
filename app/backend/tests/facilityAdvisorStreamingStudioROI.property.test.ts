@@ -118,7 +118,7 @@ async function createCycleSnapshots(
         {
           userId,
           battlesParticipated: battlesPerCycle,
-          totalRepairCosts: 0,
+          cycleRepairCreditsPaid: 0,
         },
       ],
       robotMetrics: [],

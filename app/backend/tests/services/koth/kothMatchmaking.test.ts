@@ -52,7 +52,6 @@ jest.mock('../../../src/utils/scheduleUtils', () => ({
 
 jest.mock('../../../src/services/economy/repairService', () => ({
   __esModule: true,
-  repairAllRobots: jest.fn().mockResolvedValue(undefined),
   repairRobotsForEvent: jest.fn().mockResolvedValue(undefined),
 }));
 

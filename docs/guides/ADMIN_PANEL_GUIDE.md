@@ -518,7 +518,7 @@ The three add up to every human stable. The old churn-risk classification (High 
 
 ## User Filter System
 
-The admin pages split by stable type with the [stable-type filter](#stable-type-filter) (`?stables=`, `utils/stableScope.ts`). Under it, Players is `buildUserFilter('real')` from `src/utils/buildUserFilter.ts`: human stables without `auto_*bot_*`, `test_user_*`, `archetype_*`, `attr_*` and `bye_robot_user` accounts. The same rule decides who counts as a human player for activity, dormant-stable purges and low balances; `buildUserFilter` itself is unchanged.
+The admin pages split by stable type with the [stable-type filter](#stable-type-filter) (`?stables=`, `utils/stableScope.ts`). Under it, Players is `realUserFilter()` from `src/utils/realUserFilter.ts`: human stables without `auto_*bot_*`, `test_user_*`, `archetype_*`, `attr_*` and `bye_robot_user` accounts. The same rule decides who counts as a human player for activity, dormant-stable purges and low balances; `realUserFilter` itself is unchanged.
 
 ## Daily Cycle System
 

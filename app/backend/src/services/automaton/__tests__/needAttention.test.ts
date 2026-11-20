@@ -2,10 +2,9 @@
  * Spec #55 task 9.6 — Need_Attention classification (R11.11, R11.12,
  * design §17.1a) and the Status_Bar Turn_Step label (§6.2).
  */
-import { classifyNeedAttention, NOTHING_BOUGHT_WINDOW, zeroSpendRun } from '../needAttention';
+import { classifyNeedAttention, NOTHING_BOUGHT_WINDOW } from '../needAttention';
 import { turnStepLabel } from '../automatonStatus';
 
-const completed = (creditsSpent: number) => ({ status: 'completed', creditsSpent });
 
 describe('classifyNeedAttention', () => {
   it('returns no reason for a healthy stable', () => {
@@ -44,29 +43,6 @@ describe('classifyNeedAttention', () => {
 
   it('labels a failure without a stored reason', () => {
     expect(classifyNeedAttention({ latestTurn: { status: 'failed', reason: null }, balance: 1, zeroSpendRun: 0 })[0]).toMatchObject({ errorCode: 'unknown' });
-  });
-});
-
-describe('zeroSpendRun', () => {
-  it('counts completed zero-spend records until the first purchase', () => {
-    expect(zeroSpendRun([completed(0), completed(0), completed(500), completed(0)])).toBe(2);
-  });
-
-  it('passes over skipped, failed and in-progress records', () => {
-    expect(zeroSpendRun([
-      completed(0),
-      { status: 'skipped', creditsSpent: 0 },
-      { status: 'failed', creditsSpent: 0 },
-      { status: 'in_progress', creditsSpent: 0 },
-      completed(0),
-      completed(1),
-    ])).toBe(2);
-  });
-
-  it('counts every record when nothing was ever bought, and 0 when the latest bought', () => {
-    expect(zeroSpendRun(Array.from({ length: 16 }, () => completed(0)))).toBe(16);
-    expect(zeroSpendRun([completed(10), completed(0)])).toBe(0);
-    expect(zeroSpendRun([])).toBe(0);
   });
 });
 

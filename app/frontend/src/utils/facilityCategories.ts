@@ -30,12 +30,3 @@ export const FACILITY_CATEGORIES = [
   },
 ] as const;
 
-/** Returns the category name for a given facility type, or null if unknown. */
-export function getFacilityCategory(facilityType: string): string | null {
-  for (const cat of FACILITY_CATEGORIES) {
-    if ((cat.facilityTypes as readonly string[]).includes(facilityType)) {
-      return cat.name;
-    }
-  }
-  return null;
-}

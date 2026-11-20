@@ -124,19 +124,6 @@ router.get('/robot/:robotId/metric/:metricName', authenticateToken, ...validated
   return res.json(response);
 }));
 
-// Spec #51: three endpoints were removed here — GET /api/analytics/leaderboard,
-// GET /api/analytics/robot/:robotId/stats and POST /api/analytics/stats/refresh.
-//
-// All three read the `robot_current_stats` materialized view, which no migration ever
-// created: spec "cycle-audit-logging-system" task 5.6 is ticked but its DDL never
-// landed. Every request to them could only ever raise a Postgres "relation does not
-// exist" and answer 500, and nothing called them — the game's leaderboards are served
-// by `/api/leaderboards/*` and `leaderboardService`, and the robot analytics the
-// frontend uses are `/performance`, `/metric/:metric` and `/koth-performance`.
-//
-// Deleted rather than backfilled with a migration because a battles-derived view of
-// ELO and win counts would be a second source of truth for ranking, and
-// .kiro/steering/coding-standards.md makes `standings` the only one.
 
 /** GET /api/analytics/facility/:userId/roi/all-economic */
 router.get('/facility/:userId/roi/all-economic', authenticateToken, ...validated({ params: userIdParamsSchema }, async (req: Request, res: Response, { params }) => {

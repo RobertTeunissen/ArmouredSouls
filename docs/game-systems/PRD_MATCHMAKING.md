@@ -126,7 +126,6 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
    - POST /api/admin/matchmaking/run
    - POST /api/admin/battles/run
    - POST /api/admin/leagues/rebalance
-   - POST /api/admin/repair/all (removed in Nov 2026, admin redesign part 8)
    - POST /api/admin/cycles/bulk (1-100 cycles)
    - GET /api/admin/stats (removed Nov 2026)
    - Files: `routes/admin.ts`, `scripts/testAdminAPI.js`
@@ -137,7 +136,6 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
    - GET /api/matches/battles/:id/log
    - GET /api/leagues/:tier/standings
    - GET /api/leagues/:tier/instances
-   - ~~GET /api/robots/:id/matches~~ (removed as unused in Nov 2026; robot history comes from `/api/matches/history?robotId=`)
    - Files: `routes/matches.ts`, `routes/leagues.ts`
 
 8. **Frontend UI** 
@@ -719,7 +717,6 @@ model Robot {
 - Query params: `page`, `perPage`
 - Response: Array of Robot objects with rank, sorted by league points then ELO
 
-**GET /api/robots/:id/matches** — removed as unused in Nov 2026 (use `/api/matches/history?robotId=` and `/api/matches/upcoming?robotId=`)
 
 #### Admin Endpoints (Prototype Phase)
 
@@ -1829,32 +1826,21 @@ TOKEN=$(curl -s -X POST http://localhost:3001/api/auth/login \
   jq -r '.token')
 ```
 
-**Step 3: Optional - Repair All Robots**
-
-> Removed in Nov 2026 (admin redesign part 8): `POST /api/admin/repair/all` no longer exists; robots are repaired by the cycle (automatic repair) or by players (Manual Repair).
-```bash
-curl -X POST http://localhost:3001/api/admin/repair/all \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"deductCosts": false}'
-# Expected: {"robotsRepaired": 100, "totalCost": 0}
-```
-
-**Step 4: Run Matchmaking**
+**Step 3: Run Matchmaking**
 ```bash
 curl -X POST http://localhost:3001/api/admin/matchmaking/run \
   -H "Authorization: Bearer $TOKEN"
 # Expected: {"matchesCreated": 50, "scheduledFor": "..."}
 ```
 
-**Step 5: Execute Battles**
+**Step 4: Execute Battles**
 ```bash
 curl -X POST http://localhost:3001/api/admin/battles/run \
   -H "Authorization: Bearer $TOKEN"
 # Expected: {"totalBattles": 50, "successfulBattles": 50}
 ```
 
-**Step 6: Rebalance Leagues**
+**Step 5: Rebalance Leagues**
 ```bash
 curl -X POST http://localhost:3001/api/admin/leagues/rebalance \
   -H "Authorization: Bearer $TOKEN"
@@ -2038,36 +2024,6 @@ Response:
       "tier": "bronze",
       "promoted": 2,
       "demoted": 0
-    },
-    ...
-  ]
-}
-```
-
-#### Auto-Repair All Robots
-
-> Removed in Nov 2026 (admin redesign part 8): `POST /api/admin/repair/all` no longer exists; robots are repaired by the cycle (automatic repair) or by players (Manual Repair).
-```http
-POST /api/admin/repair/all
-Authorization: Bearer <admin-jwt>
-Content-Type: application/json
-
-{
-  "deductCosts": false  // Optional, default: false
-}
-
-Response:
-{
-  "robotsRepaired": 100,
-  "totalCost": 0,
-  "costsDeducted": false,
-  "repairs": [
-    {
-      "robotId": 1,
-      "robotName": "Iron Gladiator",
-      "hpBefore": 5,
-      "hpAfter": 10,
-      "cost": 0
     },
     ...
   ]
@@ -2895,7 +2851,7 @@ After a team battle, ELO changes are applied equally to each member robot's indi
 
 A team is eligible for matchmaking when ALL of the following are true:
 
-1. **All members subscribed** — every robot in the team holds a `league_2v2` or `league_3v3` subscription (checked via `isRobotSubscribedTo`)
+1. **All members subscribed** — every robot in the team holds a `league_2v2` or `league_3v3` subscription (an active `subscriptions` row)
 2. **All members Robot_Ready** — every robot is alive (`hp > 0`), not under irreversible damage, not flagged unavailable
 3. **Team not already scheduled** — no existing `ScheduledTeamBattleMatch` with status `'scheduled'` for this team
 4. **Full roster** — team has exactly N members (teams with fewer members cannot be scheduled)

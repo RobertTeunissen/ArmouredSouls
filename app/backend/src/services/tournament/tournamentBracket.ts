@@ -9,19 +9,11 @@
  * @module services/tournament/tournamentBracket
  */
 
-import { Robot, ScheduledTournamentMatch } from '../../../generated/prisma';
+import { ScheduledTournamentMatch } from '../../../generated/prisma';
 import { ParticipantType } from './tournamentParticipantResolver';
 import type { TournamentParticipant } from './tournamentService';
 import type { SeedEntry } from '../../shared/types';
 
-
-/**
- * Seed robots by ELO rating (highest to lowest)
- * Used for fair bracket generation
- */
-export function seedRobotsByELO(robots: Robot[]): Robot[] {
-  return [...robots].sort((a, b) => b.elo - a.elo);
-}
 
 /**
  * Seed participants by ELO rating (highest to lowest).

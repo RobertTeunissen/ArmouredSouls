@@ -77,7 +77,7 @@ describe('Facility Advisor - Streaming Studio', () => {
             {
               userId: user.id,
               battlesParticipated: 20, // 20 battles per cycle for higher revenue
-              totalRepairCosts: 0,
+              cycleRepairCreditsPaid: 0,
             },
           ],
           robotMetrics: [],
@@ -210,7 +210,7 @@ describe('Facility Advisor - Streaming Studio', () => {
             {
               userId: user.id,
               battlesParticipated: 25, // High battle frequency
-              totalRepairCosts: 0,
+              cycleRepairCreditsPaid: 0,
             },
           ],
           robotMetrics: [],
@@ -295,7 +295,7 @@ describe('Facility Advisor - Streaming Studio', () => {
             {
               userId: user.id,
               battlesParticipated: cycle === startCycle + 9 ? 1 : 0, // Only 1 battle in 10 cycles
-              totalRepairCosts: 0,
+              cycleRepairCreditsPaid: 0,
             },
           ],
           robotMetrics: [],

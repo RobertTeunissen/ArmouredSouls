@@ -26,7 +26,7 @@ import { useRobotStore } from '../stores';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { repairAllRobots } from '../utils/robotApi';
 import { applyManualRepairDiscount, calculateRepairQuote } from '@shared/utils/repairCost';
-import { formatLoadoutName } from '../utils/robotStats';
+import { formatLoadoutName } from '@shared/utils/robotStats';
 import { liveModeCells, tierSummary } from '../utils/stableViewFormat';
 import { ALL_ATTRIBUTES, weaponBonuses, type AttributeValues } from '../utils/workshopBuild';
 import { workshopPath, type WorkshopSection } from '../utils/robotRoutes';

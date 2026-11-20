@@ -295,7 +295,7 @@ The following named file dispositions satisfy Task 1.5’s documentation require
 | `app/backend/tests/cycleSummaryStreamingRevenue.property.test.ts` | Integration/property | Retain unchanged; it covers battle execution summary streaming, not the Finance Center page. |
 | `app/backend/tests/coverageManifest.test.ts` and `tests/factories/coverageManifest.ts` | Static/unit | Adapt stale Income/Cycle Summary surface expectations after replacement coverage. |
 | `app/backend/tests/analyticsApi.test.ts` | Integration | Repurpose/retire only after the stable-summary endpoint is decommissioned. Preserve unrelated analytics coverage. |
-| `app/backend/src/services/financial/__tests__/financialService.test.ts` | Unit | Adapt/retire grouped-ledger route behavior after sequence/pair/reconciliation replacements. |
+| `app/backend/src/services/financial/__tests__/financialService.test.ts` | Unit | **Removed Nov 2026** with `financialService` (no production caller). |
 | `app/frontend/tests/e2e/financial-flow.spec.ts` | Playwright | Retain unrelated facility/attribute mutation flows; replace legacy Income assertions. |
 
 Replacement coverage is mandatory across:

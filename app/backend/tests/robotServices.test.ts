@@ -1,80 +1,13 @@
 /**
  * Unit tests for pure (non-database) robot service functions.
- * Tests calculateCategorySum, calculateRanking, sanitizeRobotForPublic,
+ * Tests sanitizeRobotForPublic
  * and validateAndCalculateUpgrades.
  */
 
-import { calculateCategorySum, calculateRanking, COMBAT_ATTRIBUTES } from '../src/services/robot/robotRankingService';
 import { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS } from '../src/services/robot/robotSanitizer';
 import { validateAndCalculateUpgrades, VALID_ATTRIBUTES } from '../src/services/robot/robotUpgradeService';
 import { RobotError } from '../src/errors/robotErrors';
 import type { AcademyLevels } from '../src/shared/types';
-
-// ── calculateCategorySum ─────────────────────────────────────────────
-
-describe('calculateCategorySum', () => {
-  it('should sum plain number values', () => {
-    const robot = { a: 10, b: 20, c: 30 };
-    expect(calculateCategorySum(robot, ['a', 'b', 'c'])).toBe(60);
-  });
-
-  it('should handle Prisma Decimal-like objects via Number()', () => {
-    // Prisma Decimal has a toString() that Number() can parse
-    const decimalLike = { toString: () => '15.5', toFixed: () => '15.50' };
-    const robot = { x: decimalLike as any, y: 4.5 };
-    expect(calculateCategorySum(robot, ['x', 'y'])).toBe(20);
-  });
-
-  it('should return 0 for empty attributes list', () => {
-    const robot = { a: 10 };
-    expect(calculateCategorySum(robot, [])).toBe(0);
-  });
-
-  it('should work with the real COMBAT_ATTRIBUTES constant', () => {
-    const robot: Record<string, number> = {};
-    for (const attr of COMBAT_ATTRIBUTES) robot[attr] = 5;
-    // 6 combat attributes × 5 = 30
-    expect(calculateCategorySum(robot, COMBAT_ATTRIBUTES)).toBe(30);
-  });
-});
-
-// ── calculateRanking ─────────────────────────────────────────────────
-
-describe('calculateRanking', () => {
-  it('should return rank 1 for the highest value', () => {
-    const result = calculateRanking(100, [50, 100, 75], 3);
-    expect(result.rank).toBe(1);
-    expect(result.total).toBe(3);
-    expect(result.value).toBe(100);
-  });
-
-  it('should return correct rank for middle value', () => {
-    const result = calculateRanking(75, [50, 100, 75], 3);
-    expect(result.rank).toBe(2);
-  });
-
-  it('should return last rank for lowest value', () => {
-    const result = calculateRanking(50, [50, 100, 75], 3);
-    expect(result.rank).toBe(3);
-  });
-
-  it('should calculate percentile correctly', () => {
-    // rank 1 of 4: percentile = (1 - (1-1)/4) * 100 = 100
-    const result = calculateRanking(100, [25, 50, 75, 100], 4);
-    expect(result.percentile).toBe(100);
-
-    // rank 4 of 4: percentile = (1 - (4-1)/4) * 100 = 25
-    const last = calculateRanking(25, [25, 50, 75, 100], 4);
-    expect(last.percentile).toBe(25);
-  });
-
-  it('should handle single-element array', () => {
-    const result = calculateRanking(42, [42], 1);
-    expect(result.rank).toBe(1);
-    expect(result.percentile).toBe(100);
-  });
-});
-
 
 // ── sanitizeRobotForPublic ───────────────────────────────────────────
 

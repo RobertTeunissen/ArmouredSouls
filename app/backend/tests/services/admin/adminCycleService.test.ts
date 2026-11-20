@@ -23,7 +23,6 @@ jest.mock('../../../src/utils/cycleLogger', () => ({
 }));
 
 jest.mock('../../../src/services/economy/repairService', () => ({
-  repairAllRobots: jest.fn().mockResolvedValue({ robotsRepaired: 0, totalFinalCost: 0 }),
   repairRobotsForEvent: jest.fn().mockResolvedValue({ robotsRepaired: 0, totalFinalCost: 0 }),
 }));
 
@@ -147,7 +146,6 @@ jest.mock('../../../src/services/cycle/cycle-closing-evidence', () => ({
 
 jest.mock('../../../src/utils/economyCalculations', () => ({
   calculateDailyPassiveIncome: jest.fn().mockResolvedValue({ total: 0, merchandising: 0 }),
-  calculateFacilityOperatingCost: jest.fn().mockReturnValue(0),
 }));
 
 jest.mock('../../../src/lib/prisma', () => ({

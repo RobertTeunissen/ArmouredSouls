@@ -1,4 +1,4 @@
-import { Standing, StandingsMode } from '../../../generated/prisma';
+import { StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { achievementService } from '../achievement';
 
@@ -15,7 +15,6 @@ import {
   LeagueEngineConfig,
   InstanceInfo,
   rebalanceAllTiers,
-  determinePromotionsForInstance,
 } from './leagueEngine';
 
 import { HEAD_TO_HEAD_LEAGUE_RULES, PLACEMENT_LEAGUE_RULES } from './league-rules';
@@ -32,7 +31,7 @@ export const ROBOT_LEAGUE_CONFIG: LeagueEngineConfig = {
 
 // ─── Robot Adapter (uses unified factory) ────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- createStandingsAdapter is shared by five modes and returns LeagueAdapter<any>; the public functions below narrow to Standing, which is what it actually yields
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- createStandingsAdapter is shared by five modes and returns LeagueAdapter<any>
 export const robotAdapter: LeagueAdapter<any> = createStandingsAdapter('league_1v1', {
   maxPerInstance: MAX_ROBOTS_PER_INSTANCE,
   entityType: 'robot',
@@ -54,21 +53,6 @@ export interface FullRebalancingSummary {
   totalDemoted: number;
   tierSummaries: RebalancingSummary[];
   errors: string[];
-}
-
-/**
- * Determine which robots should be promoted from a SPECIFIC INSTANCE
- * Robots must meet per-tier LP threshold AND be in top 10% AND ≥5 cycles in current league
- *
- * Returns `Standing` rows, not `Robot` rows. These signatures said `Robot[]` while
- * `robotAdapter` has always returned `prisma.standing.findMany(...)` — the
- * `LeagueAdapter<any>` in between hid the mismatch. Since Spec #40 moved league data
- * out of the Robot model, `Robot` no longer even carries `leaguePoints` or
- * `cyclesInTier`, so the declared type was unusable: any caller reading the LP it had
- * just sorted by would fail to compile.
- */
-export async function determinePromotions(instanceId: string, excludeRobotIds: Set<number> = new Set()): Promise<Standing[]> {
-  return determinePromotionsForInstance(instanceId, ROBOT_LEAGUE_CONFIG, robotAdapter, excludeRobotIds);
 }
 
 /**
@@ -113,9 +97,7 @@ export interface StandingsAdapterOptions {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function createStandingsAdapter(mode: string, options: StandingsAdapterOptions | number = {}): LeagueAdapter<any> {
-  // Backward compat: if second arg is a number, treat as overrideMinLP
-  const opts: StandingsAdapterOptions = typeof options === 'number' ? { overrideMinLP: options } : options;
+export function createStandingsAdapter(mode: string, opts: StandingsAdapterOptions = {}): LeagueAdapter<any> {
 
   const maxPerInstance = opts.maxPerInstance ?? MAX_ROBOTS_PER_INSTANCE;
   const entityType: 'robot' | 'tag_team' | 'team_battle' = opts.entityType ?? 'robot';

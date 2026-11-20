@@ -44,7 +44,7 @@ function validateCurrencyForRepair(
  *
  * - Manual repairs (POST /api/robots/repair-all) produce a payload with
  *   repairType: 'manual', manualRepairDiscount: 50, and preDiscountCost.
- * - Automatic repairs (repairAllRobots() during cycle processing) produce a
+ * - Automatic repairs (repairRobotsForEvent() before each battle type) produce a
  *   payload with repairType: 'automatic' and no manual-specific fields.
  */
 function buildRepairAuditPayload(

@@ -94,17 +94,7 @@ export interface EventLogEntry {
   metadata?: EventMetadata | null;
 }
 
-/*
- * Spec #51: the module-level `sequenceNumberCache`, `getNextSequenceNumber` and
- * `clearSequenceCache` were removed from here. They implemented check-then-act
- * across an `await` and caused 3,142 unique-constraint collisions in a single
- * integration run, each silently dropping an audit row.
- *
- * Allocation now goes through `withAuditSequence` in `./auditSequence`, which
- * serialises per cycle with `pg_advisory_xact_lock`. See that module for why a
- * Postgres sequence is not an acceptable alternative and for the correction to
- * the old "parallel test runners or multi-process deployments" diagnosis.
- */
+/* Sequence numbers are allocated by `withAuditSequence` in `./auditSequence`. */
 
 /**
  * Validate event payload against schema

@@ -5,10 +5,7 @@
  * `AutomatonRobotBlueprint`. Reads cast with `as unknown as SpecificType`
  * only after Zod validation (coding-standards.md).
  */
-import type { RefinementTier } from '../shared/utils/weaponRefinement';
-import type { RobotAttribute } from '../shared/utils/robotAttributes';
 import type { SubscribableEventType } from '../services/subscription/eventRegistry';
-import type { AcademyGroup } from '../shared/types';
 
 /** Stored in `AutomatonProfile.eventOrder`: all 9 subscribable event types, each once, in order of preference. */
 export type EventOrder = SubscribableEventType[];

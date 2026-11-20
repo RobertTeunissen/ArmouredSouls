@@ -110,7 +110,6 @@ jest.mock('../../../src/services/team-battle/teamBattleRewardService', () => ({
 }));
 
 const mockLogBattleAuditEvent = jest.fn();
-const mockAwardCreditsToUser = jest.fn();
 const mockAwardCreditsWithLedger = jest.fn();
 const mockAwardPrestigeToUser = jest.fn();
 const mockAwardStreamingRevenueForParticipant = jest.fn();
@@ -121,7 +120,6 @@ const mockUpdateRobotCombatStats = jest.fn();
 jest.mock('../../../src/services/battle/battlePostCombat', () => ({
   __esModule: true,
   logBattleAuditEvent: (...args: unknown[]) => mockLogBattleAuditEvent(...args),
-  awardCreditsToUser: (...args: unknown[]) => mockAwardCreditsToUser(...args),
   awardCreditsWithLedger: (...args: unknown[]) => mockAwardCreditsWithLedger(...args),
   awardPrestigeToUser: (...args: unknown[]) => mockAwardPrestigeToUser(...args),
   awardStreamingRevenueForParticipant: (...args: unknown[]) => mockAwardStreamingRevenueForParticipant(...args),
@@ -185,7 +183,7 @@ jest.mock('../../../src/services/league/leagueHistoryService', () => ({
 
 import { executeScheduledTeamBattles } from '../../../src/services/team-battle/teamBattleOrchestrator';
 import {
-  teamBattleAdapter,
+  teamBattle2v2Adapter,
   TEAM_BATTLE_LEAGUE_CONFIG,
   TEAM_BATTLE_LEAGUE_TIERS,
   rebalanceTeamBattleLeagues,
@@ -340,7 +338,6 @@ function setupDefaultMocks(teamSize: 2 | 3 = 2) {
     alreadyResolved: false,
   });
   mockLogBattleAuditEvent.mockResolvedValue(undefined);
-  mockAwardCreditsToUser.mockResolvedValue(undefined);
   mockAwardCreditsWithLedger.mockResolvedValue(undefined);
   mockAwardPrestigeToUser.mockResolvedValue(undefined);
   mockAwardStreamingRevenueForParticipant.mockResolvedValue(undefined);
@@ -1002,7 +999,7 @@ describe('teamBattleOrchestrator', () => {
 
 // ── Tests: Adapter ───────────────────────────────────────────────────────────
 
-describe('teamBattleAdapter', () => {
+describe('teamBattle2v2Adapter', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -1027,7 +1024,7 @@ describe('teamBattleAdapter', () => {
 
     it('should use team_battle entity type', () => {
       expect(TEAM_BATTLE_LEAGUE_CONFIG.logPrefix).toBe('TeamBattleRebalancing');
-      expect(teamBattleAdapter.entityType).toBe('team_battle');
+      expect(teamBattle2v2Adapter.entityType).toBe('team_battle');
     });
 
     it('should have six-tier structure matching 1v1', () => {
@@ -1054,23 +1051,23 @@ describe('teamBattleAdapter', () => {
     };
 
     it('should return correct current tier', () => {
-      expect(teamBattleAdapter.getEntityCurrentTier(mockStanding as any)).toBe('silver');
+      expect(teamBattle2v2Adapter.getEntityCurrentTier(mockStanding as any)).toBe('silver');
     });
 
     it('should return correct league ID', () => {
-      expect(teamBattleAdapter.getEntityLeagueId(mockStanding as any)).toBe('silver_2');
+      expect(teamBattle2v2Adapter.getEntityLeagueId(mockStanding as any)).toBe('silver_2');
     });
 
     it('should return correct league points', () => {
-      expect(teamBattleAdapter.getEntityLeaguePoints(mockStanding as any)).toBe(75);
+      expect(teamBattle2v2Adapter.getEntityLeaguePoints(mockStanding as any)).toBe(75);
     });
 
     it('should return correct owner ID (entityId)', () => {
-      expect(teamBattleAdapter.getEntityOwnerId(mockStanding as any)).toBe(100);
+      expect(teamBattle2v2Adapter.getEntityOwnerId(mockStanding as any)).toBe(100);
     });
 
     it('should return descriptive display name', () => {
-      const name = teamBattleAdapter.getEntityDisplayName(mockStanding as any);
+      const name = teamBattle2v2Adapter.getEntityDisplayName(mockStanding as any);
       expect(name).toContain('team');
       expect(name).toContain('100');
     });
@@ -1084,7 +1081,7 @@ describe('teamBattleAdapter', () => {
       ];
       mockPrisma.standing.findMany.mockResolvedValue(standings);
 
-      const result = await teamBattleAdapter.getEntitiesInInstance(
+      const result = await teamBattle2v2Adapter.getEntitiesInInstance(
         'bronze_1',
         new Set([99]),
       );
@@ -1100,7 +1097,7 @@ describe('teamBattleAdapter', () => {
     });
 
     it('should expose cycles in tier for planner-side residency filtering', () => {
-      expect(teamBattleAdapter.getEntityCyclesInTier({ cyclesInTier: 7 } as any)).toBe(7);
+      expect(teamBattle2v2Adapter.getEntityCyclesInTier({ cyclesInTier: 7 } as any)).toBe(7);
     });
 
     it('should get instances for a tier', async () => {
@@ -1109,7 +1106,7 @@ describe('teamBattleAdapter', () => {
         { leagueInstanceId: 'bronze_2' },
       ]);
 
-      const result = await teamBattleAdapter.getInstancesForTier('bronze');
+      const result = await teamBattle2v2Adapter.getInstancesForTier('bronze');
 
       expect(mockPrisma.standing.findMany).toHaveBeenCalledWith({
         where: { mode: 'league_2v2', tier: 'bronze' },
@@ -1125,7 +1122,7 @@ describe('teamBattleAdapter', () => {
     it('should count entities in tier', async () => {
       mockPrisma.standing.count.mockResolvedValue(45);
 
-      const result = await teamBattleAdapter.countEntitiesInTier('diamond');
+      const result = await teamBattle2v2Adapter.countEntitiesInTier('diamond');
 
       expect(mockPrisma.standing.count).toHaveBeenCalledWith({
         where: { mode: 'league_2v2', tier: 'diamond' },
@@ -1136,7 +1133,7 @@ describe('teamBattleAdapter', () => {
     it('should update entity league on promotion/demotion', async () => {
       mockPrisma.standing.updateMany.mockResolvedValue({ count: 1 });
 
-      await teamBattleAdapter.updateEntityLeague(5, 'gold', 'gold_1');
+      await teamBattle2v2Adapter.updateEntityLeague(5, 'gold', 'gold_1');
 
       expect(mockPrisma.standing.updateMany).toHaveBeenCalledWith({
         where: { entityType: 'team', entityId: 5, mode: 'league_2v2' },
@@ -1171,7 +1168,7 @@ describe('teamBattleAdapter', () => {
 
       expect(mockRebalanceAllTiers).toHaveBeenCalledWith(
         TEAM_BATTLE_LEAGUE_CONFIG,
-        teamBattleAdapter,
+        teamBattle2v2Adapter,
       );
       expect(result.totalTeams).toBe(100);
       expect(result.totalPromoted).toBe(5);
@@ -1209,7 +1206,7 @@ describe('teamBattleAdapter', () => {
         return cb(tx);
       });
 
-      const result = await teamBattleAdapter.assignInstance('bronze');
+      const result = await teamBattle2v2Adapter.assignInstance('bronze');
 
       expect(result).toBe('bronze_1');
     });
@@ -1228,7 +1225,7 @@ describe('teamBattleAdapter', () => {
         return cb(tx);
       });
 
-      const result = await teamBattleAdapter.assignInstance('bronze');
+      const result = await teamBattle2v2Adapter.assignInstance('bronze');
 
       expect(result).toBe('bronze_2');
     });
@@ -1247,7 +1244,7 @@ describe('teamBattleAdapter', () => {
         return cb(tx);
       });
 
-      const result = await teamBattleAdapter.assignInstance('bronze');
+      const result = await teamBattle2v2Adapter.assignInstance('bronze');
 
       expect(result).toBe('bronze_3');
     });

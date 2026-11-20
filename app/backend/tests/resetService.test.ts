@@ -7,7 +7,6 @@ import { enterRobotStanding, enterTeamStanding } from './helpers/standings';
 import {
   validateResetEligibility,
   performAccountReset,
-  getResetHistory,
 } from '../src/services/common/resetService';
 import { battleLogFixture } from './helpers/battleLogFixture';
 
@@ -613,83 +612,4 @@ describe('ResetService', () => {
     });
   });
 
-  describe('getResetHistory', () => {
-    it('should return empty array when no resets exist', async () => {
-      const history = await getResetHistory(testUserId);
-
-      expect(history).toHaveLength(0);
-    });
-
-    it('should return reset history after reset', async () => {
-      await performAccountReset(testUserId, 'First reset');
-
-      const history = await getResetHistory(testUserId);
-
-      expect(history).toHaveLength(1);
-      expect(history[0].userId).toBe(testUserId);
-      expect(history[0].robotsDeleted).toBe(1);
-      expect(history[0].weaponsDeleted).toBe(1);
-      expect(history[0].facilitiesDeleted).toBe(1);
-      expect(history[0].creditsBeforeReset).toBe(1500000);
-      expect(history[0].reason).toBe('First reset');
-      expect(history[0].resetAt).toBeInstanceOf(Date);
-    });
-
-    it('should return multiple reset entries in descending order', async () => {
-      // Perform first reset
-      await performAccountReset(testUserId, 'First reset');
-
-      // Recreate entities for second reset
-      await prisma.robot.create({
-        data: {
-          userId: testUserId,
-          name: 'Test Robot 2',
-          currentHP: 100,
-          maxHP: 100,
-          currentShield: 20,
-          maxShield: 20,
-        },
-      });
-
-      await prisma.weaponInventory.create({
-        data: {
-          userId: testUserId,
-          weaponId: testWeaponId,
-          pricePaid: 0,
-        },
-      });
-
-      // Wait a bit to ensure different timestamps
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Perform second reset
-      await performAccountReset(testUserId, 'Second reset');
-
-      const history = await getResetHistory(testUserId);
-
-      expect(history).toHaveLength(2);
-      // Should be in descending order (most recent first)
-      expect(history[0].reason).toBe('Second reset');
-      expect(history[1].reason).toBe('First reset');
-      expect(history[0].resetAt.getTime()).toBeGreaterThan(history[1].resetAt.getTime());
-    });
-
-    it('should return empty array for user with no resets', async () => {
-      // Create another user
-      const anotherUser = await prisma.user.create({
-        data: {
-          username: `test_no_reset_${Date.now()}`,
-          email: `test_no_reset_${Date.now()}@example.com`,
-          passwordHash: 'test_hash',
-        },
-      });
-
-      const history = await getResetHistory(anotherUser.id);
-
-      expect(history).toHaveLength(0);
-
-      // Cleanup
-      await prisma.user.delete({ where: { id: anotherUser.id } });
-    });
-  });
 });

@@ -13,7 +13,6 @@ import {
   buildPassiveIncomeBreakdown,
 } from './financialBreakdowns';
 import { buildSettlementEventId } from './financialEventIdentity';
-import { PASSIVE_INCOME_WIN_LOSS_BATTLES_KEY } from './passive-income-payload-keys';
 import {
   creditMutationService,
   type CreditMutationResult,
@@ -487,9 +486,8 @@ async function settleUserInTransaction(
       prestige: facts.prestige,
       rosterCapacity: facts.rosterCapacity,
       prestigePerSlot: Number(facts.prestigePerSlot.toFixed(2)),
-      // Raw win/loss-mode counter sum; renamed from `totalBattles` (read both
-      // through readPassiveIncomeWinLossModeBattles).
-      [PASSIVE_INCOME_WIN_LOSS_BATTLES_KEY]: facts.winLossModeBattles,
+      // Raw win/loss-mode counter sum (league, tournaments, tag team; not KotH/Grand Melee).
+      winLossModeBattles: facts.winLossModeBattles,
       totalFame: facts.totalFame,
     },
   });

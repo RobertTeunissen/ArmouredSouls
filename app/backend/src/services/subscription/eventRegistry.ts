@@ -68,11 +68,6 @@ export function getRegisteredEvents(): SubscribableEventDefinition[] {
   return Array.from(registry.values());
 }
 
-/** Get a single event definition. Returns undefined if not registered. */
-export function getEventDefinition(type: string): SubscribableEventDefinition | undefined {
-  return registry.get(type as SubscribableEventType);
-}
-
 /** Check if a type is a valid registered event. */
 export function isRegisteredEvent(type: string): type is SubscribableEventType {
   return registry.has(type as SubscribableEventType);

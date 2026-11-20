@@ -185,7 +185,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
     logger.info('[Admin] Running tournament-only execution (cycles=0)...');
     // executeTournamentStep() covers the 1v1 bracket only; the team brackets
     // have their own steps further down with their own scoped repair.
-    await repairRobotsForEvent('tournament_1v1', true, cycleMetadata.totalCycles);
+    await repairRobotsForEvent('tournament_1v1');
     const tournamentSummary = await executeTournamentStep();
     const duration = Date.now() - startTime;
 

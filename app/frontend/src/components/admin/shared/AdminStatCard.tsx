@@ -1,4 +1,4 @@
-import type { TrendDirection } from '../../../utils/trendIndicator';
+type TrendDirection = 'up' | 'down' | 'neutral';
 
 export interface AdminStatCardProps {
   label: string;

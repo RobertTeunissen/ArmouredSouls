@@ -112,8 +112,7 @@ This document provides a unified architectural overview of the battle simulation
         │                                                               │
         │  battlePostCombat.ts                                          │
         │    ├─ updateRobotCombatStats()                                │
-        │    ├─ awardCreditsToUser(), awardPrestigeToUser()             │
-        │    ├─ awardFameToRobot()                                      │
+        │    ├─ awardCreditsWithLedger(), awardPrestigeToUser()         │
         │    ├─ awardStreamingRevenueForParticipant()                   │
         │    └─ logBattleAuditEvent()                                   │
         │                                                               │
@@ -700,14 +699,11 @@ Located at `services/battle/battlePostCombat.ts`. Reusable functions that elimin
   │    └─ Optional fame increment                                │
   │    └─ Replaces per-orchestrator prisma.robot.update blocks   │
   │                                                              │
-  │  awardCreditsToUser()                                        │
-  │    └─ Simple currency increment (no-op if amount ≤ 0)        │
+  │  awardCreditsWithLedger()                                    │
+  │    └─ Battle income via Credit_Mutation_Service              │
   │                                                              │
   │  awardPrestigeToUser()                                       │
-  │    └─ Simple prestige increment (no-op if amount ≤ 0)        │
-  │                                                              │
-  │  awardFameToRobot()                                          │
-  │    └─ Simple fame increment (no-op if amount ≤ 0)            │
+  │    └─ Prestige via Prestige_Service                          │
   │                                                              │
   │  Shared types:                                               │
   │    ParticipantOutcome, RobotStatUpdateOptions,               │
@@ -721,10 +717,10 @@ The four existing orchestrators have been refactored to use `battle/battlePostCo
 
 | Orchestrator | Location | Shared Helpers Used |
 |---|---|---|
-| League | `services/league/` | `updateRobotCombatStats()`, `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
-| Tournament | `services/tournament/` | `updateRobotCombatStats()`, `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
-| Tag Team | `services/tag-team/` | `awardCreditsToUser()`, `awardPrestigeToUser()`, `logBattleAuditEvent()` |
-| KotH | `services/koth/` | `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardFameToRobot()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
+| League | `services/league/` | `updateRobotCombatStats()`, `awardCreditsWithLedger()`, `awardPrestigeToUser()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
+| Tournament | `services/tournament/` | `updateRobotCombatStats()`, `awardCreditsWithLedger()`, `awardPrestigeToUser()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
+| Tag Team | `services/tag-team/` | `awardCreditsWithLedger()`, `awardPrestigeToUser()`, `logBattleAuditEvent()` |
+| KotH | `services/koth/` | `awardCreditsWithLedger()`, `awardPrestigeToUser()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()` |
 
 ### How to Add a New Match Type
 

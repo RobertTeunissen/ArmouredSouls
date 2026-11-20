@@ -72,8 +72,6 @@ export interface BattleWithParticipants {
   participants: ParticipantWithRobot[];
 }
 
-// `getWinnerAndLoser()` was removed with Spec #46 R4.1/R4.2 — its only callers
-// were the Longest Battle and Fastest Victory mappers.
 
 export function mapParticipantDisplay(p: ParticipantWithRobot) {
   return { id: p.robot.id, name: p.robot.name, ...getRecordOwner(p.robot.user) };

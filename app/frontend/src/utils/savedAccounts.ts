@@ -117,10 +117,3 @@ export function removeSavedAccount(
   return next;
 }
 
-/** Look up a single saved account by user id, or null when absent. */
-export function getSavedAccount(
-  userId: number,
-  storage: SavedAccountsStorage | null = defaultStorage(),
-): SavedAccount | null {
-  return listSavedAccounts(storage).find((a) => a.userId === userId) ?? null;
-}

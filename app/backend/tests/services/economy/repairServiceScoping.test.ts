@@ -65,7 +65,7 @@ jest.mock('../../../src/services/economy/repairScope', () => ({
   resolveRobotIdsForEvent: (...args: unknown[]) => mockResolveRobotIdsForEvent(...args),
 }));
 
-import { repairRobotsForEvent, repairAllRobots } from '../../../src/services/economy/repairService';
+import { repairRobotsForEvent } from '../../../src/services/economy/repairService';
 import { ROBOT_ATTRIBUTES } from '../../../src/shared/utils/robotAttributes';
 
 /** Minimal damaged robot: every attribute at 10, half HP. */
@@ -122,7 +122,6 @@ describe('repairRobotsForEvent', () => {
       robotsRepaired: 0,
       totalBaseCost: 0,
       totalFinalCost: 0,
-      costsDeducted: true,
       userSummaries: [],
     });
     // Critically, no query — an empty `IN ()` would otherwise match everything.
@@ -130,14 +129,12 @@ describe('repairRobotsForEvent', () => {
     expect(mockTransaction).not.toHaveBeenCalled();
   });
 
-  it('should charge the owner when costs are deducted', async () => {
+  it('should charge the owner', async () => {
     mockResolveRobotIdsForEvent.mockResolvedValue([4]);
     mockRobotFindMany.mockResolvedValue([makeDamagedRobot(4, 1)]);
     mockRobotGroupBy.mockResolvedValue([{ userId: 1, _count: { id: 1 } }]);
 
-    const summary = await repairRobotsForEvent('league_1v1', true);
-
-    expect(summary.costsDeducted).toBe(true);
+    const summary = await repairRobotsForEvent('league_1v1');
     expect(summary.totalFinalCost).toBeGreaterThan(0);
   });
 });
@@ -192,20 +189,5 @@ describe('repair bay discount', () => {
     const summary = await repairRobotsForEvent('league_1v1');
 
     expect(summary.userSummaries[0].repairBayDiscount).toBe(0);
-  });
-});
-
-describe('repairAllRobots', () => {
-  // Kept for admin maintenance, which deliberately patches up the whole roster.
-  it('should query every damaged robot with no id filter', async () => {
-    mockRobotFindMany.mockResolvedValue([makeDamagedRobot(1, 1)]);
-    mockRobotGroupBy.mockResolvedValue([{ userId: 1, _count: { id: 1 } }]);
-
-    await repairAllRobots(true);
-
-    expect(mockRobotFindMany).toHaveBeenCalledWith({
-      where: { currentHP: { lt: 'maxHP' } },
-    });
-    expect(mockResolveRobotIdsForEvent).not.toHaveBeenCalled();
   });
 });

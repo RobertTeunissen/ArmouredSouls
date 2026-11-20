@@ -229,7 +229,6 @@ export function tickPassivePenalties(
       }
     } else {
       // Inside zone: reset timer, decay penalties
-      const _prevTimer = scoreState.passiveTimers[robotId] ?? 0;
 
       // Reset timer on zone entry
       scoreState.passiveTimers[robotId] = 0;

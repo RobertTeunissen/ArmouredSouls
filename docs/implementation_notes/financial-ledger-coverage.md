@@ -30,7 +30,7 @@ passive_income
 operating_costs
 ```
 
-New production writers use the validated twelve-value taxonomy above. `subscription_cost`, `prestige_award`, and `settlement_adjustment` are rejected for new events and remain readable only where immutable legacy records survive. `financialService.ts` is a reporting facade; all current-economy writes use `Credit_Mutation_Service`. Subscriptions and prestige remain non-credit domain records.
+New production writers use the validated twelve-value taxonomy above. `subscription_cost`, `prestige_award`, and `settlement_adjustment` are rejected for new events and remain readable only where immutable legacy records survive. All current-economy writes use `Credit_Mutation_Service`. Subscriptions and prestige remain non-credit domain records.
 
 The final row contract is one balance mutation, one `FinancialLedger` row, and one paired `AuditLog` row with `eventType: 'financial_transaction'`, sharing one `financialEventId`. The two rows have different purposes:
 
@@ -46,7 +46,6 @@ The AST check originally discovered 22 direct `data: { currency: ... }` assignme
 
 | ID | Current source | Current operation | Final service | Expected taxonomy/boundary | Identity and paired/domain records | Tier |
 |---|---|---:|---|---|---|---|
-| `currency-battle-simple-award` | `app/backend/src/services/battle/battlePostCombat.ts` — `awardCreditsToUser` | increment | `Credit_Mutation_Service` | `battle_income` | battle/match + stable + component; `FinancialLedger` + `financial_transaction` + existing battle record | Unit, Integration, Heavy |
 | `currency-battle-ledger-award` | `app/backend/src/services/battle/battlePostCombat.ts` — `awardCreditsWithLedger` | increment | `Credit_Mutation_Service` | `battle_income` | battle/match + stable + component; atomic pair plus existing battle record | Unit, Integration, Heavy |
 | `currency-streaming-award` | `app/backend/src/services/economy/streamingRevenueService.ts` — `awardStreamingRevenue` | increment | `Credit_Mutation_Service` | `streaming_revenue` | battle + participating robot + component; pair plus `BattleParticipant.streamingRevenue` | Unit, Integration, Heavy |
 | `currency-koth-combined-award` | `app/backend/src/services/koth/kothBattleOrchestrator.ts` — `processKothBattle` | increment | `Battle_Financial_Reward_Service` | separate `battle_income` and `streaming_revenue` | KotH battle + stable/robot + component; pair(s), battle compatibility rows, and separate prestige | Unit, Integration, Heavy |

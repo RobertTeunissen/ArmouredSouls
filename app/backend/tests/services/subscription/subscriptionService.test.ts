@@ -100,7 +100,6 @@ jest.mock('../../../src/services/standings/standingPlacement', () => ({
 }));
 
 import {
-  isRobotSubscribedTo,
   subscribeRobot,
   unsubscribeRobot,
   setSubscriptionsForRobot,
@@ -130,25 +129,6 @@ describe('subscriptionService', () => {
     mockTx.subscription.createMany.mockResolvedValue({ count: 1 });
     mockTx.subscription.deleteMany.mockResolvedValue({ count: 1 });
     given([]);
-  });
-
-  // ── Eligibility helpers ──────────────────────────────────────────
-
-  describe('isRobotSubscribedTo', () => {
-    it('should return true when a subscription exists', async () => {
-      mockPrisma.subscription.count.mockResolvedValue(1);
-
-      await expect(isRobotSubscribedTo(1, 'league_1v1')).resolves.toBe(true);
-      expect(mockPrisma.subscription.count).toHaveBeenCalledWith({
-        where: { robotId: 1, eventType: 'league_1v1', status: 'active' },
-      });
-    });
-
-    it('should return false when no subscription exists', async () => {
-      mockPrisma.subscription.count.mockResolvedValue(0);
-
-      await expect(isRobotSubscribedTo(1, 'tournament_1v1')).resolves.toBe(false);
-    });
   });
 
   // ── subscribeRobot ───────────────────────────────────────────────

@@ -216,7 +216,6 @@ const DB_DEPENDENT = [
   'tests/combatSimulator.refinement.test.ts',
   'tests/combatSimulator.spatial.test.ts',
   'tests/creditChangeAuditTrail.property.test.ts',
-  'tests/cycleCsvStreamingRevenue.property.test.ts',
   'tests/cycleExecutionTiming.test.ts',
   'tests/cycleSnapshotService.test.ts',
   'tests/cycleStepDuration.property.test.ts',

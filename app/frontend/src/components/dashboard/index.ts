@@ -1,7 +1,6 @@
 /** Overview_Row barrel — Spec #48. */
 
 export { OverviewRow } from './OverviewRow';
-export type { PlacementMode } from './placementFormatting';
 export { StableNoteCard } from './StableNoteCard';
 export {
   type SignMeaning,

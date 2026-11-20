@@ -1,5 +1,5 @@
 import { Robot } from '../../../generated/prisma';
-import { getLeagueWinReward, getParticipationReward } from '../../utils/economyCalculations';
+import { getLeagueWinReward, getParticipationReward } from '../../utils/economyFormulas';
 import { applyTeamCreditPoolFactor } from '../../utils/economyFormulas';
 import { calculateELOChange, PRESTIGE_BY_LEAGUE } from '../../utils/battleMath';
 import { TAG_TEAM_REWARD_MULTIPLIER } from './tagTeamTypes';

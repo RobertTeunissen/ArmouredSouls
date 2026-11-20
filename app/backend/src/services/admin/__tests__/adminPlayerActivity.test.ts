@@ -22,7 +22,7 @@ jest.mock('../../../config/logger', () => ({
   default: { info: jest.fn(), warn: jest.fn(), error: (...args: unknown[]) => mockLoggerError(...args), debug: jest.fn() },
 }));
 
-import { buildUserFilter } from '../../../utils/buildUserFilter';
+import { realUserFilter } from '../../../utils/realUserFilter';
 import { buildHumanActivityWhere, countHumanPlayerActivity } from '../adminPlayerActivityService';
 import { findPreviousKpiSnapshot, recordKpiSnapshot, recordKpiSnapshotNonFatal } from '../adminKpiSnapshotService';
 import { percentageOneDecimal } from '../adminDashboardService';
@@ -33,7 +33,7 @@ const ago = (ms: number): Date => new Date(NOW.getTime() - ms);
 
 describe('buildHumanActivityWhere', () => {
   const where = buildHumanActivityWhere(NOW);
-  const human = buildUserFilter('real');
+  const human = realUserFilter();
 
   it('scopes every count to human stables', () => {
     expect(where.total).toEqual(human);

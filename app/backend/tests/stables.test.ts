@@ -7,7 +7,7 @@ import bcrypt from 'bcrypt';
 import stablesRoutes from '../src/routes/stables';
 import authRoutes from '../src/routes/auth';
 import { errorHandler } from '../src/middleware/errorHandler';
-import { SENSITIVE_ROBOT_FIELDS } from '../src/routes/robots';
+import { SENSITIVE_ROBOT_FIELDS } from '../src/services/robot/robotSanitizer';
 import { battleLogFixture } from './helpers/battleLogFixture';
 import { enterRobotStanding } from './helpers/standings';
 

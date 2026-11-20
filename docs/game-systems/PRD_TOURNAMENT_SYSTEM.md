@@ -505,7 +505,7 @@ export async function getCurrentRoundMatches(tournamentId: number): Promise<Tour
 
 // Helper functions
 function calculateMaxRounds(participants: number): number
-function seedRobotsByELO(robots: Robot[]): Robot[]
+function seedParticipantsByELO(participants: TournamentParticipant[]): TournamentParticipant[]
 function createBracketPairs(seededRobots: Robot[]): TournamentMatch[]
 ```
 
@@ -1162,7 +1162,7 @@ For **large tournaments** (256+ robots):
 - [x] Create `tournamentService.ts` service
 - [x] Implement `createSingleEliminationTournament()`
 - [x] Implement `getEligibleRobotsForTournament()`
-- [x] Implement `seedRobotsByELO()`
+- [x] Implement `seedParticipantsByELO()`
 - [x] Implement `calculateMaxRounds()`
 - [x] Write unit tests for eligibility logic
 

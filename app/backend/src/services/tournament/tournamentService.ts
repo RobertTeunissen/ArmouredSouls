@@ -246,7 +246,6 @@ export async function resolveHigherSeed(tournamentId: number, p1: number, p2: nu
 
 /**
  * Create a new single elimination tournament (1v1 robots)
- * Thin wrapper around createTournament for backward compatibility.
  * All eligible robots participate (can be in multiple tournaments)
  */
 export async function createSingleEliminationTournament(): Promise<TournamentCreationResult> {

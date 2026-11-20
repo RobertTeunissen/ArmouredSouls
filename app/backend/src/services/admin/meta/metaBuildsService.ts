@@ -4,7 +4,7 @@
  *
  * Replaces the separate Tuning, Refinement and Subscriptions admin pages
  * (their endpoints are gone). Every count is scoped to one stable type via
- * `buildUserFilter`. Read-only.
+ * `realUserFilter`. Read-only.
  */
 import prisma from '../../../lib/prisma';
 import type { Prisma } from '../../../../generated/prisma';
