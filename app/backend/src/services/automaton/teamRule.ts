@@ -4,8 +4,6 @@
  * because the admin Editor's Teams card uses it too.
  */
 export {
-  TEAM_RULE_2V2,
-  TEAM_RULE_3V3,
   teamsForSlots,
   requiredTeamNameCounts,
   teamNameMaxRobots,

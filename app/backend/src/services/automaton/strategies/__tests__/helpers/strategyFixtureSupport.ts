@@ -19,11 +19,17 @@ import { AUTOMATON_FACILITY_TYPES, type BlueprintFacts, type FacilityType } from
 import { planNextStep } from '../../../turnPlanner';
 import { loadStrategyRegistry, STRATEGY_DIRECTORY } from '../../registry';
 import { SCENARIO_STARTING_BALANCE, projectOpeningBuild, type ScenarioResult } from '../../scenarioProjector';
-import { goalLabel } from '../../strategyDefinitionSchema';
+import { facilityLabel, GOAL_TYPE_LABELS } from '../../strategyDefinitionSchema';
+import type { FileBuildOrderEntry } from '../../../../../shared/types';
 import { defaultParameters } from '../../strategyParameters';
 import type { UpgradeStrategy } from '../../strategyTypes';
 import { SEED_WEAPON_MAP } from './strategyTestSupport';
 import type { BuildFocusKey, LoadoutType, RefinementStep, Stance } from '../../../../../shared/types';
+
+/** Label of a Goal: "Robots", "Booking Office", "Attributes", … */
+function goalLabel(goal: FileBuildOrderEntry['goal']): string {
+  return goal.type === 'facility' ? facilityLabel(goal.facilityType) : GOAL_TYPE_LABELS[goal.type];
+}
 
 // ── Build_Order notation of the review document ──────────────────────
 

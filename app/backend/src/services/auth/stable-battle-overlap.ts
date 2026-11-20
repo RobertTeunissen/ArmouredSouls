@@ -53,7 +53,7 @@ export type SharedSideOutcome = 'win' | 'loss' | 'draw' | 'unknown';
 const NO_COUNTER_BATTLE_TYPES: readonly string[] = [...PLACEMENT_COUNTED_MODES];
 
 /** Bye modes whose bye rows never touch the robot counters (`updatesElo: false`). */
-export const NO_COUNTER_BYE_BATTLE_TYPES: readonly string[] = BYE_MODES.filter(
+const NO_COUNTER_BYE_BATTLE_TYPES: readonly string[] = BYE_MODES.filter(
   (mode) => !BYE_MODE_SPECS[mode].updatesElo && !NO_COUNTER_BATTLE_TYPES.includes(mode),
 );
 

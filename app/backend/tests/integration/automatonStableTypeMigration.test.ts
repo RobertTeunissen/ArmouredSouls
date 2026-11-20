@@ -18,7 +18,6 @@ import prisma from '../../src/lib/prisma';
 import { createUser } from '../../src/services/auth/userService';
 import { createGeneratedStables } from '../../src/utils/userGeneration';
 import { disconnectSeedClient, upsertUser } from '../../prisma/seed';
-import { satisfiesStableTypeInvariant } from '../../src/utils/stableType';
 
 const MIGRATION_SQL = fs.readFileSync(
   path.join(__dirname, '../../prisma/migrations/20261009000000_automaton_stables/migration.sql'),
@@ -180,7 +179,7 @@ describe('Stable_Type migration and invariant I1 (Spec #55)', () => {
       expect(rows.length).toBeGreaterThan(0);
       for (const row of rows) {
         expect(row.stableType).toBe('generated');
-        expect(satisfiesStableTypeInvariant(row.isGenerated, row.stableType)).toBe(true);
+        expect(row.isGenerated).toBe(row.stableType === 'generated');
       }
     });
 
@@ -189,7 +188,7 @@ describe('Stable_Type migration and invariant I1 (Spec #55)', () => {
       createdUserIds.push(user.id);
       const row = await prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { isGenerated: true, stableType: true } });
       expect(row.stableType).toBe(isGenerated ? 'generated' : 'human');
-      expect(satisfiesStableTypeInvariant(row.isGenerated, row.stableType)).toBe(true);
+      expect(row.isGenerated).toBe(row.stableType === 'generated');
     });
   });
 });

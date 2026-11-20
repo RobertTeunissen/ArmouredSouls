@@ -1,4 +1,5 @@
-import { TEAM_RULE_2V2, TEAM_RULE_3V3, requiredTeamNameCounts, teamsForSlots } from '../teamRule';
+import { requiredTeamNameCounts, teamsForSlots } from '../teamRule';
+import { TEAM_RULE_2V2, TEAM_RULE_3V3 } from '../../../shared/utils/automatonTeamRule';
 
 const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i + 1);
 

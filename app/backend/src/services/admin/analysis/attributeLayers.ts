@@ -47,7 +47,7 @@ export const REFINEMENT_TIER_BITS = { hone: 1, augment: 2, sharpen: 4, forge: 8 
 export const REFINEMENT_TIERS = Object.keys(REFINEMENT_TIER_BITS) as RefinementTier[];
 
 /** Additive layers inside `LayeredBuild.data`, each `ATTRIBUTE_COUNT` long, in `ROBOT_ATTRIBUTES` order. */
-const LAYER_OFFSET = {
+export const LAYER_OFFSET = {
   base: 0,
   tuning: ATTRIBUTE_COUNT,
   /** Catalog weapon bonuses (both weapons), derived. */
@@ -146,11 +146,6 @@ export function layerBuild(raw: RawBuild): LayeredBuild {
     refinementTiers: tierBits(raw.mainRefinements, raw.offhandRefinements),
     invested,
   };
-}
-
-/** One additive layer's value for attribute index `k`. */
-export function layerValue(build: LayeredBuild, layer: AdditiveLayer, k: number): number {
-  return build.data[LAYER_OFFSET[layer] + k];
 }
 
 /**

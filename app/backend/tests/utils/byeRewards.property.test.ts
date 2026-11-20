@@ -12,8 +12,8 @@ import {
   BYE_MODES,
   BYE_MODE_SPECS,
   TIER_SCALED_BYE_MODES,
-  TOURNAMENT_BYE_MODES,
   ByeMode,
+  type TournamentByeMode,
   ByeRewardInput,
 } from '../../src/utils/byeRewards';
 import {
@@ -22,6 +22,10 @@ import {
   getLeagueWinReward,
 } from '../../src/utils/economyFormulas';
 import { calculateTournamentParticipationReward } from '../../src/utils/tournamentRewards';
+
+const TOURNAMENT_BYE_MODES = BYE_MODES.filter(
+  (m): m is TournamentByeMode => BYE_MODE_SPECS[m].floor === 'tournament_round_loss',
+);
 
 const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 

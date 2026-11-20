@@ -83,9 +83,6 @@ import type {
   UpdateStrategyInput,
 } from '../../shared/types';
 
-/** Opening balance of an Activated stable: the `User.currency` default (R2.2). */
-export const AUTOMATON_OPENING_BALANCE = 3_000_000;
-
 export type BlueprintInput = BlueprintFields;
 
 export interface AddBlueprintInput extends BlueprintInput {
@@ -461,7 +458,7 @@ export async function activateProfile(catalogueKey: string, deps: ProfileService
           email: null,
           role: 'user',
           stableName,
-          // `currency` keeps the account default (₡3,000,000, AUTOMATON_OPENING_BALANCE): an
+          // `currency` keeps the account default (₡3,000,000): an
           // opening balance, not a Financial_Pair, exactly as at registration (R2.2, VC1).
           isGenerated: false,
           stableType: 'automaton',

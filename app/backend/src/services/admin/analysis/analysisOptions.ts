@@ -13,7 +13,6 @@ import type {
   ArchetypeKey,
   AttributeGroup,
   LayerKey,
-  LayerToggles,
   Loadout,
   RangeBand,
   UsageTier,
@@ -48,14 +47,6 @@ export const MODE_COLUMN: Readonly<Record<string, Exclude<AnalysisColumn, 'all'>
  * All on = the values the simulator fought with (stance included).
  */
 export const LAYER_KEYS = ['tuning', 'weapons', 'refinements', 'loadout', 'stance'] as const satisfies readonly LayerKey[];
-
-export const ALL_LAYERS_ON: Readonly<LayerToggles> = {
-  tuning: true,
-  weapons: true,
-  refinements: true,
-  loadout: true,
-  stance: true,
-};
 
 /** The five attribute groups of the robot detail page (AI Processing and Team Coordination apart). */
 export const ATTRIBUTE_GROUPS = ['combat', 'defence', 'chassis', 'ai', 'team'] as const satisfies readonly AttributeGroup[];
