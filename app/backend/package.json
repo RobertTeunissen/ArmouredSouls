@@ -57,7 +57,8 @@
       "ip-address": "10.7.6",
       "mysql2": "3.23.1",
       "qs": "6.16.2",
-      "body-parser": "2.4.0"
+      "body-parser": "2.4.0",
+      "effect": "3.22.5"
     },
     "onlyBuiltDependencies": [
       "@tensorflow/tfjs-node",
