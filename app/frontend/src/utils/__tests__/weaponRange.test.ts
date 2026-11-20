@@ -1,22 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
-  getWeaponOptimalRange,
   getRangeBandColor,
   getRangeBandBgColor,
   getRangeBandLabel,
-  type WeaponRangeInput,
-  type RangeBand,
 } from '../weaponRange';
-
-describe('getWeaponOptimalRange', () => {
-  it('should return the stored rangeBand value directly', () => {
-    const bands: RangeBand[] = ['melee', 'short', 'mid', 'long'];
-    for (const band of bands) {
-      const weapon: WeaponRangeInput = { name: `Test ${band}`, rangeBand: band };
-      expect(getWeaponOptimalRange(weapon)).toBe(band);
-    }
-  });
-});
 
 describe('getRangeBandColor', () => {
   it('should return text-red-400 for melee', () => {

@@ -13,7 +13,6 @@
 
 import { RobotCombatState, RangeBand } from './types';
 import {
-  getWeaponOptimalRange,
   classifyRangeBand,
   getRangePenalty,
   canAttack,
@@ -76,7 +75,7 @@ export function resolveCounter(
     throw new BattleError(BattleErrorCode.ROBOT_NOT_BATTLE_READY, 'Defender has no main weapon', 500, { robotId: defender.robot.id });
   }
 
-  const mainRange = getWeaponOptimalRange(mainWeapon);
+  const mainRange = mainWeapon.rangeBand;
   const currentBand = classifyRangeBand(distance);
 
   // Check if main weapon can reach
@@ -86,7 +85,7 @@ export function resolveCounter(
       offhandWeapon &&
       defender.robot.loadoutType === 'dual_wield'
     ) {
-      const offhandRange = getWeaponOptimalRange(offhandWeapon);
+      const offhandRange = offhandWeapon.rangeBand;
       if (canReachAtRange(offhandRange, distance)) {
         const penalty = getRangePenalty(offhandRange, currentBand);
         const hydroBonus = currentBand === 'melee'

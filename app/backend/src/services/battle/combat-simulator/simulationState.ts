@@ -3,7 +3,7 @@
  */
 
 import { euclideanDistance, angleBetween } from '../../arena/vector2d';
-import { classifyRangeBand, getRangePenalty, getWeaponOptimalRange } from '../../arena/rangeBands';
+import { classifyRangeBand, getRangePenalty } from '../../arena/rangeBands';
 import { calculateHydraulicBonus } from '../../arena/hydraulicBonus';
 import { calculateLogicCoresBonus } from '../../arena/logicCoresBonus';
 import { checkBackstab } from '../../arena/positionTracker';
@@ -21,7 +21,6 @@ import {
   ArenaConfig,
   GameModeState,
   Position,
-  WeaponLike,
 } from './combatTypes';
 import { roundTime, requireHandWeapon } from './combatFormulas';
 import { buildPositionSnapshot } from './attackResolution';
@@ -149,9 +148,7 @@ export function buildSpatialContext(
   const rangeBand = classifyRangeBand(dist);
 
   const weapon = requireHandWeapon(attacker.robot, hand);
-  const weaponLike: WeaponLike = { name: weapon.name, rangeBand: weapon.rangeBand as RangeBand };
-  const optimalRange = getWeaponOptimalRange(weaponLike);
-  const rangePenaltyMult = getRangePenalty(optimalRange, rangeBand);
+  const rangePenaltyMult = getRangePenalty(weapon.rangeBand as RangeBand, rangeBand);
   const hydraulicMult = calculateHydraulicBonus(attacker.numHydraulicSystems, rangeBand);
   const logicCoresMult = calculateLogicCoresBonus(attacker.numLogicCores, rangeBand);
 

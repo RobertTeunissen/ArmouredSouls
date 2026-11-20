@@ -1,28 +1,5 @@
-/**
- * Weapon Range Classification Utility
- *
- * Returns the weapon's stored rangeBand value directly from the database.
- *
- * Requirement: 3.4
- */
-
-/** Range band classification */
-export type RangeBand = 'melee' | 'short' | 'mid' | 'long';
-
-/** Minimal weapon shape needed for range classification */
-export interface WeaponRangeInput {
-  name: string;
-  rangeBand: RangeBand;
-}
-
-/**
- * Determine a weapon's optimal range band.
- *
- * Returns the stored rangeBand value directly — no derivation needed.
- */
-export function getWeaponOptimalRange(weapon: WeaponRangeInput): RangeBand {
-  return weapon.rangeBand;
-}
+/** Display helpers for weapon range bands. */
+import type { RangeBand } from '@shared/types';
 
 /** Color class for each range band (Tailwind) */
 export function getRangeBandColor(band: RangeBand): string {

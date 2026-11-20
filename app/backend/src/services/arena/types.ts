@@ -17,7 +17,8 @@ import type { MovementMode } from './servoStrain';
 // ─── Range Band Classification (Req 3.1) ────────────────────────────
 
 /** Range band classification */
-export type RangeBand = 'melee' | 'short' | 'mid' | 'long';
+export type { RangeBand } from '../../shared/types';
+import type { RangeBand } from '../../shared/types';
 
 /** Range band boundaries in grid units */
 export const RANGE_BAND_BOUNDARIES = {

@@ -4,7 +4,8 @@ import BallisticIcon from '../assets/icons/weapon-types/ballistic.svg?react';
 import EnergyIcon from '../assets/icons/weapon-types/energy.svg?react';
 import ShieldIcon from '../assets/icons/weapon-types/shield.svg?react';
 import { calculateDPS as calcDPS } from '../utils/weaponConstants';
-import { getRangeBandLabel, getRangeBandColor, RangeBand } from '../utils/weaponRange';
+import { getRangeBandLabel, getRangeBandColor } from '../utils/weaponRange';
+import type { RangeBand } from '@shared/types';
 
 interface Weapon {
   id: number;

@@ -19,7 +19,7 @@
 
 import { euclideanDistance } from './vector2d';
 import { RobotCombatState, ThreatScore } from './types';
-import { getWeaponOptimalRange, classifyRangeBand, getRangePenalty, WeaponLike } from './rangeBands';
+import { classifyRangeBand, getRangePenalty, WeaponLike } from './rangeBands';
 
 /**
  * Calculate the threat score of an opponent relative to a robot.
@@ -59,7 +59,7 @@ export function calculateThreatScore(
   // Own range multiplier — how well can my main weapon hurt this opponent from here?
   const ownWeapon = robot.robot.mainWeapon?.weapon as WeaponLike | undefined;
   const ownRangeMultiplier = ownWeapon
-    ? getRangePenalty(getWeaponOptimalRange(ownWeapon), classifyRangeBand(distance))
+    ? getRangePenalty(ownWeapon.rangeBand, classifyRangeBand(distance))
     : 1;
 
   // Arena-normalized proximity decay

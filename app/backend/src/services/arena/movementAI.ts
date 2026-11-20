@@ -29,7 +29,7 @@ import {
   RobotCombatState,
   RangeBand,
 } from './types';
-import { getWeaponOptimalRange, WeaponLike } from './rangeBands';
+import { WeaponLike } from './rangeBands';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import { clampToArena } from './arenaLayout';
 import type { MovementMode } from './servoStrain';
@@ -98,8 +98,8 @@ export function getPreferredRange(state: RobotCombatState): RangeBand {
 
   // Dual wield with both weapons
   if (loadout === 'dual_wield' && offhandWeapon) {
-    const mainRange = getWeaponOptimalRange(mainWeapon);
-    const offhandRange = getWeaponOptimalRange(offhandWeapon);
+    const mainRange = mainWeapon.rangeBand;
+    const offhandRange = offhandWeapon.rangeBand;
 
     if (mainRange === offhandRange) return mainRange;
 
@@ -117,7 +117,7 @@ export function getPreferredRange(state: RobotCombatState): RangeBand {
   }
 
   // Single, weapon+shield, two-handed (and any other loadout): main weapon range
-  return getWeaponOptimalRange(mainWeapon);
+  return mainWeapon.rangeBand;
 }
 
 /**
@@ -137,8 +137,8 @@ export function getEngagementRange(
     return getPreferredRange(state);
   }
 
-  const mainRange = getWeaponOptimalRange(mainWeapon);
-  const offhandRange = getWeaponOptimalRange(offhandWeapon);
+  const mainRange = mainWeapon.rangeBand;
+  const offhandRange = offhandWeapon.rangeBand;
   if (mainRange === offhandRange) return mainRange;
 
   const mainDPS = mainWeapon.baseDamage / Math.max(mainWeapon.cooldown, 1);

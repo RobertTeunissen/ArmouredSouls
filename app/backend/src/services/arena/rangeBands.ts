@@ -52,13 +52,6 @@ export function getRangePenalty(weaponRange: RangeBand, currentRange: RangeBand)
 }
 
 /**
- * Determine a weapon's optimal range band from its stored rangeBand value.
- */
-export function getWeaponOptimalRange(weapon: WeaponLike): RangeBand {
-  return weapon.rangeBand;
-}
-
-/**
  * Check whether a weapon can attack at the given distance.
  *
  * Melee weapons are blocked beyond 2 grid units (melee band max).

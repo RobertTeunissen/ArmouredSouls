@@ -8,6 +8,7 @@
  * is the same for every type.
  */
 import type { DamageFlow, RobotCombatStats } from '../utils/battleStatistics';
+import type { RangeBand } from './admin-analysis';
 import type { StableType } from './stable';
 
 export interface ArenaPoint {
@@ -33,7 +34,7 @@ export interface BattleLogEvent {
   positions?: Record<string, ArenaPoint>;
   facingDirections?: Record<string, number>;
   distance?: number;
-  rangeBand?: 'melee' | 'short' | 'mid' | 'long';
+  rangeBand?: RangeBand;
   backstab?: boolean;
   flanking?: boolean;
   robot1HP?: number;

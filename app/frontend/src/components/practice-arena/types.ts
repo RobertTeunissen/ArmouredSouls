@@ -13,7 +13,8 @@ import type { WhatIfOverrides } from '@shared/types';
 
 export type LoadoutType = 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield';
 export type Stance = 'offensive' | 'defensive' | 'balanced';
-export type RangeBand = 'melee' | 'short' | 'mid' | 'long';
+import type { RangeBand } from '@shared/types';
+export type { RangeBand };
 export type BotTier = 'WimpBot' | 'AverageBot' | 'ExpertBot' | 'UltimateBot';
 export type SlotMode = 'owned' | 'sparring';
 
