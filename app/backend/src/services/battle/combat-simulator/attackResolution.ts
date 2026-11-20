@@ -113,6 +113,8 @@ export function performAttack(
     hydraulicMult: number;
     logicCoresMult: number;
     positionalBonus: number;
+    focusFireBonus: number;
+    focusFireContributors: string[];
     adaptationHit: number;
     adaptationDmg: number;
     pressureAccuracy: number;
@@ -198,6 +200,7 @@ export function performAttack(
         logicCoresBonus: spatialContext.logicCoresMult,
         positionalBonus: spatialContext.positionalBonus,
         positionalKind: spatialContext.isFlanking ? 'flanking' : 'backstab',
+        focusFireBonus: spatialContext.focusFireBonus,
         adaptationDamageBonus: spatialContext.adaptationDmg,
         pressureDamageMod: spatialContext.pressureDamage,
         syncVolleyBonus: spatialContext.syncVolleyBonus,
@@ -213,6 +216,7 @@ export function performAttack(
 
     attackerState.totalDamageDealt += hpDamage + shieldDamage;
     defenderState.totalDamageTaken += hpDamage + shieldDamage;
+    defenderState.lastHitTakenFrom[attackerState.teamIndex] = currentTime;
 
     // Kill attribution (Spec #46 R4.16). Only HP damage counts — stripping a
     // shield does not put the defender any closer to destruction on its own, so
@@ -275,6 +279,9 @@ export function performAttack(
       rangePenalty: spatialContext.rangePenaltyMult,
       backstab: spatialContext.isBackstab,
       flanking: spatialContext.isFlanking,
+      ...(spatialContext.focusFireBonus > 0
+        ? { focusFireBonus: spatialContext.focusFireBonus, focusFireContributors: spatialContext.focusFireContributors }
+        : {}),
       attackAngle: spatialContext.attackAngle,
     });
 

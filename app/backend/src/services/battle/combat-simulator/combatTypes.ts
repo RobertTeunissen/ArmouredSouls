@@ -108,6 +108,10 @@ export interface CombatEvent {
   rangePenalty?: number;
   backstab?: boolean;
   flanking?: boolean;
+  /** Focus fire damage bonus applied to this hit (team battles), when above 0. */
+  focusFireBonus?: number;
+  /** Names of the robots whose hits formed the focus fire (attacker included). */
+  focusFireContributors?: string[];
   attackAngle?: number;
   // KotH-specific fields
   kpiData?: {

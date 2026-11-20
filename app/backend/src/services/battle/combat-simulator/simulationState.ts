@@ -11,6 +11,7 @@ import { getEffectiveAdaptation } from '../../arena/adaptationTracker';
 import { calculatePressureEffects } from '../../arena/pressureSystem';
 import { calculateBaseSpeed } from '../../arena/servoStrain';
 import { checkSyncVolley, getFormationDefenseBonus } from '../../arena/teamCoordination';
+import { calculateFocusFireBonus, FOCUS_FIRE_WINDOW_SECONDS } from '../../team-battle/teamCoordinationEffects';
 import {
   RobotWithWeapons,
   BattleConfig,
@@ -102,6 +103,7 @@ export function initializeCombatState(
     // Team
     teamIndex,
     isAlive: true,
+    lastHitTakenFrom: {},
   };
 }
 
@@ -139,6 +141,31 @@ function engagingTeammates(
   });
 }
 
+/**
+ * Focus fire (team battles): the attacker plus every living teammate that hit
+ * `defender` within the last FOCUS_FIRE_WINDOW_SECONDS, scaled by their
+ * average syncProtocols. No bonus without a recent teammate hit.
+ */
+function focusFireFor(
+  attacker: SpatialRobotCombatState,
+  defender: SpatialRobotCombatState,
+  allStates: SpatialRobotCombatState[],
+  teamOf: Record<number, number>,
+  currentTime: number,
+  gameModeState: GameModeState | undefined,
+): { bonus: number; contributors: string[] } {
+  const contributors = [attacker, ...allStates.filter((s) => {
+    if (s === attacker || !s.isAlive || teamOf[s.teamIndex] !== teamOf[attacker.teamIndex]) return false;
+    const lastHit = defender.lastHitTakenFrom[s.teamIndex];
+    return lastHit !== undefined && currentTime - lastHit <= FOCUS_FIRE_WINDOW_SECONDS;
+  })];
+  if (contributors.length < 2) return { bonus: 0, contributors: [] };
+  const teamSize = Number(gameModeState?.customData?.teamSize ?? contributors.length);
+  const avgSync = contributors.reduce((sum, s) => sum + Number(s.robot.syncProtocols ?? 0), 0) / contributors.length;
+  const bonus = calculateFocusFireBonus(avgSync, contributors.length, teamSize);
+  return { bonus, contributors: bonus > 0 ? contributors.map((s) => s.robot.name) : [] };
+}
+
 // ─── Helper: build spatial context for an attack pair ────────────────
 export function buildSpatialContext(
   attacker: SpatialRobotCombatState,
@@ -156,6 +183,8 @@ export function buildSpatialContext(
   hydraulicMult: number;
   logicCoresMult: number;
   positionalBonus: number;
+  focusFireBonus: number;
+  focusFireContributors: string[];
   adaptationHit: number;
   adaptationDmg: number;
   pressureAccuracy: number;
@@ -190,6 +219,9 @@ export function buildSpatialContext(
       defenderPos,
     )
     : { isFlanking: false, bonus: 0 };
+  const focusFire = teamOf
+    ? focusFireFor(attacker, defender, allStates, teamOf, currentTime, gameModeState)
+    : { bonus: 0, contributors: [] };
   // One positional bonus per hit: the larger of backstab and flanking.
   const isFlanking = flankingResult.isFlanking && flankingResult.bonus >= backstabResult.bonus;
 
@@ -229,6 +261,8 @@ export function buildSpatialContext(
     hydraulicMult,
     logicCoresMult,
     positionalBonus: isFlanking ? flankingResult.bonus : backstabResult.bonus,
+    focusFireBonus: focusFire.bonus,
+    focusFireContributors: focusFire.contributors,
     adaptationHit: adaptation.hitBonus,
     adaptationDmg: adaptation.damageBonus,
     pressureAccuracy: pressure.accuracyMod,

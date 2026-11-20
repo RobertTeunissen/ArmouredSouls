@@ -37,6 +37,8 @@ export interface BattleLogEvent {
   rangeBand?: RangeBand;
   backstab?: boolean;
   flanking?: boolean;
+  /** Focus fire damage bonus applied to this hit (team battles), when above 0. */
+  focusFireBonus?: number;
   robot1HP?: number;
   robot2HP?: number;
   robot1Shield?: number;

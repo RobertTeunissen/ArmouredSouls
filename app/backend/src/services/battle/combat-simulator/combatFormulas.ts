@@ -155,7 +155,7 @@ export function calculateBaseDamage(
   attacker: RobotWithWeapons,
   weaponBaseDamage: number,
   _attackerHand: 'main' | 'offhand' = 'main',
-  spatialMultipliers?: { rangePenalty: number; hydraulicBonus: number; logicCoresBonus: number; positionalBonus: number; positionalKind?: 'backstab' | 'flanking'; adaptationDamageBonus: number; pressureDamageMod: number; syncVolleyBonus: number }
+  spatialMultipliers?: { rangePenalty: number; hydraulicBonus: number; logicCoresBonus: number; positionalBonus: number; positionalKind?: 'backstab' | 'flanking'; focusFireBonus?: number; adaptationDamageBonus: number; pressureDamageMod: number; syncVolleyBonus: number }
 ): { damage: number; breakdown: FormulaBreakdown } {
   const effectiveCombatPower = Number(attacker.combatPower);
   const combatPowerMult = 1 + (effectiveCombatPower * 1.5) / 100;
@@ -182,6 +182,7 @@ export function calculateBaseDamage(
   let adaptDmg = 0;
   let pressureDmg = 0;
   let syncBonus = 0;
+  let focusFireVal = 0;
   if (spatialMultipliers) {
     rangePenaltyVal = spatialMultipliers.rangePenalty;
     hydraulicVal = spatialMultipliers.hydraulicBonus;
@@ -191,6 +192,7 @@ export function calculateBaseDamage(
     adaptDmg = spatialMultipliers.adaptationDamageBonus;
     pressureDmg = spatialMultipliers.pressureDamageMod;
     syncBonus = spatialMultipliers.syncVolleyBonus;
+    focusFireVal = spatialMultipliers.focusFireBonus ?? 0;
     damage *= rangePenaltyVal;
     damage *= hydraulicVal;
     damage *= logicCoresVal;
@@ -198,10 +200,11 @@ export function calculateBaseDamage(
     damage *= (1 + adaptDmg / 100);
     damage *= (1 + pressureDmg / 100);
     damage *= (1 + syncBonus);
+    damage *= (1 + focusFireVal);
   }
 
   const spatialParts = spatialMultipliers
-    ? ` × ${rangePenaltyVal.toFixed(2)} range × ${hydraulicVal.toFixed(2)} hydraulic × ${logicCoresVal.toFixed(2)} logic${positionalVal > 0 ? ` × ${(1 + positionalVal).toFixed(2)} ${positionalKind}` : ''}${adaptDmg ? ` × ${(1 + adaptDmg / 100).toFixed(3)} adapt` : ''}${pressureDmg ? ` × ${(1 + pressureDmg / 100).toFixed(3)} pressure` : ''}${syncBonus ? ` × ${(1 + syncBonus).toFixed(3)} sync` : ''}`
+    ? ` × ${rangePenaltyVal.toFixed(2)} range × ${hydraulicVal.toFixed(2)} hydraulic × ${logicCoresVal.toFixed(2)} logic${positionalVal > 0 ? ` × ${(1 + positionalVal).toFixed(2)} ${positionalKind}` : ''}${adaptDmg ? ` × ${(1 + adaptDmg / 100).toFixed(3)} adapt` : ''}${pressureDmg ? ` × ${(1 + pressureDmg / 100).toFixed(3)} pressure` : ''}${syncBonus ? ` × ${(1 + syncBonus).toFixed(3)} sync` : ''}${focusFireVal ? ` × ${(1 + focusFireVal).toFixed(3)} focus_fire` : ''}`
     : '';
 
   return {
@@ -221,6 +224,7 @@ export function calculateBaseDamage(
         adaptationDamage: adaptDmg,
         pressureDamage: pressureDmg,
         syncVolley: syncBonus,
+        focusFire: focusFireVal,
       },
       result: damage,
     },

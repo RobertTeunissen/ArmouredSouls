@@ -349,6 +349,40 @@ describe('Flanking in team battles', () => {
     }
   });
 
+  it('adds focus fire damage only to hits that follow a teammate hit on the same enemy within 1 s', () => {
+    type FocusHit = HitEvent & { focusFireBonus?: number; focusFireContributors?: string[]; defender?: string; timestamp: number; attacker?: string };
+    let focusHits = 0;
+    let metricTotal = 0;
+    for (let seed = 1; seed <= 20; seed++) {
+      Math.random = seeded(seed);
+      // Robot 4 starts damaged, so both attackers pick it (lowest HP% first).
+      const wounded = { ...meleeRobot(4), currentHP: 60 } as RobotWithWeapons;
+      const result = simulateTeamBattle([meleeRobot(1), meleeRobot(2)], [meleeRobot(3), wounded], 2);
+      const hits = (result.detailedCombatEvents as FocusHit[]).filter((e) => e.type === 'attack' || e.type === 'critical');
+      for (const hit of hits.filter((e) => (e.focusFireBonus ?? 0) > 0)) {
+        focusHits++;
+        expect(hit.focusFireContributors?.length).toBeGreaterThanOrEqual(2);
+        expect(hit.formulaBreakdown?.calculation).toMatch(/focus_fire/);
+        const teammate = hit.focusFireContributors!.find((name) => name !== hit.attacker)!;
+        const earlier = hits.filter((e) => e.attacker === teammate && e.defender === hit.defender
+          && e.timestamp <= hit.timestamp && hit.timestamp - e.timestamp <= 1.0 + 1e-9);
+        expect(earlier.length).toBeGreaterThan(0);
+      }
+      metricTotal += result.focusFireMetrics.team1 + result.focusFireMetrics.team2;
+      expect(result.focusFireEvents.length).toBe(hits.filter((e) => (e.focusFireBonus ?? 0) > 0).length);
+    }
+    expect(focusHits).toBeGreaterThan(0);
+    expect(metricTotal).toBeGreaterThan(0);
+  });
+
+  it('gives no focus fire without Sync Protocols', () => {
+    const noSync = (id: number): RobotWithWeapons =>
+      createMockRobot({ id, name: `NoSync-${id}`, syncProtocols: new Prisma.Decimal(0), mainWeapon: createWeaponInventory(id, 20, 'melee') } as Partial<RobotWithWeapons> & { id: number; name: string });
+    Math.random = seeded(3);
+    const result = simulateTeamBattle([noSync(1), noSync(2)], [noSync(3), noSync(4)], 2);
+    expect(result.focusFireEvents).toHaveLength(0);
+  });
+
   it('never flanks in a 1v1 battle', () => {
     for (let seed = 1; seed <= 10; seed++) {
       Math.random = seeded(seed);

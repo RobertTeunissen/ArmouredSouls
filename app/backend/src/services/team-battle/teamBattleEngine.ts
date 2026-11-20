@@ -28,7 +28,6 @@ import {
   TeamMetricPair,
 } from '../../types/teamBattleLogTypes';
 import {
-  calculateFocusFireBonus,
   calculateAllyShieldRegen,
   calculateFormationDefense,
   FORMATION_RANGE,
@@ -130,10 +129,6 @@ export function simulateTeamBattle(
   const allySupportMetrics: TeamMetricPair = { team1: 0, team2: 0 };
   const formationDefenceMetrics: TeamMetricPair = { team1: 0, team2: 0 };
 
-  // Track focus fire bonus damage separately so it can be added to the
-  // simulator's internal damage tracking (which doesn't know about bonus damage)
-  const focusFireBonusDamageDealt: Map<number, number> = new Map();
-  const focusFireBonusDamageTaken: Map<number, number> = new Map();
 
   // ── Custom game mode hooks for team coordination ──
   // We use the game mode extensibility system to inject team coordination
@@ -283,110 +278,6 @@ export function simulateTeamBattle(
       }
     }
 
-    // ── Detect focus fire (2+ robots targeting same enemy this tick) ──
-    const tickTargets: Map<number, number[]> = new Map(); // targetIdx → attackerIdxs
-
-    for (const state of states) {
-      if (!state.isAlive) continue;
-      if (state.currentTarget === null || state.currentTarget === undefined) continue;
-
-      const targetIdx = state.currentTarget;
-      const targetState = states[targetIdx];
-      if (!targetState) continue;
-
-      // Only count if targeting opposing team
-      const myTeam = teamOf.get(state.teamIndex);
-      const targetTeam = teamOf.get(targetIdx);
-      if (myTeam === targetTeam) continue;
-
-      if (!tickTargets.has(targetIdx)) {
-        tickTargets.set(targetIdx, []);
-      }
-      tickTargets.get(targetIdx)!.push(state.teamIndex);
-    }
-
-    // Process focus fire events
-    for (const [targetIdx, attackerIdxs] of tickTargets.entries()) {
-      if (attackerIdxs.length >= 2) {
-        const targetState = states[targetIdx];
-        if (!targetState) continue;
-
-        const attackingTeam = teamOf.get(attackerIdxs[0])!;
-
-        // Calculate average syncProtocols of contributors
-        const avgSyncProtocols = attackerIdxs.reduce((sum, idx) => {
-          return sum + Number(states[idx].robot.syncProtocols ?? 0);
-        }, 0) / attackerIdxs.length;
-
-        const bonus = calculateFocusFireBonus(avgSyncProtocols, attackerIdxs.length, teamSize);
-
-        if (bonus > 0) {
-          const contributorRobotIds = attackerIdxs.map(idx => trackers[idx].robotId);
-          const targetRobotId = trackers[targetIdx].robotId;
-
-          focusFireEvents.push({
-            tick: currentTick,
-            targetRobotId,
-            contributorRobotIds,
-            contributorCount: attackerIdxs.length,
-            bonusApplied: bonus,
-          });
-
-          battleLog.push({
-            type: 'focus_fire',
-            tick: currentTick,
-            timestamp: currentTime,
-            targetRobotId,
-            contributorRobotIds,
-            bonusApplied: bonus,
-          });
-
-          // Track metrics
-          if (attackingTeam === 1) {
-            focusFireMetrics.team1 += bonus;
-          } else {
-            focusFireMetrics.team2 += bonus;
-          }
-
-          // Apply focus fire damage bonus to contributors
-          // The bonus multiplies damage dealt this tick by contributors targeting this enemy
-          for (const attackerIdx of attackerIdxs) {
-            const attackerState = states[attackerIdx];
-            if (attackerState && attackerState.isAlive) {
-              // Apply bonus damage to the target (bonus % of recent damage)
-              const recentDmg = attackerState.totalDamageDealt - (lastDamageSnapshot.get(attackerIdx) ?? 0);
-              if (recentDmg > 0) {
-                const bonusDamage = recentDmg * bonus;
-                targetState.currentHP -= bonusDamage;
-
-                // Track focus fire bonus damage separately — the combat simulator's
-                // internal totalDamageDealt/totalDamageTaken don't include this
-                focusFireBonusDamageDealt.set(
-                  attackerIdx,
-                  (focusFireBonusDamageDealt.get(attackerIdx) ?? 0) + bonusDamage,
-                );
-                focusFireBonusDamageTaken.set(
-                  targetIdx,
-                  (focusFireBonusDamageTaken.get(targetIdx) ?? 0) + bonusDamage,
-                );
-
-                battleLog.push({
-                  type: 'damage',
-                  tick: currentTick,
-                  timestamp: currentTime,
-                  attackerRobotId: trackers[attackerIdx].robotId,
-                  defenderRobotId: trackers[targetIdx].robotId,
-                  amount: bonusDamage,
-                  weaponId: null,
-                  isFocusFire: true,
-                });
-              }
-            }
-          }
-        }
-      }
-    }
-
     // ── Apply ally shield regen (supportSystems) ──
     for (const state of states) {
       if (!state.isAlive) continue;
@@ -515,16 +406,13 @@ export function simulateTeamBattle(
 
   // ── Compile final results ──
 
-  // Finalize tracker stats from combat states
-  // The simulator tracks its own damageDealt/damageTaken internally, but it
-  // doesn't know about focus fire bonus damage applied in the tick hook.
-  // We take the simulator's values and ADD the separately-tracked bonus damage.
+  // Finalize tracker stats from combat states (focus fire is part of each hit's damage).
   if (result.finalStates) {
     for (const state of result.finalStates) {
       const tracker = trackers[state.teamIndex];
       if (tracker) {
-        tracker.damageDealt = state.totalDamageDealt + (focusFireBonusDamageDealt.get(state.teamIndex) ?? 0);
-        tracker.damageTaken = state.totalDamageTaken + (focusFireBonusDamageTaken.get(state.teamIndex) ?? 0);
+        tracker.damageDealt = state.totalDamageDealt;
+        tracker.damageTaken = state.totalDamageTaken;
       }
     }
   }
@@ -553,10 +441,10 @@ export function simulateTeamBattle(
       : result.durationSeconds,
   }));
 
-  // Add damage events from the combat simulator's raw events to our battle log
-  // (we already have focus fire, elimination, shield regen, and formation events)
-  // Extract key damage events from the simulator's event stream
+  // Add damage and focus fire events from the combat simulator's raw events
+  // (elimination, shield regen and formation events come from the tick hook)
   let damageEventCount = 0;
+  const robotIdByName = new Map(trackers.map((t) => [allRobots[t.stateIndex]?.name, t.robotId]));
   for (const event of result.events) {
     if (event.type === 'attack' || event.type === 'critical') {
       if (event.damage && event.damage > 0 && event.attacker && event.defender) {
@@ -567,6 +455,32 @@ export function simulateTeamBattle(
         const defenderTracker = trackers.find(t =>
           allRobots[t.stateIndex]?.name === event.defender
         );
+
+        if (attackerTracker && defenderTracker && event.focusFireBonus !== undefined && event.focusFireBonus > 0) {
+          const contributorRobotIds = (event.focusFireContributors ?? [])
+            .map((name) => robotIdByName.get(name))
+            .filter((id): id is number => id !== undefined);
+          const tick = Math.round(event.timestamp / SIMULATION_TICK);
+          focusFireEvents.push({
+            tick,
+            targetRobotId: defenderTracker.robotId,
+            contributorRobotIds,
+            contributorCount: contributorRobotIds.length,
+            bonusApplied: event.focusFireBonus,
+          });
+          battleLog.push({
+            type: 'focus_fire',
+            tick,
+            timestamp: event.timestamp,
+            targetRobotId: defenderTracker.robotId,
+            contributorRobotIds,
+            bonusApplied: event.focusFireBonus,
+          });
+          // Metric: the part of the hit's damage that focus fire added.
+          const bonusDamage = event.damage - event.damage / (1 + event.focusFireBonus);
+          if (attackerTracker.team === 1) focusFireMetrics.team1 += bonusDamage;
+          else focusFireMetrics.team2 += bonusDamage;
+        }
 
         if (attackerTracker && defenderTracker) {
           damageEventCount++;
