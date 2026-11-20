@@ -71,20 +71,6 @@ export const positiveIntParam = z
   .pipe(z.number().int().positive());
 
 /**
- * Safe image URL: only HTTPS protocol with a valid domain and path.
- * Rejects javascript:, data:, path traversal (../), and non-HTTPS protocols.
- * The refine step explicitly blocks ".." sequences in the path component.
- */
-export const safeImageUrl = z
-  .string()
-  .regex(
-    /^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\/[a-zA-Z0-9/_.-]+$/,
-    'Invalid image URL format',
-  )
-  .refine((url) => !url.includes('..'), { message: 'Path traversal sequences not allowed' })
-  .optional();
-
-/**
  * A robot appearance image path: a bundled preset (`/assets/robots…`,
  * `/src/assets/robot…`) or the player's own upload
  * (`/uploads/user-robots/<userId>/<uuid>.webp`). WebP only; no other
@@ -98,24 +84,6 @@ export const robotImagePath = z
     /^\/(?:(?:src\/)?assets\/robots?[\w/-]*|uploads\/user-robots\/\d+\/[0-9a-f-]+)\.webp$/,
     'Invalid image path. Must be a .webp file from presets or uploads.',
   );
-
-/**
- * ORDER BY column allowlist factory.
- * Maps user input to a predefined set of allowed column names.
- * Falls back to a safe default when the input doesn't match.
- */
-export function orderByColumn<T extends readonly string[]>(
-  allowed: T,
-  defaultCol: T[number],
-): z.ZodType<T[number]> {
-  return z
-    .string()
-    .optional()
-    .transform((val) => {
-      if (!val || !(allowed as readonly string[]).includes(val)) return defaultCol;
-      return val as T[number];
-    }) as z.ZodType<T[number]>;
-}
 
 /**
  * Enum value validator factory.

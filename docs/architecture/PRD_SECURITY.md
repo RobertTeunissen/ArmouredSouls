@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.1  
-**Last Updated**: November 8, 2026 (every player endpoint requires a login)  
+**Version**: v2.2  
+**Last Updated**: November 19, 2026 (protections listed as implemented; unused helpers removed)  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen
 
@@ -12,6 +12,7 @@
 v1.0 (Jan 24, 2026): Initial security strategy (aspirational)  
 v2.0 (Apr 10, 2026): Complete rewrite — documents actual implemented security controls, removes aspirational content (GDPR, mobile security, WAF, VPC), adds Security Playbook from Specs 11/12  
 v2.1 (Nov 8, 2026): "What needs a login" — closed the last anonymous player endpoints (league standings, leaderboards, Hall of Records, ELO chart, log summary)
+v2.2 (Nov 19, 2026): Ownership and input-validation sections describe the protections that run (`robotImagePath` + `assertSelectable`, enum sort keys, facility rows by `(userId, facilityType)`). Removed the never-used `safeImageUrl`, `orderByColumn`, `verifyFacilityOwnership`, `requestLogger.redactSensitive`, `verifyToken` and `verifyPassword` (#614).  
 
 ---
 
@@ -103,7 +104,7 @@ Every mutation on a user-owned resource verifies ownership before proceeding:
 
 - `verifyRobotOwnership(tx, robotId, userId)` — 403 on mismatch
 - `verifyWeaponOwnership(tx, inventoryId, userId)` — 403 on mismatch
-- `verifyFacilityOwnership(tx, facilityId, userId)` — 403 on mismatch
+- Facilities are never addressed by id from the client: purchases and upgrades look up the row by `(userId, facilityType)` for the authenticated user (`facilityUpgradeService`), so another stable's facility cannot be reached.
 
 Ownership checks run inside transaction boundaries to prevent TOCTOU races. Failures return generic "Access denied" — never reveal whether the resource exists.
 
@@ -126,8 +127,7 @@ Zod's default `.strip()` mode removes unknown fields, preventing mass-assignment
 | `safeSlug` | `/^[a-zA-Z0-9_-]+$/`, 1–100 chars | URL slugs (no `..`, `/`, `%2e`) |
 | `positiveInt` | Coerced positive integer | ID parameters |
 | `positiveIntParam` | String → validated → number | Route params (`:id`) |
-| `safeImageUrl` | HTTPS only, no `..` in path | Robot portrait URLs |
-| `orderByColumn(allowed, default)` | Allowlist factory | ORDER BY columns (prevents SQL injection) |
+| `robotImagePath` | `.webp` preset under `/assets/robots…` or own upload under `/uploads/user-robots/<userId>/`, no `..`, max 200 chars | Robot portrait paths |
 | `safeEnum(values)` | Strict enum | Loadout types, stances, etc. |
 | `paginationQuery` | `{ page, limit }` with max 100 | Paginated endpoints |
 
@@ -331,11 +331,11 @@ Every new endpoint must be reviewed against this list.
 
 ### Robot imageUrl Protocol Injection
 **Exploit**: `javascript:`, `data:`, or `../` in image URLs.  
-**Prevention**: `safeImageUrl` Zod primitive (HTTPS only, no `..`).
+**Prevention**: `robotImagePath` Zod primitive (only bundled presets or `/uploads/user-robots/` WebP paths; no protocol, no `..`), and `assertSelectable` checks an upload belongs to the player's Image_Library.
 
 ### SQL ORDER BY Column Injection
 **Exploit**: User-supplied column names in ORDER BY.  
-**Prevention**: `orderByColumn` factory with predefined allowlist.
+**Prevention**: sort parameters are `z.enum` allowlists mapped to Prisma `orderBy` (e.g. `LOSSES_SORT_KEYS`); raw SQL takes values only as bound parameters.
 
 ### Account Reset DDoS
 **Exploit**: Spamming reset endpoint (heavy DB operations).  
