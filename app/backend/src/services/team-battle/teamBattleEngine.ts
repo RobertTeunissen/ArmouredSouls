@@ -494,7 +494,7 @@ export function simulateTeamBattle(
               defenderRobotId: defenderTracker.robotId,
               amount: event.damage,
               weaponId: null,
-              isFocusFire: false,
+              isFocusFire: (event.focusFireBonus ?? 0) > 0,
             });
           }
         }

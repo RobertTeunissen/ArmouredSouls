@@ -506,7 +506,7 @@ export async function getCurrentRoundMatches(tournamentId: number): Promise<Tour
 // Helper functions
 function calculateMaxRounds(participants: number): number
 function seedParticipantsByELO(participants: TournamentParticipant[]): TournamentParticipant[]
-function createBracketPairs(seededRobots: Robot[]): TournamentMatch[]
+function generateBracketPairsGeneric(seededParticipants: TournamentParticipant[], maxRounds: number, participantType: ParticipantType): ScheduledTournamentMatch[]
 ```
 
 #### Tournament Rewards (`tournamentRewards.ts`)

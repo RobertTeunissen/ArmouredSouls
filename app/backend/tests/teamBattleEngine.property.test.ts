@@ -350,7 +350,7 @@ describe('Flanking in team battles', () => {
   });
 
   it('adds focus fire damage only to hits that follow a teammate hit on the same enemy within 1 s', () => {
-    type FocusHit = HitEvent & { focusFireBonus?: number; focusFireContributors?: string[]; defender?: string; timestamp: number; attacker?: string };
+    type FocusHit = HitEvent & { damage?: number; focusFireBonus?: number; focusFireContributors?: string[]; defender?: string; timestamp: number; attacker?: string };
     let focusHits = 0;
     let metricTotal = 0;
     for (let seed = 1; seed <= 20; seed++) {
@@ -369,6 +369,13 @@ describe('Flanking in team battles', () => {
         expect(earlier.length).toBeGreaterThan(0);
       }
       metricTotal += result.focusFireMetrics.team1 + result.focusFireMetrics.team2;
+      // Sampled damage log entries flag exactly the hits that got the bonus.
+      type DamageEntry = { type: string; isFocusFire?: boolean; timestamp: number; amount?: number };
+      const focusTimes = new Set(hits.filter((e) => (e.focusFireBonus ?? 0) > 0).map((e) => `${e.timestamp}:${e.damage}`));
+      for (const entry of result.battleLog as DamageEntry[]) {
+        if (entry.type !== 'damage') continue;
+        expect(entry.isFocusFire).toBe(focusTimes.has(`${entry.timestamp}:${entry.amount}`));
+      }
       expect(result.focusFireEvents.length).toBe(hits.filter((e) => (e.focusFireBonus ?? 0) > 0).length);
     }
     expect(focusHits).toBeGreaterThan(0);
