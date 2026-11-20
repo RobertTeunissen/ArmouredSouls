@@ -65,7 +65,7 @@ Since Spec #55 the classification is explicit in `users.stable_type` (`human`, `
 
 A human stable with **no login during the whole ending season** is deleted at rollover, after the archive is written and verified (so its season stays on record), with the same batched delete as generated stables. It is otherwise a returning player's account that would re-enter every season with ₡3,000,000 and count as a player in every overview.
 
-- Rule (`season/dormantStables.ts`): `buildUserFilter('real')`, `is_generated = false`, `stable_type = human`, `role <> 'admin'`, and the last activity before the ending season's `started_at`. Last activity is `last_login_at`, or `created_at` when the account never logged in; registration sets `last_login_at`, so a player who signs up during a season is never dormant in it.
+- Rule (`season/dormantStables.ts`): `realUserFilter()`, `is_generated = false`, `stable_type = human`, `role <> 'admin'`, and the last activity before the ending season's `started_at`. Last activity is `last_login_at`, or `created_at` when the account never logged in; registration sets `last_login_at`, so a player who signs up during a season is never dormant in it.
 - Admin accounts, Automatons and system/test accounts are never deleted this way.
 - Season Control's preview lists the count and the first 50 names; the run summary and the rollover history report `dormantStablesDeleted`.
 - Players are told in the guide article "What Resets and What Survives"; they can register again.

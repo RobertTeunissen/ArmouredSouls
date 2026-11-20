@@ -1,5 +1,7 @@
 import logger from '../config/logger';
 
+import type { RangeBand } from '../shared/types';
+
 export interface WeaponRecord {
   id: number;
   name: string;
@@ -11,7 +13,7 @@ export interface WeaponRecord {
 
 export interface WeaponSelectionParams {
   loadoutType: 'single' | 'weapon_shield' | 'dual_wield' | 'two_handed';
-  rangeBand: 'melee' | 'short' | 'mid' | 'long';
+  rangeBand: RangeBand;
   priceTier: { min: number; max: number };
 }
 

@@ -359,14 +359,6 @@ class RobotPerformanceService {
   }
 
   /**
-   * Get cycle number for a battle timestamp
-   */
-  private async getCycleNumberForBattle(timestamp: Date): Promise<number> {
-    const result = await this.batchGetCycleNumbers([timestamp]);
-    return result.get(0) ?? 1;
-  }
-
-  /**
    * Batch-resolve cycle numbers for multiple battle timestamps.
    * Pre-fetches all cycle snapshots in a single query and does in-memory lookups,
    * avoiding N+1 queries when processing many participants.
@@ -413,7 +405,7 @@ class RobotPerformanceService {
       }
     }
 
-    // Fallback: resolve unmatched timestamps from audit log (same as getCycleNumberForBattle)
+    // Fallback: resolve unmatched timestamps from audit log
     if (unresolvedIndices.length > 0) {
       const auditEvents = await prisma.auditLog.findMany({
         where: {

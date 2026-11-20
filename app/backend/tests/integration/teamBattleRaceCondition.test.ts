@@ -685,7 +685,7 @@ describe('Team Battle Race Condition Stress Test', () => {
       //   - Disband succeeds, register gets MEMBER_CONFLICT (robots still on team when checked)
       //   - Disband succeeds, register succeeds (robots freed before register checks)
       //   - Both fail due to transaction timeout (acceptable under contention)
-      //   - Register fails with subscription error (isRobotSubscribedTo uses global client)
+      //   - Register fails with a subscription error
       const [disbandResult, registerResult] = await Promise.all([
         disbandTeam(team.id, userId)
           .then(() => ({ success: true as const }))

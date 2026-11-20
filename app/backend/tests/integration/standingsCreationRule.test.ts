@@ -29,7 +29,7 @@ import { errorHandler } from '../../src/middleware/errorHandler';
 import { generateToken } from '../../src/services/auth/jwtService';
 import { createRobotTransaction } from '../../src/services/robot/robotCreationService';
 import {
-  getEventDefinition,
+  isRegisteredEvent,
   registerSubscribableEvent,
   SUBSCRIBABLE_EVENT_TYPES,
 } from '../../src/services/subscription/eventRegistry';
@@ -166,7 +166,7 @@ async function deleteStables(ids: readonly number[]): Promise<void> {
 
 beforeAll(() => {
   for (const type of SUBSCRIBABLE_EVENT_TYPES) {
-    if (!getEventDefinition(type)) registerSubscribableEvent({ type, label: type });
+    if (!isRegisteredEvent(type)) registerSubscribableEvent({ type, label: type });
   }
 });
 

@@ -9,7 +9,7 @@
  */
 
 import fc from 'fast-check';
-import { calculateFacilityOperatingCost } from '../src/utils/economyCalculations';
+import { calculateFacilityOperatingCost } from '../src/utils/economyFormulas';
 
 describe('Property 8: Streaming Studio Operating Cost Formula', () => {
   afterAll(() => {

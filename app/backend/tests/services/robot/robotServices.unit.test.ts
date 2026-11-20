@@ -1,5 +1,5 @@
 /**
- * Unit tests for Robot services: upgrade validation, ranking calculations,
+ * Unit tests for Robot services: upgrade validation,
  * creation validation, and query services.
  *
  * Focuses on pure functions and mocked DB interactions.
@@ -33,15 +33,6 @@ import {
   VALID_ATTRIBUTES,
   ATTRIBUTE_TO_ACADEMY,
 } from '../../../src/services/robot/robotUpgradeService';
-import {
-  calculateCategorySum,
-  calculateRanking,
-  COMBAT_ATTRIBUTES,
-  DEFENSE_ATTRIBUTES,
-  CHASSIS_ATTRIBUTES,
-  AI_ATTRIBUTES,
-  TEAM_ATTRIBUTES,
-} from '../../../src/services/robot/robotRankingService';
 import { validateRobotName, checkRosterCapacity } from '../../../src/services/robot/robotCreationService';
 import { RobotError } from '../../../src/errors/robotErrors';
 import * as fc from 'fast-check';
@@ -222,122 +213,6 @@ describe('robotUpgradeService', () => {
           },
         ),
         { numRuns: 50 },
-      );
-    });
-  });
-});
-
-// ═══ robotRankingService ═════════════════════════════════════════════════════
-
-describe('robotRankingService', () => {
-  describe('calculateCategorySum', () => {
-    it('should sum combat attributes', () => {
-      const robot: Record<string, number> = {};
-      for (const attr of COMBAT_ATTRIBUTES) robot[attr] = 5;
-
-      expect(calculateCategorySum(robot, COMBAT_ATTRIBUTES)).toBe(30); // 6 attrs × 5
-    });
-
-    it('should sum defense attributes', () => {
-      const robot: Record<string, number> = {};
-      for (const attr of DEFENSE_ATTRIBUTES) robot[attr] = 3;
-
-      expect(calculateCategorySum(robot, DEFENSE_ATTRIBUTES)).toBe(15); // 5 attrs × 3
-    });
-
-    it('should sum chassis attributes', () => {
-      const robot: Record<string, number> = {};
-      for (const attr of CHASSIS_ATTRIBUTES) robot[attr] = 4;
-
-      expect(calculateCategorySum(robot, CHASSIS_ATTRIBUTES)).toBe(20); // 5 attrs × 4
-    });
-
-    it('should sum AI attributes', () => {
-      const robot: Record<string, number> = {};
-      for (const attr of AI_ATTRIBUTES) robot[attr] = 2;
-
-      expect(calculateCategorySum(robot, AI_ATTRIBUTES)).toBe(8); // 4 attrs × 2
-    });
-
-    it('should sum team coordination attributes', () => {
-      const robot: Record<string, number> = {};
-      for (const attr of TEAM_ATTRIBUTES) robot[attr] = 7;
-
-      expect(calculateCategorySum(robot, TEAM_ATTRIBUTES)).toBe(21); // 3 attrs × 7
-    });
-
-    it('should handle mixed values correctly', () => {
-      const robot = { combatPower: 10, targetingSystems: 5, criticalSystems: 3, penetration: 7, weaponControl: 2, attackSpeed: 8 };
-      expect(calculateCategorySum(robot, COMBAT_ATTRIBUTES)).toBe(35);
-    });
-
-    it('should handle 0 values', () => {
-      const robot: Record<string, number> = {};
-      for (const attr of COMBAT_ATTRIBUTES) robot[attr] = 0;
-
-      expect(calculateCategorySum(robot, COMBAT_ATTRIBUTES)).toBe(0);
-    });
-  });
-
-  describe('calculateRanking', () => {
-    it('should rank the highest value as #1', () => {
-      const result = calculateRanking(100, [100, 80, 60, 40, 20], 5);
-      expect(result.rank).toBe(1);
-      expect(result.value).toBe(100);
-    });
-
-    it('should rank the lowest value as last', () => {
-      const result = calculateRanking(20, [100, 80, 60, 40, 20], 5);
-      expect(result.rank).toBe(5);
-    });
-
-    it('should calculate correct percentile for top rank', () => {
-      const result = calculateRanking(100, [100, 80, 60, 40, 20], 5);
-      // percentile = (1 - (1-1)/5) * 100 = 100
-      expect(result.percentile).toBe(100);
-    });
-
-    it('should calculate correct percentile for bottom rank', () => {
-      const result = calculateRanking(20, [100, 80, 60, 40, 20], 5);
-      // percentile = (1 - (5-1)/5) * 100 = 20
-      expect(result.percentile).toBeCloseTo(20);
-    });
-
-    it('should handle single robot (rank 1, 100%)', () => {
-      const result = calculateRanking(50, [50], 1);
-      expect(result.rank).toBe(1);
-      expect(result.percentile).toBe(100);
-    });
-
-    it('property: rank is always between 1 and totalRobots', () => {
-      fc.assert(
-        fc.property(
-          fc.array(fc.integer({ min: 0, max: 1000 }), { minLength: 1, maxLength: 50 }),
-          (values) => {
-            const total = values.length;
-            const target = values[0];
-            const result = calculateRanking(target, values, total);
-            expect(result.rank).toBeGreaterThanOrEqual(1);
-            expect(result.rank).toBeLessThanOrEqual(total);
-          },
-        ),
-        { numRuns: 100 },
-      );
-    });
-
-    it('property: percentile is always between 0 and 100 (exclusive of 0 for non-empty)', () => {
-      fc.assert(
-        fc.property(
-          fc.array(fc.integer({ min: 0, max: 1000 }), { minLength: 1, maxLength: 50 }),
-          (values) => {
-            const total = values.length;
-            const target = values[0];
-            const result = calculateRanking(target, values, total);
-            expect(result.percentile).toBeGreaterThan(0);
-            expect(result.percentile).toBeLessThanOrEqual(100);
-          },
-        ),
-        { numRuns: 100 },
       );
     });
   });

@@ -12,7 +12,7 @@
 import { calculateWeaponWorkshopDiscount } from '../../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../../utils/weaponImages';
 
-import { getWeaponOptimalRange, getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../../utils/weaponRange';
+import { getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../../utils/weaponRange';
 import type { Weapon, StorageStatus } from './types';
 
 /**
@@ -147,7 +147,7 @@ export function WeaponCard({
 
       {/* Optimal Range Badge */}
       {(() => {
-        const range = getWeaponOptimalRange(weapon);
+        const range = weapon.rangeBand;
         return (
           <div className="mb-3">
             <span className={`text-xs px-2 py-0.5 rounded border ${getRangeBandBgColor(range)} ${getRangeBandColor(range)}`}>

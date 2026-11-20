@@ -56,7 +56,6 @@ jest.mock('../../../src/services/analytics/matchmakingService', () => ({
 
 jest.mock('../../../src/services/subscription/subscriptionService', () => ({
   __esModule: true,
-  isRobotSubscribedTo: jest.fn().mockResolvedValue(true),
 }));
 
 jest.mock('../../../src/services/team-battle/teamBattleAdapter', () => ({

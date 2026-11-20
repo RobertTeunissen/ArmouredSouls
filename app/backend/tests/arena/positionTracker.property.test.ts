@@ -148,7 +148,7 @@ describe('positionTracker property tests', () => {
    * **Validates: Requirement 9.7**
    */
   describe('Property 15: Single attacker never triggers flanking', () => {
-    it('should return isFlanking=false for a single attacker at any position', () => {
+    it('should return isFlanking=false without an engaging teammate, at any position', () => {
       fc.assert(
         fc.property(
           arbPosition(),
@@ -165,7 +165,7 @@ describe('positionTracker property tests', () => {
             });
             const attacker = makeRobot({ position: attackerPos });
 
-            const result = checkFlanking([attacker], defender);
+            const result = checkFlanking(attacker, 50, [], defender);
             expect(result.isFlanking).toBe(false);
           },
         ),
@@ -173,27 +173,5 @@ describe('positionTracker property tests', () => {
       );
     });
 
-    it('should return isFlanking=false for zero attackers', () => {
-      fc.assert(
-        fc.property(
-          arbPosition(),
-          arbFacing(),
-          arbGyro(),
-          arbThreatAnalysis(),
-          (defenderPos, facing, gyro, ta) => {
-            const defender = makeRobot({
-              position: defenderPos,
-              facingDirection: facing,
-              gyroStabilizers: gyro,
-              threatAnalysis: ta,
-            });
-
-            const result = checkFlanking([], defender);
-            expect(result.isFlanking).toBe(false);
-          },
-        ),
-        { numRuns: 500 },
-      );
-    });
   });
 });

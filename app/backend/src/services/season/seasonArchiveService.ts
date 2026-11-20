@@ -527,7 +527,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
   const records = await import('../records/recordsQueryService');
   const modeRecords = await import('../records/modeRecordsQueries');
 
-  // ── Combat: most damage per mode (Narrowest Victory was removed, Nov 2026) ──
+  // ── Combat: most damage per mode ──
   await capture('combat', async () => {
     const combat = await records.fetchCombatRecords();
     for (const [mode, entries] of Object.entries(combat.mostDamageInBattle ?? {})) {

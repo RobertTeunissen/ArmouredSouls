@@ -2,7 +2,7 @@
  * Position Tracker — Facing Direction, Backstab, and Flanking
  *
  * Tracks robot facing direction with turn-speed limits, detects
- * backstab (1v1) and flanking (multi-robot) positioning advantages,
+ * backstab and flanking (team battles) positioning advantages,
  * and applies gyro/threatAnalysis reductions to bonuses.
  *
  * All functions are pure except updateFacing which mutates the
@@ -46,8 +46,7 @@ export interface BackstabResult {
 /** Result of a flanking check */
 export interface FlankingResult {
   isFlanking: boolean;
-  bonus?: number;
-  flankingAttackers?: [number, number];
+  bonus: number;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────
@@ -70,8 +69,11 @@ const BACKSTAB_GYRO_REDUCTION_PER_POINT = 0.0025;
 /** Flanking angle threshold between attackers */
 const FLANKING_ANGLE_THRESHOLD = 90;
 
-/** Flanking base damage bonus */
-const FLANKING_BASE_BONUS = 0.20;
+/** Flanking damage bonus at Formation Tactics 50 (scales with √(formationTactics / 50)) */
+const FLANKING_MAX_BONUS = 0.20;
+
+/** Attribute value at which the flanking bonus reaches its maximum */
+const FLANKING_ATTRIBUTE_CAP = 50;
 
 /** Flanking gyro reduction per point */
 const FLANKING_GYRO_REDUCTION_PER_POINT = 0.003;
@@ -111,8 +113,6 @@ function isMovingTowardRearArc(
   state: FacingState,
   opponent: OpponentState,
 ): boolean {
-  // Direction from robot to opponent (used for context, not directly in calculation)
-  const _opponentAngle = angleBetween(state.position, opponent.position);
   // Angle of opponent's velocity
   const velMag = Math.sqrt(
     opponent.velocity.x * opponent.velocity.x +
@@ -201,42 +201,33 @@ export function checkBackstab(
 // ─── Flanking Detection ─────────────────────────────────────────────
 
 /**
- * Check if a group of attackers is flanking a defender (multi-robot).
+ * Check if an attack is a flanking attack (team battles).
  *
- * Flanking: 2+ attackers with >90° angular separation relative
- * to the defender. Base bonus: +20%, reduced by defender's gyro
- * and threatAnalysis.
+ * Flanking: a teammate engaging the same defender stands more than 90° away
+ * from the attacker, measured around the defender. The bonus comes from the
+ * attacker's formationTactics, 20% × √(formationTactics / 50), reduced by the
+ * defender's gyroStabilizers (0.3% per point) and threatAnalysis (1% per point
+ * above 25). Without an engaging teammate there is no flank.
  *
  * Requirements: 9.7, 9.8, 9.9
  */
 export function checkFlanking(
-  attackers: PositionedRobot[],
+  attacker: PositionedRobot,
+  attackerFormationTactics: number,
+  engagingTeammates: readonly PositionedRobot[],
   defender: PositionedRobot,
 ): FlankingResult {
-  if (attackers.length < 2) {
-    return { isFlanking: false };
-  }
-
-  // Calculate angles from each attacker to defender
-  const angles = attackers.map((a) =>
-    angleBetween(defender.position, a.position),
+  const attackerAngle = angleBetween(defender.position, attacker.position);
+  const flanked = engagingTeammates.some((mate) =>
+    Math.abs(normalizeAngle(angleBetween(defender.position, mate.position) - attackerAngle)) > FLANKING_ANGLE_THRESHOLD,
   );
+  if (!flanked) return { isFlanking: false, bonus: 0 };
 
-  // Check if any pair of attackers are >90° apart
-  for (let i = 0; i < angles.length; i++) {
-    for (let j = i + 1; j < angles.length; j++) {
-      const separation = Math.abs(normalizeAngle(angles[i] - angles[j]));
-      if (separation > FLANKING_ANGLE_THRESHOLD) {
-        const gyroReduction = defender.gyroStabilizers * FLANKING_GYRO_REDUCTION_PER_POINT;
-        let taReduction = 0;
-        if (defender.threatAnalysis > TA_REDUCTION_THRESHOLD) {
-          taReduction = (defender.threatAnalysis - TA_REDUCTION_THRESHOLD) * TA_REDUCTION_PER_POINT;
-        }
-        const effectiveBonus = Math.max(0, FLANKING_BASE_BONUS - gyroReduction - taReduction);
-        return { isFlanking: true, bonus: effectiveBonus, flankingAttackers: [i, j] };
-      }
-    }
-  }
-
-  return { isFlanking: false };
+  const gyroReduction = defender.gyroStabilizers * FLANKING_GYRO_REDUCTION_PER_POINT;
+  const taReduction = defender.threatAnalysis > TA_REDUCTION_THRESHOLD
+    ? (defender.threatAnalysis - TA_REDUCTION_THRESHOLD) * TA_REDUCTION_PER_POINT
+    : 0;
+  const formation = Math.min(Math.max(attackerFormationTactics, 0), FLANKING_ATTRIBUTE_CAP);
+  const baseBonus = FLANKING_MAX_BONUS * Math.sqrt(formation / FLANKING_ATTRIBUTE_CAP);
+  return { isFlanking: true, bonus: Math.max(0, baseBonus - gyroReduction - taReduction) };
 }

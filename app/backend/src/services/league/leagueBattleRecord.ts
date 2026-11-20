@@ -12,10 +12,7 @@ import { Robot, Battle } from '../../../generated/prisma';
 import { encodeBattleLog } from '../battle/battleLogCodec';
 import prisma from '../../lib/prisma';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
-import {
-  getLeagueWinReward,
-  getParticipationReward,
-} from '../../utils/economyCalculations';
+import { getLeagueWinReward, getParticipationReward } from '../../utils/economyFormulas';
 import {
   calculateELOChange,
 } from '../../utils/battleMath';
@@ -310,7 +307,7 @@ export async function createBattleRecord(
 
 /**
  * Update robot stats after battle and award prestige/fame.
- * Uses shared updateRobotCombatStats + awardCreditsToUser + awardPrestigeToUser.
+ * Uses shared updateRobotCombatStats + awardCreditsWithLedger + awardPrestigeToUser.
  * Accepts pre-fetched participant data to avoid redundant DB queries.
  */
 export async function updateRobotStats(

@@ -38,7 +38,7 @@ describe('Property 26: A manual batch reconciles to the credit across all four r
         const quotes = specs.map((s) => quoteOf(s, level));
         const chargedPerRobot = quotes.map((q) => applyManualRepairDiscount(q));
 
-        // This is exactly what `repairAllRobots` now computes: discount each robot,
+        // This is exactly what manual `repairAllRobots` computes: discount each robot,
         // then sum. The deduction, the lifetime increment, the audit charged figure
         // and the ledger amount are all this same array.
         const deduction = chargedPerRobot.reduce((sum, c) => sum + c, 0);

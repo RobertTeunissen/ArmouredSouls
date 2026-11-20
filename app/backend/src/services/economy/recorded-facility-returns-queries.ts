@@ -65,11 +65,10 @@ export async function aggregateStudioStreamingByMultiplier(
  * The stable's `robot_repair` charges in `[fromCycle, toCycle]`, summed per
  * stored `payload.discountPercent`.
  *
- * The charged figure mirrors `readRepairChargedCredits`: the renamed
- * `creditsCharged` first, the legacy `cost` only when `creditsCharged` is not a
- * finite number, never both. The magnitude guard mirrors JS `Number.isFinite`
- * (a JSON number beyond the double range parses to Infinity there). Rows with
- * neither are excluded, as the per-row helper skips them. The sum stays
+ * The charged figure mirrors `readRepairChargedCredits`: `creditsCharged` when it
+ * is a finite number (the magnitude guard mirrors JS `Number.isFinite`; a JSON
+ * number beyond the double range parses to Infinity there), else the row is
+ * excluded, as the per-row helper skips it. The sum stays
  * `numeric` (no float overflow error) and is converted with `Number()`.
  */
 export async function aggregateRepairChargedByDiscount(
@@ -85,9 +84,6 @@ export async function aggregateRepairChargedByDiscount(
                WHEN jsonb_typeof(al."payload" -> 'creditsCharged') = 'number'
                     AND abs((al."payload" -> 'creditsCharged')::numeric) <= 1.7976931348623157e308
                  THEN (al."payload" -> 'creditsCharged')::numeric
-               WHEN jsonb_typeof(al."payload" -> 'cost') = 'number'
-                    AND abs((al."payload" -> 'cost')::numeric) <= 1.7976931348623157e308
-                 THEN (al."payload" -> 'cost')::numeric
              END AS "charged"
       FROM "audit_logs" al
       WHERE al."user_id" = ${userId}

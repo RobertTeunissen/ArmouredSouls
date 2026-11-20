@@ -85,9 +85,7 @@ jest.mock('../../../src/services/migration/featureFlags', () => ({
 
 import {
   updateRobotCombatStats,
-  awardCreditsToUser,
   awardPrestigeToUser,
-  awardFameToRobot,
   didRobotLosePreviousBattle,
 } from '../../../src/services/battle/battlePostCombat';
 
@@ -434,20 +432,6 @@ describe('updateRobotCombatStats', () => {
   });
 });
 
-describe('awardCreditsToUser', () => {
-  it('should apply a battle-income mutation', async () => {
-    await awardCreditsToUser(1, 5000);
-
-    expect(mockApplyCreditMutation).toHaveBeenCalledWith(expect.objectContaining({
-      cycleNumber: 1,
-      userId: 1,
-      transactionType: 'battle_income',
-      amount: 5000,
-    }));
-    expect(mockUserUpdate).not.toHaveBeenCalled();
-  });
-});
-
 describe('awardPrestigeToUser', () => {
   it('should apply a battle prestige award', async () => {
     await awardPrestigeToUser(1, 50);
@@ -459,17 +443,6 @@ describe('awardPrestigeToUser', () => {
       source: 'battle',
     }));
     expect(mockUserUpdate).not.toHaveBeenCalled();
-  });
-});
-
-describe('awardFameToRobot', () => {
-  it('should increment robot fame', async () => {
-    await awardFameToRobot(5, 10);
-
-    expect(mockRobotUpdate).toHaveBeenCalledWith({
-      where: { id: 5 },
-      data: { fame: { increment: 10 } },
-    });
   });
 });
 

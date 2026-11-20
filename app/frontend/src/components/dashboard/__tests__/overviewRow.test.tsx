@@ -7,7 +7,7 @@ import { screen, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import * as fc from 'fast-check';
 import { OverviewRow } from '../OverviewRow';
-import { placementReward, earnsPlacementReward, ordinal } from '../placementFormatting';
+import { earnsPlacementReward, ordinal } from '../placementFormatting';
 import type { OverviewRowData } from '../types';
 import type { CycleProgressSummary } from '@shared/types';
 
@@ -379,20 +379,12 @@ describe('Requirement 6: Credits_Tile', () => {
   });
 });
 
-describe('Property 13: placement reward banding is total and field-size independent', () => {
+describe('Property 13: placement reward is total and field-size independent', () => {
   // Feature: 48-dashboard-overview-row, Property 13: Best_Placement selection is deterministic and reward banding is total
 
-  it('bands every position, with the same bands at every field size', () => {
+  it('rewards the same top 10 at every field size', () => {
     fc.assert(
       fc.property(fc.integer({ min: 1, max: 200 }), (position) => {
-        // KotH: prestige to the top 3, LP and fame to the top 10.
-        const koth = placementReward(position, 'koth');
-        if (position <= 3) expect(koth).toBe('prestige');
-        else if (position <= 10) expect(koth).toBe('lp-and-fame');
-        else expect(koth).toBe('none');
-        // Grand Melee: prestige, LP and fame to the top 10 (#576).
-        const melee = placementReward(position, 'grand_melee');
-        expect(melee).toBe(position <= 10 ? 'prestige' : 'none');
         // The tile's trophy marks any rewarded finish, the same top 10 in both modes.
         expect(earnsPlacementReward(position)).toBe(position <= 10);
       }),

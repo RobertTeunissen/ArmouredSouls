@@ -66,27 +66,3 @@ export async function hashPassword(password: string): Promise<string> {
   return hash;
 }
 
-/**
- * Verify a plaintext password against a bcrypt hash.
- *
- * Returns `false` (rather than throwing) when either argument is falsy,
- * making it safe to call without pre-checking for null/undefined values.
- *
- * @param password - The plaintext password to verify
- * @param hash - The bcrypt hash to compare against
- * @returns `true` if the password matches the hash, `false` otherwise
- *
- * @example
- * const hash = await hashPassword('secret');
- * await verifyPassword('secret', hash);  // true
- * await verifyPassword('wrong', hash);   // false
- */
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  // Return false instead of throwing when inputs are missing, so callers
-  // don't need to null-check before calling — simplifies auth flow logic.
-  if (!password || !hash) {
-    return false;
-  }
-
-  return await bcrypt.compare(password, hash);
-}

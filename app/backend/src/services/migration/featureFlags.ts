@@ -69,35 +69,6 @@ export async function getFlags(): Promise<MigrationFeatureFlags> {
 }
 
 /**
- * Update a single migration feature flag in `cycle_metadata` (id=1).
- *
- * Uses an upsert so the row is created if it doesn't exist yet.
- * Invalidates the in-memory cache after writing.
- *
- * @param flag  - The flag key to update.
- * @param value - The new boolean value for the flag.
- */
-export async function setFlag(
-  flag: keyof MigrationFeatureFlags,
-  value: boolean,
-): Promise<void> {
-  const current = await getFlags();
-  const updated: MigrationFeatureFlags = { ...current, [flag]: value };
-
-  await prisma.cycleMetadata.upsert({
-    where: { id: 1 },
-    update: { featureFlags: updated as unknown as Parameters<typeof prisma.cycleMetadata.update>[0]['data']['featureFlags'] },
-    create: {
-      id: 1,
-      featureFlags: updated as unknown as Parameters<typeof prisma.cycleMetadata.create>[0]['data']['featureFlags'],
-    },
-  });
-
-  // Invalidate cache so next read picks up the new value immediately
-  invalidateFlagCache();
-}
-
-/**
  * Convenience helper — returns whether a single flag is enabled.
  *
  * Equivalent to `(await getFlags())[flag]` but reads more clearly at call sites.

@@ -15,7 +15,7 @@
 import prisma from '../../src/lib/prisma';
 import { createRobotTransaction } from '../../src/services/robot/robotCreationService';
 import {
-  getEventDefinition,
+  isRegisteredEvent,
   registerSubscribableEvent,
   SUBSCRIBABLE_EVENT_TYPES,
 } from '../../src/services/subscription/eventRegistry';
@@ -51,7 +51,7 @@ async function buyRobot(index: number): Promise<{ userId: number; robotId: numbe
 
 beforeAll(async () => {
   for (const type of SUBSCRIBABLE_EVENT_TYPES) {
-    if (!getEventDefinition(type)) registerSubscribableEvent({ type, label: type });
+    if (!isRegisteredEvent(type)) registerSubscribableEvent({ type, label: type });
   }
   await clearKoth();
 

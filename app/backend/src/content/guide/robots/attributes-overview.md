@@ -2,7 +2,7 @@
 title: "Robot Attributes Overview"
 description: "A complete guide to all 23 robot attributes organized across five categories — Combat Systems, Defensive Systems, Chassis & Mobility, AI Processing, and Team Coordination."
 order: 1
-lastUpdated: "2026-10-17"
+lastUpdated: "2026-11-19"
 relatedArticles:
   - robots/attribute-combat-influence
   - robots/hull-and-shields
@@ -103,9 +103,9 @@ Team Coordination attributes enhance your robot's effectiveness in combat. Even 
 
 | Attribute | What It Does |
 |-----------|-------------|
-| **Sync Protocols** | In dual-wield builds, grants a damage bonus when both main and offhand weapons are ready within a 1-second window. Bonus: 0.2% per point. In team modes, improves coordination with allied robots. |
+| **Sync Protocols** | In dual-wield builds, grants a damage bonus when both main and offhand weapons are ready within a 1-second window. Bonus: 0.2% per point. In team battles, powers **focus fire**: bonus damage when a teammate hit the same enemy within the last second. |
 | **Support Systems** | Provides a passive shield regeneration boost during combat. Bonus: 0.1% increased shield regen per point per tick. In team modes, enables buffing adjacent allies. |
-| **Formation Tactics** | Grants a damage reduction bonus when your robot is within 3 grid units of the arena boundary (wall-bracing). Bonus: 0.3% per point. In team modes, improves positioning within formations. |
+| **Formation Tactics** | Grants a damage reduction bonus when your robot is within 3 grid units of the arena boundary (wall-bracing). Bonus: 0.3% per point. In team battles, reduces damage taken with allies nearby and sets the **flanking** bonus when you attack an enemy from the opposite side of a teammate. |
 
 ```callout-tip
 Formation Tactics rewards positional awareness. If your robot tends to fight near the arena edge, the wall-bracing bonus from Formation Tactics provides meaningful damage reduction. This pairs well with defensive builds that don't need to chase opponents.

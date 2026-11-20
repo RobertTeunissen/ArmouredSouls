@@ -27,20 +27,10 @@
 
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import type { AchievementTriggerType } from '../../config/achievements';
 import type { AchievementEventType } from './achievementTypes';
 import { achievementService } from './achievementService';
 
-/**
- * Trigger types whose condition reads user state a rollover preserves.
- *
- * Keep in step with `PRESERVED_STATE_EVENTS`: every trigger here must be
- * reachable from an event there, or the achievement stays unreachable. A test
- * asserts the two line up.
- */
-export const PRESERVED_STATE_TRIGGERS: readonly AchievementTriggerType[] = ['onboarding', 'previous_season_veteran'];
-
-/** Events replayed after a rollover to re-award the achievements above. */
+/** Events replayed after a rollover to re-award the achievements whose condition reads preserved user state. */
 export const PRESERVED_STATE_EVENTS: readonly AchievementEventType[] = ['onboarding_complete', 'season_started'];
 
 export interface ReawardResult {

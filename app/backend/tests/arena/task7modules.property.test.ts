@@ -88,6 +88,7 @@ function makeState(overrides: Partial<RobotCombatState> = {}): RobotCombatState 
     isUnderPressure: false,
     teamIndex: 0,
     isAlive: true,
+    lastHitTakenFrom: {},
     targetLockTimer: 0,
     ...overrides,
   };

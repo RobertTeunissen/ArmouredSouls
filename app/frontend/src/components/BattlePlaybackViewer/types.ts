@@ -1,7 +1,8 @@
 import type { ArenaPoint } from '@shared/types';
 
 /** Range band classification */
-export type RangeBand = 'melee' | 'short' | 'mid' | 'long';
+import type { RangeBand } from '@shared/types';
+export type { RangeBand };
 
 /** Playback speed options */
 export type PlaybackSpeed = 0.5 | 1 | 2 | 4;

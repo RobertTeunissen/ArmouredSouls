@@ -60,25 +60,3 @@ export async function verifyWeaponOwnership(
   }
 }
 
-/**
- * Verify that a facility belongs to the authenticated user.
- *
- * @param tx - Prisma client or transaction client
- * @param facilityId - The facility ID to check
- * @param userId - The authenticated user's ID
- * @throws AppError with code FORBIDDEN and status 403 on mismatch or not-found
- */
-export async function verifyFacilityOwnership(
-  tx: Prisma.TransactionClient,
-  facilityId: number,
-  userId: number
-): Promise<void> {
-  const facility = await tx.facility.findUnique({
-    where: { id: facilityId },
-    select: { userId: true },
-  });
-  if (!facility || facility.userId !== userId) {
-    securityMonitor.logAuthorizationFailure(userId, 'facility', facilityId);
-    throw new AppError('FORBIDDEN', 'Access denied', 403);
-  }
-}

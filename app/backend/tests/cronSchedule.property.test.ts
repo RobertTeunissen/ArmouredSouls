@@ -38,7 +38,6 @@ jest.mock('../src/config/logger', () => ({
 
 // Mock all service imports to avoid database calls
 jest.mock('../src/services/economy/repairService', () => ({
-  repairAllRobots: jest.fn().mockResolvedValue(undefined),
   repairRobotsForEvent: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock('../src/services/league/leagueBattleOrchestrator', () => ({

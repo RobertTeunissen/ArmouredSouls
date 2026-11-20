@@ -1,6 +1,6 @@
 /** Unit tests for independently configurable migration feature flags. */
 
-import { getFlags, invalidateFlagCache, isEnabled, setFlag } from '../../../src/services/migration/featureFlags';
+import { getFlags, invalidateFlagCache, isEnabled } from '../../../src/services/migration/featureFlags';
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -53,22 +53,4 @@ describe('Migration Feature Flags', () => {
     await expect(isEnabled('leaderboard_cache_active')).resolves.toBe(false);
   });
 
-  it('should persist and invalidate the leaderboard flag cache', async () => {
-    (mockPrisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({
-      featureFlags: { leaderboard_cache_active: false },
-    });
-    (mockPrisma.cycleMetadata.upsert as jest.Mock).mockResolvedValue({});
-
-    await setFlag('leaderboard_cache_active', true);
-
-    expect(mockPrisma.cycleMetadata.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 1 },
-      update: expect.objectContaining({
-        featureFlags: expect.objectContaining({ leaderboard_cache_active: true }),
-      }),
-      create: expect.objectContaining({
-        featureFlags: expect.objectContaining({ leaderboard_cache_active: true }),
-      }),
-    }));
-  });
 });

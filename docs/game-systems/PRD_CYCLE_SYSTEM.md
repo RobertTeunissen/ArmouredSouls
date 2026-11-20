@@ -344,18 +344,6 @@ The snapshot service (`cycleSnapshotService.ts`) aggregates from these AuditLog 
 
 This table does not define identified paired-capture financial accounting sources. Credits amounts, balances, and taxonomy use reconciled `FinancialLedger`/`financial_transaction` pairs by `financialEventId`; Repair_Spend uses `robot_repair`; prestige uses `prestige_change`.
 
-### Backfill Capability
-
-> Removed in Nov 2026 (admin redesign part 8): nothing called this endpoint.
-
-Snapshot regeneration is a derived-projection repair only:
-
-```
-POST /api/admin/snapshots/backfill
-```
-
-It may replace a `CycleSnapshot` using retained domain events, but it must never create, pair, relabel, normalize, or infer `FinancialLedger`, `financial_transaction`, repair, or prestige history. In particular, legacy null-identity financial history is never reconstructed.
-
 ---
 
 ## 8. AuditLog vs CycleSnapshot
@@ -403,28 +391,6 @@ Authorization: Bearer <admin-token>
 ```
 
 Executes the full KotH cycle on demand (repair → battles → matchmaking).
-
-### Admin: Backfill Snapshots
-
-> Removed in Nov 2026 (admin redesign part 8): nothing called this endpoint.
-
-```
-POST /api/admin/snapshots/backfill
-Authorization: Bearer <admin-token>
-```
-
-Regenerates all CycleSnapshots from AuditLog.
-
-### Analytics: Cycle Summary (removed)
-
-Removed as unused in Nov 2026; the Finance Center (`/api/finances/report`, `/history`) replaces it.
-
-
-```
-GET /api/analytics/stable/:userId/summary?lastNCycles=10
-```
-
-Returns per-cycle breakdown (battle credits, streaming, merchandising, repairs, operating costs, balance) for the specified user.
 
 ---
 

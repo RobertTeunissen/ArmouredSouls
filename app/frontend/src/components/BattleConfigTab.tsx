@@ -6,7 +6,7 @@ import YieldThresholdSlider from './YieldThresholdSlider';
 import WeaponSelectionModal from './WeaponSelectionModal';
 import ConfirmationModal from './ConfirmationModal';
 import { buildUnequipForfeitWarning, buildUnequipSingleFallbackWarning } from '../utils/unequipWarning';
-import { RangeBand } from '../utils/weaponRange';
+import type { RangeBand } from '@shared/types';
 import type { RobotWithAttributes } from '../types/robot';
 
 type Robot = RobotWithAttributes;

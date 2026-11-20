@@ -14,7 +14,7 @@
  */
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import { buildUserFilter } from '../../utils/buildUserFilter';
+import { realUserFilter } from '../../utils/realUserFilter';
 import { getSchedulerState, type SchedulerState } from '../cycle/cycleScheduler';
 import { getCurrentSeason } from '../season/seasonService';
 import { getSecurityAttention } from '../security/securityOverviewService';
@@ -109,7 +109,7 @@ export async function getDashboardStatus(now: Date = new Date()): Promise<Dashbo
     settle('season', () => getCurrentSeason()),
     settle('queued matches', () => countQueuedMatchesByMode()),
     settle('bankruptcy risk', () => prisma.user.count({
-      where: { AND: [buildUserFilter('real'), { currency: { lt: BANKRUPTCY_RISK_THRESHOLD } }] },
+      where: { AND: [realUserFilter(), { currency: { lt: BANKRUPTCY_RISK_THRESHOLD } }] },
     })),
     settle('automaton status', () => getAutomatonStatus()),
     prisma.scheduledMatch.count({

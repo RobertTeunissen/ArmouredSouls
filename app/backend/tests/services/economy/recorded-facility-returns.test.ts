@@ -80,9 +80,8 @@ describe('sumRepairBaySavingsFromRecords', () => {
     expect(sumRepairBaySavingsFromRecords(payloads)).toBe(1800);
   });
 
-  it('reads the legacy `cost` key when `creditsCharged` is absent', () => {
-    const payloads = [{ cost: 6400, discountPercent: 36 }];
-    expect(sumRepairBaySavingsFromRecords(payloads)).toBe(3600);
+  it('skips a row without `creditsCharged`', () => {
+    expect(sumRepairBaySavingsFromRecords([{ cost: 6400, discountPercent: 36 }])).toBe(0);
   });
 
   it('saves nothing on a row recorded with no discount', () => {

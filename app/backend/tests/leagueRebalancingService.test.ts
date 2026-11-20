@@ -1,6 +1,10 @@
 import prisma from '../src/lib/prisma';
-import { determinePromotions, rebalanceLeagues } from '../src/services/league/leagueRebalancingService';
+import { rebalanceLeagues, ROBOT_LEAGUE_CONFIG, robotAdapter } from '../src/services/league/leagueRebalancingService';
+import { determinePromotionsForInstance } from '../src/services/league/leagueEngine';
+
 import { getMinLPForPromotion } from '../src/services/league/leaguePromotionThresholds';
+
+const determinePromotions = (instanceId: string) => determinePromotionsForInstance(instanceId, ROBOT_LEAGUE_CONFIG, robotAdapter, new Set());
 
 
 describe('League Rebalancing Service', () => {

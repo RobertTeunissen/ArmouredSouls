@@ -13,7 +13,7 @@
 
 import prisma from '../../lib/prisma';
 import { AppError } from '../../errors';
-import { buildUserFilter } from '../../utils/buildUserFilter';
+import { realUserFilter } from '../../utils/realUserFilter';
 import { getStableBattleOverlapsByUser } from '../auth/stable-battle-overlap';
 import { BANKRUPTCY_RISK_THRESHOLD, INACTIVE_PLAYER_AFTER_MS } from './adminThresholds';
 import { getCurrentSeason } from '../season/seasonService';
@@ -28,7 +28,6 @@ import type {
   PlayerRow,
   PlayerSegment,
   PlayersOverview,
-  StableCashflow,
   StableType,
 } from '../../shared/types';
 
@@ -95,7 +94,7 @@ export async function getPlayersOverview(now: Date = new Date()): Promise<Player
   const [{ seasonNumber, startedAt }, users] = await Promise.all([
     currentSeasonStart(),
     prisma.user.findMany({
-      where: buildUserFilter('real'),
+      where: realUserFilter(),
       select: {
         id: true, username: true, stableName: true, currency: true, lastLoginAt: true, createdAt: true,
         hasCompletedOnboarding: true, onboardingSkipped: true, onboardingStep: true,

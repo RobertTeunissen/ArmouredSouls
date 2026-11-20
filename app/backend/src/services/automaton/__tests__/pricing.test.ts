@@ -1,7 +1,6 @@
 import {
   attributeIncrementCost,
   discountedWeaponPrice,
-  facilityMaxLevel,
   quoteFacilityLevel,
   refinementStepCost,
   robotPurchaseCost,
@@ -10,6 +9,7 @@ import {
 } from '../pricing';
 import { AUTOMATON_FACILITY_TYPES } from '../stableFacts';
 import { FACILITY_TYPES, getFacilityUpgradeCost } from '../../../config/facilities';
+import { getFacilityUpgradeRequirement } from '../../economy/facilityUpgradeService';
 import { ROBOT_CREATION_COST } from '../../robot/robotCreationService';
 import { validateAndCalculateUpgrades } from '../../robot/robotUpgradeService';
 import { calculateRefinementCost } from '../../../shared/utils/weaponRefinement';
@@ -30,7 +30,7 @@ describe('pricing (R5.3): identical to the charging services', () => {
   });
 
   it.each(AUTOMATON_FACILITY_TYPES)('quotes every level of %s at the upgrade price and gate', (type) => {
-    const maxLevel = facilityMaxLevel(type);
+    const maxLevel = getFacilityUpgradeRequirement(type, 0).maxLevel;
     for (let level = 0; level < maxLevel; level++) {
       const open = quoteFacilityLevel(type, level, 1_000_000);
       expect(open).toEqual({

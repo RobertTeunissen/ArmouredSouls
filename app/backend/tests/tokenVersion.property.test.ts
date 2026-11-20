@@ -10,7 +10,7 @@
  */
 import fc from 'fast-check';
 import jwt from 'jsonwebtoken';
-import { generateToken, verifyToken, UserForToken } from '../src/services/auth/jwtService';
+import { generateToken, UserForToken } from '../src/services/auth/jwtService';
 
 // Mock prisma before importing auth middleware
 jest.mock('../src/lib/prisma', () => ({
@@ -87,7 +87,7 @@ describe('Feature: security-audit-guardrails, Property 6: Token version invalida
           const oldToken = generateToken(user);
 
           // Verify the old token contains the correct tokenVersion
-          const decoded = verifyToken(oldToken);
+          const decoded = jwt.decode(oldToken) as { tokenVersion: number } | null;
           expect(decoded).not.toBeNull();
           expect(decoded!.tokenVersion).toBe(initialVersion);
 

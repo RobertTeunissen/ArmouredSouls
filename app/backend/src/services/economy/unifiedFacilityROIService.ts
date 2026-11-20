@@ -20,11 +20,7 @@ import {
   findEarliestSnapshotCycleWithActivity,
   type StableSnapshotTotals,
 } from './snapshot-stable-metric-queries';
-import {
-  calculateFacilityOperatingCost,
-  calculateMerchandisingIncome,
-  getRosterCapacity,
-} from '../../utils/economyCalculations';
+import { calculateFacilityOperatingCost, calculateMerchandisingIncome, getRosterCapacity } from '../../utils/economyFormulas';
 import type { AllEconomicROIsResult, UnifiedFacilityROI } from '../../shared/types';
 
 /**

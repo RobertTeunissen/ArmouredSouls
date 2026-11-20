@@ -40,8 +40,6 @@
 
 **API Endpoints:**
 - ✅ `GET /api/finances/summary` - Quick dashboard overview
-- ~~`GET /api/finances/daily`, `/operating-costs`, `/revenue-streams`, `/projections`~~ — Removed in November 2026 as unused (the Finance Center reads `/api/finances/report`, `/history`, `/robots`; the dashboard reads `/summary`)
-- ✅ **NEW**: `POST /api/admin/daily-finances/process` - Process daily operating costs for all users (removed in Nov 2026, admin redesign part 8)
 
 **Battle Rewards:**
 - ✅ League-based rewards: Bronze (₡7.5K) → Champion (₡225K)
@@ -71,14 +69,9 @@
    - Revenue streams (battle rewards, passive income)
    - Repair cost formulas
    - Financial health indicators
-   - Daily financial processing functions:
-     - `processDailyFinances(userId)` - Process single user (removed in Nov 2026, admin redesign part 8)
-     - `processAllDailyFinances()` - Batch process all users (removed in Nov 2026, admin redesign part 8)
-     - Deducts operating costs, detects bankruptcy
 
 2. `app/backend/src/routes/finances.ts` (165 lines)
    - `GET /api/finances/summary` - Quick overview
-   - ~~`GET /api/finances/daily`, `/operating-costs`, `/revenue-streams`, `/projections`~~ — Removed in November 2026 as unused (the Finance Center reads `/api/finances/report`, `/history`, `/robots`; the dashboard reads `/summary`)
 
 3. `app/backend/src/services/league/leagueBattleOrchestrator.ts` (enhanced, shared helpers in `battlePostCombat.ts`)
    - League-based battle rewards
@@ -90,7 +83,6 @@
      - Breaks down winner/loser rewards separately
 
 4. `app/backend/src/routes/admin.ts` (enhanced)
-   - `POST /api/admin/daily-finances/process` endpoint (removed in Nov 2026, admin redesign part 8)
    - Integrated financial processing into bulk cycles
    - Shows costs deducted, users processed, bankruptcies
 
@@ -158,13 +150,6 @@ Automated daily financial processing that:
 - Detects bankruptcy scenarios
 - Provides detailed financial summaries
 
-**New Functions:**
-- `processDailyFinances(userId)` - Process one user (removed in Nov 2026, admin redesign part 8)
-- `processAllDailyFinances()` - Process all users (removed in Nov 2026, admin redesign part 8)
-
-**New Endpoint:**
-- `POST /api/admin/daily-finances/process` - Trigger daily processing (removed in Nov 2026, admin redesign part 8)
-
 **Integration:**
 Integrated into bulk cycle flow for testing:
 1. Repair robots (optional)
@@ -224,64 +209,6 @@ Cycle 3:
 ### API Usage Examples
 
 This section provides curl command examples and expected responses for the economy system's key API endpoints.
-
-#### Process Daily Finances
-
-> Removed in Nov 2026 (admin redesign part 8): settlement runs through the scheduler (`POST /api/admin/scheduler/runs` with `settlement`) or the bulk cycle runner.
-
-Trigger daily financial processing for all users (admin endpoint).
-
-**Request:**
-```bash
-curl -X POST -H "Authorization: Bearer <token>" \
-  http://localhost:3001/api/admin/daily-finances/process
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "summary": {
-    "usersProcessed": 10,
-    "totalCostsDeducted": 145000,
-    "bankruptUsers": 2,
-    "summaries": [
-      {
-        "userId": 1,
-        "username": "player1",
-        "startingBalance": 500000,
-        "operatingCosts": {
-          "total": 15000,
-          "breakdown": [
-            {
-              "facilityType": "MERCHANDISING_HUB",
-              "level": 5,
-              "cost": 5000
-            },
-            {
-              "facilityType": "REPAIR_BAY",
-              "level": 3,
-              "cost": 3000
-            }
-          ]
-        },
-        "totalCosts": 15000,
-        "endingBalance": 485000,
-        "balanceChange": -15000,
-        "isBankrupt": false,
-        "canAffordCosts": true
-      }
-    ]
-  }
-}
-```
-
-**Description:**
-- Processes daily operating costs for all users
-- Deducts facility costs from user balances
-- Detects bankruptcy scenarios (balance ≤ 0)
-- Returns detailed per-user financial summaries
-- Integrated into bulk cycle flow for testing
 
 #### Get Financial Summary
 
@@ -427,7 +354,6 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
   - Financial health indicators
 - ✅ **Financial API endpoints** (`app/backend/src/routes/finances.ts`)
   - `GET /api/finances/summary` - Quick dashboard overview
-  - ~~`GET /api/finances/daily`, `/operating-costs`, `/revenue-streams`, `/projections`~~ — Removed in November 2026 as unused (the Finance Center reads `/api/finances/report`, `/history`, `/robots`; the dashboard reads `/summary`)
 - ✅ **Battle reward system** - League-based rewards with prestige multipliers
   - Bronze: ₡7.5K → Champion: ₡225K
   - Prestige multipliers: Smooth scaling up to +50% bonus

@@ -8,7 +8,6 @@
  */
 
 import {
-  seedRobotsByELO,
   generateStandardSeedOrder,
   computeSeedings,
   Round1Match,
@@ -34,7 +33,7 @@ describe('computeSeedings — known 8-robot tournament', () => {
   ];
 
   const bracketSize = 8;
-  const seeded = seedRobotsByELO(robots);
+  const seeded = [...robots].sort((a, b) => b.elo - a.elo);
   const seedOrder = generateStandardSeedOrder(bracketSize);
 
   // Place robots into bracket slots
@@ -157,7 +156,7 @@ describe('computeSeedings — 5 robots in 8-slot bracket (bye matches)', () => {
   ];
 
   const bracketSize = 8;
-  const seeded = seedRobotsByELO(robots);
+  const seeded = [...robots].sort((a, b) => b.elo - a.elo);
   const seedOrder = generateStandardSeedOrder(bracketSize);
 
   const bracketSlots: (Robot | null)[] = new Array(bracketSize).fill(null);

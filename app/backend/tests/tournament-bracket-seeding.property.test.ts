@@ -8,7 +8,6 @@
 
 import * as fc from 'fast-check';
 import {
-  seedRobotsByELO,
   generateStandardSeedOrder,
   computeSeedings,
   Round1Match,
@@ -19,7 +18,7 @@ const NUM_RUNS = 10;
 
 /**
  * Create a minimal Robot-like object for testing seeding logic.
- * seedRobotsByELO only accesses .elo for sorting, and the bracket
+ * The ELO sort only accesses .elo for sorting, and the bracket
  * placement logic only uses .id, .name, and .elo.
  */
 function makeRobot(id: number, name: string, elo: number): Robot {
@@ -40,7 +39,7 @@ describe('Feature: tournament-bracket-seeding', () => {
      * **Validates: Requirements 2.1, 2.2, 2.3**
      *
      * For any set of robots with distinct ELO ratings placed into a tournament
-     * bracket via seedRobotsByELO() and generateStandardSeedOrder(), the
+     * bracket sorted by ELO and generateStandardSeedOrder(), the
      * computeSeedings() function extracting seed numbers from round-1 match
      * positions SHALL produce a seedings array where seed 1 has the highest ELO,
      * seed 2 has the second-highest ELO, and so on — i.e., the seedings array
@@ -66,7 +65,7 @@ describe('Feature: tournament-bracket-seeding', () => {
             );
 
             // 2. Sort by ELO descending
-            const seeded = seedRobotsByELO(robots);
+            const seeded = [...robots].sort((a, b) => b.elo - a.elo);
 
             // 3. Compute bracket size (next power of 2 >= N)
             const bracketSize = nextPowerOf2(n);
@@ -144,7 +143,7 @@ describe('Feature: tournament-bracket-seeding', () => {
       const robots: Robot[] = Array.from({ length: 8 }, (_, i) => makeRobot(i + 1, `R${i + 1}`, 2000 - i * 100));
       const seedOrder = generateStandardSeedOrder(8);
       const slots: (Robot | null)[] = new Array(8).fill(null);
-      seedRobotsByELO(robots).forEach((r, i) => {
+      [...robots].sort((a, b) => b.elo - a.elo).forEach((r, i) => {
         slots[seedOrder[i] - 1] = r;
       });
       const round1Matches: Round1Match[] = [];

@@ -24,10 +24,16 @@ import { verifyRobotOwnership } from '../../middleware/ownership';
 import { Prisma, Weapon } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { AppError } from '../../errors';
-import type { NarrativeEvent } from '../../types/battleLogTypes';
 import { achievementService } from '../achievement';
 import logger from '../../config/logger';
-import type { UnlockedAchievement, WhatIfOverrides } from '../../shared/types';
+import type {
+  PracticeBatchResult,
+  PracticeBattleResult,
+  PracticeCombatResult,
+  RangeBand,
+  UnlockedAchievement,
+  WhatIfOverrides,
+} from '../../shared/types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -40,7 +46,7 @@ export type BotTier = 'WimpBot' | 'AverageBot' | 'ExpertBot' | 'UltimateBot';
 export interface SparringPartnerConfig {
   botTier: BotTier;
   loadoutType: 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield';
-  rangeBand: 'melee' | 'short' | 'mid' | 'long';
+  rangeBand: RangeBand;
   stance: 'offensive' | 'defensive' | 'balanced';
   yieldThreshold: number; // 0-50
 }
@@ -54,35 +60,6 @@ export type BattleSlot =
 export interface PracticeBattleRequest {
   robot1: BattleSlot;
   robot2: BattleSlot;
-}
-
-/** Practice battle result returned to the frontend */
-export interface PracticeBattleResult {
-  combatResult: CombatResult;
-  battleLog: NarrativeEvent[]; // narrative events from convertSimulatorEvents
-  robot1Info: { name: string; maxHP: number; maxShield: number };
-  robot2Info: { name: string; maxHP: number; maxShield: number };
-  achievementUnlocks?: UnlockedAchievement[];
-}
-
-/** Batch result returned when count > 1 */
-export interface PracticeBatchResult {
-  results: PracticeBattleResult[];
-  aggregate: {
-    totalBattles: number;
-    robot1Wins: number;
-    robot2Wins: number;
-    draws: number;
-    avgDurationSeconds: number;
-    avgRobot1DamageDealt: number;
-    avgRobot2DamageDealt: number;
-  };
-  /**
-   * Unlocks from the batch's counter update, at the top level like a single
-   * battle's: the frontend's toast subscriber only reads `achievementUnlocks`
-   * on the response body (#608).
-   */
-  achievementUnlocks: UnlockedAchievement[];
 }
 
 /** Sparring partner definition returned by GET /sparring-partners */
@@ -607,12 +584,17 @@ export async function executePracticeBattle(
   }
 
   return {
-    combatResult,
+    combatResult: toWireResult(combatResult),
     battleLog,
     robot1Info: { name: robot1.name, maxHP: Number(robot1.maxHP), maxShield: Number(robot1.maxShield) },
     robot2Info: { name: robot2.name, maxHP: Number(robot2.maxHP), maxShield: Number(robot2.maxShield) },
     achievementUnlocks,
   };
+}
+
+/** The simulator result in the wire shape (each event copied into a plain `BattleLogEvent`). */
+function toWireResult(result: CombatResult): PracticeCombatResult {
+  return { ...result, events: result.events.map((event) => ({ ...event })) };
 }
 
 // ---------------------------------------------------------------------------
@@ -654,7 +636,7 @@ export async function executePracticeBatch(
     });
 
     results.push({
-      combatResult,
+      combatResult: toWireResult(combatResult),
       battleLog,
       robot1Info: { name: robot1.name, maxHP: Number(robot1.maxHP), maxShield: Number(robot1.maxShield) },
       robot2Info: { name: robot2.name, maxHP: Number(robot2.maxHP), maxShield: Number(robot2.maxShield) },

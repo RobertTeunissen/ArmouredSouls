@@ -255,7 +255,7 @@ Current contracts (#592 moved the facilities, finance, battle log, subscription,
 | `league-standings.ts` | `/api/leagues/my-standings`, standings status and pagination |
 | `onboarding.ts` | `/api/onboarding/state` (`TutorialState`, `OnboardingChoices`) |
 | `robot-settings.ts` | `/api/robots/:id/tuning-allocation`, tuning summaries, image moderation availability |
-| `practice-arena.ts` | Practice Arena What-If overrides, academy levels |
+| `practice-arena.ts` | Practice Arena What-If overrides, academy levels, battle and batch results (`PracticeCombatResult` carries the raw simulator events as `BattleLogEvent`) |
 | `tournaments.ts` | `/api/tournaments/:id/seedings`, resolved bracket participants |
 | `hall-of-records.ts` | `/api/records` record owner and win streak lists |
 | `stable.ts` | `StableType`, used by the contracts above |

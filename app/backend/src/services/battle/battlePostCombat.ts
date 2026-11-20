@@ -1,16 +1,14 @@
 /**
  * Shared Post-Combat Helpers
  *
- * Extracts the 6 post-combat pipeline steps that are duplicated across all
- * battle orchestrators into reusable functions:
+ * Post-combat pipeline steps shared by all battle orchestrators:
  *
- *  1. awardStreamingRevenueForBattle()  — calc + award + update participant
+ *  1. awardBattleStreamingRevenue()     — calc + award + update participant
  *  2. logBattleAuditEvent()             — one audit event per robot
  *  3. updateRobotCombatStats()          — wins/losses/kills/damage lifetime
- *  4. awardCreditsToUser()              — simple currency increment
- *  5. awardPrestigeToUser()             — simple prestige increment
- *  6. awardFameToRobot()                — simple fame increment
- *  7. checkAndAwardAchievements()       — evaluate + award achievements
+ *  4. awardCreditsWithLedger()          — battle income through Credit_Mutation_Service
+ *  5. awardPrestigeToUser()             — prestige through Prestige_Service
+ *  6. checkAndAwardAchievements()       — evaluate + award achievements
  *
  * Each orchestrator still owns its own processBattle() flow, reward formulas,
  * and type-specific DB fields. These helpers just eliminate the copy-paste.
@@ -490,22 +488,6 @@ function buildBattleBreakdown(
   };
 }
 
-/** Compatibility wrapper for callers that only need the shared battle path. */
-export async function awardCreditsToUser(userId: number, amount: number): Promise<void> {
-  if (amount <= 0) return;
-  const cycleNumber = await getCurrentCycleNumber();
-  await awardCreditsWithLedger(
-    userId,
-    amount,
-    'battle_income',
-    cycleNumber,
-    'Battle reward',
-    undefined,
-    undefined,
-    { mode: 'unknown', outcome: 'unknown' },
-  );
-}
-
 /** Apply one stable-level battle-income mutation through the atomic pair. */
 export async function awardCreditsWithLedger(
   userId: number,
@@ -606,15 +588,6 @@ export async function awardPrestigeToUser(
   } else {
     await applyPrestigeAward(mutationInput);
   }
-}
-
-/** Award fame to a robot */
-export async function awardFameToRobot(robotId: number, amount: number): Promise<void> {
-  if (amount <= 0) return;
-  await prisma.robot.update({
-    where: { id: robotId },
-    data: { fame: { increment: amount } },
-  });
 }
 
 // ─── 7. Achievement Evaluation ──────────────────────────────────────

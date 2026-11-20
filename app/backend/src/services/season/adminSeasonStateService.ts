@@ -16,8 +16,6 @@ import { getQueuedAdminRollover, isRolloverActive } from './adminSeasonRolloverR
 import type {
   AdminActiveRollover,
   AdminSeasonState,
-  RolloverRunSummary,
-  SeasonState,
 } from '../../shared/types';
 
 async function usernameOf(userId: number | null): Promise<AdminActiveRollover['triggeredBy']> {

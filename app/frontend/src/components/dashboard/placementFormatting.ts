@@ -6,29 +6,8 @@
  * be property-tested without rendering anything.
  */
 
-/** The two placement-resolved modes. */
-export type PlacementMode = 'koth' | 'grand_melee';
-
-/** Highest finishing position that earns prestige, per mode (#576: Grand Melee pays the top 10). */
-const PRESTIGE_PLACES: Readonly<Record<PlacementMode, number>> = {
-  koth: 3,
-  grand_melee: 10,
-};
-
 /** Highest finishing position that earns LP and fame, in both modes. */
 const REWARDED_PLACES = 10;
-
-/**
- * Which reward band a Placement_Mode finish falls in, at EVERY field size.
- *
- * KotH: prestige to the top 3, LP and fame to the top 10. Grand Melee: prestige,
- * LP and fame to the top 10 (#576). Nothing beyond 10th in either mode.
- */
-export function placementReward(position: number, mode: PlacementMode): 'prestige' | 'lp-and-fame' | 'none' {
-  if (position <= PRESTIGE_PLACES[mode]) return 'prestige';
-  if (position <= REWARDED_PLACES) return 'lp-and-fame';
-  return 'none';
-}
 
 /** Whether a finish earns any placement reward; the same top 10 in both modes. */
 export function earnsPlacementReward(position: number): boolean {

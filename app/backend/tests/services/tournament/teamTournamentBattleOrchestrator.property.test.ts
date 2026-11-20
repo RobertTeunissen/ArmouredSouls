@@ -524,9 +524,8 @@ describe('Feature: team-battle-tournaments, Property 18: Tournament battles do n
           // - calculateTournamentFame (fame)
           // - calculateTeamBattleELOChanges (ELO)
           // - awardStreamingRevenueForParticipant (streaming)
-          // - awardCreditsToUser (credits)
+          // - awardCreditsWithLedger (credits)
           // - awardPrestigeToUser (prestige)
-          // - awardFameToRobot (fame)
           //
           // None of these touch league win counters.
           // The league counter increment happens in teamBattleOrchestrator.ts (league mode),

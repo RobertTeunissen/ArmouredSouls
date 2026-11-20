@@ -13,7 +13,6 @@ import type { WeaponFilters } from '../FilterPanel';
 import { ATTRIBUTE_LABELS } from '../../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../../shared/utils/discounts';
 import { calculateRankPrefix } from '../../../../shared/utils/weaponRefinement';
-import { getWeaponOptimalRange } from '../../utils/weaponRange';
 import type { Weapon, WeaponFacility, StorageStatus, ViewMode, WeaponInventoryItem } from './types';
 import type { OwnedRankBreakdown } from './WeaponCard';
 
@@ -195,7 +194,7 @@ export function useWeaponShop() {
       }
 
       if (filters.rangeBands.length > 0) {
-        const weaponRange = getWeaponOptimalRange(weapon);
+        const weaponRange = weapon.rangeBand;
         if (!filters.rangeBands.includes(weaponRange)) return false;
       }
 

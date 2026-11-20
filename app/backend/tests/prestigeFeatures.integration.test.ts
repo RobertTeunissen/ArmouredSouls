@@ -3,7 +3,7 @@
  * Tests end-to-end functionality of prestige gates and the merchandising multiplier
  */
 
-import { calculateMerchandisingIncome } from '../src/utils/economyCalculations';
+import { calculateMerchandisingIncome } from '../src/utils/economyFormulas';
 import { getFacilityConfig } from '../src/config/facilities';
 
 describe('Prestige Features Integration', () => {

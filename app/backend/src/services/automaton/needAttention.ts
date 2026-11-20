@@ -47,22 +47,6 @@ export function classifyNeedAttention(facts: NeedAttentionFacts): NeedAttentionR
   return reasons;
 }
 
-/**
- * The current zero-spend run of Turn_Records ordered newest first: completed
- * records counted until the first completed record with credits spent;
- * skipped, failed and in-progress records are passed over (the same rule as
- * the SQL in `loadNeedAttention`).
- */
-export function zeroSpendRun(turnsNewestFirst: readonly { status: string; creditsSpent: number }[]): number {
-  let run = 0;
-  for (const turn of turnsNewestFirst) {
-    if (turn.status !== 'completed') continue;
-    if (turn.creditsSpent > 0) break;
-    run++;
-  }
-  return run;
-}
-
 export interface NeedAttentionSubject {
   profileId: number;
   balance: number | null;

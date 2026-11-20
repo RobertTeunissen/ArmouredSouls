@@ -16,11 +16,6 @@ export interface FacilityConfig {
    * L7: 10000, L8: 15000, L9: 25000, L10: 50000
    */
   prestigeRequirements?: number[];
-  /**
-   * @deprecated No longer used. All facilities use raw prestige gates.
-   * Kept temporarily for migration safety — will be removed in a future cleanup.
-   */
-  prestigeGateIsPerSlot?: boolean;
 }
 
 /**

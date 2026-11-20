@@ -107,34 +107,3 @@ export function generateToken(user: UserForToken): string {
   return token;
 }
 
-/**
- * Verify and decode a JWT token.
- *
- * Returns `null` (rather than throwing) when the token is invalid, expired,
- * or falsy, making it safe to call without pre-checking.
- *
- * @param token - The JWT token string to verify
- * @returns The decoded {@link TokenPayload} if valid, or `null` if invalid/expired
- *
- * @example
- * const payload = verifyToken(token);
- * if (payload) {
- *   console.log('Authenticated user:', payload.userId);
- * }
- */
-export function verifyToken(token: string): TokenPayload | null {
-  if (!token) {
-    return null;
-  }
-
-  try {
-    const secret = getJwtSecret();
-    const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] }) as TokenPayload;
-    return decoded;
-  } catch {
-    // Swallow verification errors (expired, malformed, bad signature) and
-    // return null so callers can treat invalid tokens as "not authenticated"
-    // without needing try/catch at every call site.
-    return null;
-  }
-}

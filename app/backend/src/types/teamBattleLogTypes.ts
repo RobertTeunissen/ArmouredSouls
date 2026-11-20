@@ -40,7 +40,7 @@ export interface TeamBattleDamageEvent extends TeamBattleCombatEventBase {
   isFocusFire: boolean;
 }
 
-/** Focus fire detected: 2+ allies targeting the same enemy this tick. */
+/** A hit that got the focus fire bonus: a teammate hit the same enemy within the last second. */
 export interface TeamBattleFocusFireCombatEvent extends TeamBattleCombatEventBase {
   type: 'focus_fire';
   targetRobotId: number;

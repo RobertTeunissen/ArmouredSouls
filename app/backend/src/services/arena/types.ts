@@ -17,7 +17,8 @@ import type { MovementMode } from './servoStrain';
 // ─── Range Band Classification (Req 3.1) ────────────────────────────
 
 /** Range band classification */
-export type RangeBand = 'melee' | 'short' | 'mid' | 'long';
+export type { RangeBand } from '../../shared/types';
+import type { RangeBand } from '../../shared/types';
 
 /** Range band boundaries in grid units */
 export const RANGE_BAND_BOUNDARIES = {
@@ -175,6 +176,8 @@ export interface RobotCombatState {
   // === Team (Req 12, 13) ===
   teamIndex: number;
   isAlive: boolean;
+  /** Time of the latest landed hit on this robot, per attacker teamIndex (focus fire window). */
+  lastHitTakenFrom: Record<number, number>;
 }
 
 // ─── Extended CombatEvent (Backward Compatible — Req 14.2, 14.3) ───
@@ -239,6 +242,10 @@ export interface CombatEvent {
   rangePenalty?: number;
   backstab?: boolean;
   flanking?: boolean;
+  /** Focus fire damage bonus applied to this hit (team battles), when above 0. */
+  focusFireBonus?: number;
+  /** Names of the robots whose hits formed the focus fire (attacker included). */
+  focusFireContributors?: string[];
   attackAngle?: number;
 
   // === KotH-specific fields (Req 12.1–12.5) ===

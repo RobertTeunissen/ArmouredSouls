@@ -25,7 +25,6 @@ import { getProgramSwitch, setProgramSwitch } from '../../src/services/automaton
 import {
   activateProfile,
   addBlueprint,
-  AUTOMATON_OPENING_BALANCE,
   createDraft,
 } from '../../src/services/automaton/automatonProfileService';
 import { requiredTeamNameCountsFor } from '../../src/services/automaton/automatonCatalogueService';
@@ -34,6 +33,9 @@ import { SUBSCRIBABLE_EVENT_TYPES, isRegisteredEvent, registerSubscribableEvent 
 import { deleteAutomatonStables } from '../helpers/automatonStable';
 import type { TurnActionRecord } from '../../src/types/automaton';
 import type { TeamNames } from '../../src/shared/types';
+
+/** Opening balance of an Activated stable: the `User.currency` default (R2.2). */
+const AUTOMATON_OPENING_BALANCE = 3_000_000;
 
 jest.setTimeout(240_000);
 

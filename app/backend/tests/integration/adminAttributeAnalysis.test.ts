@@ -16,8 +16,8 @@ import { generateToken } from '../../src/services/auth/jwtService';
 import { createTestRobot } from '../testHelpers';
 import { ROBOT_ATTRIBUTES } from '../../src/shared/utils/robotAttributes';
 import { countRecordedBattles, getRecordingBounds, loadComparisons } from '../../src/services/admin/analysis/analysisData';
-import { layerValue, layeredValues } from '../../src/services/admin/analysis/attributeLayers';
-import { ALL_LAYERS_ON } from '../../src/services/admin/analysis/analysisOptions';
+import { layeredValues } from '../../src/services/admin/analysis/attributeLayers';
+import { ALL_LAYERS_ON, layerValue } from '../../src/services/admin/analysis/__tests__/layerTestSupport';
 
 const TAG = `${Date.now().toString().slice(-7)}${Math.floor(Math.random() * 900 + 100)}`;
 const FROM = new Date('2099-01-01T00:00:00Z');

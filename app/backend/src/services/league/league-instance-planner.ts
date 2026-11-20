@@ -26,7 +26,7 @@
  */
 
 /** An instance more than this many entities away from the tier target triggers a re-deal. */
-export const REBALANCE_THRESHOLD = 20;
+const REBALANCE_THRESHOLD = 20;
 
 /** Free places per instance that a re-deal or merge leaves for later entrants. */
 export const INSTANCE_HEADROOM = 20;

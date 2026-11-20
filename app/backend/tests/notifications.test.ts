@@ -111,7 +111,6 @@ jest.mock('../src/lib/prisma', () => ({
 }));
 
 jest.mock('../src/services/economy/repairService', () => ({
-  repairAllRobots: jest.fn(),
   repairRobotsForEvent: jest.fn(),
 }));
 

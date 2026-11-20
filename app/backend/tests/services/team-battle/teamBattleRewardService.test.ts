@@ -15,7 +15,7 @@ import {
 } from '../../../src/services/team-battle/teamBattleRewardService';
 import { TeamBattleParticipantResult } from '../../../src/types/teamBattleLogTypes';
 import { FAME_BY_LEAGUE, PRESTIGE_BY_LEAGUE } from '../../../src/utils/battleMath';
-import { getLeagueWinReward, getParticipationReward } from '../../../src/utils/economyCalculations';
+import { getLeagueWinReward, getParticipationReward } from '../../../src/utils/economyFormulas';
 
 /**
  * Unit tests for Team Battle Reward Service.

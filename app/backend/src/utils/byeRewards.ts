@@ -162,11 +162,6 @@ export const TIER_SCALED_BYE_MODES = BYE_MODES.filter(
   (m): m is TierScaledByeMode => BYE_MODE_SPECS[m].floor === 'tier_scaled',
 );
 
-/** The three Tournament_Modes, for iteration. */
-export const TOURNAMENT_BYE_MODES = BYE_MODES.filter(
-  (m): m is TournamentByeMode => BYE_MODE_SPECS[m].floor === 'tournament_round_loss',
-);
-
 // ─── Input and output ────────────────────────────────────────────────────────
 
 /**

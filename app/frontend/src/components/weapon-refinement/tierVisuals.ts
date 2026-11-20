@@ -8,10 +8,7 @@
  * Spec: 34-weapon-refinement (design.md → Components and Interfaces → Frontend Components)
  */
 
-// TODO: Switch to `import type { RefinementTier } from '../../../../shared/utils/weaponRefinement';`
-// once Task 3 of spec 34-weapon-refinement lands. The two values are identical by design —
-// the shared module is the eventual single source of truth for the tier union.
-type RefinementTier = 'hone' | 'augment' | 'sharpen' | 'forge';
+import type { RefinementTier } from '@shared/utils/weaponRefinement';
 
 /**
  * Visual identity for a single refinement tier.

@@ -21,7 +21,7 @@
  */
 
 import prisma from '../../lib/prisma';
-import { buildUserFilter } from '../../utils/buildUserFilter';
+import { realUserFilter } from '../../utils/realUserFilter';
 import { getCurrentSeason } from '../season/seasonService';
 import { loadCycleTotals } from './economyCycleRollups';
 import type {
@@ -123,7 +123,7 @@ async function loadDataset(): Promise<Dataset> {
   const [meta, users, players, season] = await Promise.all([
     prisma.cycleMetadata.findUnique({ where: { id: 1 }, select: { totalCycles: true } }),
     prisma.user.findMany({ select: { id: true, currency: true, stableType: true, isGenerated: true } }),
-    prisma.user.findMany({ where: buildUserFilter('real'), select: { id: true } }),
+    prisma.user.findMany({ where: realUserFilter(), select: { id: true } }),
     getCurrentSeason(),
   ]);
   const totalCycles = meta?.totalCycles ?? 0;

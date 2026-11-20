@@ -23,6 +23,9 @@ export const ATTRIBUTE_SCALE_CAP = 50;
 /** Maximum focus fire damage bonus (25%) */
 export const FOCUS_FIRE_MAX = 0.25;
 
+/** A teammate's hit on the same enemy within this many seconds counts toward focus fire */
+export const FOCUS_FIRE_WINDOW_SECONDS = 1.0;
+
 /** Maximum ally shield regen per second (at supportSystems=50, dt=1.0) */
 export const ALLY_SHIELD_REGEN_MAX = 0.8;
 

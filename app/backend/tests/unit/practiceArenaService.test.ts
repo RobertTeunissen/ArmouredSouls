@@ -855,9 +855,8 @@ describe('Practice Arena Service', () => {
 
       expect(serviceSource).not.toContain('battlePostCombat');
       expect(serviceSource).not.toContain('updateRobotCombatStats');
-      expect(serviceSource).not.toContain('awardCreditsToUser');
+      expect(serviceSource).not.toContain('awardCreditsWithLedger');
       expect(serviceSource).not.toContain('awardPrestigeToUser');
-      expect(serviceSource).not.toContain('awardFameToRobot');
       expect(serviceSource).not.toContain('logBattleAuditEvent');
       expect(serviceSource).not.toContain('awardStreamingRevenueForParticipant');
     });

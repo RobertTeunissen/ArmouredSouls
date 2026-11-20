@@ -8,6 +8,7 @@
  * is the same for every type.
  */
 import type { DamageFlow, RobotCombatStats } from '../utils/battleStatistics';
+import type { RangeBand } from './admin-analysis';
 import type { StableType } from './stable';
 
 export interface ArenaPoint {
@@ -33,9 +34,11 @@ export interface BattleLogEvent {
   positions?: Record<string, ArenaPoint>;
   facingDirections?: Record<string, number>;
   distance?: number;
-  rangeBand?: 'melee' | 'short' | 'mid' | 'long';
+  rangeBand?: RangeBand;
   backstab?: boolean;
   flanking?: boolean;
+  /** Focus fire damage bonus applied to this hit (team battles), when above 0. */
+  focusFireBonus?: number;
   robot1HP?: number;
   robot2HP?: number;
   robot1Shield?: number;

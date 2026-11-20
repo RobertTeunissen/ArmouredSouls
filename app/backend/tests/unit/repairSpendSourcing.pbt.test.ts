@@ -38,11 +38,6 @@ describe('Property 20: no repair figure is derived from a battle payload', () =>
     expect(source).not.toMatch(/payload\.repairCost/);
   });
 
-  it('the CSV export never reads a repair field off a battle payload', () => {
-    const source = codeOnly(read('services/cycle/cycleCsvExportService.ts'));
-    expect(source).not.toMatch(/payload\.repairCost/);
-  });
-
   it('CycleEventPayload no longer declares repairCost, so a reintroduced read cannot compile', () => {
     const source = codeOnly(read('types/snapshotTypes.ts'));
     expect(source).not.toMatch(/repairCost\s*\?:/);

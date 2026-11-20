@@ -260,18 +260,6 @@ describe('Property 21: Repair aggregation is a per-type sum that tolerates malfo
     );
   });
 
-  it('reads pre-rename rows through the fallback', async () => {
-    mockPrisma.robot.findMany.mockResolvedValue([{ id: 1 }]);
-    mockPrisma.auditLog.findMany.mockResolvedValue([
-      { payload: { cost: 500, repairType: 'manual' } },
-      { payload: { cost: 900, repairType: 'automatic' } },
-    ]);
-
-    const summary = await getCycleProgressSummary(7, new Date('2026-08-26T12:00:00Z'));
-
-    expect(summary.repairSpend).toEqual({ manual: 500, automatic: 900 });
-  });
-
   it('never reads preDiscountCost into a spend total', async () => {
     mockPrisma.robot.findMany.mockResolvedValue([{ id: 1 }]);
     mockPrisma.auditLog.findMany.mockResolvedValue([

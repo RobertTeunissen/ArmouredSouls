@@ -11,7 +11,7 @@ import prisma from '../../../lib/prisma';
 import { getStrategyRegistry } from './defaultRegistry';
 import { describeBuildOrder } from './strategyParameters';
 import type { StrategyRegistry } from './registry';
-import type { BuildOrderDescriptor, LibraryStrategy, LibraryVersion } from '../../../shared/types';
+import type { LibraryStrategy, LibraryVersion } from '../../../shared/types';
 
 export interface StrategyLibrary {
   strategies: LibraryStrategy[];

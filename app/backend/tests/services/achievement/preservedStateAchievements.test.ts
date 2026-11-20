@@ -29,11 +29,15 @@ jest.mock('../../../src/services/achievement/achievementService', () => ({
 
 import {
   reawardPreservedStateAchievements,
-  PRESERVED_STATE_TRIGGERS,
   PRESERVED_STATE_EVENTS,
 } from '../../../src/services/achievement/preservedStateAchievements';
 import { EVENT_TRIGGER_MAP } from '../../../src/services/achievement/achievementTypes';
 import { ACHIEVEMENTS } from '../../../src/config/achievements';
+
+import type { AchievementTriggerType } from '../../../src/config/achievements';
+
+/** Trigger types whose condition reads user state a rollover preserves; each must be reachable from PRESERVED_STATE_EVENTS. */
+const PRESERVED_STATE_TRIGGERS: readonly AchievementTriggerType[] = ['onboarding', 'previous_season_veteran'];
 
 beforeEach(() => {
   jest.clearAllMocks();

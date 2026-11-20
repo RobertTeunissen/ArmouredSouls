@@ -16,14 +16,11 @@ interface BracketViewProps {
   participantType: ParticipantType;
   userParticipantIds: Set<number>;
   resolvedParticipants?: Record<number, ResolvedParticipant>;
-  /** @deprecated Use userParticipantIds */
-  userRobotIds?: Set<number>;
 }
 
 const BracketView: React.FC<BracketViewProps> = ({
   matches, seedings, maxRounds, currentRound, status,
   participantType, userParticipantIds, resolvedParticipants,
-  userRobotIds,
 }) => {
   const isMobile = useIsMobile();
   const [focusParticipantId, setFocusParticipantId] = useState<number | null>(null);
@@ -31,11 +28,6 @@ const BracketView: React.FC<BracketViewProps> = ({
   const [startRound, setStartRound] = useState(1);
   const [endRound, setEndRound] = useState(maxRounds);
 
-  // Support legacy userRobotIds prop for backward compatibility
-  const effectiveUserParticipantIds = useMemo(
-    () => userParticipantIds ?? userRobotIds ?? new Set<number>(),
-    [userParticipantIds, userRobotIds],
-  );
 
   const isTeamTournament = participantType === 'team_2v2' || participantType === 'team_3v3';
 
@@ -46,8 +38,8 @@ const BracketView: React.FC<BracketViewProps> = ({
   }, [seedings]);
 
   const futurePathMatchIds = useMemo(
-    () => getUserFuturePath(matches, effectiveUserParticipantIds, maxRounds),
-    [matches, effectiveUserParticipantIds, maxRounds],
+    () => getUserFuturePath(matches, userParticipantIds, maxRounds),
+    [matches, userParticipantIds, maxRounds],
   );
 
   /** Find all user participants that appear in this tournament's matches */
@@ -55,13 +47,13 @@ const BracketView: React.FC<BracketViewProps> = ({
     const participants: Array<{ id: number; name: string }> = [];
     const seen = new Set<number>();
     for (const m of matches) {
-      if (m.participant1Id !== null && effectiveUserParticipantIds.has(m.participant1Id) && !seen.has(m.participant1Id)) {
+      if (m.participant1Id !== null && userParticipantIds.has(m.participant1Id) && !seen.has(m.participant1Id)) {
         seen.add(m.participant1Id);
         const resolved = resolvedParticipants?.[m.participant1Id];
         const name = resolved?.displayName ?? m.robot1?.name ?? `Participant #${m.participant1Id}`;
         participants.push({ id: m.participant1Id, name });
       }
-      if (m.participant2Id !== null && effectiveUserParticipantIds.has(m.participant2Id) && !seen.has(m.participant2Id)) {
+      if (m.participant2Id !== null && userParticipantIds.has(m.participant2Id) && !seen.has(m.participant2Id)) {
         seen.add(m.participant2Id);
         const resolved = resolvedParticipants?.[m.participant2Id];
         const name = resolved?.displayName ?? m.robot2?.name ?? `Participant #${m.participant2Id}`;
@@ -69,7 +61,7 @@ const BracketView: React.FC<BracketViewProps> = ({
       }
     }
     return participants;
-  }, [matches, effectiveUserParticipantIds, resolvedParticipants]);
+  }, [matches, userParticipantIds, resolvedParticipants]);
 
   const handleParticipantFocus = useCallback((participantId: number) => {
     setFocusParticipantId(null);
@@ -159,7 +151,7 @@ const BracketView: React.FC<BracketViewProps> = ({
           {isMobile ? (
             <MobileBracket
               matches={matches} maxRounds={maxRounds} currentRound={currentRound}
-              status={status} seedMap={seedMap} userParticipantIds={effectiveUserParticipantIds}
+              status={status} seedMap={seedMap} userParticipantIds={userParticipantIds}
               futurePathMatchIds={futurePathMatchIds}
               resolvedParticipants={resolvedParticipants}
               participantType={participantType}
@@ -167,7 +159,7 @@ const BracketView: React.FC<BracketViewProps> = ({
           ) : (
             <DesktopBracket
               matches={matches} maxRounds={maxRounds} currentRound={currentRound}
-              status={status} seedMap={seedMap} userParticipantIds={effectiveUserParticipantIds}
+              status={status} seedMap={seedMap} userParticipantIds={userParticipantIds}
               futurePathMatchIds={futurePathMatchIds} focusParticipantId={focusParticipantId}
               showOnlyMyParticipants={showOnlyMyParticipants}
               startRound={startRound} endRound={endRound}
@@ -177,7 +169,7 @@ const BracketView: React.FC<BracketViewProps> = ({
           )}
         </div>
         <div className="lg:w-64 shrink-0">
-          <SeedingList seedings={seedings} userRobotIds={effectiveUserParticipantIds}
+          <SeedingList seedings={seedings} userRobotIds={userParticipantIds}
             onRobotClick={handleParticipantFocus} />
         </div>
       </div>

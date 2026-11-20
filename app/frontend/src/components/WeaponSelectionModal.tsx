@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { useEscapeKey } from '../hooks/useEscapeKey';
-import { RangeBand, getWeaponOptimalRange, getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../utils/weaponRange';
+import { getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../utils/weaponRange';
+import type { RangeBand } from '@shared/types';
 import { onActivationKey } from '../utils/keyboardActivation';
 
 interface Weapon {
@@ -254,7 +255,7 @@ function WeaponSelectionModal({
                       <h3 className="font-semibold text-lg">{inv.weapon.name}</h3>
                       <div className="flex items-center gap-2">
                         {(() => {
-                          const range = getWeaponOptimalRange({ name: inv.weapon.name, rangeBand: inv.weapon.rangeBand });
+                          const range = (inv.weapon.rangeBand as RangeBand);
                           return (
                             <span className={`text-xs px-2 py-0.5 rounded border ${getRangeBandBgColor(range)} ${getRangeBandColor(range)}`}>
                               {getRangeBandLabel(range)} Range

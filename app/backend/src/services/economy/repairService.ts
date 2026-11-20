@@ -15,7 +15,6 @@ export interface RepairSummary {
   robotsRepaired: number;
   totalBaseCost: number;
   totalFinalCost: number;
-  costsDeducted: boolean;
   userSummaries: Array<{
     userId: number;
     robotsRepaired: number;
@@ -35,14 +34,8 @@ type RepairLogEvent = {
 
 type InternalRepairSummary = RepairSummary & { logEvents: RepairLogEvent[] };
 
-function emptySummary(costsDeducted: boolean): RepairSummary {
-  return {
-    robotsRepaired: 0,
-    totalBaseCost: 0,
-    totalFinalCost: 0,
-    costsDeducted,
-    userSummaries: [],
-  };
+function emptySummary(): RepairSummary {
+  return { robotsRepaired: 0, totalBaseCost: 0, totalFinalCost: 0, userSummaries: [] };
 }
 
 /**
@@ -52,26 +45,14 @@ function emptySummary(costsDeducted: boolean): RepairSummary {
  * Scope resolution remains in `resolveRobotIdsForEvent`, which intentionally
  * includes real participants in bye matches.
  */
-export async function repairRobotsForEvent(
-  eventType: SubscribableEventType,
-  deductCosts: boolean = true,
-  cycleNumber?: number,
-): Promise<RepairSummary> {
+export async function repairRobotsForEvent(eventType: SubscribableEventType): Promise<RepairSummary> {
   const robotIds = await resolveRobotIdsForEvent(eventType);
 
   logger.info(
     `[RepairService] Pre-battle repair scoped to ${eventType}: ${robotIds.length} robot(s) with a queued match`,
   );
 
-  return repairRobots(robotIds, deductCosts, cycleNumber);
-}
-
-/** Repair every damaged robot in the game for an explicit maintenance trigger. */
-export async function repairAllRobots(
-  deductCosts: boolean = true,
-  cycleNumber?: number,
-): Promise<RepairSummary> {
-  return repairRobots(null, deductCosts, cycleNumber);
+  return repairRobots(robotIds);
 }
 
 /**
@@ -82,24 +63,17 @@ export async function repairAllRobots(
  * owner avoids retaining the cycle-wide audit lock and prior owners' row locks
  * for an entire event-wide repair batch.
  */
-async function repairUserRobots(
-  userId: number,
-  scopedRobotIds: number[] | null,
-  deductCosts: boolean,
-): Promise<InternalRepairSummary> {
+async function repairUserRobots(userId: number, scopedRobotIds: number[]): Promise<InternalRepairSummary> {
   return runFinancialWriteTransaction(async (tx, financialCycleNumber): Promise<InternalRepairSummary> => {
     await lockUserForSpending(tx, userId);
 
-    const where = {
-      userId,
-      ...(scopedRobotIds !== null ? { id: { in: scopedRobotIds } } : {}),
-      currentHP: { lt: prisma.robot.fields.maxHP },
-    };
     // Re-read only after the owner lock. A concurrent repair that committed
     // first has removed its robots from this snapshot.
-    const robots = await tx.robot.findMany({ where });
+    const robots = await tx.robot.findMany({
+      where: { userId, id: { in: scopedRobotIds }, currentHP: { lt: prisma.robot.fields.maxHP } },
+    });
     if (robots.length === 0) {
-      return { ...emptySummary(deductCosts), logEvents: [] };
+      return { ...emptySummary(), logEvents: [] };
     }
 
     const [facilities, robotCounts] = await Promise.all([
@@ -136,38 +110,34 @@ async function repairUserRobots(
       totalBaseCost += baseQuote;
       totalFinalCost += repairCost;
 
-      let created = true;
-      if (deductCosts) {
-        const financialResult = await applyRepairCreditMutationInTransaction({
-          tx,
+      const { created } = await applyRepairCreditMutationInTransaction({
+        tx,
+        cycleNumber: financialCycleNumber,
+        operationId,
+        userId,
+        robotId: robot.id,
+        repairType: 'automatic',
+        charge: repairCost,
+        description: 'Automatic pre-battle repair of 1 robot',
+        baseQuote,
+        damageRepaired,
+        repairBayLevel,
+        activeRobotCount,
+        repairBayDiscountPercent: repairBayDiscount,
+        manualRepairDiscountPercent: 0,
+        quoteBeforeManualDiscount: repairCost,
+        attributeTotal,
+        damagePercent,
+        hpPercent,
+        auditContext: {
+          operationType: 'automatic_repair',
+          eventType: 'pre_battle',
           cycleNumber: financialCycleNumber,
-          operationId,
-          userId,
-          robotId: robot.id,
           repairType: 'automatic',
-          charge: repairCost,
-          description: 'Automatic pre-battle repair of 1 robot',
-          baseQuote,
-          damageRepaired,
-          repairBayLevel,
-          activeRobotCount,
-          repairBayDiscountPercent: repairBayDiscount,
-          manualRepairDiscountPercent: 0,
-          quoteBeforeManualDiscount: repairCost,
-          attributeTotal,
-          damagePercent,
-          hpPercent,
-          auditContext: {
-            operationType: 'automatic_repair',
-            eventType: 'pre_battle',
-            cycleNumber: financialCycleNumber,
-            repairType: 'automatic',
-          },
-        });
-        created = financialResult.created;
-      }
+        },
+      });
 
-      if (!deductCosts || created) {
+      if (created) {
         await tx.robot.update({
           where: { id: robot.id },
           data: {
@@ -175,7 +145,7 @@ async function repairUserRobots(
             currentShield: robot.maxShield,
             repairQuoteCredits: 0,
             battleReadiness: 100,
-            lifetimeRepairCreditsPaid: { increment: deductCosts ? repairCost : 0 },
+            lifetimeRepairCreditsPaid: { increment: repairCost },
           },
         });
       }
@@ -194,7 +164,6 @@ async function repairUserRobots(
       robotsRepaired: userRobots.length,
       totalBaseCost,
       totalFinalCost,
-      costsDeducted: deductCosts,
       userSummaries: [{
         userId,
         robotsRepaired: userRobots.length,
@@ -213,26 +182,17 @@ async function repairUserRobots(
  * owner's transaction is idempotent at the repair financial-event layer, so a
  * partially completed batch safely resumes without charging repairs twice.
  */
-async function repairRobots(
-  robotIds: number[] | null,
-  deductCosts: boolean,
-  cycleNumber?: number,
-): Promise<RepairSummary> {
-  if (robotIds !== null && robotIds.length === 0) {
-    return emptySummary(deductCosts);
+async function repairRobots(robotIds: number[]): Promise<RepairSummary> {
+  if (robotIds.length === 0) {
+    return emptySummary();
   }
 
-  // Financial identities are rebuilt from the authoritative cycle resolved
-  // inside each fresh transaction attempt. The optional argument remains for
-  // compatibility with cycle runners but cannot select an accounting cycle.
-  void cycleNumber;
-  const where = {
-    ...(robotIds !== null ? { id: { in: robotIds } } : {}),
-    currentHP: { lt: prisma.robot.fields.maxHP },
-  };
-  const initialRobots = await prisma.robot.findMany({ where });
+  // Financial identities come from the cycle resolved inside each transaction attempt.
+  const initialRobots = await prisma.robot.findMany({
+    where: { id: { in: robotIds }, currentHP: { lt: prisma.robot.fields.maxHP } },
+  });
   if (initialRobots.length === 0) {
-    return emptySummary(deductCosts);
+    return emptySummary();
   }
 
   const robotIdsByUser = new Map<number, number[]>();
@@ -243,16 +203,12 @@ async function repairRobots(
   }
 
   const result: InternalRepairSummary = {
-    ...emptySummary(deductCosts),
+    ...emptySummary(),
     logEvents: [],
   };
   const userIds = [...robotIdsByUser.keys()].sort((a, b) => a - b);
   for (const userId of userIds) {
-    const userResult = await repairUserRobots(
-      userId,
-      robotIds === null ? null : robotIdsByUser.get(userId) ?? [],
-      deductCosts,
-    );
+    const userResult = await repairUserRobots(userId, robotIdsByUser.get(userId) ?? []);
     result.robotsRepaired += userResult.robotsRepaired;
     result.totalBaseCost += userResult.totalBaseCost;
     result.totalFinalCost += userResult.totalFinalCost;

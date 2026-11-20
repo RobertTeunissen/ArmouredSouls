@@ -20,7 +20,6 @@ jest.mock('../src/lib/prisma', () => ({
 import {
   verifyRobotOwnership,
   verifyWeaponOwnership,
-  verifyFacilityOwnership,
 } from '../src/middleware/ownership';
 
 /**
@@ -155,58 +154,6 @@ describe('Feature: security-audit-guardrails, Property 8: Ownership verification
 
           try {
             await verifyWeaponOwnership(tx, inventoryId, requesterId);
-            expect(true).toBe(false);
-          } catch (err) {
-            expect(err).toBeInstanceOf(AppError);
-            const appErr = err as AppError;
-            expect(appErr.statusCode).toBe(403);
-            expect(appErr.code).toBe('FORBIDDEN');
-            expect(appErr.message).toBe('Access denied');
-          }
-        }
-      ),
-      { numRuns: 100 }
-    );
-  });
-
-  it('verifyFacilityOwnership throws generic 403 when user does not own the facility', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.integer({ min: 1, max: 100000 }),  // facilityId
-        fc.integer({ min: 1, max: 100000 }),  // ownerId
-        fc.integer({ min: 1, max: 100000 }),  // requesterId
-        async (facilityId, ownerId, requesterId) => {
-          fc.pre(ownerId !== requesterId);
-
-          const tx = createMockTx({ facilityResult: { userId: ownerId } });
-
-          try {
-            await verifyFacilityOwnership(tx, facilityId, requesterId);
-            expect(true).toBe(false);
-          } catch (err) {
-            expect(err).toBeInstanceOf(AppError);
-            const appErr = err as AppError;
-            expect(appErr.statusCode).toBe(403);
-            expect(appErr.code).toBe('FORBIDDEN');
-            expect(appErr.message).toBe('Access denied');
-            expect(appErr.details).toBeUndefined();
-          }
-        }
-      ),
-      { numRuns: 100 }
-    );
-  });
-
-  it('verifyFacilityOwnership throws generic 403 when facility does not exist', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.integer({ min: 1, max: 100000 }),
-        fc.integer({ min: 1, max: 100000 }),
-        async (facilityId, requesterId) => {
-          const tx = createMockTx({ facilityResult: null });
-
-          try {
-            await verifyFacilityOwnership(tx, facilityId, requesterId);
             expect(true).toBe(false);
           } catch (err) {
             expect(err).toBeInstanceOf(AppError);

@@ -9,39 +9,16 @@
  * real paths write.
  */
 import * as fc from 'fast-check';
-import {
-  satisfiesStableTypeInvariant,
-  stableTypeForCreation,
-  type StableTypeValue,
-} from '../stableType';
+import { stableTypeForCreation } from '../stableType';
 
 describe('Stable_Type invariant I1', () => {
   it('stableTypeForCreation satisfies I1 for every isGenerated value', () => {
     fc.assert(
       fc.property(fc.boolean(), (isGenerated) => {
         const stableType = stableTypeForCreation(isGenerated);
-        expect(satisfiesStableTypeInvariant(isGenerated, stableType)).toBe(true);
+        expect(stableType === 'generated').toBe(isGenerated);
         expect(stableType).not.toBe('automaton');
       }),
     );
-  });
-
-  it('only generated pairs with isGenerated = true', () => {
-    fc.assert(
-      fc.property(
-        fc.boolean(),
-        fc.constantFrom<StableTypeValue>('human', 'generated', 'automaton'),
-        (isGenerated, stableType) => {
-          expect(satisfiesStableTypeInvariant(isGenerated, stableType)).toBe(
-            isGenerated === (stableType === 'generated'),
-          );
-        },
-      ),
-    );
-  });
-
-  it('an Activation pair (isGenerated false, automaton) satisfies I1', () => {
-    expect(satisfiesStableTypeInvariant(false, 'automaton')).toBe(true);
-    expect(satisfiesStableTypeInvariant(true, 'automaton')).toBe(false);
   });
 });

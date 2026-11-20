@@ -187,8 +187,8 @@ describe('UnifiedFacilityROIService', () => {
 
     it('should calculate ROI for merchandising_hub from snapshot data', async () => {
       setupMocksForFacility('merchandising_hub', 3, [
-        { userId: 1, merchandisingIncome: 15000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 600 },
-        { userId: 1, merchandisingIncome: 15000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 600 },
+        { userId: 1, merchandisingIncome: 15000, streamingIncome: 0, cycleRepairCreditsPaid: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 600 },
+        { userId: 1, merchandisingIncome: 15000, streamingIncome: 0, cycleRepairCreditsPaid: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 600 },
       ]);
 
       const result = await roiFor('merchandising_hub');
@@ -205,8 +205,8 @@ describe('UnifiedFacilityROIService', () => {
 
     it('should calculate streaming_studio returns from the studio share of recorded awards', async () => {
       setupMocksForFacility('streaming_studio', 2, [
-        { userId: 1, merchandisingIncome: 0, streamingIncome: 5000, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 200 },
-        { userId: 1, merchandisingIncome: 0, streamingIncome: 8000, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 200 },
+        { userId: 1, merchandisingIncome: 0, streamingIncome: 5000, cycleRepairCreditsPaid: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 200 },
+        { userId: 1, merchandisingIncome: 0, streamingIncome: 8000, cycleRepairCreditsPaid: 0, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 200 },
       ]);
       mockedStreamingAggregate.mockResolvedValue([
         // v1 row 2,000 + v2 row 4,000, both at ×2: 6,000 × (1 − 1/2) = 3,000
@@ -228,7 +228,7 @@ describe('UnifiedFacilityROIService', () => {
       // Current level 2 (12% today), but the rows were recorded at 36% and 48%
       // under the old robot-count formula. Savings use the recorded figures.
       setupMocksForFacility('repair_bay', 2, [
-        { userId: 1, merchandisingIncome: 0, streamingIncome: 0, totalRepairCosts: 10000, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 500 },
+        { userId: 1, merchandisingIncome: 0, streamingIncome: 0, cycleRepairCreditsPaid: 10000, attributeUpgrades: 0, weaponPurchases: 0, operatingCosts: 500 },
       ]);
       mockedRepairAggregate.mockResolvedValue([
         // 6,400 × 36 / 64 = 3,600
@@ -250,7 +250,7 @@ describe('UnifiedFacilityROIService', () => {
 
     it('should calculate ROI for training_facility from snapshot data', async () => {
       setupMocksForFacility('training_facility', 3, [
-        { userId: 1, merchandisingIncome: 0, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 20000, weaponPurchases: 0, operatingCosts: 750 },
+        { userId: 1, merchandisingIncome: 0, streamingIncome: 0, cycleRepairCreditsPaid: 0, attributeUpgrades: 20000, weaponPurchases: 0, operatingCosts: 750 },
       ]);
 
       const result = await roiFor('training_facility');
@@ -263,7 +263,7 @@ describe('UnifiedFacilityROIService', () => {
 
     it('uses the purchased roster capacity for training_facility savings (#526)', async () => {
       setupMocksForFacility('training_facility', 6, [
-        { userId: 1, merchandisingIncome: 0, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 59500, weaponPurchases: 0, operatingCosts: 1500 },
+        { userId: 1, merchandisingIncome: 0, streamingIncome: 0, cycleRepairCreditsPaid: 0, attributeUpgrades: 59500, weaponPurchases: 0, operatingCosts: 1500 },
       ]);
       // Training Facility L6; roster_expansion L0 → capacity 1 → 6 × 9 × 0.75 = 40.5%.
       (mockedPrisma.facility.findUnique as jest.Mock).mockImplementation(
@@ -295,7 +295,7 @@ describe('UnifiedFacilityROIService', () => {
 
     it('should calculate ROI for weapons_workshop from snapshot data', async () => {
       setupMocksForFacility('weapons_workshop', 4, [
-        { userId: 1, merchandisingIncome: 0, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 50000, operatingCosts: 400 },
+        { userId: 1, merchandisingIncome: 0, streamingIncome: 0, cycleRepairCreditsPaid: 0, attributeUpgrades: 0, weaponPurchases: 50000, operatingCosts: 400 },
       ]);
 
       const result = await roiFor('weapons_workshop');
@@ -484,7 +484,7 @@ describe('UnifiedFacilityROIService', () => {
       mockSnapshots([
         {
           cycleNumber: 20,
-          stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
+          stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, cycleRepairCreditsPaid: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
         },
       ]);
 
@@ -516,11 +516,11 @@ describe('UnifiedFacilityROIService', () => {
       mockSnapshots([
         {
           cycleNumber: 15,
-          stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
+          stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, cycleRepairCreditsPaid: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
         },
         {
           cycleNumber: 20,
-          stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
+          stableMetrics: [{ userId: 1, merchandisingIncome: 5000, streamingIncome: 0, cycleRepairCreditsPaid: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
         },
       ]);
 
@@ -588,7 +588,7 @@ describe('UnifiedFacilityROIService', () => {
       // Operating costs = 200 * 100 = 20,000
       const snapshots = Array.from({ length: 100 }, (_, i) => ({
         cycleNumber: i + 1,
-        stableMetrics: [{ userId: 1, merchandisingIncome: 15000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
+        stableMetrics: [{ userId: 1, merchandisingIncome: 15000, streamingIncome: 0, cycleRepairCreditsPaid: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
       }));
 
       mockSnapshots(snapshots);
@@ -623,7 +623,7 @@ describe('UnifiedFacilityROIService', () => {
       // Operating costs = 600 * 5 = 3,000
       const snapshots = Array.from({ length: 5 }, (_, i) => ({
         cycleNumber: i + 1,
-        stableMetrics: [{ userId: 1, merchandisingIncome: 15000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
+        stableMetrics: [{ userId: 1, merchandisingIncome: 15000, streamingIncome: 0, cycleRepairCreditsPaid: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
       }));
 
       mockSnapshots(snapshots);
@@ -704,7 +704,7 @@ describe('UnifiedFacilityROIService', () => {
       mockSnapshots([
         {
           cycleNumber: 5,
-          stableMetrics: [{ userId: 1, merchandisingIncome: 10000, streamingIncome: 3000, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
+          stableMetrics: [{ userId: 1, merchandisingIncome: 10000, streamingIncome: 3000, cycleRepairCreditsPaid: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
         },
       ]);
 
@@ -797,7 +797,7 @@ describe('UnifiedFacilityROIService', () => {
       mockSnapshots([
         {
           cycleNumber: 1,
-          stableMetrics: [{ userId: 1, merchandisingIncome: 25000, streamingIncome: 0, totalRepairCosts: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
+          stableMetrics: [{ userId: 1, merchandisingIncome: 25000, streamingIncome: 0, cycleRepairCreditsPaid: 0, attributeUpgrades: 0, weaponPurchases: 0 }],
         },
       ]);
 

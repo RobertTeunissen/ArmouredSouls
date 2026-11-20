@@ -4,7 +4,6 @@ import {
   updateTutorialState,
   completeTutorial,
   skipTutorial,
-  advanceStep,
   updatePlayerChoices,
 } from '../src/services/onboarding/onboardingService';
 import prisma from '../src/lib/prisma';
@@ -394,82 +393,6 @@ describe('Onboarding Service - skipTutorial', () => {
     const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
     expect(dbUser!.hasCompletedOnboarding).toBe(true);
     expect(dbUser!.onboardingSkipped).toBe(true);
-  });
-});
-
-describe('Onboarding Service - advanceStep', () => {
-  const createdUserIds: number[] = [];
-
-  afterEach(async () => {
-    for (const id of createdUserIds) {
-      try {
-        await prisma.robot.deleteMany({ where: { userId: id } });
-        await prisma.user.delete({ where: { id } });
-      } catch {
-        // Ignore if already deleted
-      }
-    }
-    createdUserIds.length = 0;
-  });
-
-  let counter = 500;
-  function uid() {
-    return `${++counter}${Math.random().toString(36).substring(2, 6)}`;
-  }
-
-  it('should increment step by 1', async () => {
-    const id = uid();
-    const user = await prisma.user.create({
-      data: {
-        username: `u${id}`,
-        email: `e${id}`,
-        passwordHash: await bcrypt.hash('testpass123', 10),
-        onboardingStep: 3,
-      },
-    });
-    createdUserIds.push(user.id);
-
-    const state = await advanceStep(user.id);
-
-    expect(state.onboardingStep).toBe(4);
-  });
-
-  it('should cap at step 9', async () => {
-    const id = uid();
-    const user = await prisma.user.create({
-      data: {
-        username: `u${id}`,
-        email: `e${id}`,
-        passwordHash: await bcrypt.hash('testpass123', 10),
-        onboardingStep: 9,
-      },
-    });
-    createdUserIds.push(user.id);
-
-    const state = await advanceStep(user.id);
-
-    expect(state.onboardingStep).toBe(9);
-  });
-
-  it('should throw error if tutorial state not found', async () => {
-    await expect(advanceStep(999999)).rejects.toThrow('Tutorial state not found');
-  });
-
-  it('should advance from step 1 to step 2', async () => {
-    const id = uid();
-    const user = await prisma.user.create({
-      data: {
-        username: `u${id}`,
-        email: `e${id}`,
-        passwordHash: await bcrypt.hash('testpass123', 10),
-        onboardingStep: 1,
-      },
-    });
-    createdUserIds.push(user.id);
-
-    const state = await advanceStep(user.id);
-
-    expect(state.onboardingStep).toBe(2);
   });
 });
 

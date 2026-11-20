@@ -22,17 +22,10 @@ const log = createLogger('onboarding-analytics');
 export type OnboardingEventType =
   | 'step_started'
   | 'step_completed'
-  | 'step_skipped'
   | 'tutorial_completed'
   | 'tutorial_skipped'
   | 'tutorial_abandoned'
-  | 'blocked_action'
   | 'strategy_selected'
-  | 'facility_purchased'
-  | 'weapon_purchased'
-  | 'weapon_type_selected'
-  | 'budget_allocation_updated'
-  | 'loadout_selected'
   | 'error_encountered';
 
 export interface OnboardingAnalyticsEvent {
@@ -158,14 +151,6 @@ export function trackStepCompleted(step: number): void {
   trackEvent('step_completed', step, { durationMs });
 }
 
-/** Call when a user skips a specific step. */
-export function trackStepSkipped(step: number): void {
-  const startTime = stepTimers.get(step);
-  const durationMs = startTime ? Date.now() - startTime : undefined;
-  stepTimers.delete(step);
-  trackEvent('step_skipped', step, { durationMs });
-}
-
 /** Call when the entire tutorial is completed. */
 export function trackTutorialCompleted(finalStep: number): void {
   trackEvent('tutorial_completed', finalStep);
@@ -176,11 +161,6 @@ export function trackTutorialCompleted(finalStep: number): void {
 export function trackTutorialSkipped(atStep: number): void {
   trackEvent('tutorial_skipped', atStep);
   flushEvents();
-}
-
-/** Call when a blocked action is attempted (e.g. facility purchase too early). */
-export function trackBlockedAction(step: number, action: string, reason: string): void {
-  trackEvent('blocked_action', step, { action, reason });
 }
 
 /** Call when an error is encountered during onboarding. */
@@ -198,56 +178,6 @@ export function trackStrategySelected(
   step: number,
 ): void {
   trackEvent('strategy_selected', step, { strategy });
-}
-
-/** Track a facility purchase during onboarding. */
-export function trackFacilityPurchased(
-  facilityType: string,
-  cost: number,
-  step: number,
-): void {
-  trackEvent('facility_purchased', step, { facilityType, cost });
-}
-
-/** Track a weapon purchase during onboarding. */
-export function trackWeaponPurchased(
-  weaponName: string,
-  weaponType: string,
-  cost: number,
-  step: number,
-): void {
-  trackEvent('weapon_purchased', step, { weaponName, weaponType, cost });
-}
-
-/** Track weapon type preference selection. */
-export function trackWeaponTypeSelected(
-  weaponType: string,
-  step: number,
-): void {
-  trackEvent('weapon_type_selected', step, { weaponType });
-}
-
-/** Track loadout type selection. */
-export function trackLoadoutSelected(
-  loadoutType: 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield',
-  step: number,
-): void {
-  trackEvent('loadout_selected', step, { loadoutType });
-}
-
-/** Track budget allocation snapshot. */
-export function trackBudgetAllocation(
-  allocation: {
-    facilities: number;
-    robots: number;
-    weapons: number;
-    attributes: number;
-    remaining: number;
-  },
-  strategy: string,
-  step: number,
-): void {
-  trackEvent('budget_allocation_updated', step, { allocation, strategy });
 }
 
 // ---------------------------------------------------------------------------

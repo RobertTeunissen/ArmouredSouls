@@ -116,19 +116,6 @@ async function currentEventTypes(robotId: number, tx: Tx): Promise<string[]> {
   return rows.map((r) => r.eventType);
 }
 
-// ── Eligibility helpers used by the matchmakers ───────────────────────
-
-/**
- * Check whether a robot is subscribed to a specific event type.
- * Single DB existence check — the core eligibility helper used by all matchmakers.
- */
-export async function isRobotSubscribedTo(robotId: number, eventType: string): Promise<boolean> {
-  const count = await prisma.subscription.count({
-    where: { robotId, eventType, status: 'active' },
-  });
-  return count > 0;
-}
-
 // ── The one write path ───────────────────────────────────────────────
 
 /**

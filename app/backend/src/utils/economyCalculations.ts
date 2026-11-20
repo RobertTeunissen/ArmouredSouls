@@ -3,21 +3,12 @@
  * Based on PRD_ECONOMY_SYSTEM.md specifications
  *
  * Pure calculation functions live in `./economyFormulas.ts` (no Prisma dependency).
- * This file re-exports them for backward compatibility and contains the
- * Prisma-dependent daily operating cost and passive income reads. Settlement itself
+ * This file holds the Prisma-dependent daily operating cost and passive income reads. Settlement itself
  * is `services/financial/settlementService.ts`.
  */
 
 import prisma from '../lib/prisma';
 
-// Re-export all pure calculation functions for backward compatibility
-export {
-  calculateFacilityOperatingCost,
-  calculateMerchandisingIncome,
-  getRosterCapacity,
-  getLeagueWinReward,
-  getParticipationReward,
-} from './economyFormulas';
 
 import {
   calculateFacilityOperatingCost,

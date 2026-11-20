@@ -11,7 +11,6 @@ import { Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import type { RefinementTier } from '../../shared/utils/weaponRefinement';
 import { REPAIR_CHARGED_KEY, REPAIR_PRE_DISCOUNT_KEY } from '../economy/repairPayloadKeys';
-import { PASSIVE_INCOME_WIN_LOSS_BATTLES_KEY } from '../financial/passive-income-payload-keys';
 import { withAuditSequence } from './auditSequence';
 import {
   EventType,
@@ -255,8 +254,7 @@ export class EventLogger {
         totalIncome: merchandising + streaming,
         facilityLevel,
         prestige,
-        // Formerly `totalBattles`; read via readPassiveIncomeWinLossModeBattles.
-        [PASSIVE_INCOME_WIN_LOSS_BATTLES_KEY]: winLossModeBattles,
+        winLossModeBattles,
         totalFame,
       },
       { userId }
@@ -474,11 +472,8 @@ export class EventLogger {
   /**
    * Log a robot repair — the write side of Repair_Spend_Source.
    *
-   * Spec #48 Requirement 17 criteria 4 and 11: the payload carries the RENAMED keys
-   * only (`creditsCharged`, `creditsBeforeManualDiscount`), never the old `cost` /
-   * `preDiscountCost` alongside them, so a partially migrated row cannot double a
-   * repair total. Readers go through `services/economy/repairPayloadKeys.ts`, which
-   * falls back to the old names for rows written before this change.
+   * The figures go under `creditsCharged` / `creditsBeforeManualDiscount`
+   * (`services/economy/repairPayloadKeys.ts`).
    *
    * `repairType`, `manualRepairDiscount` and `discountPercent` are deliberately NOT
    * renamed: the `payload.repairType` JSON path join in the Finance Center's

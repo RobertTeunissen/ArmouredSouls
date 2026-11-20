@@ -206,6 +206,7 @@ export function eventLines(e: AdminCombatEvent): string[] {
   if (typeof e.distance === 'number') details.push(`${round1(e.distance)} u`);
   if (typeof e.rangeBand === 'string') details.push(e.rangeBand);
   if (e.backstab === true) details.push('backstab');
+  if (e.flanking === true) details.push('flanking');
   const head = `[${formatEventTime(e.timestamp)}] ${e.type} · ${e.message ?? ''}${details.length > 0 ? ` · ${details.join(', ')}` : ''}`;
   const lines = [head];
   if (FORMULA_EVENT_TYPES.has(e.type)) {

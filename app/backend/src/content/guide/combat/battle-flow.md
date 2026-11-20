@@ -2,7 +2,7 @@
 title: "Battle Flow"
 description: "How battles play out in the 2D arena — from movement and positioning to attack resolution, range bands, backstabs, and the complete order of operations for every strike."
 order: 1
-lastUpdated: "2026-10-17"
+lastUpdated: "2026-11-19"
 relatedArticles:
   - combat/movement-and-positioning
   - combat/malfunctions
@@ -61,7 +61,7 @@ Positioning behind your opponent grants bonus damage:
 - **Backstab**: When the attacker is more than 120° from the defender's facing direction, the attack deals up to +10% bonus damage
 - The defender's **Gyro Stabilizers** reduces the backstab bonus (0.25% reduction per point)
 - The defender's **Threat Analysis** further reduces it at high levels (25+): 1% reduction per point above 25
-- **Flanking** (multi-robot battles): When 2+ attackers are more than 90° apart relative to the defender, a +20% flanking bonus applies (also reduced by Gyro Stabilizers and Threat Analysis)
+- **Flanking** (2v2 and 3v3 battles): When a teammate attacks the same enemy from more than 90° away around it, your hit deals bonus damage set by your robot's Formation Tactics, up to +20% (reduced by the defender's Gyro Stabilizers and Threat Analysis). A hit gets flanking or backstab, whichever is larger, never both
 
 ## The Attack Sequence
 
@@ -164,7 +164,8 @@ Raw damage is calculated from multiple factors:
 - **Range penalty** — 1.1× at optimal range, 0.75× one band away, 0.5× two+ bands away
 - **Hydraulic Systems bonus** — Up to +75% at melee range, +25% at short range
 - **Logic Cores bonus** — Up to +75% at long range, +50% at mid range
-- **Backstab/flanking bonus** — Up to +10% (backstab) or +20% (flanking) for positional advantage
+- **Backstab/flanking bonus** — Up to +10% (backstab) or +20% (flanking, scaled by Formation Tactics) for positional advantage
+- **Focus fire bonus** (team battles) — Up to +25% when a teammate hit the same enemy within the last second, scaled by Sync Protocols
 - **Adaptation bonus** — Accumulated damage bonus from Adaptive AI
 - **Pressure bonus** — Damage bonus from Logic Cores when HP is low
 - **Sync volley bonus** — Sync Protocols bonus for synchronized dual-wield attacks
@@ -217,7 +218,7 @@ The 2D battle playback viewer shows robot positions, movement, and range bands i
 In addition to standard 1v1 league battles, robots can compete in **King of the Hill** — a 5-6 robot free-for-all zone-control mode. KotH runs on the same unified combat simulator as all other match types, using the full 7-phase tick loop with all 23 attributes active. The difference is in the *game mode configuration*: KotH plugs in custom strategy objects that modify target selection, movement intent, and win conditions.
 
 ### What's shared with 1v1
-All core combat mechanics apply in KotH: the full attack resolution chain (malfunction → hit → crit → damage → shield → armor → counter-attack), range bands with penalties, backstab/flanking bonuses, shield regeneration, offhand attacks for dual-wield builds, yield mechanics, adaptation (Adaptive AI), pressure system (Logic Cores), and servo strain.
+All core combat mechanics apply in KotH: the full attack resolution chain (malfunction → hit → crit → damage → shield → armor → counter-attack), range bands with penalties, backstab bonuses (flanking needs a teammate, so not in KotH), shield regeneration, offhand attacks for dual-wield builds, yield mechanics, adaptation (Adaptive AI), pressure system (Logic Cores), and servo strain.
 
 ### What's different in KotH
 - **Target selection**: Zone contesters are prioritized 3× over standard threats. Robots approaching the zone get 2× priority. Threat Analysis scales zone awareness.

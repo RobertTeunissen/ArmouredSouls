@@ -7,11 +7,11 @@
  * other rows in the shared database do not affect the counts.
  */
 import prisma from '../../src/lib/prisma';
-import { buildUserFilter, USER_FILTER_TYPES, type UserFilterType } from '../../src/utils/buildUserFilter';
+import { realUserFilter } from '../../src/utils/realUserFilter';
 
 const suffix = `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
-describe('buildUserFilter against the database (Spec #55 R1.6)', () => {
+describe('realUserFilter against the database (Spec #55 R1.6)', () => {
   const ids: Record<'human' | 'automaton' | 'bot' | 'system', number> = { human: 0, automaton: 0, bot: 0, system: 0 };
 
   beforeAll(async () => {
@@ -27,32 +27,17 @@ describe('buildUserFilter against the database (Spec #55 R1.6)', () => {
     await prisma.user.deleteMany({ where: { id: { in: Object.values(ids) } } });
   });
 
-  async function matching(filter: UserFilterType): Promise<number[]> {
+  async function matching(): Promise<number[]> {
     const rows = await prisma.user.findMany({
-      where: { AND: [buildUserFilter(filter), { id: { in: Object.values(ids) } }] },
+      where: { AND: [realUserFilter(), { id: { in: Object.values(ids) } }] },
       select: { id: true },
       orderBy: { id: 'asc' },
     });
     return rows.map((r) => r.id);
   }
 
-  it('accepts exactly all, real, auto and automaton', () => {
-    expect([...USER_FILTER_TYPES]).toEqual(['all', 'real', 'auto', 'automaton']);
-  });
-
-  it('automaton returns exactly the Automaton_Stables', async () => {
-    expect(await matching('automaton')).toEqual([ids.automaton]);
-  });
-
   it('real excludes Automaton_Stables, bots and system accounts', async () => {
-    expect(await matching('real')).toEqual([ids.human]);
+    expect(await matching()).toEqual([ids.human]);
   });
 
-  it('auto still returns only auto-generated bots', async () => {
-    expect(await matching('auto')).toEqual([ids.bot]);
-  });
-
-  it('all still returns everyone', async () => {
-    expect(await matching('all')).toEqual(Object.values(ids).sort((a, b) => a - b));
-  });
 });

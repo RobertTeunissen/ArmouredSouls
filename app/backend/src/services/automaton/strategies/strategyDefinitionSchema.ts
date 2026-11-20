@@ -105,7 +105,7 @@ export const strategyDefinitionShape = z.object({
 
 // ── Labels ───────────────────────────────────────────────────────────
 
-const GOAL_TYPE_LABELS: Readonly<Record<Exclude<GoalType, 'facility'>, string>> = {
+export const GOAL_TYPE_LABELS: Readonly<Record<Exclude<GoalType, 'facility'>, string>> = {
   robots: 'Robots',
   attributes: 'Attributes',
   weapons: 'Weapons',
@@ -116,11 +116,6 @@ const GOAL_TYPE_LABELS: Readonly<Record<Exclude<GoalType, 'facility'>, string>> 
 /** Display name of a facility type (`config/facilities.ts`). */
 export function facilityLabel(facilityType: FacilityType): string {
   return getFacilityConfig(facilityType)?.name ?? facilityType;
-}
-
-/** Label of a Goal: "Robots", "Booking Office", "Attributes", … */
-export function goalLabel(goal: FileBuildOrderEntry['goal']): string {
-  return goal.type === 'facility' ? facilityLabel(goal.facilityType) : GOAL_TYPE_LABELS[goal.type];
 }
 
 // ── Builder rules ────────────────────────────────────────────────────

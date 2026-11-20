@@ -4,7 +4,7 @@
  * Extracted from WeaponShopPage.tsx during component splitting (Spec 18).
  */
 
-import type { RangeBand } from '../../utils/weaponRange';
+import type { RangeBand } from '@shared/types';
 
 export interface Weapon {
   id: number;

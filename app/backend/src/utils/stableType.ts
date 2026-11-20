@@ -21,7 +21,3 @@ export function stableTypeForCreation(isGenerated: boolean): 'human' | 'generate
   return isGenerated ? 'generated' : 'human';
 }
 
-/** True when the pair satisfies invariant I1. */
-export function satisfiesStableTypeInvariant(isGenerated: boolean, stableType: StableTypeValue): boolean {
-  return isGenerated === (stableType === 'generated');
-}

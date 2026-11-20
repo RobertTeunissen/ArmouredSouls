@@ -80,9 +80,6 @@ describe('GET /api/robots/:id/league-history', () => {
     getPerformanceContext: jest.fn(),
   }));
 
-  jest.mock('../../services/robot/robotRankingService', () => ({
-  }));
-
   jest.mock('../../services/robot/robotUpgradeService', () => ({
     executeUpgradeTransaction: jest.fn(),
   }));
@@ -96,7 +93,6 @@ describe('GET /api/robots/:id/league-history', () => {
   }));
 
   jest.mock('../../services/robot/robotRepairService', () => ({
-    repairAllRobots: jest.fn(),
   }));
 
   jest.mock('../../services/robot/robotCreationService', () => ({

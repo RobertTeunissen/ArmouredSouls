@@ -18,7 +18,7 @@ import {
   LOADOUT_BONUSES,
   STANCE_MODIFIERS,
   type TuningAttributeMap,
-} from '../robotStats';
+} from '@shared/utils/robotStats';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

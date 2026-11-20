@@ -3,7 +3,6 @@ import {
   canAttack,
   classifyRangeBand,
   getRangePenalty,
-  getWeaponOptimalRange,
   WeaponLike,
 } from '../../src/services/arena/rangeBands';
 import { RangeBand } from '../../src/services/arena/types';
@@ -105,34 +104,6 @@ describe('rangeBands property tests', () => {
    * Property 9: getWeaponOptimalRange always returns the stored rangeBand
    * **Validates: Requirement 3.4**
    */
-  describe('Property 9: getWeaponOptimalRange returns stored rangeBand', () => {
-    it('should return the weapon rangeBand for any weapon', () => {
-      fc.assert(
-        fc.property(arbWeapon(), (weapon: WeaponLike) => {
-          expect(getWeaponOptimalRange(weapon)).toBe(weapon.rangeBand);
-        }),
-        { numRuns: 500 }
-      );
-    });
-
-    it('should return melee for any melee weapon', () => {
-      fc.assert(
-        fc.property(arbMeleeWeapon(), (weapon: WeaponLike) => {
-          expect(getWeaponOptimalRange(weapon)).toBe('melee');
-        }),
-        { numRuns: 500 }
-      );
-    });
-
-    it('should return melee for any shield weapon', () => {
-      fc.assert(
-        fc.property(arbShieldWeapon(), (weapon: WeaponLike) => {
-          expect(getWeaponOptimalRange(weapon)).toBe('melee');
-        }),
-        { numRuns: 500 }
-      );
-    });
-  });
 });
 
 // ─── Physical reach invariant (#518) ────────────────────────────────

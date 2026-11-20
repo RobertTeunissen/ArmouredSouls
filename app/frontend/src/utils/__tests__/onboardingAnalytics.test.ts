@@ -4,17 +4,10 @@ import {
   trackEvent,
   trackStepStarted,
   trackStepCompleted,
-  trackStepSkipped,
   trackTutorialCompleted,
   trackTutorialSkipped,
-  trackBlockedAction,
   trackError,
   trackStrategySelected,
-  trackFacilityPurchased,
-  trackWeaponPurchased,
-  trackWeaponTypeSelected,
-  trackLoadoutSelected,
-  trackBudgetAllocation,
   flushEvents,
   _resetForTesting,
   _getQueueLength,
@@ -133,12 +126,6 @@ describe('onboardingAnalytics', () => {
       expect(_getQueueLength()).toBe(1);
     });
 
-    it('trackStepSkipped should enqueue a step_skipped event with duration', () => {
-      trackStepStarted(2);
-      vi.advanceTimersByTime(1_500);
-      trackStepSkipped(2);
-      expect(_getQueueLength()).toBe(2);
-    });
   });
 
   // -----------------------------------------------------------------------
@@ -165,10 +152,6 @@ describe('onboardingAnalytics', () => {
   // -----------------------------------------------------------------------
 
   describe('blocked actions and errors', () => {
-    it('trackBlockedAction should enqueue with action and reason', () => {
-      trackBlockedAction(2, 'facility_purchase', 'Step too early');
-      expect(_getQueueLength()).toBe(1);
-    });
 
     it('trackError should enqueue with error details', () => {
       trackError(5, 'Network timeout', 'weapon_purchase');
@@ -186,34 +169,6 @@ describe('onboardingAnalytics', () => {
       expect(_getQueueLength()).toBe(1);
     });
 
-    it('trackFacilityPurchased should enqueue facility_purchased event', () => {
-      trackFacilityPurchased('weapons_workshop', 150_000, 5);
-      expect(_getQueueLength()).toBe(1);
-    });
-
-    it('trackWeaponPurchased should enqueue weapon_purchased event', () => {
-      trackWeaponPurchased('Laser Rifle', 'energy', 200_000, 7);
-      expect(_getQueueLength()).toBe(1);
-    });
-
-    it('trackWeaponTypeSelected should enqueue weapon_type_selected event', () => {
-      trackWeaponTypeSelected('ballistic', 6);
-      expect(_getQueueLength()).toBe(1);
-    });
-
-    it('trackLoadoutSelected should enqueue loadout_selected event', () => {
-      trackLoadoutSelected('weapon_shield', 6);
-      expect(_getQueueLength()).toBe(1);
-    });
-
-    it('trackBudgetAllocation should enqueue budget_allocation_updated event', () => {
-      trackBudgetAllocation(
-        { facilities: 500_000, robots: 500_000, weapons: 400_000, attributes: 200_000, remaining: 1_400_000 },
-        '2_average',
-        4,
-      );
-      expect(_getQueueLength()).toBe(1);
-    });
   });
 
   // -----------------------------------------------------------------------

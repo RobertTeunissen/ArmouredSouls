@@ -4,8 +4,7 @@ import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import { lockUserForSpending } from '../../lib/creditGuard';
 import { lockRobotTeamMembership, lockTeamStandings } from '../standings/standingPlacement';
 import { deleteRobotBattleReferences } from '../robot/robotReferenceCleanup';
-// Spec #45: uploaded images survive an account reset (Image_Library), so this
-// service no longer deletes files from storage.
+// Uploaded images survive an account reset (Image_Library, Spec #45).
 
 /**
  * Reset Service
@@ -32,20 +31,6 @@ export interface ResetBlocker {
 export interface ResetEligibility {
   eligible: boolean;
   blockers: ResetBlocker[];
-}
-
-/**
- * Reset history entry
- */
-export interface ResetHistoryEntry {
-  id: number;
-  userId: number;
-  robotsDeleted: number;
-  weaponsDeleted: number;
-  facilitiesDeleted: number;
-  creditsBeforeReset: number;
-  reason: string | null;
-  resetAt: Date;
 }
 
 /**
@@ -349,33 +334,3 @@ export async function performAccountReset(userId: number, reason?: string): Prom
   });
 }
 
-/**
- * Get reset history for a user.
- * Returns all previous reset events for analytics and debugging.
- *
- * @param userId - The user ID to get reset history for
- * @returns Array of reset history entries
- *
- * @example
- * const history = await getResetHistory(123);
- * console.log(`User has reset ${history.length} times`);
- *
- * Requirements: 14.13
- */
-export async function getResetHistory(userId: number): Promise<ResetHistoryEntry[]> {
-  const resetLogs = await prisma.resetLog.findMany({
-    where: { userId },
-    orderBy: { resetAt: 'desc' },
-  });
-
-  return resetLogs.map((log) => ({
-    id: log.id,
-    userId: log.userId,
-    robotsDeleted: log.robotsDeleted,
-    weaponsDeleted: log.weaponsDeleted,
-    facilitiesDeleted: log.facilitiesDeleted,
-    creditsBeforeReset: Number(log.creditsBeforeReset),
-    reason: log.reason,
-    resetAt: log.resetAt,
-  }));
-}

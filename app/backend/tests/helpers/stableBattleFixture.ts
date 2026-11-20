@@ -16,8 +16,10 @@
  * fixture (byes, 2v2/3v3, cross-stable pairs, placement modes) are covered at
  * unit level only.
  */
-import { NO_COUNTER_BYE_BATTLE_TYPES } from '../../src/services/auth/stable-battle-overlap';
 import { PLACEMENT_COUNTED_MODES } from '../../src/services/robot/all-modes-battle-count';
+
+/** Bye modes that count no battle: the tournament modes (no ELO update, not placement). */
+const NO_COUNTER_BYE_BATTLE_TYPES: readonly string[] = ['tournament_1v1', 'tournament_2v2', 'tournament_3v3'];
 
 export interface FixtureParticipant {
   robotId: number;

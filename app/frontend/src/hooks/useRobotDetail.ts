@@ -22,7 +22,7 @@ import { ApiError } from '../utils/ApiError';
 import { useAuth } from '../contexts/AuthContext';
 import type { Facility } from '../components/facilities/types';
 import { getRosterCapacity } from '../../../shared/utils/rosterCapacity';
-import type { RangeBand } from '../utils/weaponRange';
+import type { RangeBand } from '@shared/types';
 import type { RobotWithAttributes } from '../types/robot';
 import type { StableType } from '../types/stable';
 import { createLogger } from '../utils/logger';

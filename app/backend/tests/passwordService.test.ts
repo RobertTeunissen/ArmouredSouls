@@ -1,4 +1,4 @@
-import { hashPassword, verifyPassword } from '../src/services/auth/passwordService';
+import { hashPassword } from '../src/services/auth/passwordService';
 import bcrypt from 'bcrypt';
 import { _resetConfigForTesting } from '../src/config/env';
 
@@ -109,53 +109,6 @@ describe('Password Service', () => {
     });
   });
 
-  describe('verifyPassword', () => {
-    it('should verify correct password', async () => {
-      const password = 'testPassword123';
-      const hash = await hashPassword(password);
-      
-      const isValid = await verifyPassword(password, hash);
-      expect(isValid).toBe(true);
-    });
-
-    it('should reject incorrect password', async () => {
-      const password = 'testPassword123';
-      const wrongPassword = 'wrongPassword456';
-      const hash = await hashPassword(password);
-      
-      const isValid = await verifyPassword(wrongPassword, hash);
-      expect(isValid).toBe(false);
-    });
-
-    it('should return false for empty password', async () => {
-      const hash = await hashPassword('testPassword123');
-      
-      const isValid = await verifyPassword('', hash);
-      expect(isValid).toBe(false);
-    });
-
-    it('should return false for empty hash', async () => {
-      const isValid = await verifyPassword('testPassword123', '');
-      expect(isValid).toBe(false);
-    });
-
-    it('should verify password with special characters', async () => {
-      const password = 'P@ssw0rd!#$%^&*()';
-      const hash = await hashPassword(password);
-      
-      const isValid = await verifyPassword(password, hash);
-      expect(isValid).toBe(true);
-    });
-
-    it('should be case sensitive', async () => {
-      const password = 'TestPassword123';
-      const hash = await hashPassword(password);
-      
-      const isValidLower = await verifyPassword('testpassword123', hash);
-      expect(isValidLower).toBe(false);
-    });
-  });
-
   describe('Integration with bcrypt', () => {
     it('should produce hashes compatible with bcrypt.compare', async () => {
       const password = 'testPassword123';
@@ -166,13 +119,5 @@ describe('Password Service', () => {
       expect(isValid).toBe(true);
     });
 
-    it('should verify hashes created by bcrypt directly', async () => {
-      const password = 'testPassword123';
-      const hash = await bcrypt.hash(password, 10);
-      
-      // Verify using our service
-      const isValid = await verifyPassword(password, hash);
-      expect(isValid).toBe(true);
-    });
   });
 });

@@ -112,7 +112,9 @@ export function performAttack(
     rangePenaltyMult: number;
     hydraulicMult: number;
     logicCoresMult: number;
-    backstabBonus: number;
+    positionalBonus: number;
+    focusFireBonus: number;
+    focusFireContributors: string[];
     adaptationHit: number;
     adaptationDmg: number;
     pressureAccuracy: number;
@@ -122,6 +124,7 @@ export function performAttack(
     formationDefenseBonus: number;
     positionSnapshot: { positions: Record<string, Position>; facingDirections: Record<string, number> };
     isBackstab: boolean;
+    isFlanking: boolean;
     attackAngle: number;
     passiveAccuracyPenalty?: number;
     passiveDamageReduction?: number;
@@ -195,7 +198,9 @@ export function performAttack(
         rangePenalty: spatialContext.rangePenaltyMult,
         hydraulicBonus: spatialContext.hydraulicMult,
         logicCoresBonus: spatialContext.logicCoresMult,
-        backstabBonus: spatialContext.backstabBonus,
+        positionalBonus: spatialContext.positionalBonus,
+        positionalKind: spatialContext.isFlanking ? 'flanking' : 'backstab',
+        focusFireBonus: spatialContext.focusFireBonus,
         adaptationDamageBonus: spatialContext.adaptationDmg,
         pressureDamageMod: spatialContext.pressureDamage,
         syncVolleyBonus: spatialContext.syncVolleyBonus,
@@ -211,6 +216,7 @@ export function performAttack(
 
     attackerState.totalDamageDealt += hpDamage + shieldDamage;
     defenderState.totalDamageTaken += hpDamage + shieldDamage;
+    defenderState.lastHitTakenFrom[attackerState.teamIndex] = currentTime;
 
     // Kill attribution (Spec #46 R4.16). Only HP damage counts — stripping a
     // shield does not put the defender any closer to destruction on its own, so
@@ -235,7 +241,7 @@ export function performAttack(
       `Apply: ${applyBreakdown.calculation}`,
     ];
 
-    const backstabLabel = spatialContext.isBackstab ? ' 🗡️BACKSTAB!' : '';
+    const backstabLabel = spatialContext.isFlanking ? ' 🎯FLANKING!' : spatialContext.isBackstab ? ' 🗡️BACKSTAB!' : '';
 
     events.push({
       timestamp: roundTime(currentTime),
@@ -272,6 +278,10 @@ export function performAttack(
       rangeBand: spatialContext.rangeBand,
       rangePenalty: spatialContext.rangePenaltyMult,
       backstab: spatialContext.isBackstab,
+      flanking: spatialContext.isFlanking,
+      ...(spatialContext.focusFireBonus > 0
+        ? { focusFireBonus: spatialContext.focusFireBonus, focusFireContributors: spatialContext.focusFireContributors }
+        : {}),
       attackAngle: spatialContext.attackAngle,
     });
 

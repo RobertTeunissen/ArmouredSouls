@@ -9,7 +9,7 @@ jest.mock('../analysisData', () => ({
 
 import { ROBOT_ATTRIBUTES } from '../../../../shared/utils/robotAttributes';
 import * as data from '../analysisData';
-import { ALL_LAYERS_ON } from '../analysisOptions';
+import { ALL_LAYERS_ON } from './layerTestSupport';
 import { layerBuild, type LayeredBuild } from '../attributeLayers';
 import { addBattle, emptyComparisonSet, type ComparisonSet } from '../comparisons';
 import { clearAttributeAnalysisCache, getAttributeAnalysis } from '../attributeAnalysisService';

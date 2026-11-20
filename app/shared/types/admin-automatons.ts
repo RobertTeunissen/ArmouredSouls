@@ -5,6 +5,7 @@
  */
 import type { TieredStandingsMode } from '../utils/automatonStandingsTier';
 import type { RobotAttribute } from '../utils/robotAttributes';
+import type { RangeBand } from './admin-analysis';
 
 /** Facilities an Automaton can build (`AUTOMATON_FACILITY_TYPES` in backend `services/automaton/stableFacts.ts` satisfies it). */
 export type AutomatonFacilityType =
@@ -639,7 +640,7 @@ export interface CatalogueWeapon {
   name: string;
   weaponType: string;
   handsRequired: string;
-  rangeBand: 'melee' | 'short' | 'mid' | 'long';
+  rangeBand: RangeBand;
   baseDamage: number;
   cooldown: number;
   cost: number;

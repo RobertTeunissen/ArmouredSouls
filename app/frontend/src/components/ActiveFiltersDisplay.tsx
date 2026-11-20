@@ -1,6 +1,7 @@
 import React from 'react';
 import { WeaponFilters } from './FilterPanel';
 import { getRangeBandLabel } from '../utils/weaponRange';
+import type { RangeBand } from '@shared/types';
 
 interface ActiveFiltersDisplayProps {
   filters: WeaponFilters;
@@ -90,11 +91,11 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
           key={`range-${band}`}
           className="flex items-center gap-1.5 bg-teal-900 text-teal-200 px-3 py-1.5 rounded-full text-sm"
         >
-          <span>{getRangeBandLabel(band as 'melee' | 'short' | 'mid' | 'long')} Range</span>
+          <span>{getRangeBandLabel(band as RangeBand)} Range</span>
           <button
             onClick={() => onRemoveFilter('rangeBand', band)}
             className="hover:text-white transition-colors"
-            aria-label={`Remove ${getRangeBandLabel(band as 'melee' | 'short' | 'mid' | 'long')} range filter`}
+            aria-label={`Remove ${getRangeBandLabel(band as RangeBand)} range filter`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

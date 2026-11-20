@@ -4,11 +4,11 @@
  * Activity is login-based: `users.last_login_at` is written at password login,
  * and JWTs expire after 24 h with no refresh, so it is at most a day stale.
  * Generated bots and Automatons never log in, so these counts are always over
- * human stables (`buildUserFilter('real')`), whatever the dashboard filter is.
+ * human stables (`realUserFilter()`), whatever the dashboard filter is.
  */
 import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
-import { buildUserFilter } from '../../utils/buildUserFilter';
+import { realUserFilter } from '../../utils/realUserFilter';
 import { INACTIVE_PLAYER_AFTER_MS, PLAYER_ACTIVITY_WINDOW_MS } from './adminThresholds';
 
 export interface HumanPlayerActivityCounts {
@@ -26,7 +26,7 @@ export interface HumanPlayerActivityCounts {
 
 /** The where clauses of each count, exported so tests can pin the window edges. */
 export function buildHumanActivityWhere(now: Date): Record<keyof HumanPlayerActivityCounts, Prisma.UserWhereInput> {
-  const human = buildUserFilter('real');
+  const human = realUserFilter();
   const windowStart = new Date(now.getTime() - PLAYER_ACTIVITY_WINDOW_MS);
   const previousWindowStart = new Date(now.getTime() - 2 * PLAYER_ACTIVITY_WINDOW_MS);
   const inactiveBefore = new Date(now.getTime() - INACTIVE_PLAYER_AFTER_MS);

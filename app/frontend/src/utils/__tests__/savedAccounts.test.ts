@@ -7,7 +7,6 @@ import {
   listSavedAccounts,
   saveAccount,
   removeSavedAccount,
-  getSavedAccount,
   type SavedAccount,
   type SavedAccountsStorage,
 } from '../savedAccounts';
@@ -61,12 +60,6 @@ describe('savedAccounts', () => {
     const remaining = removeSavedAccount(1, storage);
     expect(remaining).toEqual([bob]);
     expect(listSavedAccounts(storage)).toEqual([bob]);
-  });
-
-  it('getSavedAccount finds a stored account or returns null', () => {
-    saveAccount(alice, storage);
-    expect(getSavedAccount(1, storage)).toEqual(alice);
-    expect(getSavedAccount(999, storage)).toBeNull();
   });
 
   it('tolerates corrupt storage by treating it as empty', () => {

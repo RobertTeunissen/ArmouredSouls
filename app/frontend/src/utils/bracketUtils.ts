@@ -22,10 +22,6 @@ export interface TournamentMatchWithRobots {
   robot1: { id: number; name: string; elo: number } | null;
   robot2: { id: number; name: string; elo: number } | null;
   winner: { id: number; name: string } | null;
-  /** @deprecated Use participant1Id */
-  robot1Id?: number | null;
-  /** @deprecated Use participant2Id */
-  robot2Id?: number | null;
 }
 
 /**
@@ -75,17 +71,6 @@ export function buildBracketTree(
   }
 
   return tree;
-}
-
-/**
- * Formats a seed number + robot name for display.
- * Seeds 1–32 get a "#N" prefix; seeds > 32 show just the name.
- *
- * Validates: Requirements 4.1, 4.2
- */
-export function formatSeedDisplay(seed: number, robotName: string): string {
-  if (seed <= 32) return `#${seed} ${robotName}`;
-  return robotName;
 }
 
 /** Match statuses that settle who advances. */

@@ -38,7 +38,6 @@ import {
   computeStableBattleOverlap,
   getStableBattleOverlap,
   getStableBattleOverlapsByUser,
-  NO_COUNTER_BYE_BATTLE_TYPES,
   type SharedSideGroup,
 } from '../stable-battle-overlap';
 
@@ -136,9 +135,6 @@ describe('getStableBattleOverlap', () => {
     expect(sql).not.toContain('battle_log');
   });
 
-  it('derives the bye exclusion from the Bye_Mode_Table (updatesElo: false, not placement)', () => {
-    expect([...NO_COUNTER_BYE_BATTLE_TYPES]).toEqual(['tournament_1v1', 'tournament_2v2', 'tournament_3v3']);
-  });
 });
 
 describe('getStableBattleOverlapsByUser (batch variant)', () => {

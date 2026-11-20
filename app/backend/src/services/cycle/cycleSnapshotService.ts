@@ -475,26 +475,6 @@ export class CycleSnapshotService {
     return stepDurations;
   }
 
-  private async getCycleStartTime(cycleNumber: number): Promise<Date> {
-    const event = await prisma.auditLog.findFirst({
-      where: { cycleNumber, eventType: 'cycle_start' },
-    });
-    if (event) return event.eventTimestamp;
-
-    const snapshot = await prisma.cycleSnapshot.findUnique({ where: { cycleNumber } });
-    return snapshot?.startTime ?? new Date(0);
-  }
-
-  private async getCycleEndTime(cycleNumber: number): Promise<Date> {
-    const event = await prisma.auditLog.findFirst({
-      where: { cycleNumber, eventType: 'cycle_complete' },
-    });
-    if (event) return event.eventTimestamp;
-
-    const snapshot = await prisma.cycleSnapshot.findUnique({ where: { cycleNumber } });
-    return snapshot?.endTime ?? new Date();
-  }
-
   async getSnapshot(cycleNumber: number): Promise<CycleSnapshot | null> {
     const snapshot = await prisma.cycleSnapshot.findUnique({ where: { cycleNumber } });
     if (!snapshot) return null;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { updateLoadoutType } from '../utils/robotApi';
-import { LOADOUT_BONUSES, formatLoadoutName, getLoadoutDescription } from '../utils/robotStats';
+import { LOADOUT_BONUSES, formatLoadoutName, getLoadoutDescription } from '@shared/utils/robotStats';
 import { onActivationKey } from '../utils/keyboardActivation';
 
 interface LoadoutSelectorProps {
