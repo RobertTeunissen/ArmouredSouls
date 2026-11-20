@@ -463,6 +463,10 @@ export type {
 } from './robot-settings';
 export type {
   AcademyLevels,
+  PracticeBatchResult,
+  PracticeBattleResult,
+  PracticeCombatResult,
+  PracticeRobotInfo,
   WhatIfOverrides,
 } from './practice-arena';
 export type {

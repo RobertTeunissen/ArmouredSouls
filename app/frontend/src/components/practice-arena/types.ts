@@ -4,7 +4,6 @@
  * Extracted from PracticeArenaPage.tsx during component splitting (Spec 18).
  */
 
-import type { PlaybackCombatResult } from '../BattlePlaybackViewer/types';
 import type { WhatIfOverrides } from '@shared/types';
 
 // ---------------------------------------------------------------------------
@@ -60,26 +59,7 @@ export interface SlotState {
   sparringConfig: SparringConfig;
 }
 
-export interface PracticeBattleResult {
-  combatResult: PlaybackCombatResult;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  battleLog: any[];
-  robot1Info: { name: string; maxHP: number; maxShield: number };
-  robot2Info: { name: string; maxHP: number; maxShield: number };
-}
-
-export interface PracticeBatchResult {
-  results: PracticeBattleResult[];
-  aggregate: {
-    totalBattles: number;
-    robot1Wins: number;
-    robot2Wins: number;
-    draws: number;
-    avgDurationSeconds: number;
-    avgRobot1DamageDealt: number;
-    avgRobot2DamageDealt: number;
-  };
-}
+export type { PracticeBatchResult, PracticeBattleResult } from '@shared/types';
 
 // ---------------------------------------------------------------------------
 // Academy Levels shape (used by WhatIfPanel and BattleSlotPanel)

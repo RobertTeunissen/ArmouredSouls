@@ -14,8 +14,6 @@ export {
   type SparringPartnerConfig,
   type BattleSlot,
   type PracticeBattleRequest,
-  type PracticeBattleResult,
-  type PracticeBatchResult,
   type SparringPartnerDefinition,
 } from './practiceArenaService';
 
