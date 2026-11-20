@@ -284,16 +284,10 @@ describe('checkBackstab', () => {
 // ─── checkFlanking ──────────────────────────────────────────────────
 
 describe('checkFlanking', () => {
-  it('should not detect flanking with fewer than 2 attackers', () => {
+  it('should not detect flanking without an engaging teammate', () => {
     const defender = makeRobot({ position: { x: 0, y: 0 } });
     const attacker = makeRobot({ position: { x: 10, y: 0 } });
-    const result = checkFlanking([attacker], defender);
-    expect(result.isFlanking).toBe(false);
-  });
-
-  it('should not detect flanking with 0 attackers', () => {
-    const defender = makeRobot({ position: { x: 0, y: 0 } });
-    const result = checkFlanking([], defender);
+    const result = checkFlanking(attacker, 50, [], defender);
     expect(result.isFlanking).toBe(false);
   });
 
@@ -306,7 +300,7 @@ describe('checkFlanking', () => {
     // Attacker 1 at 0° (right), Attacker 2 at 180° (left) — 180° apart
     const a1 = makeRobot({ position: { x: 10, y: 0 } });
     const a2 = makeRobot({ position: { x: -10, y: 0 } });
-    const result = checkFlanking([a1, a2], defender);
+    const result = checkFlanking(a1, 50, [a2], defender);
     expect(result.isFlanking).toBe(true);
     expect(result.bonus).toBeCloseTo(0.20, 10);
   });
@@ -316,7 +310,7 @@ describe('checkFlanking', () => {
     // Both attackers roughly in front — 45° apart
     const a1 = makeRobot({ position: { x: 10, y: 0 } });
     const a2 = makeRobot({ position: { x: 10, y: 10 } }); // ~45° from a1
-    const result = checkFlanking([a1, a2], defender);
+    const result = checkFlanking(a1, 50, [a2], defender);
     expect(result.isFlanking).toBe(false);
   });
 
@@ -325,7 +319,7 @@ describe('checkFlanking', () => {
     // Attacker 1 at 0°, Attacker 2 at 90° — exactly 90°, not > 90°
     const a1 = makeRobot({ position: { x: 10, y: 0 } });
     const a2 = makeRobot({ position: { x: 0, y: 10 } });
-    const result = checkFlanking([a1, a2], defender);
+    const result = checkFlanking(a1, 50, [a2], defender);
     expect(result.isFlanking).toBe(false);
   });
 
@@ -337,7 +331,7 @@ describe('checkFlanking', () => {
     });
     const a1 = makeRobot({ position: { x: 10, y: 0 } });
     const a2 = makeRobot({ position: { x: -10, y: 0 } });
-    const result = checkFlanking([a1, a2], defender);
+    const result = checkFlanking(a1, 50, [a2], defender);
     expect(result.bonus).toBeCloseTo(0.20 - 0.06, 10);
   });
 
@@ -349,7 +343,7 @@ describe('checkFlanking', () => {
     });
     const a1 = makeRobot({ position: { x: 10, y: 0 } });
     const a2 = makeRobot({ position: { x: -10, y: 0 } });
-    const result = checkFlanking([a1, a2], defender);
+    const result = checkFlanking(a1, 50, [a2], defender);
     expect(result.bonus).toBeCloseTo(0.20 - 0.10, 10);
   });
 
@@ -361,32 +355,36 @@ describe('checkFlanking', () => {
     });
     const a1 = makeRobot({ position: { x: 10, y: 0 } });
     const a2 = makeRobot({ position: { x: -10, y: 0 } });
-    const result = checkFlanking([a1, a2], defender);
+    const result = checkFlanking(a1, 50, [a2], defender);
     expect(result.isFlanking).toBe(true);
     expect(result.bonus).toBe(0);
   });
 
-  it('should return flanking attacker indices', () => {
-    const defender = makeRobot({ position: { x: 0, y: 0 } });
-    const a1 = makeRobot({ position: { x: 10, y: 0 } });
-    const a2 = makeRobot({ position: { x: -10, y: 0 } });
-    const result = checkFlanking([a1, a2], defender);
-    expect(result.flankingAttackers).toEqual([0, 1]);
+  it('should flank when any engaging teammate is on the far side', () => {
+    const defender = makeRobot({ position: { x: 0, y: 0 }, gyroStabilizers: 0, threatAnalysis: 0 });
+    const attacker = makeRobot({ position: { x: 10, y: 1 } });
+    const besideAttacker = makeRobot({ position: { x: 10, y: -1 } });
+    const farSide = makeRobot({ position: { x: -10, y: 0 } });
+    const result = checkFlanking(attacker, 50, [besideAttacker, farSide], defender);
+    expect(result).toEqual({ isFlanking: true, bonus: expect.closeTo(0.20, 10) });
   });
 
-  it('should detect flanking among 3+ attackers when any pair qualifies', () => {
-    const defender = makeRobot({
-      position: { x: 0, y: 0 },
-      gyroStabilizers: 0,
-      threatAnalysis: 0,
-    });
-    // a1 and a2 are close together, a3 is on the opposite side
-    const a1 = makeRobot({ position: { x: 10, y: 1 } });
-    const a2 = makeRobot({ position: { x: 10, y: -1 } });
-    const a3 = makeRobot({ position: { x: -10, y: 0 } });
-    const result = checkFlanking([a1, a2, a3], defender);
-    expect(result.isFlanking).toBe(true);
-    // First qualifying pair found: a1 (index 0) and a3 (index 2)
-    expect(result.flankingAttackers).toEqual([0, 2]);
+  it('should scale the bonus with the attacker\'s Formation Tactics: 20% × √(FT / 50)', () => {
+    const defender = makeRobot({ position: { x: 0, y: 0 }, gyroStabilizers: 0, threatAnalysis: 0 });
+    const attacker = makeRobot({ position: { x: 10, y: 0 } });
+    const mate = makeRobot({ position: { x: -10, y: 0 } });
+    expect(checkFlanking(attacker, 0, [mate], defender)).toEqual({ isFlanking: true, bonus: 0 });
+    expect(checkFlanking(attacker, 12.5, [mate], defender).bonus).toBeCloseTo(0.10, 10);
+    expect(checkFlanking(attacker, 50, [mate], defender).bonus).toBeCloseTo(0.20, 10);
+    expect(checkFlanking(attacker, 80, [mate], defender).bonus).toBeCloseTo(0.20, 10);
+  });
+
+  it('should not flank when the teammate is within 90° of the attacker', () => {
+    const defender = makeRobot({ position: { x: 0, y: 0 } });
+    // Attacker at 0°, teammate at ~80°: within 90°, so no flank.
+    const attacker = makeRobot({ position: { x: 10, y: 0 } });
+    const mate = makeRobot({ position: { x: 1.7, y: 9.8 } }); // ~80°
+    const result = checkFlanking(attacker, 50, [mate], defender);
+    expect(result).toEqual({ isFlanking: false, bonus: 0 });
   });
 });

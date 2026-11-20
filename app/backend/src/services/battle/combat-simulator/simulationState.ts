@@ -3,10 +3,10 @@
  */
 
 import { euclideanDistance, angleBetween } from '../../arena/vector2d';
-import { classifyRangeBand, getRangePenalty } from '../../arena/rangeBands';
+import { canAttack, classifyRangeBand, getRangePenalty } from '../../arena/rangeBands';
 import { calculateHydraulicBonus } from '../../arena/hydraulicBonus';
 import { calculateLogicCoresBonus } from '../../arena/logicCoresBonus';
-import { checkBackstab } from '../../arena/positionTracker';
+import { checkBackstab, checkFlanking, type PositionedRobot } from '../../arena/positionTracker';
 import { getEffectiveAdaptation } from '../../arena/adaptationTracker';
 import { calculatePressureEffects } from '../../arena/pressureSystem';
 import { calculateBaseSpeed } from '../../arena/servoStrain';
@@ -114,6 +114,31 @@ export function calcCooldown(robot: RobotWithWeapons, weaponCooldown: number, ha
   return cooldownWithPenalty / (1 + effectiveAttackSpeed / 50);
 }
 
+function positioned(state: SpatialRobotCombatState): PositionedRobot {
+  return {
+    position: state.position,
+    facingDirection: state.facingDirection,
+    gyroStabilizers: state.numGyroStabilizers,
+    threatAnalysis: state.numThreatAnalysis,
+  };
+}
+
+/** Living teammates of `attacker` targeting `defender` with it in their main weapon's reach. */
+function engagingTeammates(
+  attacker: SpatialRobotCombatState,
+  defender: SpatialRobotCombatState,
+  allStates: SpatialRobotCombatState[],
+  teamOf: Record<number, number>,
+): SpatialRobotCombatState[] {
+  return allStates.filter((s) => {
+    if (s === attacker || !s.isAlive || teamOf[s.teamIndex] !== teamOf[attacker.teamIndex]) return false;
+    if (s.currentTarget !== defender.teamIndex) return false;
+    const weapon = s.robot.mainWeapon?.weapon;
+    return weapon !== undefined && weapon !== null
+      && canAttack({ name: weapon.name, rangeBand: weapon.rangeBand as RangeBand }, euclideanDistance(s.position, defender.position));
+  });
+}
+
 // ─── Helper: build spatial context for an attack pair ────────────────
 export function buildSpatialContext(
   attacker: SpatialRobotCombatState,
@@ -130,7 +155,7 @@ export function buildSpatialContext(
   rangePenaltyMult: number;
   hydraulicMult: number;
   logicCoresMult: number;
-  backstabBonus: number;
+  positionalBonus: number;
   adaptationHit: number;
   adaptationDmg: number;
   pressureAccuracy: number;
@@ -140,6 +165,7 @@ export function buildSpatialContext(
   formationDefenseBonus: number;
   positionSnapshot: { positions: Record<string, Position>; facingDirections: Record<string, number> };
   isBackstab: boolean;
+  isFlanking: boolean;
   attackAngle: number;
   passiveAccuracyPenalty: number;
   passiveDamageReduction: number;
@@ -152,10 +178,20 @@ export function buildSpatialContext(
   const hydraulicMult = calculateHydraulicBonus(attacker.numHydraulicSystems, rangeBand);
   const logicCoresMult = calculateLogicCoresBonus(attacker.numLogicCores, rangeBand);
 
-  const backstabResult = checkBackstab(
-    { position: attacker.position, facingDirection: attacker.facingDirection, gyroStabilizers: attacker.numGyroStabilizers, threatAnalysis: attacker.numThreatAnalysis },
-    { position: defender.position, facingDirection: defender.facingDirection, gyroStabilizers: defender.numGyroStabilizers, threatAnalysis: defender.numThreatAnalysis },
-  );
+  const attackerPos = positioned(attacker);
+  const defenderPos = positioned(defender);
+  const backstabResult = checkBackstab(attackerPos, defenderPos);
+  const teamOf = gameModeState?.customData?.teamOf as Record<number, number> | undefined;
+  const flankingResult = teamOf
+    ? checkFlanking(
+      attackerPos,
+      Number(attacker.robot.formationTactics ?? 0),
+      engagingTeammates(attacker, defender, allStates, teamOf).map(positioned),
+      defenderPos,
+    )
+    : { isFlanking: false, bonus: 0 };
+  // One positional bonus per hit: the larger of backstab and flanking.
+  const isFlanking = flankingResult.isFlanking && flankingResult.bonus >= backstabResult.bonus;
 
   const adaptation = getEffectiveAdaptation({
     adaptiveAI: attacker.numAdaptiveAI,
@@ -192,7 +228,7 @@ export function buildSpatialContext(
     rangePenaltyMult,
     hydraulicMult,
     logicCoresMult,
-    backstabBonus: backstabResult.bonus,
+    positionalBonus: isFlanking ? flankingResult.bonus : backstabResult.bonus,
     adaptationHit: adaptation.hitBonus,
     adaptationDmg: adaptation.damageBonus,
     pressureAccuracy: pressure.accuracyMod,
@@ -201,7 +237,8 @@ export function buildSpatialContext(
     syncVolleyBonus: syncBonus,
     formationDefenseBonus: formationBonus,
     positionSnapshot: cachedPosSnapshot ?? buildPositionSnapshot(...allStates),
-    isBackstab: backstabResult.isBackstab,
+    isBackstab: backstabResult.isBackstab && !isFlanking,
+    isFlanking,
     attackAngle: backstabResult.angle,
     passiveAccuracyPenalty,
     passiveDamageReduction,

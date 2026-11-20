@@ -62,7 +62,7 @@ describe('calculateBaseDamage stacks hydraulic and Logic Cores multipliers', () 
   } as unknown as RobotWithWeapons;
   const neutral = {
     rangePenalty: 1, hydraulicBonus: 1, logicCoresBonus: 1,
-    backstabBonus: 0, adaptationDamageBonus: 0, pressureDamageMod: 0, syncVolleyBonus: 0,
+    positionalBonus: 0, adaptationDamageBonus: 0, pressureDamageMod: 0, syncVolleyBonus: 0,
   };
 
   it('should multiply both and show both in the breakdown', () => {

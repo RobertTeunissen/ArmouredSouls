@@ -11,7 +11,7 @@
 import * as fc from 'fast-check';
 import { Prisma } from '../generated/prisma';
 import { simulateTeamBattle } from '../src/services/team-battle/teamBattleEngine';
-import { RobotWithWeapons } from '../src/services/battle/combatSimulator';
+import { RobotWithWeapons, simulateBattle } from '../src/services/battle/combatSimulator';
 
 // ── Mock Factories ──────────────────────────────────────────────────
 
@@ -309,5 +309,51 @@ describe('Team Battle Engine Property Tests', () => {
         { numRuns: 100 },
       );
     });
+  });
+});
+
+// ── Flanking (#614) ─────────────────────────────────────────────────
+
+describe('Flanking in team battles', () => {
+  /** Deterministic Math.random so the battles below are reproducible. */
+  function seeded(seed: number): () => number {
+    let a = seed;
+    return () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  const meleeRobot = (id: number): RobotWithWeapons =>
+    createMockRobot({ id, name: `Flanker-${id}`, formationTactics: new Prisma.Decimal(50), mainWeapon: createWeaponInventory(id, 20, 'melee') } as Partial<RobotWithWeapons> & { id: number; name: string });
+
+  type HitEvent = { type: string; flanking?: boolean; backstab?: boolean; formulaBreakdown?: { calculation: string } };
+
+  const originalRandom = Math.random;
+  afterEach(() => { Math.random = originalRandom; });
+
+  it('lands flanking hits when two teammates engage one enemy from opposite sides, never stacked with backstab', () => {
+    const hits: HitEvent[] = [];
+    for (let seed = 1; seed <= 20; seed++) {
+      Math.random = seeded(seed);
+      const result = simulateTeamBattle([meleeRobot(1), meleeRobot(2)], [meleeRobot(3), meleeRobot(4)], 2);
+      hits.push(...(result.detailedCombatEvents as HitEvent[]).filter((e) => e.type === 'attack' || e.type === 'critical'));
+    }
+    const flanking = hits.filter((e) => e.flanking);
+    expect(flanking.length).toBeGreaterThan(0);
+    for (const hit of flanking) {
+      expect(hit.backstab).toBe(false);
+      expect(hit.formulaBreakdown?.calculation).toMatch(/× 1\.\d\d flanking/);
+    }
+  });
+
+  it('never flanks in a 1v1 battle', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      Math.random = seeded(seed);
+      const result = simulateBattle(meleeRobot(1), meleeRobot(2));
+      expect((result.events as HitEvent[]).some((e) => e.flanking)).toBe(false);
+    }
   });
 });
