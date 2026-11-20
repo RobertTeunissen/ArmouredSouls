@@ -1,6 +1,6 @@
 # Combat Formulas and Battle Mechanics
 
-**Last Updated**: October 17, 2026  
+**Last Updated**: November 19, 2026  
 **Status**: Authoritative Reference - Defines formulas, implementation, and display formats
 
 This document is the **authoritative source** for all combat formulas, weapon bonus applications, and battle mechanics in Armoured Souls. It defines:
@@ -1241,12 +1241,13 @@ effectiveBonus = max(0, 0.10 - gyroReduction - threatAnalysisReduction)
 
 ### Flanking
 
-Multi-robot positional bonus when attackers surround a defender:
+Team-battle positional bonus (league and tournament 2v2/3v3, live since Nov 2026, #614):
 
 ```
-Trigger: 2+ attackers are >90° apart relative to defender (multi-robot battles only)
-
-Base bonus: +20% damage
+Bonus:   0.20 × √(min(attacker formationTactics, 50) / 50)   // 0 at formationTactics 0, +20% at 50
+Trigger: a living teammate of the attacker targets the same defender, has it in its main
+         weapon's reach, and stands >90° away from the attacker measured around the defender.
+         Only team battles (the team engine's teamOf); never 1v1, tag team, KotH or Grand Melee.
 
 Reductions:
   gyroReduction = gyroStabilizers × 0.003        // 0.3% per point
@@ -1254,8 +1255,13 @@ Reductions:
   if threatAnalysis > 25:
     threatAnalysisReduction = (threatAnalysis - 25) × 0.01   // 1% per point above 25
 
-effectiveBonus = max(0, 0.20 - gyroReduction - threatAnalysisReduction)
+effectiveBonus = max(0, Bonus - gyroReduction - threatAnalysisReduction)
 ```
+
+One positional bonus per hit: `max(backstab, flanking)`. A flanking hit is flagged `flanking: true`
+(not `backstab`), the damage breakdown shows `× 1.xx flanking`, and the attack message carries
+`🎯FLANKING!` (backstab: `🗡BACKSTAB!`). Implementation: `arena/positionTracker.checkFlanking`,
+called from `combat-simulator/simulationState.buildSpatialContext`.
 
 ### Patience_Timer
 
@@ -1520,17 +1526,17 @@ All formulas scale with `√(attribute / 50)` for diminishing returns. The attri
 
 #### syncProtocols → Focus Fire Damage Bonus
 
-**Trigger**: 2+ allied robots target the same enemy in the same tick.
+**Trigger** (per hit, since Nov 2026, #614): at least one living teammate of the attacker landed a hit on the same enemy within the last 1 s (`FOCUS_FIRE_WINDOW_SECONDS`). Computed in `combat-simulator/simulationState.buildSpatialContext` from `defender.lastHitTakenFrom`.
 
 ```
 Bonus = 0.25 × √(avgSyncProtocols / 50) × (contributors / teamSize)
 ```
 
 - `avgSyncProtocols`: average syncProtocols across all contributing robots
-- `contributors`: number of robots targeting the same enemy this tick (≥ 2)
+- `contributors`: the attacker plus the teammates that hit the enemy in that window (≥ 2)
 - `teamSize`: N (2 or 3)
 - **Max bonus**: 25% (all N robots focus-fire with syncProtocols = 50)
-- **Effect**: Each contributor's damage is multiplied by `(1 + bonus)`
+- **Effect**: that hit's damage is multiplied by `(1 + bonus)` inside `calculateBaseDamage` (breakdown step `× 1.xxx focus_fire`); the hit event carries `focusFireBonus` and `focusFireContributors`
 
 | Attribute | 2v2 (2/2 focus) | 3v3 (2/3 focus) | 3v3 (3/3 focus) |
 |-----------|----------------|----------------|----------------|
@@ -1581,14 +1587,11 @@ Reduction = 0.20 × √(avgFormationTactics / 50) × (alliesInRange / (teamSize 
 | 25 | 14.1% | 7.1% | 14.1% |
 | 50 | 20.0% | 10.0% | 20.0% |
 
-### Focus Fire Detection
+### Focus Fire Logging
 
-A focus fire event is logged when 2+ allied robots target the same opposing robot in the same combat tick. The event records:
-- Which robots contributed
-- Which target was focused
-- The bonus damage applied
+Every hit that received the focus fire bonus produces one `focus_fire` team log event and one `focusFireEvents` entry (target, contributors, bonus). `focusFireMetrics` sums the damage focus fire added (`damage − damage / (1 + bonus)`) per team.
 
-Focus fire is probabilistic — it depends on the AI targeting logic independently selecting the same target. `syncProtocols` does not force focus fire; it rewards it when it naturally occurs.
+Before Nov 2026 focus fire was evaluated per 0.1 s tick on shared *targets* and was meant to add bonus damage afterwards, but the damage baseline was reset earlier in the same tick hook, so no bonus damage was ever applied; logs and metrics from that time count targeting ticks, not damage.
 
 ### Battle Result Structure
 
@@ -1692,6 +1695,7 @@ Each member robot receives the same ELO delta applied to their individual elo fi
   - Reward formula and ELO update rules
   - Target-of-opportunity fallback respects team membership via `gameModeState.customData.teamOf` (friendly fire fix)
 - **2026-03-25:** Added Target Stickiness formula (1.5s lock duration, early break on target death/yield)
+- **2026-11-19:** Flanking wired into team battles (it was defined but never applied), its bonus set by the attacker's formationTactics; one positional bonus per hit. Focus fire is per hit (teammate hit on the same enemy within 1 s) and actually adds damage now (#614)
 - **2026-03-18:** Added King of the Hill Zone Scoring Formulas (zone scoring, kill bonus, anti-passive penalties, zone dominance bonus)
 - **2026-03-16:** Added 2D Arena Spatial Formulas section (Movement, Range, Hydraulic, Backstab, Flanking, Patience, Adaptation, Pressure, Threat Score, Turn Speed, Counter Range)
 - **2026-02-03:** Initial documentation

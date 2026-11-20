@@ -144,7 +144,7 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 14. **Gyro Stabilizers** - Balance, dodging ability, and reaction time
     - **2D Arena Role**: Determines turn speed: `180 + gyroStabilizers × 6` degrees/s (range 186–480°/s)
     - Reduces backstab bonus (0.25% reduction per point)
-    - Reduces flanking bonus (0.3% reduction per point)
+    - Reduces flanking bonus (0.3% reduction per point; flanking applies in 2v2/3v3 team battles)
     - Higher gyro = harder to exploit positionally
 15. **Hydraulic Systems** - Physical force for melee impact and carry capacity
     - **2D Arena Role**: Proximity-based damage bonus in the arena
@@ -195,14 +195,14 @@ All robots start with each attribute at level 1. Players spend Credits to upgrad
 21. **Sync Protocols** - Coordination with allied robots
     - **1v1 Solo Bonus**: Coordinated volley for dual-wield (both weapons within 1.0s window)
     - Volley bonus: `syncProtocols × 0.2%` per point
-    - In team battles: coordination with allied robots
+    - In team battles: focus fire, up to +25% on a hit when a teammate hit the same enemy within 1 s: `0.25 × √(avgSync / 50) × contributors / teamSize`
 22. **Support Systems** - Ability to assist/buff teammates
     - **1v1 Solo Bonus**: Shield regeneration boost of `supportSystems × 0.1%` per tick
-    - In team battles: ability to assist/buff teammates
+    - In team battles: ally shield regeneration, up to 0.8 shield/s per ally: `0.8 × √(supportSystems / 50)`
 23. **Formation Tactics** - Positioning within team formations
     - **1v1 Solo Bonus**: Arena edge defense bonus when within 3 units of boundary
     - Edge defense: `formationTactics × 0.3%` damage reduction
-    - In team battles: positioning within team formations
+    - In team battles: formation defence (up to 20% less damage with allies within 8 units) and the flanking bonus on your own hits, `0.20 × √(formationTactics / 50)`, when a teammate attacks the same enemy from >90° away
 
 ---
 

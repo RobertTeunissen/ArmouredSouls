@@ -2,7 +2,7 @@
 title: "Movement & Positioning"
 description: "How the 2D combat arena works — movement speed, range bands, weapon optimal ranges, backstab and flanking mechanics, and the attributes that control spatial combat."
 order: 2
-lastUpdated: "2026-11-07"
+lastUpdated: "2026-11-19"
 relatedArticles:
   - combat/battle-flow
   - robots/attributes-overview
@@ -148,13 +148,21 @@ The effective backstab bonus can be reduced to zero by a defender with high Gyro
 - **Threat Analysis** at high levels (20+) adds predictive turn bias — your robot anticipates opponents moving toward its rear arc and turns faster to compensate
 - Both attributes also directly reduce the backstab damage bonus
 
-## Flanking Mechanics (Multi-Robot)
+## Flanking Mechanics (Team Battles)
 
-In battles with multiple attackers (tag team, future team modes), **flanking** occurs when two or more attackers are positioned more than **90°** apart relative to the defender:
+In **2v2 and 3v3** battles (leagues and tournaments), your robot **flanks** when a teammate is attacking the same enemy from more than **90°** away, measured around that enemy. The teammate must be targeting that enemy and have it within weapon reach.
 
-- **Base bonus**: +20% damage
+- **Bonus**: set by the attacker's **Formation Tactics**, up to +20% damage at 50 (about +6% at 5, +11% at 15, +14% at 25). A robot with no Formation Tactics gets no flanking bonus
 - **Gyro Stabilizers reduction**: -0.3% per point (defender)
 - **Threat Analysis reduction**: -1% per point above 25 (defender)
+
+A hit gets either the flanking bonus or the backstab bonus, whichever is larger, never both. Flanking needs a teammate, so it never happens in 1v1, Tag Team (one robot per side fights at a time), King of the Hill or Grand Melee. Flanking hits are marked 🎯 FLANKING in the combat log.
+
+### Setting Up and Stopping Flanks
+
+- **Formation Tactics** decides how much a flank pays
+- **Threat Analysis** above 20 makes your robot approach enemies from the side or rear, which sets up flanks for your team
+- On defence, **Gyro Stabilizers** and high **Threat Analysis** shrink the flanking bonus enemies get against you
 
 ## Formation Tactics — Wall Bracing
 

@@ -38,7 +38,7 @@ export const ROBOT_ATTRIBUTE_DESCRIPTIONS: Readonly<Record<RobotAttributeKey, st
   logicCores: 'Boosts damage at range (up to +75% long, +50% mid at level 50) and gives accuracy and damage bonuses when HP gets low.',
 
   // Team Coordination
-  syncProtocols: 'Dual-wield builds deal bonus damage when both weapons are ready together. Also improves team coordination.',
+  syncProtocols: 'Dual-wield builds deal bonus damage when both weapons are ready together. In team battles, adds focus fire damage when a teammate hit the same enemy within the last second.',
   supportSystems: 'Passively boosts shield regeneration during combat. In team modes, helps buff nearby allies.',
-  formationTactics: 'Reduces damage taken while your robot is near the arena edge. In team modes, improves formation positioning.',
+  formationTactics: 'Reduces damage taken while your robot is near the arena edge. In team battles, reduces damage with allies nearby and sets the flanking bonus.',
 };

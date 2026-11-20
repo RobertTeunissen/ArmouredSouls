@@ -2,7 +2,7 @@
 title: "Team Battles Overview"
 description: "How 2v2 and 3v3 League Team Battles work — team registration, simultaneous combat, coordination effects, matchmaking, rewards, and daily schedule."
 order: 1
-lastUpdated: "2026-11-06"
+lastUpdated: "2026-11-19"
 relatedArticles:
   - facilities/booking-office
   - leagues/matchmaking
@@ -84,7 +84,7 @@ Three robot attributes — previously minor in 1v1 — become powerful in Team B
 
 ### Sync Protocols → Focus Fire Bonus
 
-When two or more of your robots target the same enemy in the same tick, they deal bonus damage. Higher `syncProtocols` across your team means a bigger bonus.
+When one of your robots hits an enemy that a teammate hit **within the last second**, that hit deals bonus damage. The bonus grows with the average `syncProtocols` of the robots hitting that enemy, and with how many of your robots joined in: in 3v3, two of three robots get two thirds of the bonus below. Hits marked as focus fire show a `focus_fire` step in the damage breakdown.
 
 | Avg Sync Protocols | 2v2 Bonus (2/2 focus) | 3v3 Bonus (3/3 focus) |
 |--------------------|----------------------|----------------------|
@@ -103,6 +103,18 @@ Each robot passively regenerates shields on all allies. Higher `supportSystems` 
 | 15 | 0.44/sec |
 | 25 | 0.57/sec |
 | 50 (max) | 0.80/sec |
+
+### Formation Tactics → Flanking Bonus
+
+When a teammate is attacking the same enemy from more than 90° away around it, your robot **flanks** that enemy and its hits deal bonus damage. The bonus comes from the attacking robot's own `formationTactics`; the defender's Gyro Stabilizers and Threat Analysis (above 25) reduce it. A hit gets either the flanking or the backstab bonus, whichever is larger.
+
+| Formation Tactics (attacker) | Flanking Bonus |
+|------------------------------|----------------|
+| 0 | none |
+| 5 | +6.3% damage |
+| 15 | +11.0% damage |
+| 25 | +14.1% damage |
+| 50 (max) | +20.0% damage |
 
 ### Formation Tactics → Formation Damage Reduction
 
