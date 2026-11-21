@@ -101,7 +101,6 @@ jest.mock('../../../src/services/standings/standingPlacement', () => ({
 
 import {
   subscribeRobot,
-  unsubscribeRobot,
   setSubscriptionsForRobot,
 } from '../../../src/services/subscription/subscriptionService';
 import { SubscriptionErrorCode } from '../../../src/errors/subscriptionErrors';
@@ -209,7 +208,6 @@ describe('subscriptionService', () => {
 
     it.each([
       ['subscribeRobot', () => subscribeRobot(1, 'koth', 1)],
-      ['unsubscribeRobot', () => { given(['koth']); return unsubscribeRobot(1, 'koth', 1); }],
       ['setSubscriptionsForRobot', () => setSubscriptionsForRobot(1, ['koth'], 1)],
     ])('%s should read the audit cycle before opening its transaction', async (_name, run) => {
       await run();
@@ -254,34 +252,25 @@ describe('subscriptionService', () => {
     );
   });
 
-  // ── unsubscribeRobot: the unified rule ───────────────────────────
+  // ── Removing a subscription (bulk save without it): the unified rule ──
 
-  describe('unsubscribeRobot', () => {
+  describe('removing a subscription', () => {
     it('should throw ACCESS_DENIED when robot is owned by a different user', async () => {
       mockTx.robot.findUnique.mockResolvedValue({ userId: 99 });
 
-      await expect(unsubscribeRobot(1, 'league_1v1', 42)).rejects.toMatchObject({
+      await expect(setSubscriptionsForRobot(1, [], 42)).rejects.toMatchObject({
         code: SubscriptionErrorCode.ACCESS_DENIED,
         statusCode: 403,
       });
     });
 
-    it('should throw SUBSCRIPTION_NOT_FOUND when not subscribed', async () => {
-      given([]);
-
-      await expect(unsubscribeRobot(1, 'league_1v1', 1)).rejects.toMatchObject({
-        code: SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND,
-        statusCode: 404,
-      });
-    });
-
     it.each(['league_1v1', 'koth', 'grand_melee', 'tournament_1v1'])(
-      'should allow unsubscribe from %s even with a match already booked',
+      'should allow removing %s even with a match already booked',
       async (eventType) => {
         given([eventType]);
         mockResolveOutstandingEventsForRobot.mockResolvedValue([eventType]);
 
-        const result = await unsubscribeRobot(1, eventType, 1);
+        const result = await setSubscriptionsForRobot(1, [], 1);
 
         expect(result.removed).toEqual([eventType]);
         expect(mockTx.subscription.deleteMany).toHaveBeenCalledWith({
@@ -294,7 +283,7 @@ describe('subscriptionService', () => {
       given(['grand_melee']);
       mockResolveOutstandingEventsForRobot.mockResolvedValue(['grand_melee']);
 
-      const result = await unsubscribeRobot(1, 'grand_melee', 1);
+      const result = await setSubscriptionsForRobot(1, [], 1);
 
       expect(result.heldSlots).toEqual(['grand_melee']);
       expect(result.occupiedCount).toBe(1);
@@ -303,7 +292,7 @@ describe('subscriptionService', () => {
     it('should write a subscription_remove audit entry', async () => {
       given(['league_1v1']);
 
-      await unsubscribeRobot(1, 'league_1v1', 1);
+      await setSubscriptionsForRobot(1, [], 1);
 
       expect(mockTx.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({

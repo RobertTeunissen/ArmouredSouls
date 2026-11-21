@@ -14,8 +14,6 @@ import { AppError } from './AppError';
 export const TagTeamErrorCode = {
   TAG_TEAM_NOT_FOUND: 'TAG_TEAM_NOT_FOUND',
   INVALID_TEAM_COMPOSITION: 'INVALID_TEAM_COMPOSITION',
-  TEAM_NOT_ELIGIBLE: 'TEAM_NOT_ELIGIBLE',
-  TAG_TEAM_LEAGUE_NOT_FOUND: 'TAG_TEAM_LEAGUE_NOT_FOUND',
 } as const;
 
 export type TagTeamErrorCodeType = typeof TagTeamErrorCode[keyof typeof TagTeamErrorCode];

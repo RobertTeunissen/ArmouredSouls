@@ -9,8 +9,6 @@ import { errorCodeLabel, formatCount } from './adminFormat';
 import type { DashboardStatus } from '@shared/types';
 
 const MINUTE = 60_000;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
 
 /** Battle mode labels, keyed by `battles.battle_type` / `MatchType`. */
 const MODE_LABELS: Readonly<Record<string, string>> = {
@@ -327,6 +325,3 @@ export function deriveStatusCells(status: DashboardStatus, now: Date): StatusCel
     },
   ];
 }
-
-/** Elapsed-time constants, exported for tests. */
-export const TIME = { MINUTE, HOUR, DAY } as const;

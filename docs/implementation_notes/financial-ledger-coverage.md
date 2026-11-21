@@ -183,7 +183,7 @@ Settlement identity is stable user + cycle + component (`passive_income` or `ope
 Subscription writes use one core path in `app/backend/src/services/subscription/subscriptionService.ts`:
 
 - `applySubscriptionChange` is the shared write implementation;
-- `subscribeRobot` and `unsubscribeRobot` are thin single-event wrappers; and
+- `subscribeRobot` is a thin single-event wrapper; and
 - the bulk subscription route delegates to the same operation.
 
 The event types are all nine battle modes listed above. Subscribing under the cap is free, unsubscribing is free and immediate, and an outstanding scheduled obligation continues to occupy its slot. These writes create subscription/domain audit records only. They never create a `FinancialLedger` row or a `financial_transaction` audit row, and no `subscription_cost` taxonomy value is allowed for new work.

@@ -1,10 +1,8 @@
 import prisma from '../src/lib/prisma';
 import { rebalanceLeagues, ROBOT_LEAGUE_CONFIG, robotAdapter } from '../src/services/league/leagueRebalancingService';
-import { determinePromotionsForInstance } from '../src/services/league/leagueEngine';
 
 import { getMinLPForPromotion } from '../src/services/league/leaguePromotionThresholds';
 
-const determinePromotions = (instanceId: string) => determinePromotionsForInstance(instanceId, ROBOT_LEAGUE_CONFIG, robotAdapter, new Set());
 
 
 describe('League Rebalancing Service', () => {
@@ -95,120 +93,6 @@ describe('League Rebalancing Service', () => {
 
     return { robot, standing };
   }
-
-  describe('determinePromotions', () => {
-    it('should return top 10% of standings with ≥5 cycles AND per-tier LP threshold', async () => {
-      // Create 20 robots in bronze with corresponding standings
-      for (let i = 0; i < 20; i++) {
-        await createRobotWithStanding({
-          name: `Bronze Robot ${i}`,
-          tier: 'bronze',
-          leagueInstanceId: 'bronze_1',
-          cyclesInTier: 10,
-          leaguePoints: i * 5, // robots 5-19 clear the bronze threshold of 25
-        });
-      }
-
-      const toPromote = await determinePromotions('bronze_1');
-
-      // Top 10% of the complete 20-robot instance = 2 fixed positions.
-      // LP and residency gates are then applied inside those positions.
-      expect(toPromote.length).toBe(2);
-      expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(25);
-      expect(toPromote[1].leaguePoints).toBeGreaterThanOrEqual(25);
-      // Results ordered by LP desc
-      expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(toPromote[1].leaguePoints);
-    });
-
-    it('should skip standings with <5 cycles in current tier', async () => {
-      for (let i = 0; i < 20; i++) {
-        await createRobotWithStanding({
-          name: `Bronze Robot ${i}`,
-          tier: 'bronze',
-          leagueInstanceId: 'bronze_1',
-          cyclesInTier: i < 10 ? 3 : 10, // First 10 have too few cycles
-          leaguePoints: i * 5, // robots 5-19 clear the bronze threshold of 25
-        });
-      }
-
-      const toPromote = await determinePromotions('bronze_1');
-
-      // The fixed promotion zone is the top 10% of all 20 standings: two positions.
-      // Residency is applied inside those positions, and both top-ranked robots qualify.
-      expect(toPromote.length).toBe(2);
-      expect(toPromote[0].cyclesInTier).toBeGreaterThanOrEqual(5);
-      expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(25);
-    });
-
-    it('should return empty array for champion tier', async () => {
-      const toPromote = await determinePromotions('champion_1');
-      expect(toPromote).toEqual([]);
-    });
-
-    it('should return empty array when no standings meet per-tier LP threshold', async () => {
-      for (let i = 0; i < 20; i++) {
-        await createRobotWithStanding({
-          name: `Low Points Robot ${i}`,
-          tier: 'bronze',
-          leagueInstanceId: 'bronze_1',
-          cyclesInTier: 10,
-          leaguePoints: i, // 0-19, all below the bronze threshold of 25
-        });
-      }
-
-      const toPromote = await determinePromotions('bronze_1');
-      expect(toPromote).toEqual([]);
-    });
-
-    it('should use higher LP threshold for silver tier (50 LP for Silver→Gold)', async () => {
-      for (let i = 0; i < 20; i++) {
-        await createRobotWithStanding({
-          name: `Silver Threshold Robot ${i}`,
-          tier: 'silver',
-          leagueInstanceId: 'silver_1',
-          cyclesInTier: 10,
-          leaguePoints: i * 5, // robots 10-19 clear the silver threshold of 50
-        });
-      }
-
-      const toPromote = await determinePromotions('silver_1');
-
-      // Top 10% of 20 = 2 slots, only robots with ≥50 LP qualify
-      expect(toPromote.length).toBe(2);
-      expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(50);
-      expect(toPromote[1].leaguePoints).toBeGreaterThanOrEqual(50);
-    });
-
-    it('should not promote silver standings with 25-49 LP (below silver threshold)', async () => {
-      for (let i = 0; i < 20; i++) {
-        await createRobotWithStanding({
-          name: `Silver Below Threshold ${i}`,
-          tier: 'silver',
-          leagueInstanceId: 'silver_1',
-          cyclesInTier: 10,
-          leaguePoints: 25 + i, // 25-44: past bronze's threshold, short of silver's 50
-        });
-      }
-
-      const toPromote = await determinePromotions('silver_1');
-      expect(toPromote).toEqual([]);
-    });
-
-    it('should return empty array when too few entities (< min for rebalancing)', async () => {
-      for (let i = 0; i < 5; i++) {
-        await createRobotWithStanding({
-          name: `Small League Robot ${i}`,
-          tier: 'gold',
-          leagueInstanceId: 'gold_1',
-          cyclesInTier: 10,
-          leaguePoints: 100, // ample; this case is gated on entity count, not LP
-        });
-      }
-
-      const toPromote = await determinePromotions('gold_1');
-      expect(toPromote).toEqual([]);
-    });
-  });
 
   describe('rebalanceLeagues', () => {
     it('should process all tiers and return summary', async () => {

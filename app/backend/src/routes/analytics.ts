@@ -14,7 +14,6 @@ import { robotPerformanceService } from '../services/analytics/robotPerformanceS
 import type { RobotMetric } from '../services/analytics/robotPerformanceService';
 import { getCurrentCycle } from '../services/analytics/cycleAnalyticsService';
 import { unifiedFacilityROIService } from '../services/economy/unifiedFacilityROIService';
-import { getKothPerformance } from '../services/analytics/kothAnalyticsService';
 import { calculateTrendLine } from '../services/analytics/trendHelpers';
 import prisma from '../lib/prisma';
 import {
@@ -23,8 +22,6 @@ import {
   RobotErrorCode,
   AuthError,
   AuthErrorCode,
-  KothError,
-  KothErrorCode,
 } from '../errors';
 import { validateRequest, validated } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
@@ -36,10 +33,6 @@ const router = express.Router();
 
 const userIdParamsSchema = z.object({
   userId: positiveIntParam,
-});
-
-const robotIdByIdParamsSchema = z.object({
-  id: positiveIntParam,
 });
 
 const robotMetricParamsSchema = z.object({
@@ -152,14 +145,6 @@ router.get('/facility/:userId/recommendations', authenticateToken, ...validated(
 
   const recommendations = await facilityRecommendationService.generateRecommendations(userId);
   return res.json(recommendations);
-}));
-
-/** GET /api/analytics/robot/:id/koth-performance */
-router.get('/robot/:id/koth-performance', authenticateToken, ...validated({ params: robotIdByIdParamsSchema }, async (req: AuthRequest, res: Response, { params }) => {
-  const robotId = params.id;
-  const result = await getKothPerformance(robotId);
-  if (!result) throw new KothError(KothErrorCode.KOTH_NOT_FOUND, 'No KotH data for this robot', 404);
-  return res.json(result);
 }));
 
 export default router;

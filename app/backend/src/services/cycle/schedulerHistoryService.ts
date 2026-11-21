@@ -6,7 +6,6 @@
  *   of the last 7 days.
  * - `listSchedulerRuns`: runs, "backend restarted" markers and missed runs,
  *   merged newest first, filterable and paginated.
- * - `getSchedulerRun`: one run.
  *
  * Read-only. Job labels are the frontend's; this returns job names.
  */
@@ -249,11 +248,4 @@ export async function listSchedulerRuns(query: SchedulerHistoryQuery, now: Date 
 
   const start = (page - 1) * limit;
   return { entries: entries.slice(start, start + limit), page, limit, total: entries.length, windowDays: days };
-}
-
-/** One run, or `SchedulerError` 404. */
-export async function getSchedulerRun(id: number): Promise<SchedulerRunView> {
-  const row = await prisma.schedulerJobRun.findUnique({ where: { id }, select: RUN_SELECT });
-  if (!row) throw new SchedulerError(SchedulerErrorCode.RUN_NOT_FOUND, 'Run not found', 404);
-  return toRunView(row, await usernamesFor([row]));
 }

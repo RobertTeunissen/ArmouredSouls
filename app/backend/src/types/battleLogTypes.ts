@@ -157,19 +157,6 @@ export interface KothBattleLogData {
 }
 
 /**
- * Union of all battle log shapes that can be stored in `Battle.battleLog`.
- *
- * Use this when you need to accept any battle log variant. For code that
- * knows the battle type, prefer the specific interface directly.
- */
-export type BattleLogData =
-  | LeagueBattleLogData
-  | TournamentBattleLogData
-  | TagTeamBattleLogData
-  | KothBattleLogData
-  | TeamBattleLogData;
-
-/**
  * Re-export placeholder for TeamBattleLog to keep the union complete.
  * The full type is defined in `teamBattleLogTypes.ts`.
  */

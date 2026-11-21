@@ -9,7 +9,7 @@ import prisma from '../src/lib/prisma';
 
 describe('Cycle Execution Timing', () => {
   let eventLogger: EventLogger;
-  let testCycleNumbers: number[] = [];
+  const testCycleNumbers: number[] = [];
 
   beforeAll(() => {
     eventLogger = new EventLogger();

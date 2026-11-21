@@ -405,19 +405,4 @@ function RegistrationForm({ onSuccess }: RegistrationFormProps) {
   );
 }
 
-/**
- * Describes the internal state shape of the {@link RegistrationForm} component.
- * Exported for use in property-based tests and external state inspection.
- */
-export interface RegistrationFormState {
-  username: string;
-  stableName: string;
-  email: string;
-  password: string;
-  passwordConfirmation: string;
-  isSubmitting: boolean;
-  fieldErrors: FieldErrors;
-  generalError: string | null;
-}
-
 export default RegistrationForm;

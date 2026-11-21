@@ -9,7 +9,7 @@
  */
 import express, { Response } from 'express';
 import { z } from 'zod';
-import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { recordEvents, OnboardingEventRecord } from '../services/analytics/onboardingAnalyticsService';
 import { AppError } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
@@ -62,21 +62,6 @@ router.post('/', authenticateToken, validateRequest({ body: analyticsEventsBodyS
   res.json({
     success: true,
     data: { received: validEvents.length },
-  });
-});
-
-/**
- * GET /api/onboarding/analytics/summary
- *
- * Get aggregated onboarding analytics summary. Admin-only.
- */
-router.get('/summary', authenticateToken, requireAdmin, validateRequest({}), async (req: AuthRequest, res: Response) => {
-  const { getSummary } = await import('../services/analytics/onboardingAnalyticsService');
-  const summary = getSummary();
-
-  res.json({
-    success: true,
-    data: summary,
   });
 });
 

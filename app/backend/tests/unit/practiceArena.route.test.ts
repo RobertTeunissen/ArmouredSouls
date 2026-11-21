@@ -63,6 +63,7 @@ import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import practiceArenaRouter from '../../src/routes/practiceArena';
 import { errorHandler } from '../../src/middleware/errorHandler';
+import { AppError } from '../../src/errors';
 
 // ---------------------------------------------------------------------------
 // Test App Setup
@@ -235,7 +236,6 @@ describe('Practice Arena Route', () => {
   // =========================================================================
   describe('POST /battle — ownership', () => {
     it('should return 403 when robot is not owned by the authenticated user', async () => {
-      const { AppError } = require('../../src/errors');
       mockExecutePracticeBattle.mockRejectedValue(
         new AppError('FORBIDDEN', 'Access denied', 403),
       );

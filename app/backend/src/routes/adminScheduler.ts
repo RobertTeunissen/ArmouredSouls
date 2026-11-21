@@ -3,7 +3,6 @@
  *
  * - GET  /api/admin/scheduler/overview   status strip, daily schedule, missed runs
  * - GET  /api/admin/scheduler/runs       run history (runs, restarts, missed)
- * - GET  /api/admin/scheduler/runs/:id   one run
  * - POST /api/admin/scheduler/runs       start a job by hand in the background (202)
  *
  * Mounted at /api/admin/ from the main admin router. Thin: validate, call a
@@ -13,7 +12,6 @@ import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import { validateRequest, validated } from '../middleware/schemaValidator';
-import { positiveIntParam } from '../utils/securityValidation';
 // The constants module, not cycleScheduler: a test that mocks the scheduler
 // must not be able to turn this into `z.enum(undefined)`.
 import { SCHEDULER_JOB_NAMES } from '../services/cycle/schedulerJobNames';
@@ -22,7 +20,6 @@ import { startManualRun } from '../services/cycle/cycleScheduler';
 import {
   MAX_HISTORY_DAYS,
   getSchedulerOverview,
-  getSchedulerRun,
   listSchedulerRuns,
 } from '../services/cycle/schedulerHistoryService';
 import { recordAction as recordAuditAction } from '../services/admin/adminAuditLogService';
@@ -38,8 +35,6 @@ const historyQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(25),
 }).strict();
 
-const runIdParamSchema = z.object({ id: positiveIntParam });
-
 const startRunBodySchema = z.object({ jobName: z.enum(SCHEDULER_JOB_NAMES) }).strict();
 
 router.get('/scheduler/overview', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
@@ -48,10 +43,6 @@ router.get('/scheduler/overview', authenticateToken, requireAdmin, validateReque
 
 router.get('/scheduler/runs', authenticateToken, requireAdmin, ...validated({ query: historyQuerySchema }, async (req: Request, res: Response, { query }) => {
   res.json(await listSchedulerRuns(query));
-}));
-
-router.get('/scheduler/runs/:id', authenticateToken, requireAdmin, ...validated({ params: runIdParamSchema }, async (req: Request, res: Response, { params }) => {
-  res.json(await getSchedulerRun(params.id));
 }));
 
 /**

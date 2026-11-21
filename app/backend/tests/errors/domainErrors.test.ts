@@ -19,7 +19,6 @@ import { EconomyError, EconomyErrorCode } from '../../src/errors/economyErrors';
 import { LeagueError, LeagueErrorCode } from '../../src/errors/leagueErrors';
 import { TournamentError, TournamentErrorCode } from '../../src/errors/tournamentErrors';
 import { TagTeamError, TagTeamErrorCode } from '../../src/errors/tagTeamErrors';
-import { KothError, KothErrorCode } from '../../src/errors/kothErrors';
 import { OnboardingError, OnboardingErrorCode } from '../../src/errors/onboardingErrors';
 
 describe('AuthError', () => {
@@ -65,7 +64,7 @@ describe('AuthError', () => {
     });
 
     test('should default statusCode to 400', () => {
-      const error = new AuthError(AuthErrorCode.INVALID_TOKEN, 'Invalid token');
+      const error = new AuthError(AuthErrorCode.UNAUTHORIZED, 'Unauthorized');
       expect(error.statusCode).toBe(400);
     });
   });
@@ -198,7 +197,7 @@ describe('EconomyError', () => {
 
   describe('constructor', () => {
     test('should set all properties correctly', () => {
-      const code = EconomyErrorCode.WEAPON_NOT_AFFORDABLE;
+      const code = EconomyErrorCode.INSUFFICIENT_CREDITS;
       const message = 'Cannot afford weapon';
       const statusCode = 402;
       const details = { weaponId: 'wpn-1', cost: 5000, balance: 1000 };
@@ -221,19 +220,19 @@ describe('EconomyError', () => {
 describe('LeagueError', () => {
   describe('inheritance', () => {
     test('should be instanceof AppError', () => {
-      const error = new LeagueError(LeagueErrorCode.LEAGUE_NOT_FOUND, 'League not found');
+      const error = new LeagueError(LeagueErrorCode.INVALID_LEAGUE_TIER, 'Invalid league tier');
       expect(error instanceof AppError).toBe(true);
     });
 
     test('should be instanceof Error', () => {
-      const error = new LeagueError(LeagueErrorCode.LEAGUE_NOT_FOUND, 'League not found');
+      const error = new LeagueError(LeagueErrorCode.INVALID_LEAGUE_TIER, 'Invalid league tier');
       expect(error instanceof Error).toBe(true);
     });
   });
 
   describe('name property', () => {
     test('should have name set to LeagueError', () => {
-      const error = new LeagueError(LeagueErrorCode.LEAGUE_NOT_FOUND, 'League not found');
+      const error = new LeagueError(LeagueErrorCode.INVALID_LEAGUE_TIER, 'Invalid league tier');
       expect(error.name).toBe('LeagueError');
     });
   });
@@ -311,7 +310,7 @@ describe('TournamentError', () => {
     });
 
     test('should default statusCode to 400', () => {
-      const error = new TournamentError(TournamentErrorCode.ROUND_NOT_READY, 'Round not ready');
+      const error = new TournamentError(TournamentErrorCode.TOURNAMENT_NOT_ACTIVE, 'Tournament not active');
       expect(error.statusCode).toBe(400);
     });
   });
@@ -360,56 +359,7 @@ describe('TagTeamError', () => {
     });
 
     test('should default statusCode to 400', () => {
-      const error = new TagTeamError(TagTeamErrorCode.TEAM_NOT_ELIGIBLE, 'Team not eligible');
-      expect(error.statusCode).toBe(400);
-    });
-  });
-});
-
-describe('KothError', () => {
-  describe('inheritance', () => {
-    test('should be instanceof AppError', () => {
-      const error = new KothError(KothErrorCode.KOTH_NOT_FOUND, 'KotH not found');
-      expect(error instanceof AppError).toBe(true);
-    });
-
-    test('should be instanceof Error', () => {
-      const error = new KothError(KothErrorCode.KOTH_NOT_FOUND, 'KotH not found');
-      expect(error instanceof Error).toBe(true);
-    });
-  });
-
-  describe('name property', () => {
-    test('should have name set to KothError', () => {
-      const error = new KothError(KothErrorCode.KOTH_NOT_FOUND, 'KotH not found');
-      expect(error.name).toBe('KothError');
-    });
-  });
-
-  describe('error code validation', () => {
-    test.each(Object.values(KothErrorCode))('should accept valid error code: %s', (code) => {
-      const error = new KothError(code, `Error with code ${code}`);
-      expect(error.code).toBe(code);
-    });
-  });
-
-  describe('constructor', () => {
-    test('should set all properties correctly', () => {
-      const code = KothErrorCode.INSUFFICIENT_KOTH_PARTICIPANTS;
-      const message = 'Not enough KotH participants';
-      const statusCode = 400;
-      const details = { kothId: 'koth-1', required: 4, actual: 2 };
-
-      const error = new KothError(code, message, statusCode, details);
-
-      expect(error.code).toBe(code);
-      expect(error.message).toBe(message);
-      expect(error.statusCode).toBe(statusCode);
-      expect(error.details).toEqual(details);
-    });
-
-    test('should default statusCode to 400', () => {
-      const error = new KothError(KothErrorCode.INVALID_KOTH_STATE, 'Invalid KotH state');
+      const error = new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, 'Invalid team composition');
       expect(error.statusCode).toBe(400);
     });
   });

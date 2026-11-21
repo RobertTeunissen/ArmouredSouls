@@ -324,39 +324,6 @@ export async function subscribeRobot(
   });
 }
 
-/**
- * Unsubscribe a robot from one event. Thin wrapper over the shared write path.
- *
- * Never refused. If a match for the event is already booked it still runs, and
- * the slot it occupies frees up once it has been fought.
- */
-export async function unsubscribeRobot(
-  robotId: number,
-  eventType: string,
-  requestingUserId: number,
-): Promise<SubscriptionChangeResult> {
-  return inSubscriptionTransaction(async (tx, cycleNumber) => {
-    await assertOwnership(robotId, requestingUserId, tx);
-
-    const current = await currentEventTypes(robotId, tx);
-    if (!current.includes(eventType)) {
-      throw new SubscriptionError(
-        SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND,
-        `Robot is not subscribed to ${eventType}`,
-        404,
-      );
-    }
-
-    return applySubscriptionChange(
-      robotId,
-      current.filter((e) => e !== eventType),
-      requestingUserId,
-      tx,
-      cycleNumber,
-    );
-  });
-}
-
 // ── Read API ─────────────────────────────────────────────────────────
 
 /**

@@ -2,12 +2,13 @@
 
 **Project**: Armoured Souls
 **Document Type**: Product Requirements Document (PRD)
-**Version**: v1.25
-**Last Updated**: November 19, 2026
+**Version**: v1.26
+**Last Updated**: November 21, 2026
 **Status**: ✅ Implemented
 **Owner**: Robert Teunissen
 
 **Revision History**:
+- v1.26 (Nov 21, 2026): the Spec #40 materialized leaderboard cache is retired. `leaderboard/leaderboardService` (settlement's `refreshAll`) and `migration/featureFlags` (`leaderboard_cache_active`, never switched on) are removed, and a migration drops the empty `leaderboard_cache` table. Nothing had read the cache since its reader went in v1.21; leaderboards query live data through `analytics/leaderboardService` with the route's 5-minute in-memory cache. `cycle_metadata.feature_flags` now only holds settlement's financial cycle-closing markers. The same migration drops the unused `practice_arena_daily_stats` table and `facilities.active_coach` column. Also removed as unused: the endpoints no client calls (`GET /api/koth/standings` with `koth/kothStandingsService`, `GET /api/analytics/robot/:id/koth-performance` with `analytics/kothAnalyticsService`, `GET /api/onboarding/analytics/summary` with the in-memory onboarding event store, `GET /api/admin/scheduler/runs/:id`, `POST /api/subscriptions/robot/:robotId/unsubscribe`; the Booking Office unsubscribes through `PUT /api/subscriptions/robot/:robotId`), `leagueEngine.determinePromotionsForInstance`, `KothError`, error codes nothing throws, unused types, and barrel type re-exports nobody imported.
 - v1.25 (Nov 19, 2026): dead-code sweep. Removed as unused (with their tests): `cycle/cycleCsvExportService`, `financial/financialService`, `robot/robotRankingService`, the `tag-team/index` barrel, `financial/passive-income-payload-keys` (nothing reads the key back), `battlePostCombat.awardCreditsToUser`/`awardFameToRobot`, `economy/repairService.repairAllRobots` (automatic repair is event-scoped only; the ignored `deductCosts`/`cycleNumber` parameters went too), `subscriptionService.isRobotSubscribedTo`, `resetService.getResetHistory`, `onboardingService.advanceStep`, `featureFlags.setFlag`, `leagueRebalancingService.determinePromotions`, `tournamentBracket.seedRobotsByELO`, `eventRegistry.getEventDefinition` and the deprecated `teamBattleAdapter` alias. `utils/buildUserFilter` became `utils/realUserFilter` (`realUserFilter()`, the only filter production used). The pre-rename repair JSON keys (`totalRepairCosts`, `cost`, `preDiscountCost`) are no longer read: the 11 Nov 2026 rollover purged every row that carried them. `economyCalculations` no longer re-exports `economyFormulas`.
 - v1.24 (Nov 13, 2026, #591): module exports narrowed — symbols only their own module uses are no longer exported, barrel entries nobody imported were dropped, and type-only constant lists became union types (`BattleType`, `AutomatonAlertKind`, `TeamLeagueMode`, `PracticeOutcome`, `SearchCategory`). Removed as unused (with their tests where they had any): `cycleScheduler.triggerJob`, `createReservedSlotHandler`, `subscriptionService.hasSubscription`, `leagueHistoryService.checkCtrlZ`, `leagueInstanceService.getRobotsInInstance`/`moveRobotToInstance`, `leagueRebalancingService.determineDemotions`/`promoteRobot`/`demoteRobot`, the team-battle adapter's `determineTeamBattlePromotions`/`Demotions` and `promote`/`demoteTeamBattle`, `leagueEngine.determineDemotionsForInstance`, `teamTournamentService.createTeamTournament`, `tournamentService.getTournamentById`, `tournamentParticipantResolver.validateParticipantType`/`resolveParticipant`, `playerStables.isPlayerStable`, `koth/kothConfig.validateKothConfig`, `automatonImageService.isAutomatonUploadUrl`, the `recordExecutedSearch` wrapper, `vector2d.clampMagnitude`/`dotProduct`, `storageCalculations.hasStorageSpace`, `weaponValidation.isWeaponCompatibleWithLoadout`/`getValidLoadoutsForWeapon`, and unused constant lists (`SCHEDULER_RUN_STATUSES`/`TRIGGERS`, `SECURITY_SIGNALS`, `GOAL_TYPES`, `MATCHUP_VIEWS`, `PRACTICE_MATCHUPS`, `LEAGUE_SEASON_STABLE_FILTERS`).
 - v1.23 (Nov 13, 2026, #590): every backend service file over 800 lines split by responsibility, no behaviour change. Steps the battle orchestrators repeated moved to shared modules: `battle/battlePreparation` (robot loading, loadout fallbacks, tuning preparation), `battle/battleSummaryWriter`, `battle/placementBattleSteps` and `battle/placementMatchExecutor` (KotH and Grand Melee), `team-battle/teamBattlePostCombat` (team leagues and team tournaments). Mode files split out: `tournament/teamTournamentEntry`, `teamTournamentRewards`, `teamTournamentFinalization`, `tournamentForfeit`, `tournamentBattleRecord`, `tournamentBattleFinalization`, `tournamentBracket`, `tournamentCompletion`; `league/leagueBattleRecord`, `leagueByeAndForfeit`; `team-battle/teamBattleByeAndForfeit`; `admin/adminCycleSteps`; `cycle/cycleEventJobs`, `cycleSettlementJob`; `records/modeRecordsQueries`; `automaton/automatonProfileStore`, `automatonProfileQueries`, `turnStepLease`; `battle/combat-simulator/simulationPhases`; `achievement/triggerQueries`; `common/auditEventTypes`. Removed as unused: the inert `isPreparationPhase` stub in the tournament cycle jobs (always false; the scheduler already skips battle event jobs during a Preparation_Phase), the deprecated `_generateBracketPairs`, `_REPAIR_COST_PER_HP` and the unused league battle constants, and re-exports nobody imported (`getCurrentCycleNumber` from the league orchestrator, the profile rule names from `automatonProfileService`, the tournament cycles from `cycleScheduler`).
@@ -67,7 +68,6 @@ The backend currently contains **38 domain directories** under `app/backend/src/
 | `financial` | Financial reporting and reconciliation |
 | `grand-melee` | Grand Melee orchestration (shared placement steps and executor in `battle/`) |
 | `koth` | King of the Hill orchestration |
-| `leaderboard` | Leaderboard cache and reads |
 | `league` | League battles, instances, and rebalancing |
 | `match` | Battle and scheduled-match history |
 | `matchmaking` | Shared matchmaking utilities |
@@ -162,8 +162,7 @@ Data aggregation, leaderboards, and reporting. Read-only services that query acr
 | `robotStatsViewService` | Robot stats aggregation for display |
 | `cycleAnalyticsService` | Cycle comparison and trend analysis |
 | `facilityAnalyticsService` | Facility usage and ROI analytics |
-| `kothAnalyticsService` | KotH-specific analytics (placements, zone scores) |
-| `onboardingAnalyticsService` | Onboarding funnel metrics and event tracking |
+| `onboardingAnalyticsService` | Writes the onboarding events the frontend posts to the application log |
 | `trendHelpers` | Shared trend calculation utilities |
 
 ### arena/
@@ -237,7 +236,7 @@ Automated game loop — the scheduler and analytics snapshot system.
 | `cycleEventJobs`, `cycleSettlementJob` | The job bodies `cycleScheduler` registers: one battle-event job per slot, and settlement (closing, cutover, then generated-stable top-up, Automaton turns and the league instance re-deal) |
 | `schedulerRunStore` | Persistent run history: one `scheduler_processes` row per backend start with a 60 s heartbeat; `scheduler_job_runs` queued → running → success / failed / skipped; marks an earlier process's unfinished runs `interrupted`. All writes non-fatal |
 | `schedulerMissedRuns` | Pure: daily slots with no covering cron/resume run (15 min grace), with the downtime window when the backend was down |
-| `schedulerHistoryService` | Cycle Controls reads: `GET /api/admin/scheduler/overview` (status strip, slots with last run, missed runs), `GET /api/admin/scheduler/runs` (runs + restart markers + missed, paginated), `GET /api/admin/scheduler/runs/:id` |
+| `schedulerHistoryService` | Cycle Controls reads: `GET /api/admin/scheduler/overview` (status strip, slots with last run, missed runs), `GET /api/admin/scheduler/runs` (runs + restart markers + missed, paginated) |
 | `schedulerWindow` | Leaf module: `nextScheduledJobRunAt` from the configured cron schedules (null when the scheduler is off); feeds the Automaton Turn_Step deadline without importing `cycleScheduler` |
 | `cycleSnapshotService` | Aggregates AuditLog events into CycleSnapshot for fast analytics |
 

@@ -273,9 +273,6 @@ model Facility {
   level        Int    @default(0) // Current level (0-10, where 0 = not purchased)
   maxLevel     Int    @default(10) @map("max_level") // Maximum level (10 for most, 9 for Roster Expansion)
 
-  // ===== COACHING STAFF SPECIFIC =====
-  activeCoach String? @map("active_coach") @db.VarChar(50) // For coaching_staff: active coach type
-
   // ===== TIMESTAMPS =====
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -680,7 +677,8 @@ model CycleMetadata {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  // Feature flags for migration rollback safety (Spec #40)
+  // Settlement's financial cycle-closing markers (services/cycle/canonicalCycleIdentity).
+  // The name is historical: it held Spec #40 migration flags, which are all retired.
   featureFlags Json @default("{}") @map("feature_flags")
 
   @@map("cycle_metadata")
@@ -842,21 +840,6 @@ model ResetLog {
   @@index([userId])
   @@index([resetAt])
   @@map("reset_logs")
-}
-
-// Practice Arena daily stats — superseded by practice_arena_events (admin
-// Practice Arena redesign). No longer written; kept so the migration stays
-// additive. Rows from before the switch are emptied at the next rollover.
-model PracticeArenaDailyStats {
-  id            Int      @id @default(autoincrement())
-  date          DateTime @unique @db.Date
-  totalBattles  Int      @default(0)
-  uniquePlayers Int      @default(0)
-  rateLimitHits Int      @default(0)
-  playerIds     Json     @default("[]")
-  createdAt     DateTime @default(now())
-
-  @@map("practice_arena_daily_stats")
 }
 
 // One row per Practice Arena request (admin Practice Arena page): the battles
@@ -1393,22 +1376,6 @@ model FinancialLedger {
   @@index([robotId])
   @@index([cycleNumber])
   @@map("financial_ledger")
-}
-
-// Materialized leaderboard cache refreshed per cycle
-model LeaderboardCache {
-  id         Int      @id @default(autoincrement())
-  category   String   @db.VarChar(30) // fame, prestige, losses, koth_wins, koth_zone_score, career_wins, team_wins
-  rank       Int
-  entityType String   @map("entity_type") @db.VarChar(10) // "robot" or "user"
-  entityId   Int      @map("entity_id")
-  score      Float // The numeric value being ranked
-  generation Int      @default(0) // Swap semantics: readers use current gen, writers use next gen
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  @@index([category, generation, rank])
-  @@index([entityType, entityId])
-  @@map("leaderboard_cache")
 }
 
 // ===== SEASON SYSTEM (Spec #45) =====

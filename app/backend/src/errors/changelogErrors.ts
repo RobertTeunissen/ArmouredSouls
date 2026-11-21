@@ -13,7 +13,6 @@ import { AppError } from './AppError';
 /** All changelog error codes. */
 export const ChangelogErrorCode = {
   CHANGELOG_NOT_FOUND: 'CHANGELOG_NOT_FOUND',
-  CHANGELOG_VALIDATION_ERROR: 'CHANGELOG_VALIDATION_ERROR',
   CHANGELOG_IMAGE_ERROR: 'CHANGELOG_IMAGE_ERROR',
 } as const;
 

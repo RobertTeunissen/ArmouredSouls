@@ -26,6 +26,3 @@ export interface ArchivedFacility {
   facilityType: string;
   level: number;
 }
-
-/** Unlocked achievement identifiers held by `StableSeasonArchive.achievementIds`. */
-export type ArchivedAchievementIds = string[];

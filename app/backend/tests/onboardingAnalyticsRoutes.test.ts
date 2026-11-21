@@ -1,6 +1,5 @@
 /**
- * Tests for onboarding analytics routes
- * Verifies admin-only access to analytics summary endpoint
+ * Tests for the onboarding analytics route (signed-in players post their events).
  */
 import request from 'supertest';
 import express from 'express';
@@ -33,67 +32,32 @@ const JWT_SECRET = getConfig().jwtSecret;
  * non-admin case included, which made its 403 assertion unreachable.
  */
 describe('Onboarding Analytics Routes', () => {
-  let adminUserId: number;
   let playerUserId: number;
 
   const tokenFor = (userId: number, username: string, role: string): string =>
     jwt.sign({ userId, username, role, tokenVersion: 0 }, JWT_SECRET, { expiresIn: '1h' });
 
   beforeAll(async () => {
-    const stamp = Date.now();
-    const admin = await prisma.user.create({
-      data: { username: `onb_admin_${stamp}`, passwordHash: 'unused', role: 'admin' },
-    });
     const player = await prisma.user.create({
-      data: { username: `onb_player_${stamp}`, passwordHash: 'unused', role: 'player' },
+      data: { username: `onb_player_${Date.now()}`, passwordHash: 'unused', role: 'player' },
     });
-    adminUserId = admin.id;
     playerUserId = player.id;
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany({ where: { id: { in: [adminUserId, playerUserId] } } });
+    await prisma.user.deleteMany({ where: { id: playerUserId } });
   });
 
-  describe('GET /api/onboarding/analytics/summary', () => {
+  describe('POST /api/onboarding/analytics', () => {
     it('should return 401 when no token provided', async () => {
       const response = await request(app)
-        .get('/api/onboarding/analytics/summary');
+        .post('/api/onboarding/analytics')
+        .send({ events: [{ eventType: 'step_started', timestamp: new Date().toISOString() }] });
 
       expect(response.status).toBe(401);
       expect(response.body.error).toBe('Access token required');
     });
 
-    it('should return 403 when non-admin user tries to access', async () => {
-      const token = tokenFor(playerUserId, 'testuser', 'player');
-
-      const response = await request(app)
-        .get('/api/onboarding/analytics/summary')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(403);
-      expect(response.body.error).toBe('Admin access required');
-    });
-
-    it('should return 200 when admin user accesses', async () => {
-      const token = tokenFor(adminUserId, 'admin', 'admin');
-
-      const response = await request(app)
-        .get('/api/onboarding/analytics/summary')
-        .set('Authorization', `Bearer ${token}`);
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data).toBeDefined();
-      expect(response.body.data).toHaveProperty('totalEvents');
-      expect(response.body.data).toHaveProperty('uniqueUsers');
-      expect(response.body.data).toHaveProperty('completions');
-      expect(response.body.data).toHaveProperty('skips');
-      expect(response.body.data).toHaveProperty('stepCompletionCounts');
-    });
-  });
-
-  describe('POST /api/onboarding/analytics', () => {
     it('should allow authenticated users to post events', async () => {
       // Regular users should be able to post their own analytics events
       const token = tokenFor(playerUserId, 'testuser', 'player');

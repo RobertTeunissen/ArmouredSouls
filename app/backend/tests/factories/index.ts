@@ -33,13 +33,6 @@ export {
 export type { FinancialLedger, TransactionType } from './financialLedgerFactory';
 
 export {
-  createCacheEntry,
-  createLeaderboard,
-  LEADERBOARD_CATEGORIES,
-} from './leaderboardCacheFactory';
-export type { LeaderboardCache, LeaderboardCategory } from './leaderboardCacheFactory';
-
-export {
   createParticipant,
   createTagTeamParticipants,
   createKothParticipants,

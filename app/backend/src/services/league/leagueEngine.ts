@@ -191,37 +191,6 @@ function getPlanSelectors<T extends LeagueEntityBase>(adapter: LeagueAdapter<T>)
 }
 
 /**
- * Determine promotion candidates from the fixed top percentage of a complete
- * instance. The tier-level empty-destination cohort rule is applied by
- * `planLeagueTierRebalancing` when `buildTierPlanSnapshot` combines candidates
- * from every instance.
- */
-export async function determinePromotionsForInstance<T extends LeagueEntityBase>(
-  instanceId: string,
-  config: LeagueEngineConfig,
-  adapter: LeagueAdapter<T>,
-  excludeIds: Set<number>,
-): Promise<T[]> {
-  const tier = instanceId.split('_')[0];
-  const entities = await adapter.getEntitiesInInstance(instanceId, excludeIds);
-  const plan = planLeagueInstanceRebalancing(
-    instanceId,
-    tier,
-    entities,
-    config,
-    getPlanSelectors(adapter),
-  );
-
-  logger.info(
-    `[${config.logPrefix}] ${instanceId}: ${plan.promotionCandidates.length} promotion candidates `
-    + `from ${plan.promotionSlots} fixed slots (${plan.totalEntities} total, `
-    + `${plan.eligibleEntities} with ≥${config.minCyclesForRebalancing} cycles, `
-    + `threshold ≥${plan.minPromotionLP} LP)`,
-  );
-  return plan.promotionCandidates;
-}
-
-/**
  * Promote a single entity to the next tier.
  * LP is retained across promotions. Cycles counter is reset.
  */

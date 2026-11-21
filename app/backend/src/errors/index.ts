@@ -8,7 +8,6 @@ export * from './economyErrors';
 export * from './leagueErrors';
 export * from './tournamentErrors';
 export * from './tagTeamErrors';
-export * from './kothErrors';
 export * from './changelogErrors';
 export * from './subscriptionErrors';
 export * from './seasonErrors';

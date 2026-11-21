@@ -14,7 +14,6 @@ export {
   getBattleEconomicDisplay,
   isTeamBattleType,
 } from './battleFormatters';
-export type { BattlePerspective, BattleEconomicDisplay } from './battleFormatters';
 
 // Types
 export type ByeRewardStatus = 'expected' | 'awarded' | 'pending';

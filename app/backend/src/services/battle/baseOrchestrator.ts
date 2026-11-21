@@ -25,23 +25,6 @@ export type BattleType =
   | 'tournament_3v3'
   | 'grand_melee';
 
-/** Minimal context every battle mode needs before simulation. */
-export interface BattleContext {
-  /** The mode identifier stored in the Battle record. */
-  battleType: BattleType;
-  /** League tier (e.g. 'bronze', 'silver') or mode name for non-league modes. */
-  leagueType: string;
-  /** Arbitrary mode-specific metadata. */
-  metadata: Record<string, unknown>;
-}
-
-/** Common shape returned after a battle is recorded. */
-export interface BattleRecordRef {
-  battleId: number;
-  winnerId: number | null;
-  durationSeconds: number;
-}
-
 // ─── Shared Helpers ──────────────────────────────────────────────────
 
 /**

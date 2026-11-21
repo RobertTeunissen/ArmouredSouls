@@ -19,7 +19,7 @@ import { SubscriptionError, SubscriptionErrorCode } from '../../../src/errors/su
 
 // ── Mocks ────────────────────────────────────────────────────────────
 
-// Mock Prisma for subscribeRobot / unsubscribeRobot tests
+// Mock Prisma for subscribeRobot / setSubscriptionsForRobot tests
 const subscriptionStore = new Map<string, { robotId: number; eventType: string }>();
 let userCurrency = 100000;
 
@@ -100,8 +100,16 @@ jest.unmock('../../../src/services/subscription/eventRegistry');
 
 import {
   subscribeRobot,
-  unsubscribeRobot,
+  setSubscriptionsForRobot,
 } from '../../../src/services/subscription/subscriptionService';
+
+/** Robot 1 leaves one event: the bulk save with every other current subscription. */
+function unsubscribe(eventType: string): ReturnType<typeof setSubscriptionsForRobot> {
+  const remaining = [...subscriptionStore.values()]
+    .filter((s) => s.robotId === 1 && s.eventType !== eventType)
+    .map((s) => s.eventType);
+  return setSubscriptionsForRobot(1, remaining, 1);
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -219,7 +227,7 @@ describe('Subscription System Property-Based Tests', () => {
                 if (op.action === 'subscribe') {
                   await subscribeRobot(1, op.eventType, 1);
                 } else {
-                  await unsubscribeRobot(1, op.eventType, 1);
+                  await unsubscribe(op.eventType);
                 }
               } catch {
                 // Expected errors (cap exceeded, duplicate, not found) — continue
@@ -327,7 +335,7 @@ describe('Subscription System Property-Based Tests', () => {
                 if (op.action === 'subscribe') {
                   await subscribeRobot(1, op.eventType, 1);
                 } else {
-                  await unsubscribeRobot(1, op.eventType, 1);
+                  await unsubscribe(op.eventType);
                 }
               } catch {
                 // Expected errors — continue
@@ -385,7 +393,7 @@ describe('Subscription System Property-Based Tests', () => {
             expect(mockEnsureStandingsForSubscriptionGain).toHaveBeenCalledWith(mockTx, 1, [eventType]);
             expect(mockLockRobotTeamMembership).toHaveBeenCalledTimes(eventType === 'tag_team' ? 1 : 0);
 
-            const result = await unsubscribeRobot(1, eventType, 1);
+            const result = await unsubscribe(eventType);
 
             expect(result.removed).toEqual([eventType]);
             expect(subscriptionStore.has(`1:${eventType}`)).toBe(false);

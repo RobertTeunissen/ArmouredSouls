@@ -39,12 +39,6 @@ export interface ZoneOccupationResult {
 
 // ─── Config Validation Result ───────────────────────────────────────
 
-/** Result of validating a KotH match configuration */
-export interface KothConfigValidationResult {
-  valid: boolean;
-  errors: string[];
-}
-
 // ─── KotH Score State ───────────────────────────────────────────────
 
 /** Runtime scoring state tracked throughout a KotH match */
@@ -66,19 +60,6 @@ export interface KothScoreState {
 }
 
 // ─── KotH Combat Event ─────────────────────────────────────────────
-
-/** KotH-specific event types extending the base CombatEvent */
-export type KothEventType =
-  | 'zone_defined'
-  | 'zone_enter'
-  | 'zone_exit'
-  | 'score_tick'
-  | 'kill_bonus'
-  | 'robot_eliminated'
-  | 'passive_warning'
-  | 'passive_penalty'
-  | 'last_standing'
-  | 'match_end';
 
 /** Placement entry for final match results */
 export interface KothPlacement {

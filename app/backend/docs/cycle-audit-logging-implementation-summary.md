@@ -107,7 +107,6 @@ This document summarizes the implementation of the Cycle-Based Audit Logging and
 Current (Nov 2026; the stable summary, robot performance, single-facility ROI, cycle performance, integrity and event-statistics endpoints listed here originally were removed as unused):
 - `GET /api/analytics/cycle/current` - Get current cycle number
 - `GET /api/analytics/robot/:robotId/metric/:metricName` - Metric progression
-- `GET /api/analytics/robot/:id/koth-performance` - KotH performance
 - `GET /api/analytics/facility/:userId/roi/all-economic` - ROI of every economic facility
 - `GET /api/analytics/facility/:userId/recommendations` - Investment recommendations
 

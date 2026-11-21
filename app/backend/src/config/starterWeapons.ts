@@ -14,5 +14,3 @@ export const STARTER_WEAPON_NAMES = [
   'Training Rifle',
   'Training Beam',
 ] as const;
-
-export type StarterWeaponName = (typeof STARTER_WEAPON_NAMES)[number];

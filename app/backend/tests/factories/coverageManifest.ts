@@ -969,7 +969,7 @@ export const COVERAGE_MANIFEST: CoverageManifest = {
     },
   ],
   subscriptionBoundary: {
-    currentSource: { file: 'app/backend/src/services/subscription/subscriptionService.ts', symbol: 'applySubscriptionChange / subscribeRobot / unsubscribeRobot' },
+    currentSource: { file: 'app/backend/src/services/subscription/subscriptionService.ts', symbol: 'applySubscriptionChange / subscribeRobot / setSubscriptionsForRobot' },
     eventTypes: BATTLE_MODES,
     finalService: 'Booking_Office',
     financialOutput: 'none',

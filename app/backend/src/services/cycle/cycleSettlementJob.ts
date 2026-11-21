@@ -160,16 +160,6 @@ export async function executeSettlement(): Promise<JobContext> {
     logger.error(`Daily Settlement: Failed to refresh achievement rarity cache — ${err instanceof Error ? err.message : String(err)}`);
   }
 
-  // Step 8: Refresh leaderboard cache (Spec #40)
-  // Runs after all battle results and standings updates are complete
-  try {
-    const { leaderboardService } = await import('../leaderboard/leaderboardService');
-    await leaderboardService.refreshAll();
-    logger.info('Daily Settlement: Leaderboard cache refreshed');
-  } catch (err) {
-    logger.error(`Daily Settlement: Failed to refresh leaderboard cache — ${err instanceof Error ? err.message : String(err)}`);
-  }
-
   // Admin dashboard trend data: human-player activity counts for the closed
   // cycle. Non-fatal by construction (the helper logs and swallows its errors);
   // the import is guarded too so a module-load failure cannot fail settlement.

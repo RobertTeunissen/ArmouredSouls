@@ -61,12 +61,6 @@ export interface LeagueHistoryRecord {
   stableName?: string;
 }
 
-export interface CtrlZResult {
-  found: boolean;
-  demotionCycle?: number;
-  promotionCycle?: number;
-}
-
 // --- Helper Functions ---
 
 /**

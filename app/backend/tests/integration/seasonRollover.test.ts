@@ -391,7 +391,6 @@ describe('Season Rollover Integration', () => {
       expect(await prisma.standing.count()).toBe(0);
       expect(await prisma.battle.count()).toBe(0);
       expect(await prisma.auditLog.count()).toBe(0);
-      expect(await prisma.leaderboardCache.count()).toBe(0);
 
       // Cycle counter reset and next season open in preparation.
       const meta = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });

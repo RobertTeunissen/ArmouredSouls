@@ -18,9 +18,6 @@ import { WeaponLike } from '../../arena/rangeBands';
 // Re-export arena types used by other sub-modules
 export type { SpatialRobotCombatState, SpatialCombatEvent, SpatialCombatResult, RangeBand, ArenaConfig, GameModeConfig, GameModeState, Position, WeaponLike };
 
-/** Type alias for GameModeState used in spatial context */
-export type SpatialGameModeState = GameModeState;
-
 /**
  * Combat Simulator - Implements time-based combat formulas from ROBOT_ATTRIBUTES.md
  * Enhanced with 2D spatial arena mechanics.

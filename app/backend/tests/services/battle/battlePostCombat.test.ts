@@ -79,10 +79,6 @@ jest.mock('../../../src/services/achievement/achievementService', () => ({
   default: { checkAndAward: jest.fn().mockResolvedValue([]) },
 }));
 
-jest.mock('../../../src/services/migration/featureFlags', () => ({
-  isEnabled: jest.fn().mockReturnValue(true),
-}));
-
 import {
   updateRobotCombatStats,
   awardPrestigeToUser,

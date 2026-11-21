@@ -29,48 +29,12 @@ type ParticipantWithBattle = Prisma.BattleParticipantGetPayload<{
 }>;
 
 /**
- * Robot performance summary interface
- */
-export interface RobotPerformanceSummary {
-  robotId: number;
-  cycleRange: [number, number];
-  battlesParticipated: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  winRate: number; // Percentage (0-100)
-  damageDealt: number;
-  damageReceived: number;
-  totalCreditsEarned: number;
-  totalFameEarned: number;
-  totalRepairCosts: number;
-  kills: number;
-  destructions: number;
-  eloChange: number;
-  eloStart: number;
-  eloEnd: number;
-}
-
-/**
  * ELO progression data point
  */
 export interface ELODataPoint {
   cycleNumber: number;
   elo: number;
   change: number;
-}
-
-/**
- * ELO progression data
- */
-export interface ELOProgressionData {
-  robotId: number;
-  cycleRange: [number, number];
-  dataPoints: ELODataPoint[];
-  startElo: number;
-  endElo: number;
-  totalChange: number;
-  averageChange: number;
 }
 
 /**

@@ -34,8 +34,6 @@ export const LEGACY_TRANSACTION_TYPES = [
   'settlement_adjustment',
 ] as const;
 
-export type LegacyTransactionType = (typeof LEGACY_TRANSACTION_TYPES)[number];
-
 export type FinancialInputValue = string | number | boolean | null;
 
 export interface FinancialInput {

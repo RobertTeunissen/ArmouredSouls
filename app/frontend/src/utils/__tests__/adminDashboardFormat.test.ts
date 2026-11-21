@@ -14,9 +14,10 @@ import {
   formatUtcTime,
   jobLabel,
   modeLabel,
-  TIME,
 } from '../adminDashboardFormat';
 import type { DashboardStatus } from '@shared/types';
+
+const TIME = { MINUTE: 60_000, HOUR: 3_600_000, DAY: 86_400_000 } as const;
 
 const NOW = new Date('2026-10-22T14:00:00.000Z');
 

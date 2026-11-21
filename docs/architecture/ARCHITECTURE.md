@@ -155,7 +155,6 @@ The backend currently contains 36 service directories under `app/backend/src/ser
 | `financial` | Financial reporting, ledger reads, and reconciliation |
 | `grand-melee` | Grand Melee orchestration and rewards |
 | `koth` | King of the Hill orchestration and matchmaking |
-| `leaderboard` | Materialized leaderboard reads and refreshes |
 | `league` | League orchestration, instances, and rebalancing |
 | `match` | Battle history and scheduled-match reads |
 | `matchmaking` | Shared matchmaking utilities |
@@ -243,7 +242,7 @@ Current contracts (#592 moved the facilities, finance, battle log, subscription,
 | `finance-report.ts` | Finance Center: `/api/finances/report`, `/history`, `/robots`, `/robots/:id/events` |
 | `facility-roi.ts` | `/api/analytics/facility/:userId/roi/all-economic`, `/recommendations` |
 | `battle-log.ts` | `/api/matches/battles/:id/log` (`battleLog` is null once the stored log is pruned) |
-| `subscriptions.ts` | `/api/subscriptions/overview`, `/registry`, subscribe/unsubscribe/replace |
+| `subscriptions.ts` | `/api/subscriptions/overview`, `/registry`, subscribe one event, replace a robot's set |
 | `seasons.ts` | `/api/seasons/*` (state, archive, stable history) and admin Season Control |
 | `robot-setup.ts` | scheduling eligibility report |
 | `achievements.ts` | `AchievementTier`, `AchievementCategory`; `/api/achievements` (`AchievementsResponse`), unlock toasts (`UnlockedAchievement`), the stable page's pins and showcase |
@@ -282,7 +281,6 @@ The Prisma schema contains the current live and archive models. Key models inclu
 | `CycleMetadata` / `CycleSnapshot` | Global cycle state and historical aggregates |
 | `AuditLog` / `AdminAuditLog` | Game-event and administrative audit trails |
 | `FinancialLedger` | Append-only current-economy accounting records |
-| `LeaderboardCache` | Materialized leaderboard results |
 | `Season` and archive models | Current season state and cross-season history |
 | `Subscription` | Booking Office event subscriptions |
 | `ChangelogEntry`, `UserAchievement`, and `TuningAllocation` | Current progression and player-facing systems |
