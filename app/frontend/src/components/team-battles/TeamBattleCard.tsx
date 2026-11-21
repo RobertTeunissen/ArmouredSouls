@@ -65,9 +65,14 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap, onSwapPositions }: 
           <div className="flex items-center gap-2">
             <span className="text-warning">🔒</span>
             <span className="text-warning text-sm font-semibold">
-              Team locked — battle scheduled
+              Members locked — battle scheduled
             </span>
           </div>
+          {team.teamSize === 2 && (
+            <p className="text-warning/80 text-xs mt-1">
+              You can still swap Active and Reserve.
+            </p>
+          )}
         </div>
       )}
 
@@ -124,7 +129,7 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap, onSwapPositions }: 
               onClick={(e) => { e.stopPropagation(); onSwap(member); }}
               disabled={isLocked}
               className="absolute top-2 right-2 text-xs bg-surface-elevated border border-white/20 text-secondary hover:text-white hover:border-primary/50 px-2 py-1 rounded transition-all min-h-[32px] disabled:opacity-50 disabled:cursor-not-allowed"
-              title={isLocked ? 'Cannot swap while battle is scheduled' : 'Replace member'}
+              title={isLocked ? 'Cannot replace a member while a battle is scheduled' : 'Replace member'}
             >
               🔄
             </button>
@@ -135,11 +140,11 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap, onSwapPositions }: 
       {/* Swap Positions button (Active ↔ Reserve) — only for 2v2 teams */}
       {team.teamSize === 2 && team.members.length === 2 && (
         <div className="flex justify-center mb-4">
+          {/* Allowed while a battle is scheduled: same two robots, only the order changes. */}
           <button
             onClick={onSwapPositions}
-            disabled={isLocked}
-            className="text-xs bg-surface border border-white/20 text-secondary hover:text-white hover:border-primary/50 px-3 py-1.5 rounded-lg transition-all min-h-[32px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-            title={isLocked ? 'Cannot swap while battle is scheduled' : 'Swap Active ↔ Reserve positions'}
+            className="text-xs bg-surface border border-white/20 text-secondary hover:text-white hover:border-primary/50 px-3 py-1.5 rounded-lg transition-all min-h-[32px] flex items-center gap-1.5"
+            title="Swap Active ↔ Reserve positions"
           >
             <span>⇅</span> Swap Active / Reserve
           </button>

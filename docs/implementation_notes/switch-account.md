@@ -32,13 +32,16 @@ Authentication is a single JWT held in `localStorage['token']`, rehydrated by
 
 A saved JWT is best-effort. It can be:
 
-- **expired** (24h lifetime), or
+- **expired** (`JWT_EXPIRATION`: 30d on acceptance, 24h elsewhere, counted from
+  the login that saved it; tokens are not renewed), or
 - **revoked** by a `tokenVersion` bump (e.g. after a password change), or
 - rejected because the account became an `automaton` stable.
 
 In all these cases the backend answers the profile read with `401`. `switchAccount`
-then tears the half-applied session down with `logout()`, drops the dead entry from
-the saved list, and rejects. The navbar handler catches that rejection and sends the
+then tears the half-applied session down with `logout({ keepSavedAccount: true })`,
+drops only the dead target entry from the saved list, and rejects. The outgoing
+account's entry is kept: its token is still valid, and forgetting it would make one
+expired stable cost a second password entry. The navbar handler catches that rejection and sends the
 player to the login form to authenticate as that account again. No stale session or
 cross-account store data is left behind.
 

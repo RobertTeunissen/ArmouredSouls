@@ -455,6 +455,12 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
   // The result updater reloads the robots with their stored loadout, so it
   // needs to know which ones fought as single (no dual-wield win for them).
   result.loadoutFallbackRobotIds = loadoutFallbackRobotIds;
+  // The team order may have changed since the job loaded the match (Active /
+  // Reserve swaps are allowed while scheduled); record the order fought with.
+  result.lineup = {
+    team1: { activeRobotId: team1.activeRobotId, reserveRobotId: team1.reserveRobotId },
+    team2: { activeRobotId: team2.activeRobotId, reserveRobotId: team2.reserveRobotId },
+  };
 
   // The bye draw-override that used to sit here is gone (Spec #49 R12.7). It
   // existed only to correct a simulation that should not have run for a bye;

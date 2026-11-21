@@ -2,7 +2,7 @@
 title: "Tag Team Battles"
 description: "How Tag Team combat works — phased 1v1 battles with tag-in mechanics, Active/Reserve roles, rewards, LP, and how it differs from simultaneous 2v2 League."
 order: 2
-lastUpdated: "2026-11-06"
+lastUpdated: "2026-11-21"
 relatedArticles:
   - team-battles/overview
   - facilities/booking-office
@@ -34,7 +34,7 @@ Your team's slot order determines the roles:
 - **Slot 1** (first member) = **Active** — starts the fight
 - **Slot 2** (second member) = **Reserve** — tags in when Active yields or is destroyed
 
-You can swap slot positions on the [Team Battles](/team-battles) page to change which robot leads.
+You can swap slot positions on the [Team Battles](/team-battles) page to change which robot leads, also while a battle is scheduled. The battle uses the order at the moment it starts. Replacing a member with a different robot stays blocked until the scheduled battle is done.
 
 ```callout-tip
 Position your tankier robot in Slot 1 (Active) to absorb early damage, and a high-damage robot in Slot 2 (Reserve) to finish off a weakened opponent. Or do the opposite — lead with a glass cannon to deal burst damage, then tag in a defensive robot to clean up.

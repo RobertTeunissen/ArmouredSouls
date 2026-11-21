@@ -18,6 +18,12 @@ export interface TagTeamWithRobots {
   updatedAt: Date;
 }
 
+/** The Active and Reserve robot of one team in one battle. */
+export interface TagTeamLineup {
+  activeRobotId: number;
+  reserveRobotId: number;
+}
+
 export interface TagTeamBattleResult {
   battleId: number;
   winnerId: number | null;
@@ -26,6 +32,15 @@ export interface TagTeamBattleResult {
   isForfeit?: boolean;
   /** Robots that fought as `single` because their loadout was incomplete (rule 6); their stored loadout is unchanged. */
   loadoutFallbackRobotIds?: number[];
+  /**
+   * Active / Reserve robots each team fought with. A player may swap Active and
+   * Reserve while a match is scheduled, so the result updater books the result
+   * against this line-up, not the team order loaded when the job started.
+   */
+  lineup?: {
+    team1: TagTeamLineup;
+    team2: TagTeamLineup;
+  };
   durationSeconds: number;
   team1TagOutTime?: number;
   team2TagOutTime?: number;

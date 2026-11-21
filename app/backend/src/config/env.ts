@@ -285,9 +285,9 @@ export interface EnvConfig {
 /** Token lifetime everywhere except acceptance. */
 const DEFAULT_JWT_EXPIRATION = '24h';
 /**
- * Token lifetime on acceptance (ACC, #615). ACC holds only test accounts, so
- * testers stay logged in for 30 days instead of re-entering every stable's
- * password daily. Production keeps the 24h default.
+ * Token lifetime on acceptance (ACC, #615). ACC is the running game: players
+ * stay logged in for 30 days instead of re-entering every stable's password
+ * daily. Other environments keep the 24h default.
  */
 const ACCEPTANCE_JWT_EXPIRATION = '30d';
 

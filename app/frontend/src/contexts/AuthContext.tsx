@@ -323,7 +323,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
    *
    * On failure (the saved token is expired or `tokenVersion`-revoked, so
    * `/api/user/profile` answers a definitive 401), the half-applied session is
-   * torn down with `logout()`, the dead entry is dropped, and the error is
+   * torn down (keeping the outgoing account's saved entry), the dead target
+   * entry is dropped, and the error is
    * re-thrown so the caller can route the player to the login form. A
    * non-definitive failure (network/proxy) keeps the saved entry so a transient
    * outage does not force re-entering the password.
@@ -359,7 +360,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // saved entry is dead. Only a definitive backend 401 proves the token is
       // invalid; a network/proxy failure keeps the entry for a retry.
       log.warn('Saved account switch failed; falling back to login', { userId: account.userId });
-      logout();
+      // Keep the OUTGOING account's saved credential: its token is still valid,
+      // and a plain logout() would forget it, so one expired stable would force
+      // re-entering the password for the stable the player was just using too.
+      logout({ keepSavedAccount: true });
       if (isDefinitiveAuthRejection(error)) {
         try {
           removeSavedAccount(account.userId);

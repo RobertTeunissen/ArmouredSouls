@@ -143,6 +143,37 @@ describe('AuthContext.switchAccount', () => {
     expect(removeSpy).toHaveBeenCalledWith(2);
   });
 
+  it('keeps the outgoing account saved when switching to an expired account', async () => {
+    // Signed in as alice; bob's saved token has expired. The failed switch must
+    // forget only bob, not alice, whose token is still valid.
+    localStorage.setItem('token', 'tok-alice');
+    vi.mocked(api.get)
+      .mockResolvedValueOnce({
+        id: 1,
+        username: 'alice',
+        email: null,
+        role: 'user',
+        currency: 100,
+        prestige: 0,
+        stableName: 'Iron Wolves',
+      } as never)
+      .mockRejectedValueOnce(new ApiError('Invalid or expired token', 'UNAUTHORIZED', 401));
+    vi.spyOn(savedAccounts, 'saveAccount').mockReturnValue([]);
+    const removeSpy = vi.spyOn(savedAccounts, 'removeSavedAccount').mockReturnValue([]);
+
+    renderHarness();
+    await waitFor(() => expect(screen.getByTestId('user')).toHaveTextContent('alice'));
+
+    await act(async () => {
+      screen.getByText('switch').click();
+    });
+
+    await waitFor(() => expect(screen.getByTestId('err')).toHaveTextContent(/log in again/i));
+    expect(localStorage.getItem('token')).toBeNull();
+    expect(removeSpy).toHaveBeenCalledWith(2);
+    expect(removeSpy).not.toHaveBeenCalledWith(1);
+  });
+
   it('remembers the account on a successful session restore (refreshUser path)', async () => {
     // Normal sign-in and session restore go through refreshUser, not login, so
     // refreshUser must be what populates the saved-accounts list.

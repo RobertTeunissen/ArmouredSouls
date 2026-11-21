@@ -54,7 +54,7 @@ Security is enforced at multiple layers: input validation at the API boundary (Z
 
 ### JWT Tokens
 - **Library**: `jsonwebtoken`
-- **Expiration**: Configurable via `JWT_EXPIRATION` env var (default: `24h`; `30d` on acceptance, which holds only test accounts)
+- **Expiration**: Configurable via `JWT_EXPIRATION` env var (default: `24h`; `30d` on acceptance, the running game, #615)
 - **Secret**: `JWT_SECRET` env var (required in production, falls back to dev default locally)
 - **Payload**: `{ userId, username, role, tokenVersion }`
 - **Token version**: Incremented on password change to invalidate all existing tokens

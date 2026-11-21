@@ -88,6 +88,7 @@ jest.mock('../../../src/services/standings/standingPlacement', () => ({
 import {
   registerTeam,
   swapTeamMember,
+  swapPositions,
   renameTeam,
   disbandTeam,
 } from '../../../src/services/team-battle/teamBattleService';
@@ -415,6 +416,50 @@ describe('teamBattleService', () => {
 
       await expect(swapTeamMember(1, 10, 20, 100)).rejects.toBeInstanceOf(TeamBattleError);
       expect(mockEnsureTeamStandings).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── swapPositions ────────────────────────────────────────────────
+
+  describe('swapPositions', () => {
+    it('swaps Active and Reserve while a battle is scheduled', async () => {
+      mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam());
+      mockTx.scheduledMatchParticipant.count.mockResolvedValue(1);
+      mockTx.teamBattleMember.update.mockResolvedValue({});
+
+      await expect(swapPositions(1, 100)).resolves.toBeUndefined();
+
+      const updates = mockTx.teamBattleMember.update.mock.calls.map(([arg]) => arg);
+      expect(updates).toEqual([
+        { where: { id: 1 }, data: { slotIndex: 99 } },
+        { where: { id: 2 }, data: { slotIndex: 0 } },
+        { where: { id: 1 }, data: { slotIndex: 1 } },
+      ]);
+    });
+
+    it('rejects another stable with a generic 403', async () => {
+      mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam({ stableId: 999 }));
+
+      await expect(swapPositions(1, 100)).rejects.toMatchObject({
+        code: TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION,
+        statusCode: 403,
+      });
+      expect(mockTx.teamBattleMember.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects a 3v3 team', async () => {
+      mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam({
+        teamSize: 3,
+        members: [
+          { id: 1, robotId: 10, slotIndex: 0 },
+          { id: 2, robotId: 11, slotIndex: 1 },
+          { id: 3, robotId: 12, slotIndex: 2 },
+        ],
+      }));
+
+      await expect(swapPositions(1, 100)).rejects.toMatchObject({
+        code: TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
+      });
     });
   });
 

@@ -2,7 +2,7 @@
 title: "Team Battles Overview"
 description: "How 2v2 and 3v3 League Team Battles work — team registration, simultaneous combat, coordination effects, matchmaking, rewards, and daily schedule."
 order: 1
-lastUpdated: "2026-11-19"
+lastUpdated: "2026-11-21"
 relatedArticles:
   - facilities/booking-office
   - leagues/matchmaking
@@ -63,11 +63,12 @@ You can form a team at any time — **no subscription is needed** to register. S
 From the [Team Battles](/team-battles) page you can:
 
 - **Swap a member** — Replace one robot with any other robot of yours that isn't already on a team of that size (blocked while a battle is scheduled). The team keeps its tier and LP; if the new robot isn't subscribed yet, subscribe it so the team can be matched again
+- **Swap Active / Reserve** (2-robot teams) — Switch the order of your two robots for [Tag Team](/guide/team-battles/tag-team). Allowed at any time, also while a battle is scheduled; the next battle uses the order you set
 - **Rename** — Change your team's name at any time
 - **Disband** — Delete the team entirely, including its tier and LP (blocked while a battle is scheduled). A team registered later starts again in Bronze
 
 ```callout-warning
-You cannot swap members or disband a team while it has a scheduled battle. Wait for the battle to complete, then make changes before the next matchmaking window.
+You cannot replace a member or disband a team while it has a scheduled battle. Wait for the battle to complete, then make changes before the next matchmaking window. Swapping Active and Reserve is still allowed, because the team keeps the same two robots.
 ```
 
 ### Incomplete Rosters

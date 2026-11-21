@@ -21,8 +21,10 @@ import { stableTypeForCreation } from './stableType';
  * Since Oct 2026 the population is a fixed target (`GENERATED_STABLE_TARGET`,
  * default 150) instead of N new stables on cycle N. Automatons fill the 1v1,
  * 2v2, Tag Team and KotH leagues; generated stables fill what they leave
- * short: the 3v3 league, Grand Melee and all three tournaments, so every
- * tournament opens the season with at least 128 entrants. Tournaments are the
+ * short: the 3v3 league, Grand Melee and all three tournaments. The tier sets
+ * both strength and roster size (WimpBot 3 robots, AverageBot 2, ExpertBot 1),
+ * so no filler stable fields more than a human could build from the starting
+ * balance; only WimpBot stables have a 3v3 team. Tournaments are the
  * cheapest events to fill (one bracket costs entrants − 1 battles in total),
  * leagues the dearest (about half a battle per entry every cycle), so the
  * filler stables enter no other league. Sizing: PRD_AUTO_USER_GENERATION.md.
@@ -33,20 +35,12 @@ import { stableTypeForCreation } from './stableType';
 /** Default size of the generated-stable population (`GENERATED_STABLE_TARGET`). */
 export const GENERATED_STABLE_TARGET_DEFAULT = 150;
 
-/** Every filler stable has three robots: one 3v3 team, one 2v2 team. */
-export const FILLER_ROBOTS_PER_STABLE = 3;
-
-/** Events every robot of a filler stable holds. */
-const FILLER_SHARED_EVENTS = ['league_3v3', 'tournament_3v3', 'tournament_1v1'] as const;
-/** Fourth event per robot slot: slots 0–1 form the 2v2 tournament team, slot 2 enters Grand Melee. */
-const FILLER_SLOT_EVENT = ['tournament_2v2', 'tournament_2v2', 'grand_melee'] as const;
-
 const LOADOUT_TYPES = ['single', 'weapon_shield', 'dual_wield', 'two_handed'] as const;
 const RANGE_BANDS = ['melee', 'short', 'mid', 'long'] as const;
 const STANCES = ['balanced', 'offensive', 'defensive'] as const;
 
 /** Every generated username starts with one of these (`auto_wimpbot_0001`, …). */
-const TIER_PREFIX: Record<TierConfig['name'], string> = {
+export const TIER_PREFIX: Record<TierConfig['name'], string> = {
   WimpBot: 'auto_wimpbot',
   AverageBot: 'auto_averagebot',
   ExpertBot: 'auto_expertbot',
@@ -54,8 +48,18 @@ const TIER_PREFIX: Record<TierConfig['name'], string> = {
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
+/** Max HP of a generated robot at attribute `level`. */
+export function generatedMaxHP(level: number): number {
+  return 50 + Math.floor(level * 5);
+}
+
+/** Max shield of a generated robot at attribute `level`. */
+export function generatedMaxShield(level: number): number {
+  return Math.floor(level * 4);
+}
+
 /** Build an attributes object with all 23 robot attributes set to `level`. */
-function buildAttributes(level: number): Record<string, number> {
+export function buildAttributes(level: number): Record<string, number> {
   return {
     combatPower: level,
     targetingSystems: level,
@@ -99,9 +103,21 @@ export function getGeneratedStableTarget(): number {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : GENERATED_STABLE_TARGET_DEFAULT;
 }
 
-/** The four events (the Booking Office L1 cap) the filler robot in `slot` (0–2) holds. */
-export function fillerSubscriptionsFor(slot: number): string[] {
-  return [...FILLER_SHARED_EVENTS, FILLER_SLOT_EVENT[slot]];
+/**
+ * Events the filler robot in `slot` (0-based) of a `robotCount`-robot stable
+ * holds, at most four (the Booking Office L1 cap):
+ * - every robot: the 1v1 tournament;
+ * - three-robot stables: the 3v3 league and tournament (their 3v3 team);
+ * - robots 1–2 of a two- or three-robot stable: the 2v2 tournament (their 2v2 team);
+ * - the stable's last robot: Grand Melee.
+ */
+export function fillerSubscriptionsFor(slot: number, robotCount: TierConfig['robotCount']): string[] {
+  const events: string[] = [];
+  if (robotCount === 3) events.push('league_3v3', 'tournament_3v3');
+  events.push('tournament_1v1');
+  if (robotCount >= 2 && slot < 2) events.push('tournament_2v2');
+  if (slot === robotCount - 1) events.push('grand_melee');
+  return events;
 }
 
 function emptyResult(): TieredGenerationResult {
@@ -130,9 +146,11 @@ export async function countGeneratedStables(): Promise<number> {
 
 /**
  * Create `count` filler stables, split evenly over the WimpBot / AverageBot /
- * ExpertBot attribute levels (1 / 5 / 10). Each stable: three armed robots,
- * Booking Office L1, the filler subscriptions, a 3v3 team (3v3 league and
- * tournament) and a 2v2 team of robots 1–2 (2v2 tournament only).
+ * ExpertBot tiers (attribute level 1 / 5 / 10, 3 / 2 / 1 armed robots). Each
+ * stable: Booking Office L1 and the filler subscriptions
+ * (`fillerSubscriptionsFor`); a three-robot stable also gets a 3v3 team (3v3
+ * league and tournament), a stable of two or more a 2v2 team of robots 1–2
+ * (2v2 tournament only).
  *
  * Each stable is created in its own transaction; a failed stable is logged and
  * skipped. Teams are registered afterwards through `registerTeam`, which places
@@ -207,7 +225,7 @@ export async function createGeneratedStables(count: number): Promise<TieredGener
           await tx.facility.create({ data: { userId: user.id, facilityType: 'booking_office', level: 1 } });
 
           const robotIds: number[] = [];
-          for (let slot = 0; slot < FILLER_ROBOTS_PER_STABLE; slot++) {
+          for (let slot = 0; slot < tier.robotCount; slot++) {
             const loadoutType = randomElement(LOADOUT_TYPES);
             const rangeBand = randomElement(RANGE_BANDS);
             const stance = randomElement(STANCES);
@@ -250,8 +268,8 @@ export async function createGeneratedStables(count: number): Promise<TieredGener
             }
             robotCountsByNamePrefix[namePrefix]++;
 
-            const maxHP = 50 + Math.floor(tier.attributeLevel * 5);
-            const maxShield = Math.floor(tier.attributeLevel * 4);
+            const maxHP = generatedMaxHP(tier.attributeLevel);
+            const maxShield = generatedMaxShield(tier.attributeLevel);
             const robot = await tx.robot.create({
               data: {
                 userId: user.id,
@@ -273,7 +291,7 @@ export async function createGeneratedStables(count: number): Promise<TieredGener
               },
             });
 
-            const subscriptions = fillerSubscriptionsFor(slot);
+            const subscriptions = fillerSubscriptionsFor(slot, tier.robotCount);
             await tx.subscription.createMany({
               data: subscriptions.map((eventType) => ({ robotId: robot.id, eventType, status: 'active' })),
               skipDuplicates: true,
@@ -299,19 +317,23 @@ export async function createGeneratedStables(count: number): Promise<TieredGener
 
       // Teams after the transaction (registerTeam runs its own, R15.5). A failed
       // team is logged and skipped; the stable keeps its robots.
-      try {
-        await registerTeam(created.userId, created.robotIds, `${created.stableName} 3v3`, 3, created.userId);
-        totalLeague3v3TeamsCreated++;
-      } catch (teamError) {
-        const errorCode = (teamError as { code?: string }).code || 'UNKNOWN';
-        logger.warn(`[UserGeneration] Failed to create 3v3 team for ${username}: ${errorCode} - ${teamError}`);
+      if (created.robotIds.length === 3) {
+        try {
+          await registerTeam(created.userId, created.robotIds, `${created.stableName} 3v3`, 3, created.userId);
+          totalLeague3v3TeamsCreated++;
+        } catch (teamError) {
+          const errorCode = (teamError as { code?: string }).code || 'UNKNOWN';
+          logger.warn(`[UserGeneration] Failed to create 3v3 team for ${username}: ${errorCode} - ${teamError}`);
+        }
       }
-      try {
-        await registerTeam(created.userId, created.robotIds.slice(0, 2), `${created.stableName} 2v2`, 2, created.userId);
-        totalLeague2v2TeamsCreated++;
-      } catch (teamError) {
-        const errorCode = (teamError as { code?: string }).code || 'UNKNOWN';
-        logger.warn(`[UserGeneration] Failed to create 2v2 team for ${username}: ${errorCode} - ${teamError}`);
+      if (created.robotIds.length >= 2) {
+        try {
+          await registerTeam(created.userId, created.robotIds.slice(0, 2), `${created.stableName} 2v2`, 2, created.userId);
+          totalLeague2v2TeamsCreated++;
+        } catch (teamError) {
+          const errorCode = (teamError as { code?: string }).code || 'UNKNOWN';
+          logger.warn(`[UserGeneration] Failed to create 2v2 team for ${username}: ${errorCode} - ${teamError}`);
+        }
       }
 
       if (usernames.length % 25 === 0) {

@@ -1,11 +1,12 @@
 # Product Requirements Document: Generated Stables (Auto-User Generation)
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v3.0
-**Date**: October 28, 2026
+**Version**: v3.1
+**Date**: November 21, 2026
 **Status**: ✅ Implemented
 ---
 ## Version History
+- v3.1 - Roster size follows the tier again: WimpBot 3 robots, AverageBot 2, ExpertBot 1. v3.0 gave every tier three robots, so 50 stables of three level-10 robots with premium weapons (far beyond a new human stable's starting credits) led the 3v3 league. Only WimpBot stables have a 3v3 team now. The 100 three-robot AverageBot/ExpertBot stables already in ACC Season 2 were converted in place to WimpBot stables (attributes, HP/shield, weapons, names, portraits, usernames), keeping their battles, records, standings and teams, with the one-off `scripts/convertGeneratedStablesToWimpBot.ts` (November 21, 2026)
 - v3.0 - Fixed population instead of growth: settlement tops the generated stables up to `GENERATED_STABLE_TARGET` (default 150), including on preparation days, and every generated stable is a three-robot filler stable with fixed subscriptions (3v3 league and tournament, 1v1 and 2v2 tournament, Grand Melee). Replaces "N stables on cycle N" (October 28, 2026)
 - v2.1 - Standings follow the unified creation rule: robot rows via `ensureStanding` for each subscribed robot mode, team rows via `registerTeam` (`ensureTeamStandings`) for modes every member holds; subscriptions are still written directly (October 14, 2026)
 - v2.0 - Replaced archetype system with tiered stable system (WimpBot/AverageBot/ExpertBot) (March 26, 2026)
@@ -15,7 +16,7 @@
 - v1.0 - Initial draft by GitHub Copilot (February 4, 2026)
 ---
 
-## Current behaviour (v3.0)
+## Current behaviour (v3.1)
 
 ### Why a fixed population
 
@@ -33,33 +34,34 @@ Generated_Stables only exist to keep every battle type populated. Until v3.0 cyc
 
 | | |
 |---|---|
-| Robots | 3 per stable, Booking Office L1 (4 subscriptions per robot) |
-| Tier | Split evenly by `distributeTiers` over WimpBot / AverageBot / ExpertBot: attribute level 1 / 5 / 10 and the tier's weapon price band (`TIER_CONFIGS`). The tier sets strength only; every stable has the same shape |
-| Robots 1–2 | `league_3v3`, `tournament_3v3`, `tournament_1v1`, `tournament_2v2` |
-| Robot 3 | `league_3v3`, `tournament_3v3`, `tournament_1v1`, `grand_melee` |
-| Teams | One 3v3 team (all three; enters the 3v3 league, eligible for the 3v3 tournament) and one 2v2 team of robots 1–2 (2v2 tournament only, no league) |
-| Standings | 3v3 league (team) and Grand Melee (robot 3), Bronze, 0 LP |
+| Tier | Split evenly by `distributeTiers` over WimpBot / AverageBot / ExpertBot (`TIER_CONFIGS`): attribute level 1 / 5 / 10, the tier's weapon price band, and **3 / 2 / 1 robots**. Stronger robots come in smaller rosters so no filler stable fields more than a human can build from the starting balance |
+| Facilities | Booking Office L1 (at most 4 subscriptions per robot) |
+| WimpBot (3 robots) | Robots 1–2: `league_3v3`, `tournament_3v3`, `tournament_1v1`, `tournament_2v2`. Robot 3: `league_3v3`, `tournament_3v3`, `tournament_1v1`, `grand_melee`. One 3v3 team (3v3 league, 3v3 tournament) and one 2v2 team of robots 1–2 (2v2 tournament only, no league) |
+| AverageBot (2 robots) | Robot 1: `tournament_1v1`, `tournament_2v2`. Robot 2: the same plus `grand_melee`. One 2v2 team (2v2 tournament only) |
+| ExpertBot (1 robot) | `tournament_1v1`, `grand_melee`. No team |
+| Rule (`fillerSubscriptionsFor`) | Every robot enters the 1v1 tournament; three-robot stables the 3v3 events; robots 1–2 of a stable of two or more the 2v2 tournament; the stable's last robot Grand Melee |
+| Standings | 3v3 league (WimpBot teams) and Grand Melee (each stable's last robot), Bronze, 0 LP |
 | Not entered | 1v1 league, 2v2 league, Tag Team, KotH — Automatons fill those |
 
 Usernames, stable names, robot names (`{Tier} {LoadoutTitle} {WeaponCodename} {Number}`), random loadout / range / stance / yield threshold, HP and shield formulas, ELO 1200 and the ₡100,000 opening balance are unchanged from v2.
 
-### Sizing (October 2026)
+### Sizing (October 2026, filler column updated for v3.1)
 
 Goal set by the product owner: every tournament opens the season with at least **128 entrants** (7+ rounds), every league tier of every mode stays healthy, and as few battles as possible are fought that nobody watches. Tournaments are the cheapest events to fill (a bracket costs entrants − 1 battles in total); leagues the dearest (about half a battle per entry every cycle).
 
 Automaton opening build, measured on ACC on 28 Oct 2026 (295 stables whose robots were all created that day) and scaled to 500 stables, against the population with 150 filler stables:
 
-| Event | Automatons (est.) | + 150 filler stables | Filler alone |
+| Event | Automatons (est.) | + 150 filler stables | Filler alone (v3.1) |
 |---|---|---|---|
-| 1v1 tournament | ~58 robots | ~508 | 450 |
-| 2v2 tournament | ~92 teams | ~242 | 150 |
-| 3v3 tournament | ~245 teams | ~395 | 150 |
-| 3v3 league | ~255 teams | ~405 | 150 |
+| 1v1 tournament | ~58 robots | ~358 | 300 |
+| 2v2 tournament | ~92 teams | ~192 | 100 |
+| 3v3 tournament | ~245 teams | ~295 | 50 |
+| 3v3 league | ~255 teams | ~305 | 50 |
 | Grand Melee | ~215 robots | ~365 | 150 |
 | 1v1 league / KotH | ~720 / ~660 robots | unchanged | 0 |
 | 2v2 league / Tag Team | ~450 teams each | unchanged | 0 |
 
-The filler stables alone keep every tournament at ≥128 even if the Automaton estimate is far off. A Monte Carlo of the live promotion rules (99 battle cycles, LP thresholds 25 → 125, ≥5 cycles per tier, 10% zones in instances of ≥10) opened Champion in every simulated season for all head-to-head leagues at these sizes (first Champion around cycle 77–83, 24–66 Champions by cycle 100); Champion became unreliable below ~200 entities. Champion timing is set by the LP thresholds, not population.
+In v3.0 (three robots per tier) the filler stables alone kept every tournament at ≥128 (450 / 150 / 150). With v3.1's 3 / 2 / 1 rosters they no longer do for the 2v2 and 3v3 tournaments; those reach 128 only with Automaton entries. A Monte Carlo of the live promotion rules (99 battle cycles, LP thresholds 25 → 125, ≥5 cycles per tier, 10% zones in instances of ≥10) opened Champion in every simulated season for all head-to-head leagues at these sizes (first Champion around cycle 77–83, 24–66 Champions by cycle 100); Champion became unreliable below ~200 entities. Champion timing is set by the LP thresholds, not population.
 
 ---
 
