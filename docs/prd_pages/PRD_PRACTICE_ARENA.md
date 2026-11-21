@@ -51,7 +51,7 @@ Practice battles are entirely stateless on the server. The service constructs `R
 - Zero audit log events emitted
 - No imports from `battlePostCombat.ts` (the entire post-combat pipeline is skipped)
 
-The only database table the Practice Arena writes to is `practice_arena_daily_stats`, and only once per day during the settlement cycle — not during battle execution.
+The only database table the Practice Arena writes to is `practice_arena_events` (one usage row per request); it never touches game state.
 
 ### Combat Engine Reuse
 
@@ -312,7 +312,7 @@ Every `POST /api/practice-arena/battle` writes one `practice_arena_events` row (
 
 Each row also stores the matchup (`owned_vs_sparring`, `owned_vs_owned`, `sparring_vs_sparring`), the sparring opponent's tier (the second slot when it is a sparring partner, else the first) and whether an owned robot carried what-if overrides. Rows are per-season history: the season rollover empties the table.
 
-This replaced in-memory counters flushed at settlement, which lost every battle since the last settlement on each restart (on ACC 455 of 798 Season 1 practice battles were never recorded) and filed each day under the next date. `practice_arena_daily_stats` is no longer written.
+This replaced in-memory counters flushed at settlement, which lost every battle since the last settlement on each restart (on ACC 455 of 798 Season 1 practice battles were never recorded) and filed each day under the next date.
 
 ### Unavailable time
 
@@ -369,5 +369,4 @@ Indexes: `occurred_at`; `(user_id, occurred_at)`.
 - `app/frontend/src/hooks/usePracticeHistory.ts` — localStorage history hook
 
 ### Database
-- `app/backend/prisma/schema.prisma` — `PracticeArenaEvent` model (`practice_arena_events`); `PracticeArenaDailyStats` is no longer written
-- One migration: `add-practice-arena-daily-stats`
+- `app/backend/prisma/schema.prisma` — `PracticeArenaEvent` model (`practice_arena_events`)

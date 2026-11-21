@@ -4,5 +4,5 @@ export { RosterSection, type RosterEntry } from './RosterSection';
 export { TrophyCabinet } from './TrophyCabinet';
 export { RecentResults } from './RecentResults';
 export { FacilitiesStrip } from './FacilitiesStrip';
-export { useStableProfile, type StablePageState } from './useStableProfile';
+export { useStableProfile } from './useStableProfile';
 export type * from './types';

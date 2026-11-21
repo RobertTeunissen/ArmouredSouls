@@ -420,7 +420,6 @@ erDiagram
         string facilityType
         int level
         int maxLevel
-        string activeCoach
         datetime createdAt
         datetime updatedAt
     }
@@ -767,16 +766,6 @@ erDiagram
         datetime createdAt
     }
 
-    LeaderboardCache {
-        int id PK
-        string category "fame|prestige|losses|koth_wins|koth_zone_score|career_wins|team_wins"
-        int rank
-        string entityType "robot|user"
-        int entityId
-        float score
-        int generation "swap semantics"
-        datetime updatedAt
-    }
 ```
 
 ### 9i. Cycle & Audit Domain
@@ -865,16 +854,6 @@ erDiagram
         decimal creditsBeforeReset
         string reason
         datetime resetAt
-    }
-
-    PracticeArenaDailyStats {
-        int id PK
-        date date UK
-        int totalBattles
-        int uniquePlayers
-        int rateLimitHits
-        json playerIds
-        datetime createdAt
     }
 
     User ||--o{ UserAchievement : "earned"

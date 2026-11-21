@@ -11,8 +11,6 @@ export const SchedulerErrorCode = {
   UNKNOWN_JOB: 'SCHEDULER_UNKNOWN_JOB',
   /** That job already has a queued or running run; a second would double it. */
   JOB_ALREADY_ACTIVE: 'SCHEDULER_JOB_ALREADY_ACTIVE',
-  /** No run with that id exists. */
-  RUN_NOT_FOUND: 'SCHEDULER_RUN_NOT_FOUND',
 } as const;
 
 export type SchedulerErrorCodeType = typeof SchedulerErrorCode[keyof typeof SchedulerErrorCode];

@@ -11,4 +11,4 @@ export { ADMIN_FOCUS_RING } from './focusRing';
 export { ToggleChip } from './ToggleChip';
 export { StableScopeToggle } from './StableScopeToggle';
 export { AdminPagination } from './AdminPagination';
-export { AdminPanel, PanelError, PanelSkeleton, type AdminPanelProps } from './AdminPanel';
+export { AdminPanel, PanelError, PanelSkeleton } from './AdminPanel';

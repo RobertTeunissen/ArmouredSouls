@@ -44,8 +44,6 @@ import type { Hand } from '../../shared/types';
 
 export {
   createExecutionCursor,
-  type AutomatonTurnIdentity,
-  type ChargedStepKind,
   type ExecutedChargedStep,
   type ExecutionContext,
   type ExecutionCursor,

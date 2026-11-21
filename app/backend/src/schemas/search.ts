@@ -46,8 +46,6 @@ export const searchQuerySchema = z.preprocess((input: unknown, context) => {
   return input;
 }, searchQueryObjectSchema);
 
-export type SearchQuery = z.infer<typeof searchQuerySchema>;
-
 /**
  * Privacy-light selection body: the category of the opened result and nothing
  * else. `.strict()` rejects any extra field (result id, label, route…).

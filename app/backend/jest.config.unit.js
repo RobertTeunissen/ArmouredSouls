@@ -26,7 +26,7 @@ module.exports = {
   // computes `global` over the files no directory entry below matches: there it
   // was statements 59.9%, branches 48.7%, functions 53.9%, lines 60.8%. The
   // directories: auth 95.9%, combat-simulator 90.9%, financial 79.8%,
-  // scheduling 61.6%, standings 97.6%, leaderboard 98.4%, team-battle 95.9%.
+  // scheduling 61.6%, standings 97.6%, team-battle 95.9%.
   //
   // financial/ and scheduling/ were set to 95% when they held only pure code.
   // They now also hold database-backed services (thinInstanceByes,
@@ -40,7 +40,6 @@ module.exports = {
     'src/services/financial/': { lines: 79 },
     'src/services/scheduling/': { lines: 60 },
     'src/services/standings/': { lines: 95 },
-    'src/services/leaderboard/': { lines: 90 },
     'src/services/team-battle/': { lines: 90 },
   },
 };

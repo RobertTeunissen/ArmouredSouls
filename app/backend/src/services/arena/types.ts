@@ -79,14 +79,6 @@ export interface ThreatScore {
   };
 }
 
-/** Weapon-to-range-band mapping (Req 3.2) */
-export interface WeaponRangeMapping {
-  weaponType: string;
-  handsRequired: string;
-  weaponName: string;
-  optimalRange: RangeBand;
-}
-
 // ─── Extended Robot Combat State ────────────────────────────────────
 
 /** Extended combat state with spatial tracking */

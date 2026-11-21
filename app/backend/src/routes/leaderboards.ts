@@ -136,6 +136,4 @@ router.get('/prestige', ...validated({ query: prestigeQuerySchema }, async (req:
   res.json(response);
 }));
 
-// ─── Unified Leaderboard Cache Endpoint (Spec #40) ───────────────────────────
-
 export default router;

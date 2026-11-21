@@ -42,7 +42,6 @@ jest.mock('../../achievement', () => ({
 jest.mock('../../../utils/userGeneration', () => ({
   topUpGeneratedStables: jest.fn(async () => ({ usersCreated: 150, robotsCreated: 450, target: 150, existingBefore: 0 })),
 }));
-jest.mock('../../leaderboard/leaderboardService', () => ({ leaderboardService: { refreshAll: jest.fn(async () => undefined) } }));
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
   default: {

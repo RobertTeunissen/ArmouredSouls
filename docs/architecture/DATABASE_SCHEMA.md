@@ -385,7 +385,6 @@ model Facility {
   facilityType String @map("facility_type") @db.VarChar(50)
   level        Int    @default(0)       // 0-10, where 0 = not purchased
   maxLevel     Int    @default(10) @map("max_level")
-  activeCoach  String? @map("active_coach") @db.VarChar(50)
   
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

@@ -52,8 +52,6 @@ Example with details:
 | Code | HTTP Status | Description |
 |------|-------------|-------------|
 | `INVALID_CREDENTIALS` | 401 | Username or password is incorrect |
-| `INVALID_TOKEN` | 401 | JWT token is malformed or invalid |
-| `TOKEN_EXPIRED` | 401 | JWT token has expired |
 | `USER_NOT_FOUND` | 404 | User does not exist |
 | `PASSWORD_RESET_NOT_ALLOWED` | 400 | Admin password reset for a generated stable, which has no player (`adminPlayersService.ts`); Automaton accounts answer `AUTOMATON_ACCOUNT_LOCKED` |
 | `USER_ALREADY_EXISTS` | 409 | Username is already taken |
@@ -67,7 +65,6 @@ Example with details:
 |------|-------------|-------------|
 | `ROBOT_NOT_FOUND` | 404 | Robot does not exist |
 | `ROBOT_NOT_OWNED` | 403 | Robot belongs to another user |
-| `ROBOT_DESTROYED` | 400 | Robot is destroyed and cannot perform action |
 | `ROBOT_NAME_TAKEN` | 409 | Robot name is already in use |
 | `INVALID_ROBOT_ATTRIBUTES` | 400 | Robot attributes are invalid |
 | `MAX_ROBOTS_REACHED` | 400 | User has reached maximum robot limit |
@@ -92,9 +89,7 @@ Example with details:
 | `INSUFFICIENT_CREDITS` | 400 | User does not have enough credits |
 | `FACILITY_MAX_LEVEL` | 400 | Facility is already at maximum level |
 | `INVALID_FACILITY_TYPE` | 400 | Facility type does not exist |
-| `FACILITY_NOT_FOUND` | 404 | Facility does not exist |
 | `WEAPON_NOT_FOUND` | 404 | Weapon does not exist |
-| `WEAPON_NOT_AFFORDABLE` | 400 | User cannot afford the weapon |
 | `WEAPON_EQUIPPED` | 409 | Weapon is currently equipped on a robot — unequip before selling |
 | `INVALID_TRANSACTION` | 400 | Transaction is invalid |
 | `STORAGE_CAPACITY_FULL` | 400 | Weapon storage capacity is full |
@@ -113,23 +108,17 @@ Example with details:
 
 | Code | HTTP Status | Description |
 |------|-------------|-------------|
-| `LEAGUE_NOT_FOUND` | 404 | League does not exist |
 | `INVALID_LEAGUE_TIER` | 400 | League tier is invalid |
-| `LEAGUE_INSTANCE_FULL` | 400 | League instance has reached capacity |
 | `PROMOTION_BLOCKED` | 400 | Robot cannot be promoted (already at top tier) |
 | `RELEGATION_BLOCKED` | 400 | Robot cannot be relegated (already at bottom tier) |
-| `NO_ELIGIBLE_ROBOTS` | 400 | No robots are eligible for the operation |
 
 ### Tournament Errors
 
 | Code | HTTP Status | Description |
 |------|-------------|-------------|
 | `TOURNAMENT_NOT_FOUND` | 404 | Tournament does not exist |
-| `TOURNAMENT_ALREADY_COMPLETED` | 400 | Tournament has already finished |
 | `TOURNAMENT_NOT_ACTIVE` | 400 | Tournament is not currently active |
 | `INSUFFICIENT_PARTICIPANTS` | 400 | Not enough participants for tournament |
-| `ROUND_NOT_READY` | 400 | Tournament round is not ready to advance |
-| `INVALID_TOURNAMENT_STATE` | 400 | Tournament is in an invalid state |
 | `MATCH_MISSING_ROBOTS` | 400 | Tournament match is missing required robots |
 | `INVALID_MATCH_STATE` | 400 | Tournament match is in an invalid state |
 | `BATTLE_RECORD_FAILED` | 500 | Failed to record tournament battle result |
@@ -140,17 +129,6 @@ Example with details:
 |------|-------------|-------------|
 | `TAG_TEAM_NOT_FOUND` | 404 | Tag team does not exist |
 | `INVALID_TEAM_COMPOSITION` | 400 | Team composition is invalid |
-| `TEAM_NOT_ELIGIBLE` | 400 | Team is not eligible for the operation |
-| `TAG_TEAM_LEAGUE_NOT_FOUND` | 404 | Tag team league does not exist |
-
-### KotH Errors
-
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `KOTH_NOT_FOUND` | 404 | KotH match does not exist |
-| `KOTH_ALREADY_COMPLETED` | 400 | KotH match has already finished |
-| `INSUFFICIENT_KOTH_PARTICIPANTS` | 400 | Not enough participants for KotH. No longer thrown since #536: a field that drops below the minimum at battle time is resolved by `resolveBelowMinimumField` (byes for the ready robots). The code is kept for compatibility |
-| `INVALID_KOTH_STATE` | 400 | KotH match is in an invalid state |
 
 ### Onboarding Errors
 
@@ -164,7 +142,6 @@ Example with details:
 | `RESET_INVALID_CONFIRMATION` | 400 | Reset confirmation is invalid |
 | `TUTORIAL_ALREADY_COMPLETED` | 400 | Tutorial has already been completed |
 | `INVALID_CHOICES` | 400 | Invalid choices provided |
-| `ONBOARDING_INTERNAL_ERROR` | 500 | Internal onboarding error |
 
 ### Subscription Errors
 
@@ -173,7 +150,6 @@ Example with details:
 | `SUBSCRIPTION_CAP_EXCEEDED` | 400 | The requested set would occupy more event slots than the Stable's Booking Office level allows. `details` carries `{ currentCount, requestedCount, cap, level, heldSlots }`; `heldSlots` lists events whose slot is still occupied by a booked match, which is the non-obvious reason a save can fail. |
 | `SUBSCRIPTION_DUPLICATE` | 400 | Robot is already subscribed to the requested event type. Each robot can only hold one subscription per event. |
 | `SUBSCRIPTION_UNKNOWN_EVENT` | 400 | The requested event type is not a valid registered subscribable event in the Event Registry. |
-| `SUBSCRIPTION_NOT_FOUND` | 404 | The robot is not subscribed to the specified event type. Cannot unsubscribe from an event the robot is not in. |
 
 **Removed:** `EVENT_SUBSCRIPTION_LOCKED` (was 409). Unsubscribing is now permitted for
 every event, so nothing raises it. A booked match no longer blocks the change — it
@@ -330,7 +306,6 @@ try {
 |---|---|---|
 | `SCHEDULER_UNKNOWN_JOB` | 400 | The job name is not one of the scheduler's jobs (`startManualRun`). Route validation normally rejects it first with `VALIDATION_ERROR`. |
 | `SCHEDULER_JOB_ALREADY_ACTIVE` | 409 | That job (or a bulk run) is already queued or running; a second start would run it twice (`POST /api/admin/scheduler/runs`, `POST /api/admin/cycles/bulk`). |
-| `SCHEDULER_RUN_NOT_FOUND` | 404 | No run with that id (`GET /api/admin/scheduler/runs/:id`). |
 
 ## SeasonErrorCode (Spec #45)
 

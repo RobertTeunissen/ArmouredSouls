@@ -19,7 +19,6 @@ import {
 import {
   getSubscriptionsForRobot,
   subscribeRobot,
-  unsubscribeRobot,
   setSubscriptionsForRobot,
   getStableOverview,
 } from '../services/subscription/subscriptionService';
@@ -67,18 +66,6 @@ router.post(
     const result = await subscribeRobot(robotId, eventType, req.user!.userId);
     const achievementUnlocks = await checkSubscriptionAchievements(req.user!.userId, robotId);
     res.json({ success: true, message: `Subscribed to ${eventType}.`, ...result, achievementUnlocks });
-  }),
-);
-
-// POST /api/subscriptions/robot/:robotId/unsubscribe — unsubscribe robot from event
-router.post(
-  '/robot/:robotId/unsubscribe',
-  authenticateToken,
-  ...validated({ params: robotIdParamSchema, body: subscribeBodySchema }, async (req: AuthRequest, res: Response, { params, body }) => {
-    const robotId = params.robotId;
-    const { eventType } = body;
-    const result = await unsubscribeRobot(robotId, eventType, req.user!.userId);
-    res.json({ success: true, message: `Unsubscribed from ${eventType}.`, ...result });
   }),
 );
 

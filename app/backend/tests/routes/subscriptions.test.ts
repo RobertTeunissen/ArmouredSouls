@@ -42,14 +42,12 @@ jest.mock('../../src/services/security/securityMonitor', () => ({
 // Mock subscription service
 const mockGetSubscriptionsForRobot = jest.fn();
 const mockSubscribeRobot = jest.fn();
-const mockUnsubscribeRobot = jest.fn();
 const mockSetSubscriptionsForRobot = jest.fn();
 const mockGetStableOverview = jest.fn();
 jest.mock('../../src/services/subscription/subscriptionService', () => ({
   __esModule: true,
   getSubscriptionsForRobot: (...args: unknown[]) => mockGetSubscriptionsForRobot(...args),
   subscribeRobot: (...args: unknown[]) => mockSubscribeRobot(...args),
-  unsubscribeRobot: (...args: unknown[]) => mockUnsubscribeRobot(...args),
   setSubscriptionsForRobot: (...args: unknown[]) => mockSetSubscriptionsForRobot(...args),
   getStableOverview: (...args: unknown[]) => mockGetStableOverview(...args),
 }));
@@ -115,14 +113,6 @@ describe('Subscription Routes', () => {
       mockUser = null;
       const res = await request(app)
         .post('/api/subscriptions/robot/1/subscribe')
-        .send({ eventType: 'league_1v1' });
-      expect(res.status).toBe(401);
-    });
-
-    it('POST /robot/:robotId/unsubscribe returns 401 without token', async () => {
-      mockUser = null;
-      const res = await request(app)
-        .post('/api/subscriptions/robot/1/unsubscribe')
         .send({ eventType: 'league_1v1' });
       expect(res.status).toBe(401);
     });
@@ -196,14 +186,6 @@ describe('Subscription Routes', () => {
       expect(mockSubscribeRobot).not.toHaveBeenCalled();
     });
 
-    it('POST /robot/:robotId/unsubscribe returns 400 for missing eventType', async () => {
-      const res = await request(app)
-        .post('/api/subscriptions/robot/1/unsubscribe')
-        .send({});
-      expect(res.status).toBe(400);
-      expect(res.body.code).toBe('VALIDATION_ERROR');
-    });
-
     it('PUT /robot/:robotId returns 400 for an unknown event type in the array', async () => {
       const res = await request(app)
         .put('/api/subscriptions/robot/1')
@@ -246,19 +228,6 @@ describe('Subscription Routes', () => {
 
       const res = await request(app)
         .post('/api/subscriptions/robot/999/subscribe')
-        .send({ eventType: 'league_1v1' });
-
-      expect(res.status).toBe(403);
-      expect(res.body.code).toBe('ACCESS_DENIED');
-    });
-
-    it('POST /robot/:robotId/unsubscribe returns 403 when robot not owned by user', async () => {
-      mockUnsubscribeRobot.mockRejectedValue(
-        new SubscriptionError(SubscriptionErrorCode.ACCESS_DENIED, 'Access denied', 403),
-      );
-
-      const res = await request(app)
-        .post('/api/subscriptions/robot/999/unsubscribe')
         .send({ eventType: 'league_1v1' });
 
       expect(res.status).toBe(403);
@@ -331,32 +300,11 @@ describe('Subscription Routes', () => {
     });
   });
 
-  // ── The unified rule: unsubscribe is never refused ────────────────
+  // ── The unified rule: removing a subscription is never refused ────
 
-  describe('Unsubscribe is always permitted', () => {
-    it.each(['league_1v1', 'koth', 'grand_melee', 'tournament_1v1', 'tag_team'])(
-      'POST /robot/:robotId/unsubscribe returns 200 for %s',
-      async (eventType) => {
-        mockUnsubscribeRobot.mockResolvedValue({
-          added: [],
-          removed: [eventType],
-          heldSlots: [eventType],
-          occupiedCount: 1,
-          cap: 3,
-          level: 0,
-        });
-
-        const res = await request(app)
-          .post('/api/subscriptions/robot/1/unsubscribe')
-          .send({ eventType });
-
-        expect(res.status).toBe(200);
-        expect(res.body.success).toBe(true);
-      },
-    );
-
-    it('reports the slot as still held when a match is already booked', async () => {
-      mockUnsubscribeRobot.mockResolvedValue({
+  describe('Removing a subscription is always permitted', () => {
+    it('PUT /robot/:robotId reports the slot as still held when a match is already booked', async () => {
+      mockSetSubscriptionsForRobot.mockResolvedValue({
         added: [],
         removed: ['grand_melee'],
         heldSlots: ['grand_melee'],
@@ -366,8 +314,8 @@ describe('Subscription Routes', () => {
       });
 
       const res = await request(app)
-        .post('/api/subscriptions/robot/1/unsubscribe')
-        .send({ eventType: 'grand_melee' });
+        .put('/api/subscriptions/robot/1')
+        .send({ eventTypes: [] });
 
       expect(res.status).toBe(200);
       expect(res.body.heldSlots).toEqual(['grand_melee']);
@@ -413,21 +361,6 @@ describe('Subscription Routes', () => {
       expect(res.body.message).toContain('Subscribed to league_1v1');
       expect(res.body.added).toEqual(['league_1v1']);
       expect(mockSubscribeRobot).toHaveBeenCalledWith(1, 'league_1v1', 1);
-    });
-
-    it('POST /robot/:robotId/unsubscribe returns success message', async () => {
-      mockUnsubscribeRobot.mockResolvedValue({
-        added: [], removed: ['tournament_1v1'], heldSlots: [], occupiedCount: 0, cap: 3, level: 0,
-      });
-
-      const res = await request(app)
-        .post('/api/subscriptions/robot/1/unsubscribe')
-        .send({ eventType: 'tournament_1v1' });
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.message).toContain('Unsubscribed from tournament_1v1');
-      expect(mockUnsubscribeRobot).toHaveBeenCalledWith(1, 'tournament_1v1', 1);
     });
 
     it('PUT /robot/:robotId saves a whole set in one request', async () => {

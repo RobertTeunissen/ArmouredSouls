@@ -36,7 +36,6 @@ import {
 import {
   setSubscriptionsForRobot,
   subscribeRobot,
-  unsubscribeRobot,
 } from '../../src/services/subscription/subscriptionService';
 import { disbandTeam, registerTeam, swapTeamMember } from '../../src/services/team-battle/teamBattleService';
 import { performAccountReset } from '../../src/services/common/resetService';
@@ -261,8 +260,8 @@ describe('case 4: unsubscribe and resubscribe', () => {
     await prisma.standing.updateMany({ where: { entityType: 'robot', entityId: robotId }, data: progressed });
     const before = await rowsOf('robot', robotId);
 
-    await unsubscribeRobot(robotId, 'league_1v1', userId);
-    await unsubscribeRobot(robotId, 'koth', userId);
+    await setSubscriptionsForRobot(robotId, ['koth'], userId);
+    await setSubscriptionsForRobot(robotId, [], userId);
     expect(await rowsOf('robot', robotId)).toEqual(before);
 
     await subscribeRobot(robotId, 'league_1v1', userId);
@@ -312,7 +311,7 @@ describe('case 5: 2v2 team, league_2v2 and tag_team', () => {
 
     // A member unsubscribing keeps the team's row.
     const before = await rowsOf('team', teamId);
-    await unsubscribeRobot(a, 'league_2v2', userId);
+    await setSubscriptionsForRobot(a, ['tag_team'], userId);
     expect(await rowsOf('team', teamId)).toEqual(before);
   });
 });

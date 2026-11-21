@@ -185,7 +185,7 @@ Sections, top to bottom:
 
 Season rollovers are runs too (job **Season rollover**, `seasonRollover`): trigger `manual` from Season Control, `cron` when the settlement rolls the season over. They appear in Run history and in the job filter.
 
-**API:** `GET /api/admin/scheduler/overview`, `GET /api/admin/scheduler/runs?jobName&problemsOnly&days(1–30)&page&limit`, `GET /api/admin/scheduler/runs/:id`, `POST /api/admin/scheduler/runs` `{ jobName }` → 202 `{ run }` (400 unknown job, 409 already active), `POST /api/admin/cycles/bulk` with `background: true` → 202 `{ run }` (without it the call waits and returns the full result, as before; 409 while a bulk run is active). Removed because nothing called them: `POST /api/admin/scheduler/trigger/:jobName` (part 8; `POST /scheduler/runs` replaces it) and `GET /api/admin/scheduler/status` (in-memory state; the overview and run history replace it). All require `authenticateToken` + `requireAdmin`; manual and bulk starts write an `admin_audit_logs` row.
+**API:** `GET /api/admin/scheduler/overview`, `GET /api/admin/scheduler/runs?jobName&problemsOnly&days(1–30)&page&limit`, `POST /api/admin/scheduler/runs` `{ jobName }` → 202 `{ run }` (400 unknown job, 409 already active), `POST /api/admin/cycles/bulk` with `background: true` → 202 `{ run }` (without it the call waits and returns the full result, as before; 409 while a bulk run is active). Removed because nothing called them: `POST /api/admin/scheduler/trigger/:jobName` (part 8; `POST /scheduler/runs` replaces it) and `GET /api/admin/scheduler/status` (in-memory state; the overview and run history replace it). All require `authenticateToken` + `requireAdmin`; manual and bulk starts write an `admin_audit_logs` row.
 
 ### Season Control (`/admin/seasons`)
 

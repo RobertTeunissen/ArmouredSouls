@@ -289,8 +289,8 @@ database). It adds real-code arms, paired seeds, range classes, kiters, Grand Me
   Every battle runs whatever is deployed, and no combat code reads the season.
 - `Season` stores only phase and progress (`phase`, cycle counters, `lengthOverrideCycles`); it has no ruleset or
   config. `Battle` rows store no season or rules/engine revision (`battleLog` is nullable and purged after 7 days).
-- The only runtime flag store is `cycle_metadata.feature_flags` (`MigrationFeatureFlags`, currently only
-  `leaderboard_cache_active`). Combat does not use it.
+- There is no runtime flag store. `cycle_metadata.feature_flags` only holds settlement's financial cycle-closing
+  markers (the Spec #40 migration flags were retired in Nov 2026). Combat does not use it.
 - The only season boundary is behavioural: `cycleScheduler` skips every battle job while `Season.phase` is
   `preparation` (Spec #45). The player guide (`seasons/preparation-window.md`) promises that balance changes land in
   that window, but this rests on deploy timing; nothing in the code enforces it. Practice Arena runs during

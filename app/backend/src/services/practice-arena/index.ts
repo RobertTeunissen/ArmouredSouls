@@ -10,14 +10,9 @@ export {
   executePracticeBattle,
   executePracticeBatch,
   getSparringPartnerDefinitions,
-  type BotTier,
-  type SparringPartnerConfig,
-  type BattleSlot,
   type PracticeBattleRequest,
-  type SparringPartnerDefinition,
 } from './practiceArenaService';
 
 export {
   recordPracticeRequest,
-  type PracticeOutcome,
 } from './practiceArenaUsageService';

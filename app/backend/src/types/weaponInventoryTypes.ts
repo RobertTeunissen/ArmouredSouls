@@ -26,17 +26,3 @@ export type WeaponInventoryWithRefinements = Prisma.WeaponInventoryGetPayload<{
     refinements: true;
   };
 }>;
-
-/**
- * Same as {@link WeaponInventoryWithRefinements} but also includes the
- * `robotsMain` and `robotsOffhand` summaries that the inventory listing
- * uses to show "equipped on Robot X" badges.
- */
-export type WeaponInventoryListItem = Prisma.WeaponInventoryGetPayload<{
-  include: {
-    weapon: true;
-    refinements: true;
-    robotsMain: { select: { id: true; name: true } };
-    robotsOffhand: { select: { id: true; name: true } };
-  };
-}>;

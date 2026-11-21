@@ -160,12 +160,10 @@ jest.mock('../../../src/services/standings/standingsService', () => ({
 
 // Mock leagueEngine for adapter tests
 const mockRebalanceAllTiers = jest.fn();
-const mockDeterminePromotionsForInstance = jest.fn();
 
 jest.mock('../../../src/services/league/leagueEngine', () => ({
   __esModule: true,
   rebalanceAllTiers: (...args: unknown[]) => mockRebalanceAllTiers(...args),
-  determinePromotionsForInstance: (...args: unknown[]) => mockDeterminePromotionsForInstance(...args),
 }));
 
 jest.mock('../../../src/services/league/leaguePromotionThresholds', () => ({

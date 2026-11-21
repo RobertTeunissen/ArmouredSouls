@@ -18,7 +18,7 @@ import {
   resetRunStore,
   startProcess,
 } from '../../src/services/cycle/schedulerRunStore';
-import { getSchedulerOverview, getSchedulerRun, listSchedulerRuns } from '../../src/services/cycle/schedulerHistoryService';
+import { getSchedulerOverview, listSchedulerRuns } from '../../src/services/cycle/schedulerHistoryService';
 
 const MIN = 60_000;
 const HOUR = 60 * MIN;
@@ -202,8 +202,5 @@ describe('getSchedulerOverview', () => {
     expect(overview.next).toBeNull();
     // Tracking started just now: nothing can be missed yet.
     expect(overview.missed).toEqual({ windowDays: 7, runs: [] });
-
-    await expect(getSchedulerRun(gmDone.id)).resolves.toMatchObject({ id: gmDone.id, jobName: 'grandMelee' });
-    await expect(getSchedulerRun(999_999_999)).rejects.toMatchObject({ statusCode: 404 });
   });
 });

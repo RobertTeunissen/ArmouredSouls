@@ -20,7 +20,6 @@ export const OnboardingErrorCode = {
   RESET_INVALID_CONFIRMATION: 'RESET_INVALID_CONFIRMATION',
   TUTORIAL_ALREADY_COMPLETED: 'TUTORIAL_ALREADY_COMPLETED',
   INVALID_CHOICES: 'INVALID_CHOICES',
-  ONBOARDING_INTERNAL_ERROR: 'ONBOARDING_INTERNAL_ERROR',
 } as const;
 
 export type OnboardingErrorCodeType = typeof OnboardingErrorCode[keyof typeof OnboardingErrorCode];

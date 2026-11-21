@@ -9,18 +9,9 @@ export {
   runTurnStepNonFatal,
   type TurnStepInput,
   type TurnStepOutcome,
-  type TurnStepSource,
   type TurnStepSummary,
 } from './automatonTurnService';
-export {
-  type ProgramSwitchResult,
-  type ProgramSwitchState,
-} from './programSwitch';
-export { type CatalogueSyncResult } from './catalogueSync';
 export {
   type CatalogueExportDocument,
   type CatalogueIssue,
 } from './automatonCatalogueService';
-export {
-  type RejectedUpgrade,
-} from './automatonObservability';

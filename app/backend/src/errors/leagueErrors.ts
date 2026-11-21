@@ -12,12 +12,9 @@ import { AppError } from './AppError';
 
 /** All league error codes. */
 export const LeagueErrorCode = {
-  LEAGUE_NOT_FOUND: 'LEAGUE_NOT_FOUND',
   INVALID_LEAGUE_TIER: 'INVALID_LEAGUE_TIER',
-  LEAGUE_INSTANCE_FULL: 'LEAGUE_INSTANCE_FULL',
   PROMOTION_BLOCKED: 'PROMOTION_BLOCKED',
   RELEGATION_BLOCKED: 'RELEGATION_BLOCKED',
-  NO_ELIGIBLE_ROBOTS: 'NO_ELIGIBLE_ROBOTS',
 } as const;
 
 export type LeagueErrorCodeType = typeof LeagueErrorCode[keyof typeof LeagueErrorCode];

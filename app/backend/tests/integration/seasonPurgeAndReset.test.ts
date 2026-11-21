@@ -188,7 +188,6 @@ describe('Season purge and reset integration', () => {
       expect(await prisma.cycleSnapshot.count()).toBe(0);
       expect(await prisma.financialLedger.count()).toBe(0);
       expect(await prisma.leagueHistory.count()).toBe(0);
-      expect(await prisma.leaderboardCache.count()).toBe(0);
 
       const user = await prisma.user.findUnique({ where: { id: stable.userId } });
       expect(user!.currency).toBe(STARTING_CREDITS);

@@ -30,12 +30,6 @@ export const STARTING_CREDITS = 3_000_000;
  *  30s timeout. */
 const GENERATED_DELETE_BATCH = 50;
 
-export interface PurgeCounts {
-  generatedStablesDeleted: number;
-  rowsDeleted: Record<string, number>;
-  humanStablesReset: number;
-}
-
 // ─── Stage 3.1: Generated_Stables ────────────────────────────────────
 
 /**
@@ -242,8 +236,6 @@ export async function purgeHistory(): Promise<Record<string, number>> {
     'cycle_snapshots',
     'financial_ledger',
     'league_history',
-    'leaderboard_cache',
-    'practice_arena_daily_stats',
     // Practice Arena usage (admin Practice Arena page) is per-season history.
     'practice_arena_events',
     'search_analytics_events',
@@ -293,7 +285,6 @@ export async function reclaimSpace(): Promise<boolean> {
     'cycle_snapshots',
     'financial_ledger',
     'league_history',
-    'leaderboard_cache',
     'robots',
     'standings',
     'weapon_inventory',
@@ -338,7 +329,7 @@ export async function previewRollover(): Promise<RolloverPreview> {
     humanStables, humanRobots, generatedStables, generatedRobots,
     typeStables, typeRobots,
     battles, battleSummaries, auditLogs, cycleSnapshots,
-    financialLedger, leagueHistory, leaderboardCache, practiceStats,
+    financialLedger, leagueHistory,
     standings, robotModeKills, weaponInventory, facilities, teamBattles, tournaments,
     robotsWithImages,
     battleParticipants, tuningAllocations, subscriptions, teamBattleMembers,
@@ -357,8 +348,6 @@ export async function previewRollover(): Promise<RolloverPreview> {
     prisma.cycleSnapshot.count(),
     prisma.financialLedger.count(),
     prisma.leagueHistory.count(),
-    prisma.leaderboardCache.count(),
-    prisma.practiceArenaDailyStats.count(),
     prisma.standing.count(),
     prisma.robotModeKills.count(),
     prisma.weaponInventory.count(),
@@ -403,8 +392,8 @@ export async function previewRollover(): Promise<RolloverPreview> {
     rowsToPurge: {
       battles, battle_summaries: battleSummaries, audit_logs: auditLogs,
       cycle_snapshots: cycleSnapshots, financial_ledger: financialLedger,
-      league_history: leagueHistory, leaderboard_cache: leaderboardCache,
-      practice_arena_daily_stats: practiceStats, standings,
+      league_history: leagueHistory,
+      standings,
       robot_mode_kills: robotModeKills,
       weapon_inventory: weaponInventory, facilities, team_battles: teamBattles, tournaments,
       battle_participants: battleParticipants,

@@ -32,18 +32,6 @@ export interface TournamentCreationResult {
   participantCount: number;
 }
 
-export interface RoundExecutionSummary {
-  tournamentId: number;
-  round: number;
-  matchesExecuted: number;
-  matchesFailed: number;
-  byeMatches: number;
-  winners: number[];
-  errors: string[];
-  tournamentComplete: boolean;
-  championRobotId?: number;
-}
-
 /**
  * Calculate maximum rounds needed for a tournament
  * Formula: ceil(log2(participants))

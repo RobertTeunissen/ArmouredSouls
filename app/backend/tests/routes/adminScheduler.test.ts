@@ -20,13 +20,11 @@ jest.mock('../../src/services/cycle/cycleScheduler', () => ({
 
 const mockOverview = jest.fn();
 const mockListRuns = jest.fn();
-const mockGetRun = jest.fn();
 jest.mock('../../src/services/cycle/schedulerHistoryService', () => ({
   __esModule: true,
   MAX_HISTORY_DAYS: 30,
   getSchedulerOverview: (...args: unknown[]) => mockOverview(...args),
   listSchedulerRuns: (...args: unknown[]) => mockListRuns(...args),
-  getSchedulerRun: (...args: unknown[]) => mockGetRun(...args),
 }));
 
 const mockRunBulk = jest.fn();
@@ -167,18 +165,6 @@ describe('GET /api/admin/scheduler/overview, /runs, /runs/:id', () => {
       expect(res.status).toBe(400);
     }
     expect(mockListRuns).not.toHaveBeenCalled();
-  });
-
-  it('returns one run, 404 for a missing one and 400 for a bad id', async () => {
-    mockGetRun.mockResolvedValueOnce({ id: 5, jobName: 'league' });
-    expect((await request(baseUrl).get('/api/admin/scheduler/runs/5')).body).toEqual({ id: 5, jobName: 'league' });
-
-    mockGetRun.mockRejectedValueOnce(new SchedulerError(SchedulerErrorCode.RUN_NOT_FOUND, 'Run not found', 404));
-    const missing = await request(baseUrl).get('/api/admin/scheduler/runs/999');
-    expect(missing.status).toBe(404);
-    expect(missing.body.code).toBe('SCHEDULER_RUN_NOT_FOUND');
-
-    expect((await request(baseUrl).get('/api/admin/scheduler/runs/abc')).status).toBe(400);
   });
 
   it('requires an admin for reads too', async () => {
