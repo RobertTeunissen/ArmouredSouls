@@ -126,10 +126,6 @@ describe('tag team Active / Reserve swap while scheduled', () => {
   });
 
   it('books the result against the line-up the battle was fought with', async () => {
-    await prisma.scheduledMatch.updateMany({
-      where: { matchType: 'tag_team', status: 'scheduled' },
-      data: { status: 'cancelled', cancelReason: 'tagTeamSwapWhileScheduled.test isolation' },
-    });
     const teams = [await createTeam(), await createTeam(), await createTeam(), await createTeam()];
     await schedule(teams[0].teamId, teams[1].teamId, 1);
     const m2 = await schedule(teams[2].teamId, teams[3].teamId, 2);
@@ -147,7 +143,19 @@ describe('tag team Active / Reserve swap while scheduled', () => {
       return original(t1, t2);
     });
 
-    const summary = await executeScheduledTagTeamBattles();
+    // The job runs every scheduled tag team match. Park other suites' queued
+    // matches for the run and put them back afterwards, untouched.
+    const parked = (await prisma.scheduledMatch.findMany({
+      where: { matchType: 'tag_team', status: 'scheduled', id: { notIn: scheduledIds } },
+      select: { id: true },
+    })).map((m) => m.id);
+    await prisma.scheduledMatch.updateMany({ where: { id: { in: parked } }, data: { status: 'cancelled' } });
+    let summary: Awaited<ReturnType<typeof executeScheduledTagTeamBattles>>;
+    try {
+      summary = await executeScheduledTagTeamBattles();
+    } finally {
+      await prisma.scheduledMatch.updateMany({ where: { id: { in: parked } }, data: { status: 'scheduled' } });
+    }
     expect(summary.totalBattles).toBe(2);
     expect(swappedDuringRun).toBe(true);
 
@@ -175,6 +183,18 @@ describe('tag team Active / Reserve swap while scheduled', () => {
       .map((p) => p.damageDealt);
     expect(Math.abs(first - second)).toBeGreaterThan(2);
   }, 120000);
+
+  it('handles two simultaneous swaps of one team: both apply, back to the original order', async () => {
+    const t = await createTeam();
+
+    // The team row lock serialises them; this checks the locked path neither
+    // deadlocks nor trips the (teamId, slotIndex) unique constraint. Timing
+    // alone cannot force the unlocked interleaving, so it does not prove the race.
+    await Promise.all([swapPositions(t.teamId, t.stableId), swapPositions(t.teamId, t.stableId)]);
+
+    const members = await prisma.teamBattleMember.findMany({ where: { teamId: t.teamId }, orderBy: { slotIndex: 'asc' } });
+    expect(members.map((m) => m.robotId)).toEqual([t.active, t.reserve]);
+  });
 
   it('still refuses to replace a member while a match is scheduled', async () => {
     const [a, b] = [await createTeam(), await createTeam()];

@@ -334,6 +334,10 @@ export async function swapPositions(
   userId: number,
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {
+    // Serialise swaps of the same team: without the row lock, two concurrent
+    // swaps both read the old order and one of them is silently lost.
+    await tx.$executeRaw`SELECT id FROM team_battles WHERE id = ${teamId} FOR UPDATE`;
+
     const team = await tx.teamBattle.findUnique({
       where: { id: teamId },
       include: { members: { orderBy: { slotIndex: 'asc' } } },
