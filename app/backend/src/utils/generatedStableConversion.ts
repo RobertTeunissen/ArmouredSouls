@@ -97,13 +97,19 @@ function maxNumberFor(prefix: string, names: string[]): number {
   return max;
 }
 
-/** Read the database and work out every change. Writes nothing. */
-export async function planWimpBotConversion(): Promise<ConversionPlan> {
+/**
+ * Read the database and work out every change. Writes nothing.
+ *
+ * @param options.userIds - Limit the plan to these stables (tests scope to their
+ *   own fixtures); the ACC run converts every matching stable.
+ */
+export async function planWimpBotConversion(options: { userIds?: number[] } = {}): Promise<ConversionPlan> {
   const candidates = await prisma.user.findMany({
     where: {
       isGenerated: true,
       stableType: 'generated',
       OR: SOURCE_PREFIXES.map((prefix) => ({ username: { startsWith: prefix } })),
+      ...(options.userIds ? { id: { in: options.userIds } } : {}),
     },
     include: {
       robots: {

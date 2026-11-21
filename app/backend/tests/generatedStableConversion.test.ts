@@ -8,9 +8,12 @@ import { createGeneratedStables } from '../src/utils/userGeneration';
 import { TIER_CONFIGS } from '../src/utils/tierConfig';
 import { applyWimpBotConversion, planWimpBotConversion } from '../src/utils/generatedStableConversion';
 
-/** Remove every auto-generated stable and what it owns (standings have no FK). */
-async function cleanupAutoUsers(): Promise<void> {
-  const userIds = (await prisma.user.findMany({ where: { username: { startsWith: 'auto_' } }, select: { id: true } })).map((u) => u.id);
+/** Stables this suite created; cleanup and planning never reach beyond them. */
+const createdUserIds: number[] = [];
+
+/** Remove the stables this suite created and what they own (standings have no FK). */
+async function cleanupOwnStables(): Promise<void> {
+  const userIds = createdUserIds.splice(0);
   if (userIds.length === 0) return;
   const robotIds = (await prisma.robot.findMany({ where: { userId: { in: userIds } }, select: { id: true } })).map((r) => r.id);
   const teamIds = (await prisma.teamBattle.findMany({ where: { stableId: { in: userIds } }, select: { id: true } })).map((t) => t.id);
@@ -26,15 +29,32 @@ async function cleanupAutoUsers(): Promise<void> {
   await prisma.user.deleteMany({ where: { id: { in: userIds } } });
 }
 
+/** Create generated stables and remember their ids for scoped planning and cleanup. */
+async function createTracked(count: number): Promise<string[]> {
+  const { usernames } = await createGeneratedStables(count);
+  const users = await prisma.user.findMany({ where: { username: { in: usernames } }, select: { id: true } });
+  createdUserIds.push(...users.map((u) => u.id));
+  return usernames;
+}
+
 /** Build stables the way the Oct 2026 generator did: three robots in every tier. */
 async function createThreeRobotStables(count: number): Promise<string[]> {
   const original = TIER_CONFIGS.map((t) => t.robotCount);
   TIER_CONFIGS.forEach((t) => { t.robotCount = 3; });
   try {
-    return (await createGeneratedStables(count)).usernames;
+    return await createTracked(count);
   } finally {
     TIER_CONFIGS.forEach((t, i) => { t.robotCount = original[i]; });
   }
+}
+
+/** Plan scoped to this suite's stables. */
+const planOwn = () => planWimpBotConversion({ userIds: [...createdUserIds] });
+
+/** Highest `auto_wimpbot_NNNN` number in the database. */
+async function maxWimpBotNumber(): Promise<number> {
+  const rows = await prisma.user.findMany({ where: { username: { startsWith: 'auto_wimpbot_' } }, select: { username: true } });
+  return rows.reduce((max, { username }) => Math.max(max, Number(username.slice('auto_wimpbot_'.length)) || 0), 0);
 }
 
 const robotsOf = (usernames: string[]) =>
@@ -46,26 +66,29 @@ const robotsOf = (usernames: string[]) =>
 
 describe('WimpBot conversion of three-robot generated stables', () => {
   beforeAll(async () => { await prisma.$connect(); });
-  beforeEach(async () => { await cleanupAutoUsers(); });
+  afterEach(async () => { await cleanupOwnStables(); });
   afterAll(async () => {
-    await cleanupAutoUsers();
+    await cleanupOwnStables();
     await prisma.$disconnect();
   });
 
   it('plans only the three-robot AverageBot / ExpertBot stables and writes nothing', async () => {
     await createThreeRobotStables(3); // one stable per tier, three robots each
-    await createGeneratedStables(3); // correctly built: 3 / 2 / 1 robots
-    const before = await prisma.robot.findMany({ select: { id: true, name: true, combatPower: true }, orderBy: { id: 'asc' } });
+    await createTracked(3); // correctly built: 3 / 2 / 1 robots
+    const ownRobots = { user: { id: { in: [...createdUserIds] } } };
+    const before = await prisma.robot.findMany({ where: ownRobots, select: { id: true, name: true, combatPower: true }, orderBy: { id: 'asc' } });
+    const maxWimp = await maxWimpBotNumber();
 
-    const plan = await planWimpBotConversion();
+    const plan = await planOwn();
 
     expect(plan.stables.map((s) => s.oldUsername.replace(/_\d+$/, ''))).toEqual(['auto_averagebot', 'auto_expertbot']);
     expect(plan.stables.every((s) => s.robots.length === 3)).toBe(true);
-    // WimpBot numbering continues after the two existing WimpBot stables.
-    expect(plan.stables.map((s) => s.newUsername)).toEqual(['auto_wimpbot_0003', 'auto_wimpbot_0004']);
-    expect(await prisma.robot.findMany({ select: { id: true, name: true, combatPower: true }, orderBy: { id: 'asc' } })).toEqual(before);
+    // WimpBot numbering continues after the highest existing WimpBot username.
+    const pad = (n: number) => `auto_wimpbot_${String(n).padStart(4, '0')}`;
+    expect(plan.stables.map((s) => s.newUsername)).toEqual([pad(maxWimp + 1), pad(maxWimp + 2)]);
+    expect(await prisma.robot.findMany({ where: ownRobots, select: { id: true, name: true, combatPower: true }, orderBy: { id: 'asc' } })).toEqual(before);
     // Deterministic: planning twice gives the same plan.
-    expect(await planWimpBotConversion()).toEqual(plan);
+    expect(await planOwn()).toEqual(plan);
   });
 
   it('turns every robot into a WimpBot and keeps results, teams, standings and subscriptions', async () => {
@@ -84,10 +107,17 @@ describe('WimpBot conversion of three-robot generated stables', () => {
       include: { members: true },
       orderBy: { id: 'asc' },
     });
-    const standingsBefore = await prisma.standing.findMany({ orderBy: { id: 'asc' } });
-    const subscriptionsBefore = await prisma.subscription.findMany({ orderBy: { id: 'asc' } });
+    const ownRobotIds = (await prisma.robot.findMany({ where: { userId: { in: [...createdUserIds] } }, select: { id: true } })).map((r) => r.id);
+    const ownStandings = {
+      OR: [
+        { entityType: 'robot', entityId: { in: ownRobotIds } },
+        { entityType: 'team', entityId: { in: teamsBefore.map((t) => t.id) } },
+      ],
+    };
+    const standingsBefore = await prisma.standing.findMany({ where: ownStandings, orderBy: { id: 'asc' } });
+    const subscriptionsBefore = await prisma.subscription.findMany({ where: { robotId: { in: ownRobotIds } }, orderBy: { id: 'asc' } });
 
-    const plan = await planWimpBotConversion();
+    const plan = await planOwn();
     expect(await applyWimpBotConversion(plan)).toBe(2);
 
     const after = await prisma.robot.findMany({
@@ -125,21 +155,21 @@ describe('WimpBot conversion of three-robot generated stables', () => {
       include: { members: true },
       orderBy: { id: 'asc' },
     })).toEqual(teamsBefore);
-    expect(await prisma.standing.findMany({ orderBy: { id: 'asc' } })).toEqual(standingsBefore);
-    expect(await prisma.subscription.findMany({ orderBy: { id: 'asc' } })).toEqual(subscriptionsBefore);
+    expect(await prisma.standing.findMany({ where: ownStandings, orderBy: { id: 'asc' } })).toEqual(standingsBefore);
+    expect(await prisma.subscription.findMany({ where: { robotId: { in: ownRobotIds } }, orderBy: { id: 'asc' } })).toEqual(subscriptionsBefore);
   }, 60000);
 
   it('is a no-op the second time', async () => {
     await createThreeRobotStables(3);
-    await applyWimpBotConversion(await planWimpBotConversion());
-    const plan = await planWimpBotConversion();
+    await applyWimpBotConversion(await planOwn());
+    const plan = await planOwn();
     expect(plan.stables).toEqual([]);
     expect(await applyWimpBotConversion(plan)).toBe(0);
   }, 60000);
 
   it('refuses a stale plan', async () => {
     await createThreeRobotStables(3);
-    const plan = await planWimpBotConversion();
+    const plan = await planOwn();
     await applyWimpBotConversion(plan);
     await expect(applyWimpBotConversion(plan)).rejects.toThrow(/changed since planning/);
   }, 60000);
