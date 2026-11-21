@@ -321,7 +321,13 @@ export async function swapTeamMember(
  * Swap positions of the two members on a 2v2 team (Active ↔ Reserve).
  *
  * Swaps the slotIndex values: slot 0 becomes slot 1 and vice versa.
- * Rejects if team is locked for battle or team is not teamSize=2.
+ * Rejects if the team is not teamSize=2.
+ *
+ * Allowed while a battle is scheduled: the line-up stays the same two robots,
+ * only their order changes, and the next battle uses the order at the time it
+ * runs. A battle that is already running fought with the teams it loaded at the
+ * start, so a swap mid-run only affects later battles. Replacing a member
+ * (`swapTeamMember`) and disbanding stay locked.
  */
 export async function swapPositions(
   teamId: number,
@@ -362,14 +368,6 @@ export async function swapPositions(
         TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
         'Team must have exactly 2 members to swap positions',
         400,
-      );
-    }
-
-    if (await isTeamLockedForBattle(teamId, tx as unknown as typeof prisma)) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_LOCKED_FOR_BATTLE,
-        'Cannot modify team while a battle is scheduled',
-        409,
       );
     }
 

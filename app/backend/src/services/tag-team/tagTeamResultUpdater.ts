@@ -22,7 +22,7 @@ import { getTuningBonusesBatch } from '../tuning-pool';
 import { getTagTeamYields } from './tagTeamBattleRecord';
 import { TagTeamError, TagTeamErrorCode } from '../../errors/tagTeamErrors';
 import { countKillsByRobot } from '../../shared/utils/battleStatistics';
-import { TagTeamBattleResult } from './tagTeamTypes';
+import type { TagTeamBattleResult, TagTeamLineup } from './tagTeamTypes';
 import {
   calculateTagTeamRewards,
   calculateTagTeamELOChanges,
@@ -63,10 +63,19 @@ export async function updateTagTeamBattleResults(
   // the top of `tagTeamScheduler` and resolved by the Bye_Reward_Module before
   // any opponent is loaded (Spec #49), so both teams are real here.
 
-  // Map teams to the expected shape (slot 0 = active, slot 1 = reserve)
-  const mapTeam = (raw: (TeamBattle & { members: Array<{ robot: Robot; slotIndex: number; robotId: number }> }) | null) => {
+  // Map teams to the expected shape: the Active / Reserve robots the battle was
+  // fought with (`result.lineup`), else slot 0 = active, slot 1 = reserve. The
+  // match was loaded when the job started; the player may have swapped Active
+  // and Reserve since, and the simulation used the order at battle time.
+  const mapTeam = (
+    raw: (TeamBattle & { members: Array<{ robot: Robot; slotIndex: number; robotId: number }> }) | null,
+    lineup: TagTeamLineup | undefined,
+  ) => {
     if (!raw || raw.members.length < 2) return null;
-    const sorted = [...raw.members].sort((a, b) => a.slotIndex - b.slotIndex);
+    const bySlot = [...raw.members].sort((a, b) => a.slotIndex - b.slotIndex);
+    const active = lineup && raw.members.find((m) => m.robotId === lineup.activeRobotId);
+    const reserve = lineup && raw.members.find((m) => m.robotId === lineup.reserveRobotId);
+    const sorted = active && reserve ? [active, reserve] : bySlot;
     return {
       id: raw.id,
       stableId: raw.stableId,
@@ -79,11 +88,11 @@ export async function updateTagTeamBattleResults(
   };
 
   // Use pre-loaded teams from the scheduled match query (no re-fetch needed)
-  const team1 = mapTeam(match.team1);
+  const team1 = mapTeam(match.team1, result.lineup?.team1);
   // The loadout each robot fought with: an incomplete one fought as single (rule 6).
   const fallbackIds = new Set(result.loadoutFallbackRobotIds ?? []);
   const battleLoadout = (robot: Robot): string => (fallbackIds.has(robot.id) ? 'single' : robot.loadoutType);
-  const team2 = mapTeam(match.team2);
+  const team2 = mapTeam(match.team2, result.lineup?.team2);
 
   // The bye branch that used to sit here is gone (Spec #49). It paid
   // 2x (win + participation), full prestige and full fame, and split the credits

@@ -159,6 +159,8 @@ const DB_DEPENDENT = [
   // PR #536 — battle-time readiness, forfeits and the match-failure policy
   'tests/integration/tournamentSeedingsRoute.test.ts',
   'tests/integration/matchFailurePolicy.test.ts',
+  // Active / Reserve swap while a tag team match is scheduled.
+  'tests/integration/tagTeamSwapWhileScheduled.test.ts',
   'tests/integration/tournamentFailure.test.ts',
   'tests/integration/forfeitResolution.test.ts',
   'tests/integration/schedulingAfterForfeit.test.ts',
