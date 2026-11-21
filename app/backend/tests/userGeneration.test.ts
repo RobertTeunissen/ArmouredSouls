@@ -1,11 +1,12 @@
 /**
  * Generated_Stable creation and top-up (userGeneration.ts), against the real DB.
  *
- * Every generated stable is a three-robot filler stable: one 3v3 team (3v3
- * league + tournament), one 2v2 team of robots 1–2 (2v2 tournament only), all
- * three robots in the 1v1 tournament and robot 3 in Grand Melee. The tier
- * (WimpBot / AverageBot / ExpertBot, split evenly) sets only attribute level and
- * weapon price band. The population is topped up to GENERATED_STABLE_TARGET.
+ * The tier (WimpBot / AverageBot / ExpertBot, split evenly) sets attribute
+ * level, weapon price band and roster size (3 / 2 / 1 robots). WimpBot stables
+ * have a 3v3 team (3v3 league + tournament) and a 2v2 team of robots 1–2;
+ * AverageBot stables only the 2v2 team; ExpertBot stables no team. Every robot
+ * is in the 1v1 tournament and each stable's last robot in Grand Melee. The
+ * population is topped up to GENERATED_STABLE_TARGET.
  */
 
 import fc from 'fast-check';
@@ -14,7 +15,6 @@ import {
   createGeneratedStables,
   countGeneratedStables,
   topUpGeneratedStables,
-  FILLER_ROBOTS_PER_STABLE,
 } from '../src/utils/userGeneration';
 import { TIER_CONFIGS, LOADOUT_TITLES, WEAPON_CODENAMES } from '../src/utils/tierConfig';
 import { getEligibleTeamsForTournament } from '../src/services/tournament/teamTournamentService';
@@ -98,14 +98,14 @@ describe('Generated stables', () => {
       expect(await countGeneratedStables()).toBe(0);
     });
 
-    it('splits the stables evenly over the three tiers, three robots each', async () => {
+    it('splits the stables evenly over the three tiers with 3 / 2 / 1 robots', async () => {
       const result = await createGeneratedStables(3);
 
       expect(result).toMatchObject({
         usersCreated: 3,
-        robotsCreated: 9,
-        league3v3TeamsCreated: 3,
-        league2v2TeamsCreated: 3,
+        robotsCreated: 6,
+        league3v3TeamsCreated: 1,
+        league2v2TeamsCreated: 2,
         tagTeamsCreated: 0,
         tierBreakdown: { wimpBot: 1, averageBot: 1, expertBot: 1 },
       });
@@ -121,7 +121,7 @@ describe('Generated stables', () => {
       expect(new Set(users.map((u) => u.stableName)).size).toBe(3);
       for (const user of users) {
         expect(user).toMatchObject({ currency: 100000, role: 'user', isGenerated: true, stableType: 'generated' });
-        expect(user.robots).toHaveLength(FILLER_ROBOTS_PER_STABLE);
+        expect(user.robots).toHaveLength(tierOf(user.username).robotCount);
         expect(user.facilities).toEqual([expect.objectContaining({ facilityType: 'booking_office', level: 1 })]);
       }
     });
@@ -132,7 +132,7 @@ describe('Generated stables', () => {
         where: { user: { username: { in: result.usernames } } },
         include: { user: true, mainWeapon: { include: { weapon: true } } },
       });
-      expect(robots).toHaveLength(9);
+      expect(robots).toHaveLength(6);
       for (const robot of robots) {
         const tier = tierOf(robot.user.username);
         expect(Number(robot.combatPower)).toBe(tier.attributeLevel);
@@ -148,56 +148,74 @@ describe('Generated stables', () => {
       }
     });
 
-    it('subscribes every robot to the filler events: 2v2 tournament for robots 1–2, Grand Melee for robot 3', async () => {
+    it('subscribes every robot to the filler events of its stable size', async () => {
       const result = await createGeneratedStables(3);
       const users = await prisma.user.findMany({
         where: { username: { in: result.usernames } },
         include: { robots: { include: { subscriptions: true }, orderBy: { id: 'asc' } } },
       });
-      for (const user of users) {
-        const sets = user.robots.map((r) => r.subscriptions.map((s) => s.eventType).sort());
-        expect(sets).toEqual([
+      const expected: Record<string, string[][]> = {
+        WimpBot: [
           ['league_3v3', 'tournament_1v1', 'tournament_2v2', 'tournament_3v3'],
           ['league_3v3', 'tournament_1v1', 'tournament_2v2', 'tournament_3v3'],
           ['grand_melee', 'league_3v3', 'tournament_1v1', 'tournament_3v3'],
-        ]);
+        ],
+        AverageBot: [
+          ['tournament_1v1', 'tournament_2v2'],
+          ['grand_melee', 'tournament_1v1', 'tournament_2v2'],
+        ],
+        ExpertBot: [['grand_melee', 'tournament_1v1']],
+      };
+      for (const user of users) {
+        const sets = user.robots.map((r) => r.subscriptions.map((s) => s.eventType).sort());
+        expect(sets).toEqual(expected[tierOf(user.username).name]);
       }
     });
 
-    it('registers a 3v3 team in the 3v3 league and a 2v2 team of robots 1–2 in no league', async () => {
+    it('registers a 3v3 team only for three-robot stables and a 2v2 team of robots 1–2 in no league', async () => {
       const result = await createGeneratedStables(3);
       const users = await prisma.user.findMany({
         where: { username: { in: result.usernames } },
         include: { robots: { orderBy: { id: 'asc' } } },
       });
       for (const user of users) {
+        const robotCount = tierOf(user.username).robotCount;
         const teams = await prisma.teamBattle.findMany({ where: { stableId: user.id }, include: { members: true } });
         const team3 = teams.find((t) => t.teamSize === 3);
         const team2 = teams.find((t) => t.teamSize === 2);
-        expect(team3?.members.map((m) => m.robotId).sort()).toEqual(user.robots.map((r) => r.id).sort());
-        expect(team2?.members.map((m) => m.robotId).sort()).toEqual(user.robots.slice(0, 2).map((r) => r.id).sort());
 
-        const team3Modes = await prisma.standing.findMany({ where: { entityType: 'team', entityId: team3!.id } });
-        expect(team3Modes.map((s) => s.mode)).toEqual(['league_3v3']);
-        expect(team3Modes[0]).toMatchObject({ tier: 'bronze', leaguePoints: 0 });
-        expect(await prisma.standing.count({ where: { entityType: 'team', entityId: team2!.id } })).toBe(0);
+        if (robotCount === 3) {
+          expect(team3?.members.map((m) => m.robotId).sort()).toEqual(user.robots.map((r) => r.id).sort());
+          const team3Modes = await prisma.standing.findMany({ where: { entityType: 'team', entityId: team3!.id } });
+          expect(team3Modes.map((s) => s.mode)).toEqual(['league_3v3']);
+          expect(team3Modes[0]).toMatchObject({ tier: 'bronze', leaguePoints: 0 });
+        } else {
+          expect(team3).toBeUndefined();
+        }
+
+        if (robotCount >= 2) {
+          expect(team2?.members.map((m) => m.robotId).sort()).toEqual(user.robots.slice(0, 2).map((r) => r.id).sort());
+          expect(await prisma.standing.count({ where: { entityType: 'team', entityId: team2!.id } })).toBe(0);
+        } else {
+          expect(team2).toBeUndefined();
+        }
       }
     });
 
-    it('gives robot standings only in Grand Melee, for robot 3', async () => {
+    it('gives robot standings only in Grand Melee, for the last robot of each stable', async () => {
       const result = await createGeneratedStables(3);
       const robots = await prisma.robot.findMany({
         where: { user: { username: { in: result.usernames } } },
         orderBy: { id: 'asc' },
         select: { id: true, userId: true },
       });
-      const thirdRobotOf = new Map<number, number>();
-      for (const robot of robots) thirdRobotOf.set(robot.userId, robot.id); // last (third) robot per stable
+      const lastRobotOf = new Map<number, number>();
+      for (const robot of robots) lastRobotOf.set(robot.userId, robot.id); // last robot per stable
       const standings = await prisma.standing.findMany({
         where: { entityType: 'robot', entityId: { in: robots.map((r) => r.id) } },
       });
       expect(standings.map((s) => s.mode)).toEqual(['grand_melee', 'grand_melee', 'grand_melee']);
-      expect(standings.map((s) => s.entityId).sort()).toEqual([...thirdRobotOf.values()].sort());
+      expect(standings.map((s) => s.entityId).sort()).toEqual([...lastRobotOf.values()].sort());
     });
 
     it('makes every team and robot eligible for its tournament', async () => {
@@ -225,7 +243,9 @@ describe('Generated stables', () => {
             where: { user: { username: { in: result.usernames } } },
             include: { user: true, mainWeapon: { include: { weapon: true } } },
           });
-          expect(robots).toHaveLength(count * FILLER_ROBOTS_PER_STABLE);
+          const users = await prisma.user.findMany({ where: { username: { in: result.usernames } }, select: { username: true } });
+          const expectedRobots = users.reduce((sum, u) => sum + tierOf(u.username).robotCount, 0);
+          expect(robots).toHaveLength(expectedRobots);
           expect(new Set(robots.map((r) => r.name)).size).toBe(robots.length);
           for (const robot of robots) {
             const parts = robot.name.split(' ');
@@ -250,7 +270,8 @@ describe('Generated stables', () => {
       process.env.GENERATED_STABLE_TARGET = '4';
 
       const first = await topUpGeneratedStables();
-      expect(first).toMatchObject({ target: 4, existingBefore: 0, usersCreated: 4, robotsCreated: 12 });
+      // Two WimpBot (3 robots), one AverageBot (2), one ExpertBot (1).
+      expect(first).toMatchObject({ target: 4, existingBefore: 0, usersCreated: 4, robotsCreated: 9 });
       expect(first.tierBreakdown).toEqual({ wimpBot: 2, averageBot: 1, expertBot: 1 });
 
       const second = await topUpGeneratedStables();

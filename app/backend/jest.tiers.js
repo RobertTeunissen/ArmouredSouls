@@ -239,6 +239,7 @@ const DB_DEPENDENT = [
   'tests/finances.test.ts',
   'tests/financialLedgerCoverage.integration.test.ts',
   'tests/financialWriteTransaction.integration.test.ts',
+  'tests/generatedStableConversion.test.ts',
   'tests/health.property.test.ts',
   'tests/hpTracking.pbt.test.ts',
   'tests/incomeGeneratorNoStreaming.property.test.ts',

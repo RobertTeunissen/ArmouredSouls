@@ -38,16 +38,29 @@ describe('getGeneratedStableTarget', () => {
 });
 
 describe('fillerSubscriptionsFor', () => {
-  it('gives each robot four events (the Booking Office L1 cap)', () => {
-    expect(fillerSubscriptionsFor(0)).toEqual(['league_3v3', 'tournament_3v3', 'tournament_1v1', 'tournament_2v2']);
-    expect(fillerSubscriptionsFor(1)).toEqual(['league_3v3', 'tournament_3v3', 'tournament_1v1', 'tournament_2v2']);
-    expect(fillerSubscriptionsFor(2)).toEqual(['league_3v3', 'tournament_3v3', 'tournament_1v1', 'grand_melee']);
+  it('three-robot (WimpBot) stables: 3v3 events for all, 2v2 for robots 1–2, Grand Melee for robot 3', () => {
+    expect(fillerSubscriptionsFor(0, 3)).toEqual(['league_3v3', 'tournament_3v3', 'tournament_1v1', 'tournament_2v2']);
+    expect(fillerSubscriptionsFor(1, 3)).toEqual(['league_3v3', 'tournament_3v3', 'tournament_1v1', 'tournament_2v2']);
+    expect(fillerSubscriptionsFor(2, 3)).toEqual(['league_3v3', 'tournament_3v3', 'tournament_1v1', 'grand_melee']);
   });
 
-  it('never enters the leagues Automatons already fill', () => {
-    for (const slot of [0, 1, 2]) {
-      for (const event of ['league_1v1', 'league_2v2', 'tag_team', 'koth']) {
-        expect(fillerSubscriptionsFor(slot)).not.toContain(event);
+  it('two-robot (AverageBot) stables: no 3v3 events, both in the 2v2 tournament, robot 2 in Grand Melee', () => {
+    expect(fillerSubscriptionsFor(0, 2)).toEqual(['tournament_1v1', 'tournament_2v2']);
+    expect(fillerSubscriptionsFor(1, 2)).toEqual(['tournament_1v1', 'tournament_2v2', 'grand_melee']);
+  });
+
+  it('one-robot (ExpertBot) stables: only the 1v1 tournament and Grand Melee', () => {
+    expect(fillerSubscriptionsFor(0, 1)).toEqual(['tournament_1v1', 'grand_melee']);
+  });
+
+  it('stays within the Booking Office L1 cap and never enters the leagues Automatons already fill', () => {
+    for (const robotCount of [1, 2, 3] as const) {
+      for (let slot = 0; slot < robotCount; slot++) {
+        const events = fillerSubscriptionsFor(slot, robotCount);
+        expect(events.length).toBeLessThanOrEqual(4);
+        for (const event of ['league_1v1', 'league_2v2', 'tag_team', 'koth']) {
+          expect(events).not.toContain(event);
+        }
       }
     }
   });

@@ -1,18 +1,24 @@
-// Bot tier constants and shared types: the attribute level and weapon price
-// band of generated stables (userGeneration.ts) and Practice Arena sparring bots.
-// Every generated stable has the same shape (three robots, see
-// FILLER_ROBOTS_PER_STABLE); the tier only sets how strong its robots are.
+// Bot tier constants and shared types: the attribute level, weapon price band
+// and roster size of generated stables (userGeneration.ts). Practice Arena
+// sparring bots reuse the attribute level and price band only.
 
 export interface TierConfig {
   name: 'WimpBot' | 'AverageBot' | 'ExpertBot';
   attributeLevel: number;
   priceTier: { min: number; max: number };
+  /**
+   * Robots in a generated stable of this tier. Stronger robots come in smaller
+   * rosters (3 / 2 / 1) so no filler stable outbuilds what a human can afford
+   * from the starting balance: three level-10 robots with premium weapons
+   * would cost far more than a new stable's credits.
+   */
+  robotCount: 1 | 2 | 3;
 }
 
 export const TIER_CONFIGS: TierConfig[] = [
-  { name: 'WimpBot', attributeLevel: 1.0, priceTier: { min: 0, max: 99999 } },
-  { name: 'AverageBot', attributeLevel: 5.0, priceTier: { min: 100000, max: 250000 } },
-  { name: 'ExpertBot', attributeLevel: 10.0, priceTier: { min: 250000, max: 400000 } },
+  { name: 'WimpBot', attributeLevel: 1.0, priceTier: { min: 0, max: 99999 }, robotCount: 3 },
+  { name: 'AverageBot', attributeLevel: 5.0, priceTier: { min: 100000, max: 250000 }, robotCount: 2 },
+  { name: 'ExpertBot', attributeLevel: 10.0, priceTier: { min: 250000, max: 400000 }, robotCount: 1 },
 ];
 
 export const LOADOUT_TITLES: Record<string, string> = {
