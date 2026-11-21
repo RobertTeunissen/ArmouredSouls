@@ -15,7 +15,7 @@ import prisma from '../src/lib/prisma';
 
 describe('Property 15: Cycle Step Duration Recording', () => {
   let eventLogger: EventLogger;
-  let testCycleNumbers: number[] = [];
+  const testCycleNumbers: number[] = [];
 
   beforeAll(() => {
     eventLogger = new EventLogger();

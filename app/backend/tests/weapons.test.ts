@@ -17,7 +17,7 @@ app.use(express.json());
 app.use('/api/weapons', weaponsRoutes);
 
 describe('Weapons Routes', () => {
-  let testUserIds: number[] = [];
+  const testUserIds: number[] = [];
   let testUser: any;
   let authToken: string;
 

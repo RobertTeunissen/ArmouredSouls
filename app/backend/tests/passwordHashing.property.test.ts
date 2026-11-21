@@ -185,7 +185,7 @@ function passwordWithSpecialCharsGenerator(): fc.Arbitrary<string> {
       { minLength: 8, maxLength: 64 }
     )
     .map((chars) => chars.join(''))
-    .filter((s) => /[!@#$%^&*()_+\-=\[\]{}|\\:;"'<>,.?/]/.test(s)); // Ensure at least one special char
+    .filter((s) => /[!@#$%^&*()_+\-=[\]{}|\\:;"'<>,.?/]/.test(s)); // Ensure at least one special char
 }
 
 /**
