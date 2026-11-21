@@ -40,7 +40,7 @@ const RANGE_BANDS = ['melee', 'short', 'mid', 'long'] as const;
 const STANCES = ['balanced', 'offensive', 'defensive'] as const;
 
 /** Every generated username starts with one of these (`auto_wimpbot_0001`, …). */
-export const TIER_PREFIX: Record<TierConfig['name'], string> = {
+const TIER_PREFIX: Record<TierConfig['name'], string> = {
   WimpBot: 'auto_wimpbot',
   AverageBot: 'auto_averagebot',
   ExpertBot: 'auto_expertbot',
@@ -49,17 +49,17 @@ export const TIER_PREFIX: Record<TierConfig['name'], string> = {
 // ── Helpers ──────────────────────────────────────────────────────────
 
 /** Max HP of a generated robot at attribute `level`. */
-export function generatedMaxHP(level: number): number {
+function generatedMaxHP(level: number): number {
   return 50 + Math.floor(level * 5);
 }
 
 /** Max shield of a generated robot at attribute `level`. */
-export function generatedMaxShield(level: number): number {
+function generatedMaxShield(level: number): number {
   return Math.floor(level * 4);
 }
 
 /** Build an attributes object with all 23 robot attributes set to `level`. */
-export function buildAttributes(level: number): Record<string, number> {
+function buildAttributes(level: number): Record<string, number> {
   return {
     combatPower: level,
     targetingSystems: level,
