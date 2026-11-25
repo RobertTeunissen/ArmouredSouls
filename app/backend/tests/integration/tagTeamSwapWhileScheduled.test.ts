@@ -39,7 +39,7 @@ async function createStable(): Promise<number> {
   return user.id;
 }
 
-async function armedRobot(userId: number): Promise<number> {
+async function armedRobot(userId: number, combatPower = 1): Promise<number> {
   const inv = await prisma.weaponInventory.create({ data: { userId, weaponId, pricePaid: 0 } });
   const robot = await prisma.robot.create({
     data: {
@@ -52,16 +52,18 @@ async function armedRobot(userId: number): Promise<number> {
       yieldThreshold: 20,
       loadoutType: 'single',
       mainWeaponId: inv.id,
+      combatPower,
     },
   });
   robotIds.push(robot.id);
   return robot.id;
 }
 
-async function createTeam(): Promise<{ teamId: number; stableId: number; active: number; reserve: number }> {
+/** `strongReserve` gives the reserve a much higher Combat Power, so the two members deal clearly different damage. */
+async function createTeam(strongReserve = false): Promise<{ teamId: number; stableId: number; active: number; reserve: number }> {
   const stableId = await createStable();
   const active = await armedRobot(stableId);
-  const reserve = await armedRobot(stableId);
+  const reserve = await armedRobot(stableId, strongReserve ? 30 : 1);
   const team = await createTagTeamFixture(stableId, active, reserve);
   teamIds.push(team.id);
   return { teamId: team.id, stableId, active, reserve };
@@ -126,7 +128,7 @@ describe('tag team Active / Reserve swap while scheduled', () => {
   });
 
   it('books the result against the line-up the battle was fought with', async () => {
-    const teams = [await createTeam(), await createTeam(), await createTeam(), await createTeam()];
+    const teams = [await createTeam(), await createTeam(), await createTeam(true), await createTeam()];
     await schedule(teams[0].teamId, teams[1].teamId, 1);
     const m2 = await schedule(teams[2].teamId, teams[3].teamId, 2);
     const swapped = teams[2];
