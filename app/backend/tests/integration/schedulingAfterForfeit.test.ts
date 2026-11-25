@@ -292,7 +292,7 @@ describe('T25: scheduling after execution excludes forfeiters and fallback fight
     await unequipMainWeapon((await prisma.robot.findUniqueOrThrow({ where: { id: unarmed } })).userId, unarmed);
     await unequipOffhandWeapon((await prisma.robot.findUniqueOrThrow({ where: { id: incomplete } })).userId, incomplete);
 
-    const eligible = new Set((await getEligible(TIER, instance)).map((r) => r.id));
+    const eligible = new Set((await getEligible(instance)).map((r) => r.id));
 
     expect(eligible.has(unarmed)).toBe(false);
     expect(eligible.has(incomplete)).toBe(false);
