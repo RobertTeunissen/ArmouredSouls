@@ -8,6 +8,17 @@
  */
 
 import { z } from 'zod';
+import { SAFE_NAME_MAX_LENGTH, SAFE_NAME_PATTERN, stableNameErrors } from '../shared/utils/accountRules';
+
+/**
+ * A string checked by one of the shared account rules (`shared/utils/accountRules`):
+ * each failed rule becomes an issue with the rule's own user-facing message.
+ */
+export function ruleCheckedString(rules: (value: string) => string[]): z.ZodString {
+  return z.string().superRefine((value, ctx) => {
+    for (const message of rules(value)) ctx.addIssue({ code: 'custom', message });
+  });
+}
 
 /**
  * Safe name: letters, numbers, spaces, hyphens, underscores, apostrophes, periods, exclamation marks.
@@ -25,9 +36,9 @@ import { z } from 'zod';
 export const safeName = z
   .string()
   .min(1, 'Name is required')
-  .max(50, 'Name must be 50 characters or less')
+  .max(SAFE_NAME_MAX_LENGTH, `Name must be ${SAFE_NAME_MAX_LENGTH} characters or less`)
   .regex(
-    /^[a-zA-Z0-9 _\-'.!]+$/,
+    SAFE_NAME_PATTERN,
     'Name can only contain letters, numbers, spaces, hyphens, underscores, apostrophes, periods, and exclamation marks',
   );
 
@@ -104,28 +115,9 @@ export const paginationQuery = z.object({
 });
 
 /**
- * Stable name: letters, numbers, spaces, hyphens, underscores.
- * Used for player stable names (public display names).
+ * Stable name: letters, numbers, spaces, hyphens, underscores (3–30 characters).
+ * The rule and its user-facing wording live in `shared/utils/accountRules`
+ * (the registration and profile forms use them too). Profanity is checked by
+ * `validateStableName` in the handler: a content rule, not a shape rule.
  */
-/**
- * The wording is the canonical wording from `validateStableName` in
- * `utils/validation.ts`, deliberately duplicated here rather than paraphrased.
- *
- * These messages are user-facing: `validateRequest` builds the response's `error`
- * string from the failing issues, and this schema runs in front of
- * `validateStableName`, so whatever is written here is what a player reads. Zod's
- * defaults ('Too small: expected string to have >=3 characters') name neither the
- * field nor the rule.
- *
- * Profanity is checked by `validateStableName` in the handler, not here — that is a
- * content rule rather than a shape rule, and it needs the profanity list in
- * `utils/profanityFilter.ts`.
- */
-export const stableName = z
-  .string()
-  .min(3, 'Stable name must be at least 3 characters')
-  .max(30, 'Stable name must be 30 characters or less')
-  .regex(
-    /^[a-zA-Z0-9 _-]+$/,
-    'Stable name can only contain letters, numbers, spaces, hyphens, and underscores',
-  );
+export const stableName = ruleCheckedString(stableNameErrors);

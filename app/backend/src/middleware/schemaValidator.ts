@@ -27,18 +27,9 @@ interface ValidationSchemas {
 /**
  * Build the human-readable `error` string from Zod issues.
  *
- * Spec #51: this used to be a fixed string — 'Invalid request body' and friends —
- * with the useful text buried in `details.fields`. That broke a client contract.
- * `RegistrationForm.tsx` maps a VALIDATION_ERROR to the offending input by
- * keyword-matching the message ("username", "email", "password", "stable"), so a
- * message of 'Invalid request body' matched nothing and every server-side
- * validation failure landed in the generic banner instead of under its field.
- *
- * Its own comment recorded the contract it depended on: "The backend joins
- * multiple errors with ', '". That was true of `validateRegistrationRequest`,
- * which this middleware was placed in front of.
- *
- * `details.fields` is unchanged, so structured consumers are unaffected.
+ * Forms put each message under its input from `details.fields` (field + message);
+ * this joined string is what a screen shows when it has no field for the error,
+ * so each message names its own field.
  *
  * CONVENTION for schema authors: write messages that name their own field, e.g.
  * 'Username must be at least 3 characters long' rather than Zod's default

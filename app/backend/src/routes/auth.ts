@@ -22,7 +22,8 @@ import { initializeTutorialState } from '../services/onboarding/onboardingServic
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { AppError } from '../errors/AppError';
 import { validateRequest } from '../middleware/schemaValidator';
-import { stableName as stableNameSchema } from '../utils/securityValidation';
+import { ruleCheckedString, stableName as stableNameSchema } from '../utils/securityValidation';
+import { emailErrors, registrationPasswordErrors, usernameErrors } from '../shared/utils/accountRules';
 import prisma from '../lib/prisma';
 import { securityMonitor } from '../services/security/securityMonitor';
 
@@ -30,33 +31,15 @@ const router = express.Router();
 
 // --- Zod schemas for auth routes ---
 
-// Spec #51: these messages are the ones the user sees. `validateRequest` now
-// joins them into the response's `error` field, and `RegistrationForm.tsx` maps a
-// VALIDATION_ERROR to the offending input by keyword-matching that text — so each
-// message must name its own field.
-//
-// The wording is kept identical to `utils/validation.ts`, which produced these
-// strings before this Zod schema was placed in front of it. Both layers still run
-// (this one as middleware, `validateRegistrationRequest` inside the handler) and
-// both declare the same bounds, which is a duplication worth collapsing — see the
-// note in tasks.md. It is left alone here to keep this spec's scope to
-// restoration.
+// Shape rules and their user-facing wording come from shared/utils/accountRules,
+// which the registration form also checks before submitting. `validateRequest`
+// joins the messages into the response's `error` field and lists them per field
+// in `details.fields`. The handler still runs `validateRegistrationRequest` for
+// the content rule the schema cannot express (stable name profanity).
 const registerBodySchema = z.object({
-  username: z
-    .string()
-    .min(3, 'Username must be at least 3 characters long')
-    .max(20, 'Username must not exceed 20 characters')
-    .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens'),
-  email: z
-    .string()
-    .min(3, 'Email must be at least 3 characters long')
-    .max(50, 'Email must not exceed 50 characters')
-    .regex(/^[a-zA-Z0-9._@-]+$/, 'Email contains invalid characters')
-    .email('Please provide a valid email address'),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters long')
-    .max(128, 'Password must not exceed 128 characters'),
+  username: ruleCheckedString(usernameErrors),
+  email: ruleCheckedString(emailErrors).email('Please provide a valid email address'),
+  password: ruleCheckedString(registrationPasswordErrors),
   stableName: stableNameSchema,
 });
 
@@ -109,7 +92,7 @@ router.post('/register', validateRequest({ body: registerBodySchema }), async (r
       invalidFields: validation.invalidFields,
       username: username || '<missing>',
     });
-    throw new AppError('VALIDATION_ERROR', validation.errors.join(', '), 400, { errors: validation.errors });
+    throw new AppError('VALIDATION_ERROR', validation.errors.join(', '), 400, { fields: validation.fields });
   }
 
   // Check for duplicate username

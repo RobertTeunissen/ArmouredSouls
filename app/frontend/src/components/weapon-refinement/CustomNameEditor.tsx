@@ -30,6 +30,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { WeaponInventoryItem } from '../weapon-shop/types';
+import { SAFE_NAME_MAX_LENGTH, SAFE_NAME_PATTERN } from '@shared/utils/accountRules';
 
 interface CustomNameEditorProps {
   inventoryItem: WeaponInventoryItem;
@@ -44,30 +45,15 @@ interface CustomNameEditorProps {
   onSave: (newName: string | null) => Promise<void>;
 }
 
-/**
- * Mirrors `safeName` from `app/backend/src/utils/securityValidation.ts`
- * (`/^[a-zA-Z0-9 _\-'.!]+$/`), with `+` relaxed to `*` so the empty-string
- * case is handled by the "empty → null clears the name" branch in handleSave
- * rather than by failing the regex check.
- */
-const SAFE_NAME_PATTERN = /^[a-zA-Z0-9 _\-'.!]*$/;
-const MAX_LENGTH = 60;
+/** The backend's `safeName` length limit (shared/utils/accountRules). */
+const MAX_LENGTH = SAFE_NAME_MAX_LENGTH;
 
 /**
- * Pull a human-readable error message off whatever the parent threw. We
- * prefer the API error envelope (`response.data.error`) — that's where the
- * backend's 429 / 400 / 403 messages land — and fall back to `error.message`
- * for thrown JS errors. Anything else becomes a generic fallback so the UI
- * never renders `[object Object]`.
+ * The parent's error message (an ApiError carries the backend's 429 / 400 /
+ * 403 text), else a generic fallback so the UI never renders `[object Object]`.
  */
 function extractErrorMessage(err: unknown): string {
-  if (typeof err === 'object' && err !== null) {
-    const apiErr = err as { response?: { data?: { error?: string } }; message?: string };
-    const apiMsg = apiErr.response?.data?.error;
-    if (typeof apiMsg === 'string' && apiMsg.length > 0) return apiMsg;
-    if (typeof apiErr.message === 'string' && apiErr.message.length > 0) return apiErr.message;
-  }
-  return 'Failed to save custom name.';
+  return (err instanceof Error && err.message) || 'Failed to save custom name.';
 }
 
 export function CustomNameEditor({ inventoryItem, onSave }: CustomNameEditorProps) {
