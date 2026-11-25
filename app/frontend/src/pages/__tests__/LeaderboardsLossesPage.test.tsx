@@ -73,7 +73,7 @@ describe('LeaderboardsLossesPage', () => {
     await waitFor(() => expect(mockGet).toHaveBeenCalled());
     expect(mockGet).toHaveBeenCalledWith(
       '/api/leaderboards/losses',
-      { params: { page: 1, limit: 100, sortBy: 'total' } },
+      expect.objectContaining({ params: { page: 1, limit: 100, sortBy: 'total' } }),
     );
   });
 
@@ -96,7 +96,7 @@ describe('LeaderboardsLossesPage', () => {
     await waitFor(() =>
       expect(mockGet).toHaveBeenLastCalledWith(
         '/api/leaderboards/losses',
-        { params: { page: 1, limit: 100, sortBy: 'koth' } },
+        expect.objectContaining({ params: { page: 1, limit: 100, sortBy: 'koth' } }),
       ),
     );
   });
@@ -115,7 +115,7 @@ describe('LeaderboardsLossesPage', () => {
     await waitFor(() =>
       expect(mockGet).toHaveBeenLastCalledWith(
         '/api/leaderboards/losses',
-        { params: { page: 1, limit: 100, sortBy: 'grand_melee' } },
+        expect.objectContaining({ params: { page: 1, limit: 100, sortBy: 'grand_melee' } }),
       ),
     );
   });
