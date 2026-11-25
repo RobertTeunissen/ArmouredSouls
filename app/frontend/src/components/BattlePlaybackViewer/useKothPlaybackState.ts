@@ -1,12 +1,7 @@
 import { useMemo } from 'react';
-import type { PlaybackCombatEvent, PlaybackZoneState, KothPlaybackData } from './types';
+import type { KothPlaybackData, KothScoreEntry, PlaybackCombatEvent, PlaybackZoneState } from './types';
 import type { ArenaPoint } from '@shared/types';
 
-export interface KothScoreEntry {
-  robotName: string;
-  zoneScore: number;
-  isEliminated: boolean;
-}
 
 export interface KothPlaybackState {
   zone: PlaybackZoneState;

@@ -23,7 +23,7 @@ import {
   buildSpatialContext,
   CombatEvent,
   RobotWithWeapons,
-  SpatialRobotCombatState,
+  RobotCombatState,
 } from '../../src/services/battle/combatSimulator';
 
 type WeaponShape = 'melee' | 'ranged';
@@ -73,7 +73,7 @@ function statesAt(
   attacker: RobotWithWeapons,
   defender: RobotWithWeapons,
   distance: number,
-): [SpatialRobotCombatState, SpatialRobotCombatState] {
+): [RobotCombatState, RobotCombatState] {
   return [
     initializeCombatState(attacker, { x: 0, y: 0 }, { x: distance, y: 0 }, 0, 3, 4),
     initializeCombatState(defender, { x: distance, y: 0 }, { x: 0, y: 0 }, 1, 3, 4),

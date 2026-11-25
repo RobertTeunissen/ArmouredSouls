@@ -80,9 +80,9 @@ import { calculateBaseCost } from '../src/shared/utils/upgradeCosts';
 import type {
   RobotWithWeapons,
   BattleConfig,
-  SpatialCombatResult,
-  SpatialCombatEvent,
-  SpatialRobotCombatState,
+  CombatResult,
+  CombatEvent,
+  RobotCombatState,
 } from '../src/services/battle/combatSimulator';
 import type * as KothEngine from '../src/services/arena/kothEngine';
 
@@ -146,7 +146,7 @@ interface Arm {
   label: string;
   src: string;
   revision: string;
-  simulateBattleMulti: (robots: RobotWithWeapons[], config: BattleConfig) => SpatialCombatResult;
+  simulateBattleMulti: (robots: RobotWithWeapons[], config: BattleConfig) => CombatResult;
   prepareRobotForCombat: (robot: RobotWithWeapons) => void;
   catalogue: Map<string, WeaponDefinition>;
   disconnectSeedClient: () => Promise<void>;
@@ -365,7 +365,7 @@ function bandOf(distance: number): RangeClass {
  * The band before the first transition is the band of the distance to the nearest opponent at
  * spawn (always beyond melee reach in these arenas).
  */
-function bandTime(result: SpatialCombatResult, name: string, endTime: number): Record<RangeClass, { seconds: number; entries: number }> {
+function bandTime(result: CombatResult, name: string, endTime: number): Record<RangeClass, { seconds: number; entries: number }> {
   const start = result.startingPositions ?? {};
   const own = start[name];
   let nearest = Infinity;
@@ -391,7 +391,7 @@ function bandTime(result: SpatialCombatResult, name: string, endTime: number): R
  * Seconds `name` spent within melee reach (≤ 2) of its current target and the number of
  * transitions into the melee band (see bandTime).
  */
-function meleeReach(result: SpatialCombatResult, name: string, endTime: number): { seconds: number; entries: number } {
+function meleeReach(result: CombatResult, name: string, endTime: number): { seconds: number; entries: number } {
   return bandTime(result, name, endTime).melee;
 }
 
@@ -424,7 +424,7 @@ function wallSampler(): { config: BattleConfig; share: (name: string) => number 
 }
 
 /** Resolved main/offhand attacks with a melee-band weapon at distance > 2 (#518 invariant), and their damage. */
-function outOfReachMeleeAttacks(events: SpatialCombatEvent[], robots: RobotWithWeapons[]): { count: number; damage: number } {
+function outOfReachMeleeAttacks(events: CombatEvent[], robots: RobotWithWeapons[]): { count: number; damage: number } {
   const byName = new Map(robots.map((r) => [r.name, r]));
   let count = 0;
   let damage = 0;
@@ -440,7 +440,7 @@ function outOfReachMeleeAttacks(events: SpatialCombatEvent[], robots: RobotWithW
   return { count, damage };
 }
 
-function isTimeout(result: SpatialCombatResult, maxDuration: number): boolean {
+function isTimeout(result: CombatResult, maxDuration: number): boolean {
   return result.durationSeconds >= maxDuration - 0.05;
 }
 
@@ -634,7 +634,7 @@ const GM_ROBOT_METRICS: Array<keyof MeleeRobotMetrics> = ['normRank', 'podium', 
 const GM_BATTLE_METRICS = ['timeout', 'duration', 'survivors', 'oorMelee', 'oorMeleeDamage', 'noContact'] as const;
 type GmBattleMetric = (typeof GM_BATTLE_METRICS)[number];
 
-function firstEliminations(events: SpatialCombatEvent[]): Map<string, number> {
+function firstEliminations(events: CombatEvent[]): Map<string, number> {
   const eliminatedAt = new Map<string, number>();
   for (const e of events) {
     if (ELIMINATION_TYPES.has(e.type) && e.defender && !eliminatedAt.has(e.defender)) eliminatedAt.set(e.defender, e.timestamp);
@@ -643,9 +643,9 @@ function firstEliminations(events: SpatialCombatEvent[]): Map<string, number> {
 }
 
 /** Same ordering as grandMeleeBattleOrchestrator.computePlacements (not exported; that module needs a DB client). */
-function placementOrder(states: SpatialRobotCombatState[], events: SpatialCombatEvent[]): string[] {
+function placementOrder(states: RobotCombatState[], events: CombatEvent[]): string[] {
   const eliminatedAt = firstEliminations(events);
-  const hpPct = (s: SpatialRobotCombatState): number => (s.maxHP > 0 ? s.currentHP / s.maxHP : 0);
+  const hpPct = (s: RobotCombatState): number => (s.maxHP > 0 ? s.currentHP / s.maxHP : 0);
   const survivors = states.filter((s) => s.isAlive)
     .sort((a, b) => hpPct(b) - hpPct(a) || b.totalDamageDealt - a.totalDamageDealt);
   const eliminated = states.filter((s) => !s.isAlive).sort((a, b) =>

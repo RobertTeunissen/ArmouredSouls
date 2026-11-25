@@ -7,7 +7,7 @@ import { resolveBelowMinimumField } from '../scheduling/thinInstanceByes';
 import type { KothPlacement } from '../../types';
 import { MIN_GROUP_SIZE } from './grandMeleeMatchmakingService';
 import { countKillsByRobot } from '../../shared/utils/battleStatistics';
-import { simulateBattleMulti, RobotWithWeapons, BattleConfig, SpatialCombatResult, SpatialRobotCombatState, SpatialCombatEvent } from '../battle/combatSimulator';
+import { simulateBattleMulti, RobotWithWeapons, BattleConfig, CombatResult, RobotCombatState, CombatEvent } from '../battle/combatSimulator';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import {
   checkAndAwardAchievements,
@@ -81,9 +81,9 @@ interface PlacementEntry {
  * 7. Count kills per robot from elimination events
  */
 function computePlacements(
-  result: SpatialCombatResult,
-  states: SpatialRobotCombatState[],
-  events: SpatialCombatEvent[],
+  result: CombatResult,
+  states: RobotCombatState[],
+  events: CombatEvent[],
 ): PlacementEntry[] {
   // Event types that take a robot out of the match. `yield` counts for ordering
   // but never for kill credit — the robot removed itself.
@@ -113,8 +113,8 @@ function computePlacements(
   );
 
   // Split states into survivors and eliminated
-  const survivors: SpatialRobotCombatState[] = [];
-  const eliminated: SpatialRobotCombatState[] = [];
+  const survivors: RobotCombatState[] = [];
+  const eliminated: RobotCombatState[] = [];
 
   for (const state of states) {
     if (state.isAlive) {

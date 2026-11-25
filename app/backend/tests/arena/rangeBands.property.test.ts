@@ -15,7 +15,7 @@ import {
   simulateBattleMulti,
   CombatEvent,
   RobotWithWeapons,
-  SpatialRobotCombatState,
+  RobotCombatState,
 } from '../../src/services/battle/combatSimulator';
 import { BattleError, BattleErrorCode } from '../../src/errors/battleErrors';
 
@@ -180,8 +180,8 @@ function attemptAttack(
   result: unknown;
   events: CombatEvent[];
   randomCalls: number;
-  attackerState: SpatialRobotCombatState;
-  defenderState: SpatialRobotCombatState;
+  attackerState: RobotCombatState;
+  defenderState: RobotCombatState;
   attackerBefore: string;
   defenderBefore: string;
 } {
@@ -191,7 +191,7 @@ function attemptAttack(
   const states = [attackerState, defenderState];
   const ctx = buildSpatialContext(attackerState, defenderState, hand, 1, arena, states);
   if (options.contextDistance !== undefined) ctx.distance = options.contextDistance;
-  const snapshot = (s: SpatialRobotCombatState): string => JSON.stringify({
+  const snapshot = (s: RobotCombatState): string => JSON.stringify({
     hp: s.currentHP, shield: s.currentShield, miss: s.missCount, hits: s.hitsTaken,
     adaptHit: s.adaptationHitBonus, adaptDmg: s.adaptationDamageBonus,
     dealt: s.totalDamageDealt, taken: s.totalDamageTaken,

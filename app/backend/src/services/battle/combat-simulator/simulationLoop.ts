@@ -11,9 +11,8 @@ import {
   RobotWithWeapons,
   CombatResult,
   BattleConfig,
-  SpatialRobotCombatState,
-  SpatialCombatEvent,
-  SpatialCombatResult,
+  RobotCombatState,
+  CombatEvent,
   RangeBand,
   Position,
   MAX_BATTLE_DURATION,
@@ -53,13 +52,13 @@ import {
  *
  * @param robots Array of robots to fight (N >= 2)
  * @param config Battle configuration (draw rules, duration, game mode hooks)
- * @returns SpatialCombatResult with full arena metadata
+ * @returns CombatResult with full arena metadata
  */
 
 export function simulateBattleMulti(
   robots: RobotWithWeapons[],
   config: BattleConfig = { allowDraws: true },
-): SpatialCombatResult {
+): CombatResult {
   const n = robots.length;
   if (n < 2) {
     throw new BattleError(
@@ -97,7 +96,7 @@ export function simulateBattleMulti(
   }
 
   // === 2. Initialize combat states ===
-  const states: SpatialRobotCombatState[] = robots.map((robot, i) => {
+  const states: RobotCombatState[] = robots.map((robot, i) => {
     const spawn = arena.spawnPositions[i] ?? { x: 0, y: 0 };
     const facingTarget = n === 2
       ? (arena.spawnPositions[1 - i] ?? arena.center)
@@ -118,14 +117,14 @@ export function simulateBattleMulti(
     startingPositions[s.robot.name] = { x: s.position.x, y: s.position.y };
   }
 
-  const rawEvents: SpatialCombatEvent[] = [];
+  const rawEvents: CombatEvent[] = [];
   let currentTime = 0;
   let battleEnded = false;
   let winnerId: number | null = null;
   let winReason: string | undefined;
 
   // Pre-build index for O(1) lookups by teamIndex (replaces repeated linear scans)
-  const stateByTeamIndex = new Map<number, SpatialRobotCombatState>(
+  const stateByTeamIndex = new Map<number, RobotCombatState>(
     states.map(s => [s.teamIndex, s])
   );
 
@@ -144,7 +143,7 @@ export function simulateBattleMulti(
 
   // Push helper that auto-injects robotHP/robotShield maps on every event.
   // Always builds a fresh snapshot from live state to ensure post-damage accuracy.
-  function pushEvent(...args: SpatialCombatEvent[]): number {
+  function pushEvent(...args: CombatEvent[]): number {
     const snapshot = buildHPShieldSnapshot(states);
     for (const evt of args) {
       evt.robotHP = snapshot.robotHP;
@@ -154,7 +153,7 @@ export function simulateBattleMulti(
   }
 
   // Array-like object passed to performAttack (which calls events.push internally)
-  const events = { push: pushEvent } as unknown as SpatialCombatEvent[];
+  const events = { push: pushEvent } as unknown as CombatEvent[];
 
   // Movement event throttling per robot
   const lastMoveEventTime: number[] = states.map(() => 0);
@@ -293,7 +292,7 @@ export function simulateBattle(
     allowDraws: !isTournament,
   });
 
-  // Map SpatialCombatResult back to the legacy CombatResult shape
+  // Map CombatResult back to the legacy CombatResult shape
   return {
     winnerId: result.winnerId,
     robot1FinalHP: result.robot1FinalHP,
