@@ -7,7 +7,7 @@ import { resolveByeCardSubject } from './match-cards/bye-match-data';
 import type { BattleReadiness } from '../utils/robot-battle-readiness';
 
 // Readiness is loadout-only (no HP), so the only not-ready state is the yellow warning.
-const NOT_READY_COLOR = 'text-[#d29922]';
+const NOT_READY_COLOR = 'text-warning';
 const NOT_READY_ICON = '🟡';
 
 interface UpcomingMatchesProps {

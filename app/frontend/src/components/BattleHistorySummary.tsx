@@ -188,15 +188,15 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
   const displayStats = getDisplayStats();
   
   return (
-    <div className="bg-[#252b38] border border-white/10 rounded-lg p-4 mb-4">
+    <div className="bg-surface-elevated border border-white/10 rounded-lg p-4 mb-4">
       {/* View Toggle */}
       <div className="flex flex-wrap gap-2 mb-4 pb-3 border-b border-white/10">
         <button
           onClick={() => onViewChange('overall')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
             view === 'overall' 
-              ? 'bg-[#58a6ff] text-white' 
-              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              ? 'bg-primary text-white' 
+              : 'bg-surface text-secondary hover:bg-surface-elevated'
           }`}
         >
           Overall
@@ -205,8 +205,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
           onClick={() => onViewChange('league')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
             view === 'league' 
-              ? 'bg-[#58a6ff] text-white' 
-              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              ? 'bg-primary text-white' 
+              : 'bg-surface text-secondary hover:bg-surface-elevated'
           }`}
         >
           ⚔️ 1v1 League
@@ -215,8 +215,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
           onClick={() => onViewChange('league_2v2')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
             view === 'league_2v2' 
-              ? 'bg-[#58a6ff] text-white' 
-              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              ? 'bg-primary text-white' 
+              : 'bg-surface text-secondary hover:bg-surface-elevated'
           }`}
         >
           ⚔️ 2v2 League
@@ -225,8 +225,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
           onClick={() => onViewChange('league_3v3')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
             view === 'league_3v3' 
-              ? 'bg-[#58a6ff] text-white' 
-              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              ? 'bg-primary text-white' 
+              : 'bg-surface text-secondary hover:bg-surface-elevated'
           }`}
         >
           ⚔️ 3v3 League
@@ -235,8 +235,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
           onClick={() => onViewChange('tournament')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
             view === 'tournament' 
-              ? 'bg-[#58a6ff] text-white' 
-              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              ? 'bg-primary text-white' 
+              : 'bg-surface text-secondary hover:bg-surface-elevated'
           }`}
         >
           🏆 1v1 Tournament
@@ -245,8 +245,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
           onClick={() => onViewChange('tournament_2v2')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
             view === 'tournament_2v2' 
-              ? 'bg-[#58a6ff] text-white' 
-              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              ? 'bg-primary text-white' 
+              : 'bg-surface text-secondary hover:bg-surface-elevated'
           }`}
         >
           🏆 2v2 Tournament
@@ -255,8 +255,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
           onClick={() => onViewChange('tournament_3v3')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
             view === 'tournament_3v3' 
-              ? 'bg-[#58a6ff] text-white' 
-              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              ? 'bg-primary text-white' 
+              : 'bg-surface text-secondary hover:bg-surface-elevated'
           }`}
         >
           🏆 3v3 Tournament
@@ -265,8 +265,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
           onClick={() => onViewChange('tag_team')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
             view === 'tag_team' 
-              ? 'bg-[#58a6ff] text-white' 
-              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              ? 'bg-primary text-white' 
+              : 'bg-surface text-secondary hover:bg-surface-elevated'
           }`}
         >
           🤝 Tag Team
@@ -275,8 +275,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
           onClick={() => onViewChange('koth')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
             view === 'koth' 
-              ? 'bg-[#58a6ff] text-white' 
-              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              ? 'bg-primary text-white' 
+              : 'bg-surface text-secondary hover:bg-surface-elevated'
           }`}
         >
           👑 KotH
@@ -285,8 +285,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
           onClick={() => onViewChange('grand_melee')}
           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
             view === 'grand_melee' 
-              ? 'bg-[#58a6ff] text-white' 
-              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+              ? 'bg-primary text-white' 
+              : 'bg-surface text-secondary hover:bg-surface-elevated'
           }`}
         >
           💀 Grand Melee
@@ -296,7 +296,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Total Battles */}
         <div>
-          <div className="text-sm text-[#8b949e]">
+          <div className="text-sm text-secondary">
             {view === 'overall' ? 'Total Battles' : 
              view === 'league' ? 'League Battles' : 
              view === 'tournament' ? '1v1 Tournament Battles' : 
@@ -308,32 +308,32 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
              view === 'grand_melee' ? 'Grand Melee Battles' :
              'KotH Battles'}
           </div>
-          <div className="text-2xl font-bold text-[#58a6ff]">{displayStats.battles}</div>
+          <div className="text-2xl font-bold text-primary">{displayStats.battles}</div>
         </div>
         
         {/* Record */}
         <div>
-          <div className="text-sm text-[#8b949e]">Record</div>
+          <div className="text-sm text-secondary">Record</div>
           <div className="text-2xl font-bold">
-            <span className="text-[#3fb950]">{displayStats.wins}W</span>
+            <span className="text-success">{displayStats.wins}W</span>
             {' / '}
-            <span className="text-[#f85149]">{displayStats.losses}L</span>
+            <span className="text-error">{displayStats.losses}L</span>
             {displayStats.draws > 0 && (
               <>
                 {' / '}
-                <span className="text-[#57606a]">{displayStats.draws}D</span>
+                <span className="text-tertiary">{displayStats.draws}D</span>
               </>
             )}
           </div>
-          <div className="text-xs text-[#57606a]">
+          <div className="text-xs text-tertiary">
             {(displayStats.winRate * 100).toFixed(1)}% win rate
           </div>
         </div>
         
         {/* Average ELO Change */}
         <div>
-          <div className="text-sm text-[#8b949e]">Avg ELO Change</div>
-          <div className={`text-2xl font-bold ${displayStats.avgELOChange >= 0 ? 'text-[#3fb950]' : 'text-[#f85149]'}`}>
+          <div className="text-sm text-secondary">Avg ELO Change</div>
+          <div className={`text-2xl font-bold ${displayStats.avgELOChange >= 0 ? 'text-success' : 'text-error'}`}>
             {displayStats.avgELOChange > 0 ? '+' : ''}{displayStats.avgELOChange.toFixed(1)}
           </div>
         </div>
@@ -341,8 +341,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
         {/* Credits Earned */}
         {view === 'overall' && (
           <div>
-            <div className="text-sm text-[#8b949e]">Credits Earned</div>
-            <div className="text-2xl font-bold text-[#e6edf3]">₡{stats.totalCreditsEarned.toLocaleString()}</div>
+            <div className="text-sm text-secondary">Credits Earned</div>
+            <div className="text-2xl font-bold text-foreground">₡{stats.totalCreditsEarned.toLocaleString()}</div>
           </div>
         )}
         
@@ -353,7 +353,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
       {view === 'overall' && stats.currentStreak && stats.currentStreak.count >= 3 && (
         <div className="mt-4 pt-4 border-t border-white/10">
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
-            ${stats.currentStreak.type === 'win' ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'}`}>
+            ${stats.currentStreak.type === 'win' ? 'bg-success/20 text-success' : 'bg-error/20 text-error'}`}>
             <span>{stats.currentStreak.count}-game {stats.currentStreak.type} streak</span>
             {stats.currentStreak.type === 'win' && <span>🔥</span>}
           </div>
@@ -365,7 +365,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
         <div className="mt-4 pt-4 border-t border-white/10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <div className="text-sm text-[#8b949e]">Placements</div>
+              <div className="text-sm text-secondary">Placements</div>
               <div className="text-sm font-medium">
                 <span className="text-yellow-400">🥇 {stats.kothStats.placements.first}</span>
                 {' · '}
@@ -373,23 +373,23 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
                 {' · '}
                 <span className="text-orange-500">🥉 {stats.kothStats.placements.third}</span>
                 {stats.kothStats.placements.other > 0 && (
-                  <span className="text-[#8b949e]"> · {stats.kothStats.placements.other} other</span>
+                  <span className="text-secondary"> · {stats.kothStats.placements.other} other</span>
                 )}
               </div>
             </div>
             <div>
-              <div className="text-sm text-[#8b949e]">Avg Zone Score</div>
+              <div className="text-sm text-secondary">Avg Zone Score</div>
               <div className="text-2xl font-bold text-orange-500">
                 ⏱ {stats.kothStats.avgZoneScore.toFixed(1)}s
               </div>
             </div>
             <div>
-              <div className="text-sm text-[#8b949e]">Total Credits</div>
-              <div className="text-2xl font-bold text-[#e6edf3]">₡{stats.kothStats.totalCredits.toLocaleString()}</div>
+              <div className="text-sm text-secondary">Total Credits</div>
+              <div className="text-2xl font-bold text-foreground">₡{stats.kothStats.totalCredits.toLocaleString()}</div>
             </div>
             <div>
-              <div className="text-sm text-[#8b949e]">Total Kills</div>
-              <div className="text-2xl font-bold text-[#f85149]">{stats.kothStats.totalKills}</div>
+              <div className="text-sm text-secondary">Total Kills</div>
+              <div className="text-2xl font-bold text-error">{stats.kothStats.totalKills}</div>
             </div>
           </div>
         </div>
@@ -400,7 +400,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
         <div className="mt-4 pt-4 border-t border-white/10">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
-              <div className="text-sm text-[#8b949e]">Placements</div>
+              <div className="text-sm text-secondary">Placements</div>
               <div className="text-sm font-medium">
                 <span className="text-yellow-400">🥇 {stats.grandMeleeStats.placements.first}</span>
                 {' · '}
@@ -408,12 +408,12 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
                 {' · '}
                 <span className="text-orange-500">🥉 {stats.grandMeleeStats.placements.third}</span>
                 {stats.grandMeleeStats.placements.other > 0 && (
-                  <span className="text-[#8b949e]"> · {stats.grandMeleeStats.placements.other} other</span>
+                  <span className="text-secondary"> · {stats.grandMeleeStats.placements.other} other</span>
                 )}
               </div>
             </div>
             <div>
-              <div className="text-sm text-[#8b949e]">Podium Rate</div>
+              <div className="text-sm text-secondary">Podium Rate</div>
               <div className="text-2xl font-bold text-red-400">
                 {stats.grandMeleeStats.battles > 0
                   ? ((stats.grandMeleeStats.placements.first + stats.grandMeleeStats.placements.second + stats.grandMeleeStats.placements.third) / stats.grandMeleeStats.battles * 100).toFixed(0)
@@ -421,8 +421,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
               </div>
             </div>
             <div>
-              <div className="text-sm text-[#8b949e]">Matches</div>
-              <div className="text-2xl font-bold text-[#e6edf3]">{stats.grandMeleeStats.battles}</div>
+              <div className="text-sm text-secondary">Matches</div>
+              <div className="text-2xl font-bold text-foreground">{stats.grandMeleeStats.battles}</div>
             </div>
           </div>
         </div>

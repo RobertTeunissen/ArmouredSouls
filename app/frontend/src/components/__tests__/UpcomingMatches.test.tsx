@@ -228,9 +228,9 @@ describe('UpcomingMatches perspective and readiness', () => {
 
     const badge = await screen.findByText('Not Battle Ready');
     const badgeRow = badge.parentElement;
-    expect(badgeRow?.className).toContain('text-[#d29922]');
+    expect(badgeRow?.className).toContain('text-warning');
     expect(badgeRow?.textContent).toContain('🟡');
     expect(badgeRow?.textContent).not.toContain('🔴');
-    expect(screen.getByText(/⚠️ Shield HP check/).className).toContain('text-[#d29922]');
+    expect(screen.getByText(/⚠️ Shield HP check/).className).toContain('text-warning');
   });
 });

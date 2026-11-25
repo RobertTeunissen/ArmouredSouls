@@ -172,26 +172,26 @@ function BattleHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0e14] text-[#e6edf3]">
+    <div className="min-h-screen bg-background text-foreground">
 
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         <h1 className="text-4xl font-bold mb-6">Battle History</h1>
 
         {loading && (
-          <div className="bg-[#252b38] p-6 rounded-lg">
-            <p className="text-[#8b949e]">Loading battles...</p>
+          <div className="bg-surface-elevated p-6 rounded-lg">
+            <p className="text-secondary">Loading battles...</p>
           </div>
         )}
 
         {error && (
-          <div className="bg-[#f85149]/20 border border-[#f85149] p-6 rounded-lg">
-            <p className="text-[#f85149]">{error}</p>
+          <div className="bg-error/20 border border-error p-6 rounded-lg">
+            <p className="text-error">{error}</p>
           </div>
         )}
 
         {!loading && !error && battles.length === 0 && battleFilter === 'overall' && (
-          <div className="bg-[#252b38] p-6 rounded-lg">
-            <p className="text-[#8b949e]">No battles yet. Your first match is coming soon!</p>
+          <div className="bg-surface-elevated p-6 rounded-lg">
+            <p className="text-secondary">No battles yet. Your first match is coming soon!</p>
           </div>
         )}
 
@@ -205,13 +205,13 @@ function BattleHistoryPage() {
             />
 
             {/* Filter and Sort Controls */}
-            <div className="bg-[#252b38] border border-white/10 rounded-lg p-4 mb-4">
+            <div className="bg-surface-elevated border border-white/10 rounded-lg p-4 mb-4">
               <div className="flex flex-col lg:flex-row lg:flex-wrap gap-3">
                 {/* Outcome Filter */}
                 <select 
                   value={outcomeFilter}
                   onChange={(e) => setOutcomeFilter(e.target.value as typeof outcomeFilter)}
-                  className="w-full lg:w-auto min-h-[44px] bg-[#1a1f29] border border-white/10 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
+                  className="w-full lg:w-auto min-h-[44px] bg-surface border border-white/10 rounded px-3 py-2 text-sm text-foreground hover:border-primary/50 transition-colors"
                 >
                   <option value="all">All Outcomes</option>
                   <option value="win">Wins Only</option>
@@ -223,7 +223,7 @@ function BattleHistoryPage() {
                 <select 
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="w-full lg:w-auto min-h-[44px] bg-[#1a1f29] border border-white/10 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
+                  className="w-full lg:w-auto min-h-[44px] bg-surface border border-white/10 rounded px-3 py-2 text-sm text-foreground hover:border-primary/50 transition-colors"
                 >
                   <option value="date-desc">Sort: Newest First</option>
                   <option value="date-asc">Sort: Oldest First</option>
@@ -239,14 +239,14 @@ function BattleHistoryPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search robot or opponent..."
-                  className="w-full lg:w-auto min-h-[44px] bg-[#1a1f29] border border-white/10 rounded px-3 py-2 text-sm text-[#e6edf3] placeholder-[#57606a] lg:flex-1 lg:min-w-[200px] hover:border-[#58a6ff]/50 focus:border-[#58a6ff] focus:outline-none transition-colors"
+                  className="w-full lg:w-auto min-h-[44px] bg-surface border border-white/10 rounded px-3 py-2 text-sm text-foreground placeholder-tertiary lg:flex-1 lg:min-w-[200px] hover:border-primary/50 focus:border-primary focus:outline-none transition-colors"
                 />
 
                 {/* Results Per Page */}
                 <select 
                   value={resultsPerPage}
                   onChange={(e) => setResultsPerPage(Number(e.target.value))}
-                  className="w-full lg:w-auto min-h-[44px] bg-[#1a1f29] border border-white/10 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
+                  className="w-full lg:w-auto min-h-[44px] bg-surface border border-white/10 rounded px-3 py-2 text-sm text-foreground hover:border-primary/50 transition-colors"
                 >
                   <option value={20}>20 per page</option>
                   <option value={50}>50 per page</option>
@@ -257,7 +257,7 @@ function BattleHistoryPage() {
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="w-full lg:w-auto min-h-[44px] px-4 py-2 bg-[#1a1f29] border border-white/10 rounded text-sm text-[#8b949e] hover:bg-[#252b38] hover:text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
+                    className="w-full lg:w-auto min-h-[44px] px-4 py-2 bg-surface border border-white/10 rounded text-sm text-secondary hover:bg-surface-elevated hover:text-foreground hover:border-primary/50 transition-colors"
                   >
                     Clear Filters
                   </button>
@@ -266,7 +266,7 @@ function BattleHistoryPage() {
 
               {/* Filter Results Count */}
               {filteredAndSortedBattles.length !== battles.length && (
-                <div className="mt-3 text-sm text-[#8b949e]">
+                <div className="mt-3 text-sm text-secondary">
                   Showing {filteredAndSortedBattles.length} of {battles.length} battles
                 </div>
               )}
@@ -275,10 +275,10 @@ function BattleHistoryPage() {
             {/* Battle List */}
             <div className="mb-6">
               {filteredAndSortedBattles.length === 0 ? (
-                <div className="bg-[#252b38] border border-white/10 rounded-lg p-12 text-center">
+                <div className="bg-surface-elevated border border-white/10 rounded-lg p-12 text-center">
                   <div className="text-6xl mb-4 opacity-30">⚔️</div>
                   <h3 className="text-xl font-bold mb-2">No Battles Found</h3>
-                  <p className="text-[#8b949e] mb-4">
+                  <p className="text-secondary mb-4">
                     {hasActiveFilters 
                       ? "Try adjusting your filters to see more results."
                       : "Your first match is coming soon!"}
@@ -286,7 +286,7 @@ function BattleHistoryPage() {
                   {hasActiveFilters && (
                     <button 
                       onClick={clearFilters}
-                      className="px-4 py-2 bg-[#58a6ff] hover:bg-[#58a6ff]/80 rounded transition-colors text-white font-medium"
+                      className="px-4 py-2 bg-primary hover:bg-primary/80 rounded transition-colors text-white font-medium"
                     >
                       Clear Filters
                     </button>
@@ -337,19 +337,19 @@ function BattleHistoryPage() {
                 <button
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page === 1}
-                  className="px-4 py-2 bg-[#252b38] rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1a1f29] transition-colors"
+                  className="px-4 py-2 bg-surface-elevated rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface transition-colors"
                 >
                   Previous
                 </button>
 
-                <div className="px-4 py-2 bg-[#252b38] rounded">
+                <div className="px-4 py-2 bg-surface-elevated rounded">
                   Page {pagination.page} of {pagination.totalPages}
                 </div>
 
                 <button
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={pagination.page === pagination.totalPages}
-                  className="px-4 py-2 bg-[#252b38] rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1a1f29] transition-colors"
+                  className="px-4 py-2 bg-surface-elevated rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface transition-colors"
                 >
                   Next
                 </button>

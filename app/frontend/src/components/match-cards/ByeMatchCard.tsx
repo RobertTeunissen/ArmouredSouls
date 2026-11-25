@@ -35,7 +35,7 @@ function ByeMatchCard({ match, subject }: ByeMatchCardProps) {
   return (
     <div
       className={`
-        bg-[#252b38] border border-white/10 rounded-lg p-3 mb-1.5 min-h-[44px]
+        bg-surface-elevated border border-white/10 rounded-lg p-3 mb-1.5 min-h-[44px]
         border-l-4 ${modeConfig.borderColor}
         transition-all duration-150 ease-out
       `}
@@ -52,16 +52,16 @@ function ByeMatchCard({ match, subject }: ByeMatchCardProps) {
             <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
               {modeConfig.label}
             </span>
-            <span className="text-xs text-[#d29922] truncate">{tournamentLabel}</span>
+            <span className="text-xs text-warning truncate">{tournamentLabel}</span>
           </div>
-          <div className="font-medium text-xs truncate text-[#58a6ff]">{getSubjectLabel(subject)}</div>
+          <div className="font-medium text-xs truncate text-primary">{getSubjectLabel(subject)}</div>
         </div>
-        <div className="flex-shrink-0 w-44 text-right text-xs text-[#8b949e]">
+        <div className="flex-shrink-0 w-44 text-right text-xs text-secondary">
           <div>No opponent — walkover</div>
           <div>{formatDateTime(match.scheduledFor)}</div>
         </div>
         {rewardLabel && (
-          <div className="flex-shrink-0 w-36 text-right text-xs font-medium text-[#e6edf3]">
+          <div className="flex-shrink-0 w-36 text-right text-xs font-medium text-foreground">
             {rewardLabel}
           </div>
         )}
@@ -76,12 +76,12 @@ function ByeMatchCard({ match, subject }: ByeMatchCardProps) {
               {modeConfig.label}
             </span>
           </div>
-          <span className="text-xs text-[#8b949e] whitespace-nowrap">{formatDateTime(match.scheduledFor)}</span>
+          <span className="text-xs text-secondary whitespace-nowrap">{formatDateTime(match.scheduledFor)}</span>
         </div>
-        <div className="text-xs text-[#d29922] mb-1.5 break-words">{tournamentLabel}</div>
-        <div className="text-sm font-medium text-[#58a6ff] break-words mb-1">{getSubjectLabel(subject)}</div>
-        <div className="text-xs text-[#8b949e]">No opponent — walkover</div>
-        {rewardLabel && <div className="text-xs font-medium text-[#e6edf3] mt-1 break-words">{rewardLabel}</div>}
+        <div className="text-xs text-warning mb-1.5 break-words">{tournamentLabel}</div>
+        <div className="text-sm font-medium text-primary break-words mb-1">{getSubjectLabel(subject)}</div>
+        <div className="text-xs text-secondary">No opponent — walkover</div>
+        {rewardLabel && <div className="text-xs font-medium text-foreground mt-1 break-words">{rewardLabel}</div>}
       </div>
     </div>
   );
