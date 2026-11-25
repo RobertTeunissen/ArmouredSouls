@@ -23,13 +23,13 @@
 import prisma from '../../lib/prisma';
 import { lockUserForSpending } from '../../lib/creditGuard';
 import logger from '../../config/logger';
-import { AppError, EconomyError, EconomyErrorCode } from '../../errors';
+import { EconomyError, EconomyErrorCode } from '../../errors';
 import { verifyWeaponOwnership } from '../../middleware/ownership';
 import { calculateWeaponResaleRate, applyResaleRate } from '../../shared/utils/discounts';
 import { eventLogger } from '../common/eventLogger';
-import { securityMonitor } from '../security/securityMonitor';
 import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
 import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
+import { lockOwnedWeaponInventory } from './lockedWeaponInventory';
 import {
   createEconomicRequestIdentity,
   findCompletedEconomicRequest,
@@ -114,32 +114,9 @@ export async function sellWeapon(
       };
     }
 
-    // 2. Lock the weapon_inventory row second.
-    const lockedInvRows = await tx.$queryRaw<{
-      id: number;
-      userId: number;
-      weaponId: number;
-      pricePaid: number;
-    }[]>`
-      SELECT id, user_id as "userId", weapon_id as "weaponId", price_paid as "pricePaid"
-      FROM weapon_inventory WHERE id = ${inventoryId} FOR UPDATE
-    `;
-    if (lockedInvRows.length === 0) {
-      throw new EconomyError(EconomyErrorCode.WEAPON_NOT_FOUND, 'Weapon not found', 404);
-    }
-    const weaponInv = lockedInvRows[0];
-
-    // 3. Re-verify ownership inside the transaction (TOCTOU)
-    if (weaponInv.userId !== userId) {
-      securityMonitor.logAuthorizationFailure(userId, 'weapon', inventoryId);
-      throw new AppError('FORBIDDEN', 'Access denied', 403);
-    }
-
-    // 4. Defensive bounds check on pricePaid.
-    if (weaponInv.pricePaid < 0) {
-      logger.error(`[Weapon] Invariant violation: negative pricePaid (${weaponInv.pricePaid}) on inventory ${inventoryId}`);
-      throw new EconomyError(EconomyErrorCode.INVALID_TRANSACTION, 'Invalid weapon state', 500);
-    }
+    // 2. Lock the weapon_inventory row second; re-checks ownership (TOCTOU)
+    //    and the pricePaid invariant under the lock.
+    const weaponInv = await lockOwnedWeaponInventory(tx, userId, inventoryId, 'Weapon');
 
     // 5. Equipped check under both locks
     const equippedOn = await tx.robot.findFirst({
