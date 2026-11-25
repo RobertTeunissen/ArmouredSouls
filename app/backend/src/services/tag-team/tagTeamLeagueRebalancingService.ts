@@ -1,17 +1,11 @@
-
 import {
   TEAM_BATTLE_LEAGUE_CONFIG,
-  TeamBattleLeagueTier,
   tagTeamLeagueAdapter,
+  toTeamRebalancingSummary,
+  type FullTeamBattleRebalancingSummary,
+  type TeamBattleLeagueTier,
 } from '../team-battle/teamBattleAdapter';
-import {
-  LeagueEngineConfig,
-  rebalanceAllTiers,
-} from '../league/leagueEngine';
-
-// Re-export for consumers that need the helper
-
-// Re-export for consumers that need the helper
+import { LeagueEngineConfig, rebalanceAllTiers } from '../league/leagueEngine';
 
 export type TagTeamLeagueTier = TeamBattleLeagueTier;
 
@@ -21,43 +15,12 @@ export const TAG_TEAM_LEAGUE_CONFIG: LeagueEngineConfig = {
   logPrefix: 'TagTeamRebalancing',
 };
 
-// ─── Public API (unchanged signatures) ──────────────────────────────────────
-
-export interface TagTeamRebalancingSummary {
-  tier: TagTeamLeagueTier;
-  teamsInTier: number;
-  promoted: number;
-  demoted: number;
-  eligibleTeams: number;
-}
-
-export interface FullTagTeamRebalancingSummary {
-  totalTeams: number;
-  totalPromoted: number;
-  totalDemoted: number;
-  tierSummaries: TagTeamRebalancingSummary[];
-  errors: string[];
-}
+export type FullTagTeamRebalancingSummary = FullTeamBattleRebalancingSummary;
 
 /**
- * Rebalance all tag team league tiers
- * This is called every cycle (daily cadence)
+ * Rebalance all tag team league tiers.
+ * Called every cycle (daily cadence).
  */
 export async function rebalanceTagTeamLeagues(): Promise<FullTagTeamRebalancingSummary> {
-  const result = await rebalanceAllTiers(TAG_TEAM_LEAGUE_CONFIG, tagTeamLeagueAdapter);
-
-  // Map engine result to the existing public interface
-  return {
-    totalTeams: result.totalEntities,
-    totalPromoted: result.totalPromoted,
-    totalDemoted: result.totalDemoted,
-    tierSummaries: result.tierSummaries.map(s => ({
-      tier: s.tier as TagTeamLeagueTier,
-      teamsInTier: s.entitiesInTier,
-      promoted: s.promoted,
-      demoted: s.demoted,
-      eligibleTeams: s.eligibleEntities,
-    })),
-    errors: result.errors,
-  };
+  return toTeamRebalancingSummary(await rebalanceAllTiers(TAG_TEAM_LEAGUE_CONFIG, tagTeamLeagueAdapter));
 }

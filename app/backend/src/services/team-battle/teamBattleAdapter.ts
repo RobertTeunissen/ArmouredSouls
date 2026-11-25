@@ -1,7 +1,7 @@
 /**
  * Team Battle League Adapter
  *
- * Implements `LeagueAdapter<any>` for the generic league engine using the
+ * Implements `LeagueAdapter<Standing>` for the generic league engine using the
  * unified `createStandingsAdapter` factory. Handles promotion/demotion and
  * rebalancing for 2v2, 3v3, and tag team leagues. Initial placement (a team's
  * first standings row) is `services/standings/standingPlacement`.
@@ -18,7 +18,9 @@
  * @module services/team-battle/teamBattleAdapter
  */
 
+import { StandingsMode, type Standing } from '../../../generated/prisma';
 import {
+  FullRebalancingResult,
   LeagueAdapter,
   LeagueEngineConfig,
   rebalanceAllTiers,
@@ -29,8 +31,6 @@ import {
   MAX_TEAMS_PER_INSTANCE,
 } from '../league/leagueInstanceService';
 import { HEAD_TO_HEAD_LEAGUE_RULES } from '../league/league-rules';
-
-// Re-export for consumers that need the helper
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -51,24 +51,21 @@ export const TEAM_BATTLE_LEAGUE_CONFIG: LeagueEngineConfig = {
 // ─── Adapters (all use unified createStandingsAdapter) ───────────────────────
 
 /** Adapter for 2v2 team battle leagues */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const teamBattle2v2Adapter: LeagueAdapter<any> = createStandingsAdapter('league_2v2', {
+export const teamBattle2v2Adapter: LeagueAdapter<Standing> = createStandingsAdapter(StandingsMode.league_2v2, {
   maxPerInstance: MAX_TEAMS_PER_INSTANCE,
   entityType: 'team_battle',
   useLocking: true,
 });
 
 /** Adapter for 3v3 team battle leagues */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const teamBattle3v3Adapter: LeagueAdapter<any> = createStandingsAdapter('league_3v3', {
+export const teamBattle3v3Adapter: LeagueAdapter<Standing> = createStandingsAdapter(StandingsMode.league_3v3, {
   maxPerInstance: MAX_TEAMS_PER_INSTANCE,
   entityType: 'team_battle',
   useLocking: true,
 });
 
 /** Tag-team-scoped league adapter */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const tagTeamLeagueAdapter: LeagueAdapter<any> = createStandingsAdapter('tag_team', {
+export const tagTeamLeagueAdapter: LeagueAdapter<Standing> = createStandingsAdapter(StandingsMode.tag_team, {
   maxPerInstance: MAX_TEAMS_PER_INSTANCE,
   entityType: 'tag_team',
   useLocking: true,
@@ -92,15 +89,8 @@ export interface FullTeamBattleRebalancingSummary {
   errors: string[];
 }
 
-/**
- * Rebalance all team battle league tiers for a specific team size.
- * Called every cycle (daily cadence) after team battles are executed.
- * Requirements: R8.1–R8.8
- */
-export async function rebalanceTeamBattleLeagues(teamSize: 2 | 3 = 2): Promise<FullTeamBattleRebalancingSummary> {
-  const adapter = teamSize === 2 ? teamBattle2v2Adapter : teamBattle3v3Adapter;
-  const result = await rebalanceAllTiers(TEAM_BATTLE_LEAGUE_CONFIG, adapter);
-
+/** Engine result in the team-mode summary shape (2v2, 3v3 and tag team). */
+export function toTeamRebalancingSummary(result: FullRebalancingResult): FullTeamBattleRebalancingSummary {
   return {
     totalTeams: result.totalEntities,
     totalPromoted: result.totalPromoted,
@@ -114,4 +104,14 @@ export async function rebalanceTeamBattleLeagues(teamSize: 2 | 3 = 2): Promise<F
     })),
     errors: result.errors,
   };
+}
+
+/**
+ * Rebalance all team battle league tiers for a specific team size.
+ * Called every cycle (daily cadence) after team battles are executed.
+ * Requirements: R8.1–R8.8
+ */
+export async function rebalanceTeamBattleLeagues(teamSize: 2 | 3 = 2): Promise<FullTeamBattleRebalancingSummary> {
+  const adapter = teamSize === 2 ? teamBattle2v2Adapter : teamBattle3v3Adapter;
+  return toTeamRebalancingSummary(await rebalanceAllTiers(TEAM_BATTLE_LEAGUE_CONFIG, adapter));
 }
