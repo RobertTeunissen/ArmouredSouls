@@ -1,13 +1,51 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { ApiError } from '../utils/ApiError';
+import { useApiQuery } from '../hooks/useApiQuery';
+import { newPasswordErrors, stableNameErrors } from '@shared/utils/accountRules';
 import TutorialSettings from '../components/TutorialSettings';
 import { getProfile, ProfileData, updateProfile, ProfileUpdateRequest } from '../utils/userApi';
+
+/**
+ * Field and banner messages for a failed save. `api` rejects with an ApiError
+ * (status 0 for a network failure); validation errors list their fields in
+ * `details.fields`, and a wrong current password is a 401 INVALID_CREDENTIALS.
+ */
+function saveErrorMessages(error: unknown, changingPassword: boolean): Record<string, string> {
+  if (!(error instanceof ApiError)) return { general: 'An unexpected error occurred. Please try again.' };
+  switch (error.statusCode) {
+    case 0:
+      return { general: 'Network error. Please check your connection and try again.' };
+    case 400: {
+      const fields = (error.details as { fields?: Array<{ field: string; message: string }> } | undefined)?.fields ?? [];
+      const fieldErrors = Object.fromEntries(fields.map(({ field, message }) => [field, message]));
+      return Object.keys(fieldErrors).length > 0 ? fieldErrors : { general: error.message || 'Failed to update profile' };
+    }
+    case 401:
+      return changingPassword
+        ? { currentPassword: 'Current password is incorrect' }
+        : { general: 'Authentication failed. Please log in again.' };
+    case 409:
+      return { stableName: 'This stable name is already taken' };
+    default:
+      return { general: error.message || 'Failed to update profile' };
+  }
+}
 
 function ProfilePage() {
   const { user } = useAuth();
 
   // Component state
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  // Loaded once per signed-in user (not on every refreshUser()). A 401 ends the session in the API client.
+  // Keyed by user, so a switched account never sees the previous account's profile.
+  const userId = user?.id;
+  const profileQuery = useApiQuery(
+    async () => ({ userId, profile: await getProfile() }),
+    [userId],
+    { enabled: userId !== undefined },
+  );
+  const profile = profileQuery.data?.userId === userId ? profileQuery.data?.profile ?? null : null;
+  const setProfile = (next: ProfileData): void => profileQuery.setData({ userId, profile: next });
   const [editedProfile, setEditedProfile] = useState<Partial<ProfileData>>({});
   const [passwordData, setPasswordData] = useState({ current: '', new: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -20,29 +58,17 @@ function ProfilePage() {
   };
 
   // Validation functions
-  const validateStableNameFormat = (name: string): string | null => {
-    if (!name || name.trim().length === 0) return null; // Empty is valid (optional field)
-    if (name.length < 3) return 'Stable name must be at least 3 characters';
-    if (name.length > 30) return 'Stable name must be 30 characters or less';
-    if (!/^[a-zA-Z0-9 _-]+$/.test(name)) {
-      return 'Stable name can only contain letters, numbers, spaces, hyphens, and underscores';
-    }
-    return null;
-  };
+  // Shape rules and wording shared with the backend; empty means "unchanged" here.
+  const validateStableNameFormat = (name: string): string | null =>
+    !name || name.trim().length === 0 ? null : stableNameErrors(name)[0] ?? null;
 
   const validateStableNoteFormat = (note: string): string | null => {
     if (note.length > 2000) return 'Stable note must be 2000 characters or less';
     return null;
   };
 
-  const validatePasswordFormat = (password: string): string | null => {
-    if (!password || password.length === 0) return null; // Empty is valid (optional field)
-    if (password.length < 8) return 'Password must be at least 8 characters';
-    if (!/[A-Z]/.test(password)) return 'Password must contain an uppercase letter';
-    if (!/[a-z]/.test(password)) return 'Password must contain a lowercase letter';
-    if (!/[0-9]/.test(password)) return 'Password must contain a number';
-    return null;
-  };
+  const validatePasswordFormat = (password: string): string | null =>
+    !password ? null : newPasswordErrors(password)[0] ?? null;
 
   // Check if form has validation errors
   const hasValidationErrors = (): boolean => {
@@ -114,86 +140,18 @@ function ProfilePage() {
       // Auto-hide success message after 5 seconds
       setTimeout(() => setSaveSuccess(false), 5000);
     } catch (error: unknown) {
-      const err = error as {
-        response?: {
-          status: number;
-          data: { details?: { fields?: Array<{ field: string; message: string }> }; error?: string };
-        };
-        request?: unknown;
-      };
-      // Handle API error responses
-      if (err.response) {
-        const { status, data } = err.response;
-
-        if (status === 400) {
-          // Validation errors — display field-specific errors.
-          //
-          // The backend's shape is `details.fields`, an array of { field, message }.
-          // This used to assign `data.details` straight into the errors record, so it
-          // stored `{ fields: [...] }`, rendered nothing under any field, and skipped
-          // the banner below because `data.details` was truthy. A validation error
-          // was therefore completely invisible. Falls back to the `error` string,
-          // which now carries the joined messages.
-          const fieldErrors = Object.fromEntries(
-            (data.details?.fields ?? []).map(({ field, message }) => [field, message]),
-          );
-          setErrors(
-            Object.keys(fieldErrors).length > 0
-              ? fieldErrors
-              : { general: data.error || 'Failed to update profile' },
-          );
-        } else if (status === 401) {
-          // Authentication error
-          if (passwordData.current) {
-            setErrors({ currentPassword: 'Current password is incorrect' });
-          } else {
-            setErrors({ general: 'Authentication failed. Please log in again.' });
-          }
-        } else if (status === 409) {
-          // Conflict error (duplicate stable name)
-          setErrors({ stableName: 'This stable name is already taken' });
-        } else {
-          // Other API errors
-          setErrors({ general: data.error || 'Failed to update profile' });
-        }
-      } else if (err.request) {
-        // Network error
-        setErrors({ general: 'Network error. Please check your connection and try again.' });
-      } else {
-        // Other errors
-        setErrors({ general: 'An unexpected error occurred. Please try again.' });
-      }
+      setErrors(saveErrorMessages(error, Boolean(passwordData.current)));
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch profile data once per signed-in user (not on every refreshUser()).
-  // A 401 ends the session in the API client.
-  const userId = user?.id;
-  useEffect(() => {
-    if (userId === undefined) return undefined;
-    let cancelled = false;
-    setLoading(true);
-    getProfile()
-      .then((profileData) => {
-        if (!cancelled) setProfile(profileData);
-      })
-      .catch(() => {
-        if (!cancelled) setErrors({ general: 'Failed to load profile data' });
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
+  const dirty = isDirty();
 
   // Warn user about unsaved changes when closing/refreshing page
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty()) {
+      if (dirty) {
         e.preventDefault();
         e.returnValue = ''; // Chrome requires returnValue to be set
       }
@@ -204,15 +162,14 @@ function ProfilePage() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editedProfile, passwordData]);
+  }, [dirty]);
 
   // Navigation guard - warn when navigating away with unsaved changes
   useEffect(() => {
     // This is a simple implementation. For more robust navigation blocking,
     // consider using react-router's useBlocker hook (v6.4+) or a custom solution
     const handleNavigation = () => {
-      if (isDirty()) {
+      if (dirty) {
         const confirmLeave = window.confirm(
           'You have unsaved changes. Are you sure you want to leave this page?'
         );
@@ -229,15 +186,23 @@ function ProfilePage() {
     return () => {
       window.removeEventListener('popstate', handleNavigation);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editedProfile, passwordData]);
+  }, [dirty]);
 
   if (!user || !profile) {
     return (
       <div className="min-h-screen bg-background text-white">
           <div className="container mx-auto px-4 py-8 flex justify-center items-center">
-          {loading ? (
-            <div className="text-center">Loading profile...</div>
+          {profileQuery.error ? (
+            <div className="text-center" role="alert">
+              <p className="text-error mb-3">Failed to load profile data</p>
+              <button
+                type="button"
+                onClick={profileQuery.refetch}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors min-h-[44px]"
+              >
+                Try again
+              </button>
+            </div>
           ) : (
             <div className="text-center">Loading profile...</div>
           )}

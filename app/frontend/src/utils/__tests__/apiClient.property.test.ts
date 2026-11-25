@@ -180,6 +180,20 @@ describe('API Client Interceptors - Property Tests', () => {
       }
     });
 
+    it('keeps the session when a form\'s password check fails (INVALID_CREDENTIALS)', async () => {
+      vi.mocked(localStorage.getItem).mockReturnValue('some-token');
+      vi.mocked(localStorage.removeItem).mockClear();
+      (window.location as unknown as { href: string }).href = '';
+
+      mock.onPut('/api/user/profile').reply(401, { error: 'Current password is incorrect', code: 'INVALID_CREDENTIALS' });
+
+      await expect(apiClient.put('/api/user/profile', {})).rejects.toMatchObject({ response: { status: 401 } });
+      expect(localStorage.removeItem).not.toHaveBeenCalled();
+      expect(window.location.href).toBe('');
+
+      mock.reset();
+    });
+
     it('keeps the session on a backend 401/403 when the request opted out (telemetry)', async () => {
       await fc.assert(
         fc.asyncProperty(fc.constantFrom(401, 403), fc.string({ minLength: 1 }), async (status, message) => {

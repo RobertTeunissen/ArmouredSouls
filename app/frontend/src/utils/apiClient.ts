@@ -85,8 +85,11 @@ apiClient.interceptors.response.use(
     // from "a proxy blocked this request".
     if (status === 401 && !isAuthRoute) {
       const data = error.response?.data;
+      // INVALID_CREDENTIALS is a wrong password in a form (Profile's "current
+      // password"), not a bad token: the screen shows it under its field.
       const isBackendAuthError =
-        data && typeof data === 'object' && typeof data.error === 'string';
+        data && typeof data === 'object' && typeof data.error === 'string'
+        && data.code !== 'INVALID_CREDENTIALS';
 
       if (isBackendAuthError) {
         localStorage.removeItem('token');

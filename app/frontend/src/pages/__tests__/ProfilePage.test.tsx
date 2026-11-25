@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import ProfilePage from '../ProfilePage';
 import * as userApi from '../../utils/userApi';
+import { ApiError } from '../../utils/ApiError';
 
 // Mock the AuthContext
 const mockLogout = vi.fn();
@@ -321,9 +322,9 @@ describe('ProfilePage', () => {
     });
 
     it('should display API error messages', async () => {
-      vi.mocked(userApi.updateProfile).mockRejectedValue({
-        response: { status: 409, data: { error: 'This stable name is already taken' } },
-      });
+      vi.mocked(userApi.updateProfile).mockRejectedValue(
+        new ApiError('This stable name is already taken', 'DUPLICATE_STABLE_NAME', 409),
+      );
 
       renderProfilePage();
       await waitFor(() => {
@@ -338,29 +339,32 @@ describe('ProfilePage', () => {
       });
     });
 
-    it('should display validation errors from API', async () => {
-      // `details.fields` is an array of { field, message }.
-      //
-      // This mock used to be a flat `details: { stableName: '...' }`, a shape the backend has
-      // never sent: `PUT /api/user/profile` previously emitted `details.errors` keyed by field
-      // name, and `validateRequest` has always emitted `details.fields`. The old
-      // `setErrors(data.details)` in ProfilePage happened to satisfy the invented flat mock,
-      // so the test passed while a real validation error rendered nothing under any field and
-      // was also suppressed from the banner, because `data.details` was truthy either way.
-      // Spec #51 made the endpoint emit `fields` like every other route; the mock now matches.
-      vi.mocked(userApi.updateProfile).mockRejectedValue({
-        response: {
-          status: 400,
-          data: {
-            error: 'Stable name contains inappropriate content',
-            details: {
-              fields: [
-                { field: 'stableName', message: 'Stable name contains inappropriate content' },
-              ],
-            },
-          },
-        },
+    it('should show a wrong current password under its field', async () => {
+      vi.mocked(userApi.updateProfile).mockRejectedValue(
+        new ApiError('Current password is incorrect', 'INVALID_CREDENTIALS', 401),
+      );
+      renderProfilePage();
+      await waitFor(() => {
+        expect(screen.getByText('My Profile')).toBeInTheDocument();
       });
+      await userEvent.type(screen.getByLabelText('Current Password'), 'WrongPass1');
+      await userEvent.type(screen.getByLabelText('New Password'), 'NewPassw0rd');
+      const saveButton = screen.getByRole('button', { name: /Save Changes/i });
+      await waitFor(() => expect(saveButton).not.toBeDisabled());
+      fireEvent.click(saveButton);
+      await waitFor(() => {
+        expect(screen.getByText('Current password is incorrect')).toBeInTheDocument();
+      });
+    });
+
+    it('should display validation errors from API', async () => {
+      // The API client rejects with an ApiError carrying `details.fields`, an
+      // array of { field, message } (what `validateRequest` and this endpoint emit).
+      vi.mocked(userApi.updateProfile).mockRejectedValue(
+        new ApiError('Stable name contains inappropriate content', 'VALIDATION_ERROR', 400, {
+          fields: [{ field: 'stableName', message: 'Stable name contains inappropriate content' }],
+        }),
+      );
 
       renderProfilePage();
       await waitFor(() => {
@@ -376,15 +380,10 @@ describe('ProfilePage', () => {
     });
 
     it('should fall back to the banner when a 400 carries no field details', async () => {
-      // The other half of the same defect. `setErrors(data.details)` was guarded by a truthy
-      // check on `data.details`, so a 400 whose details held no usable field entries showed
-      // the player nothing at all — no inline error and no banner.
-      vi.mocked(userApi.updateProfile).mockRejectedValue({
-        response: {
-          status: 400,
-          data: { error: 'Validation failed', details: { fields: [] } },
-        },
-      });
+      // A 400 without usable field entries falls back to the banner.
+      vi.mocked(userApi.updateProfile).mockRejectedValue(
+        new ApiError('Validation failed', 'VALIDATION_ERROR', 400, { fields: [] }),
+      );
 
       renderProfilePage();
       await waitFor(() => {
@@ -400,7 +399,7 @@ describe('ProfilePage', () => {
     });
 
     it('should display network error message', async () => {
-      vi.mocked(userApi.updateProfile).mockRejectedValue({ request: {} });
+      vi.mocked(userApi.updateProfile).mockRejectedValue(new ApiError('', 'NETWORK_ERROR', 0));
 
       renderProfilePage();
       await waitFor(() => {
