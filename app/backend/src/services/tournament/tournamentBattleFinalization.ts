@@ -19,7 +19,7 @@ import {
   checkAndAwardAchievements,
   didRobotLosePreviousBattle,
 } from '../battle/battlePostCombat';
-import { hasAllocatedTuning, hpPercentOf } from '../battle/battleAchievementContext';
+import { duelAchievementData, type DuelAchievementSide } from '../battle/battleAchievementContext';
 import { TournamentError, TournamentErrorCode } from '../../errors/tournamentErrors';
 import { getTuningBonusesBatch } from '../tuning-pool';
 import { evaluateCombatEntry } from '../battle/combatReadiness';
@@ -107,63 +107,27 @@ export async function resumeTournamentBattleFinalization(
     prisma.tournament.findUnique({ where: { id: tournamentMatch.tournamentId }, select: { maxRounds: true } }),
     loadBattleTimeMaxHP(battle.id),
   ]);
-  const maxHP1 = combatMaxHP.get(robot1.id) ?? robot1.maxHP;
-  const maxHP2 = combatMaxHP.get(robot2.id) ?? robot2.maxHP;
-  const resumeTournamentContext = {
+  const side1: DuelAchievementSide = {
+    robot: robot1, participant: robot1Participant, won: robot1IsWinner,
+    previousBattleLost: robot1PrevLost, tuning: tuningMap.get(robot1.id),
+    combatMaxHP: combatMaxHP.get(robot1.id), battleLoadoutType: battleLoadout(robot1),
+  };
+  const side2: DuelAchievementSide = {
+    robot: robot2, participant: robot2Participant, won: robot2IsWinner,
+    previousBattleLost: robot2PrevLost, tuning: tuningMap.get(robot2.id),
+    combatMaxHP: combatMaxHP.get(robot2.id), battleLoadoutType: battleLoadout(robot2),
+  };
+  const duel = {
+    durationSeconds: battle.durationSeconds,
+    battleType: 'tournament_1v1',
     battleId: battle.id,
     isDraw: false,
     tournamentRound: tournamentMatch.round,
     tournamentMaxRounds: bracket?.maxRounds,
   };
   const [unlocks1, unlocks2] = await Promise.all([
-    checkAndAwardAchievements(robot1.userId, robot1.id, {
-      won: robot1IsWinner,
-      destroyed: robot2Participant.destroyed,
-      finalHpPercent: hpPercentOf(robot1Participant.finalHP, maxHP1),
-      eloChange: robot1Participant.eloAfter - robot1Participant.eloBefore,
-      subjectEloBefore: robot1Participant.eloBefore,
-      opponentEloBefore: robot2Participant.eloBefore,
-      opponentElo: robot2.elo,
-      yielded: robot1Participant.yielded,
-      opponentYielded: robot2Participant.yielded,
-      previousBattleLost: robot1PrevLost,
-      damageDealt: robot1Participant.damageDealt,
-      opponentDamageDealt: robot2Participant.damageDealt,
-      loadoutType: battleLoadout(robot1),
-      stance: robot1.stance || 'balanced',
-      yieldThreshold: robot1.yieldThreshold,
-      hasTuning: hasAllocatedTuning(tuningMap.get(robot1.id)),
-      hasMainWeapon: robot1.mainWeaponId !== null,
-      battleType: 'tournament_1v1',
-      battleDurationSeconds: battle.durationSeconds,
-      ...resumeTournamentContext,
-      opponentRobotId: robot2.id,
-      opponentFinalHpPercent: hpPercentOf(robot2Participant.finalHP, maxHP2),
-    }),
-    checkAndAwardAchievements(robot2.userId, robot2.id, {
-      won: robot2IsWinner,
-      destroyed: robot1Participant.destroyed,
-      finalHpPercent: hpPercentOf(robot2Participant.finalHP, maxHP2),
-      eloChange: robot2Participant.eloAfter - robot2Participant.eloBefore,
-      subjectEloBefore: robot2Participant.eloBefore,
-      opponentEloBefore: robot1Participant.eloBefore,
-      opponentElo: robot1.elo,
-      yielded: robot2Participant.yielded,
-      opponentYielded: robot1Participant.yielded,
-      previousBattleLost: robot2PrevLost,
-      damageDealt: robot2Participant.damageDealt,
-      opponentDamageDealt: robot1Participant.damageDealt,
-      loadoutType: battleLoadout(robot2),
-      stance: robot2.stance || 'balanced',
-      yieldThreshold: robot2.yieldThreshold,
-      hasTuning: hasAllocatedTuning(tuningMap.get(robot2.id)),
-      hasMainWeapon: robot2.mainWeaponId !== null,
-      battleType: 'tournament_1v1',
-      battleDurationSeconds: battle.durationSeconds,
-      ...resumeTournamentContext,
-      opponentRobotId: robot1.id,
-      opponentFinalHpPercent: hpPercentOf(robot1Participant.finalHP, maxHP1),
-    }),
+    checkAndAwardAchievements(robot1.userId, robot1.id, duelAchievementData(side1, side2, duel)),
+    checkAndAwardAchievements(robot2.userId, robot2.id, duelAchievementData(side2, side1, duel)),
   ]);
 
   await prisma.scheduledTournamentMatch.update({

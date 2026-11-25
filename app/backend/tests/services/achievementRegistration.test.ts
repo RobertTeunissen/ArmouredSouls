@@ -7,7 +7,8 @@
  *   1. `ACHIEVEMENTS` declares it (`config/achievements.ts`)
  *   2. `EVENT_TRIGGER_MAP` selects it as a candidate for some event
  *      (`achievementTypes.ts`)
- *   3. `evaluateTrigger()` has a non-default branch for it (`triggerEvaluator.ts`)
+ *   3. `evaluateTrigger()` has a non-default branch for it (`triggerEvaluator.ts`,
+ *      or a counter table in `counterTriggers.ts`)
  *
  * Cause C in this requirement was exactly a step-2 gap: `grand_melee_wins`,
  * `grand_melee_top3`, and `grand_melee_win_high_hp` were declared and used by
@@ -28,6 +29,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ACHIEVEMENTS, type AchievementTriggerType } from '../../src/config/achievements';
 import { EVENT_TRIGGER_MAP } from '../../src/services/achievement/achievementTypes';
+import { isCounterTrigger } from '../../src/services/achievement/counterTriggers';
 
 const EVALUATOR_SOURCE = fs.readFileSync(
   path.join(__dirname, '../../src/services/achievement/triggerEvaluator.ts'),
@@ -41,9 +43,12 @@ const CATALOG_SOURCE = fs.readFileSync(
 /** Trigger types reachable from at least one event. */
 const registeredTriggerTypes = new Set<string>(Object.values(EVENT_TRIGGER_MAP).flat());
 
-/** Trigger types with a `case '<type>':` branch in evaluateTrigger(). */
+/**
+ * Trigger types evaluateTrigger() handles: a `case '<type>':` branch, or an
+ * entry in the counter tables it checks before its switch.
+ */
 function hasEvaluatorBranch(triggerType: string): boolean {
-  return EVALUATOR_SOURCE.includes(`case '${triggerType}':`);
+  return EVALUATOR_SOURCE.includes(`case '${triggerType}':`) || isCounterTrigger(triggerType);
 }
 
 /** Trigger types with a `case '<type>':` branch in the progress resolver. */

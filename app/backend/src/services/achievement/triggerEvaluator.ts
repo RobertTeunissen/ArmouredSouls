@@ -48,6 +48,7 @@ import {
   checkStreamingRevenue,
   checkSurvivalStreak,
 } from './triggerQueries';
+import { ROBOT_COUNTER_TRIGGERS, USER_COUNTER_TRIGGERS, USER_TOTAL_TRIGGERS } from './counterTriggers';
 
 // ─── Cached-Data Helpers (no DB queries) ────────────────────────────
 
@@ -121,49 +122,16 @@ export async function evaluateTrigger(
   const { triggerType, triggerThreshold, triggerMeta } = achievement;
   const data = event.data;
 
+  const own = (table: Readonly<Record<string, string>>): string | undefined =>
+    Object.prototype.hasOwnProperty.call(table, triggerType) ? table[triggerType] : undefined;
+  const robotCounter = own(ROBOT_COUNTER_TRIGGERS);
+  if (robotCounter) return checkRobotStatCached(cachedRobot, robotCounter, triggerThreshold);
+  const userCounter = own(USER_COUNTER_TRIGGERS);
+  if (userCounter) return checkUserStatCached(cachedUser, userCounter, triggerThreshold);
+  const userTotal = own(USER_TOTAL_TRIGGERS);
+  if (userTotal) return Number(cachedUser?.[userTotal] ?? 0) >= (triggerThreshold ?? 0);
+
   switch (triggerType) {
-    // ── Cumulative Robot Stats (from cached robot) ─────────────
-    case 'wins':
-      return checkRobotStatCached(cachedRobot, 'wins', triggerThreshold);
-    case 'losses':
-      return checkRobotStatCached(cachedRobot, 'losses', triggerThreshold);
-    case 'battles':
-      // Season 2 (D7): every mode, including KotH and Grand Melee.
-      return checkRobotStatCached(cachedRobot, 'allModesBattles', triggerThreshold);
-    case 'kills':
-      return checkRobotStatCached(cachedRobot, 'kills', triggerThreshold);
-    case 'elo':
-      return checkRobotStatCached(cachedRobot, 'elo', triggerThreshold);
-    case 'fame':
-      return checkRobotStatCached(cachedRobot, 'fame', triggerThreshold);
-    case 'win_streak':
-      return checkRobotStatCached(cachedRobot, 'currentWinStreak', triggerThreshold);
-    case 'lose_streak':
-      return checkRobotStatCached(cachedRobot, 'currentLoseStreak', triggerThreshold);
-    case 'koth_wins':
-      return checkRobotStatCached(cachedRobot, 'kothWins', triggerThreshold);
-    case 'tag_team_wins':
-      return checkRobotStatCached(cachedRobot, 'totalTagTeamWins', triggerThreshold);
-    case 'league_2v2_wins':
-      return checkRobotStatCached(cachedRobot, 'totalLeague2v2Wins', triggerThreshold);
-    case 'league_3v3_wins':
-      return checkRobotStatCached(cachedRobot, 'totalLeague3v3Wins', triggerThreshold);
-
-    // ── Grand Melee counters (Spec #46 R8 Cause C) ─────────────
-    // `robots.grand_melee_wins` and `grand_melee_top3` already existed but were
-    // never incremented and never read. Both are now written by
-    // `updateRobotCombatStats()` and follow the `koth_wins` pattern here.
-    case 'grand_melee_wins':
-      return checkRobotStatCached(cachedRobot, 'grandMeleeWins', triggerThreshold);
-    case 'grand_melee_top3':
-      return checkRobotStatCached(cachedRobot, 'grandMeleeTop3', triggerThreshold);
-
-    // ── Cumulative User Stats (from cached user) ───────────────
-    case 'prestige':
-      return checkUserStatCached(cachedUser, 'prestige', triggerThreshold);
-    case 'currency':
-      return checkUserStatCached(cachedUser, 'currency', triggerThreshold);
-
     // ── Battle-Specific Boolean Triggers (from event.data) ─────
     case 'perfect_victory':
       return Boolean(data.won) && Number(data.finalHpPercent) === 100;
@@ -317,14 +285,6 @@ export async function evaluateTrigger(
     // ── One-Time Triggers (from cached user) ──────────────────
     case 'onboarding':
       return (cachedUser as Record<string, unknown>)?.hasCompletedOnboarding === true;
-    case 'practice_battles':
-      return (Number((cachedUser as Record<string, unknown>)?.totalPracticeBattles ?? 0)) >= (triggerThreshold ?? 0);
-    case 'tournament_wins':
-      return (Number((cachedUser as Record<string, unknown>)?.championshipTitles ?? 0)) >= (triggerThreshold ?? 0);
-    case 'tournament_2v2_wins':
-      return (Number((cachedUser as Record<string, unknown>)?.championshipTitles2v2 ?? 0)) >= (triggerThreshold ?? 0);
-    case 'tournament_3v3_wins':
-      return (Number((cachedUser as Record<string, unknown>)?.championshipTitles3v3 ?? 0)) >= (triggerThreshold ?? 0);
 
     // ── Tuning Triggers ───────────────────────────────────────
     case 'tuning_allocated':
