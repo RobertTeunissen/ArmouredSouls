@@ -11,9 +11,10 @@
  * Requirements: R9.2, R9.10
  */
 
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect } from 'react';
 import { api } from '../utils/api';
-import { ApiError } from '../utils/ApiError';
+import { apiErrorMessage } from '../utils/ApiError';
+import { useApiQuery } from './useApiQuery';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import type {
   EligibleEvent,
@@ -75,31 +76,18 @@ export interface UseEventRegistryReturn {
   events: EligibleEvent[];
   loading: boolean;
   error: string | null;
-  refetch: () => Promise<void>;
+  refetch: () => void;
 }
 
 export function useEventRegistry(): UseEventRegistryReturn {
-  const [events, setEvents] = useState<EligibleEvent[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchRegistry = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await api.get<RegistryResponse>('/api/subscriptions/registry');
-      setEvents(response.events);
-    } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Failed to load event registry';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchRegistry();
-  }, [fetchRegistry]);
-
-  return { events, loading, error, refetch: fetchRegistry };
+  const query = useApiQuery(
+    (signal) => api.get<RegistryResponse>('/api/subscriptions/registry', { signal }),
+    [],
+  );
+  return {
+    events: query.data?.events ?? [],
+    loading: query.loading,
+    error: apiErrorMessage(query.error, 'Failed to load event registry'),
+    refetch: query.refetch,
+  };
 }

@@ -4,12 +4,11 @@
  * Arena, Tournaments (`?user=`). Players get the password reset; Automatons
  * link to their Editor; generated stables are read-only.
  */
-import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING, AdminSlideOver, PanelError, PanelSkeleton } from '../shared';
-import { ApiError } from '../../../utils/ApiError';
-import { isAbortError } from '../../../utils/abort';
+import { ApiError, apiErrorMessage } from '../../../utils/ApiError';
+import { useApiQuery } from '../../../hooks/useApiQuery';
 import { getPlayerDetail } from '../../../utils/adminPlayersApi';
 import {
   SEGMENT_LABELS,
@@ -185,28 +184,20 @@ function DetailBody({ detail, lowBalanceThreshold }: { detail: PlayerDetail; low
 }
 
 export function PlayerDetailPanel({ userId, lowBalanceThreshold, onClose }: PlayerDetailPanelProps): ReactNode {
-  const [detail, setDetail] = useState<PlayerDetail | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState(0);
-
-  useEffect(() => {
-    if (userId === null) return;
-    const controller = new AbortController();
-    setDetail(null);
-    setError(null);
-    getPlayerDetail(userId, controller.signal)
-      .then((value) => { if (!controller.signal.aborted) setDetail(value); })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setError((err instanceof ApiError && err.statusCode === 404 && 'This stable no longer exists.') || (err instanceof ApiError && err.message) || 'The stable could not be loaded.');
-      });
-    return () => controller.abort();
-  }, [userId, token]);
+  const query = useApiQuery(
+    (signal) => getPlayerDetail(userId!, signal),
+    [userId],
+    { enabled: userId !== null },
+  );
+  const detail = query.data;
+  const error = query.error instanceof ApiError && query.error.statusCode === 404
+    ? 'This stable no longer exists.'
+    : apiErrorMessage(query.error, 'The stable could not be loaded.');
 
   const title = detail && detail.id === userId ? displayName(detail) : 'Stable';
   return (
     <AdminSlideOver open={userId !== null} onClose={onClose} title={title} width="xl">
-      {error ? <PanelError message={error} onRetry={() => setToken((t) => t + 1)} />
+      {error ? <PanelError message={error} onRetry={query.refetch} />
         : detail && detail.id === userId ? <DetailBody detail={detail} lowBalanceThreshold={lowBalanceThreshold} />
           : <PanelSkeleton rows={8} />}
     </AdminSlideOver>

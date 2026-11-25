@@ -8,11 +8,10 @@
  * two load independently, so one slow or failing request does not hold up
  * the other sections.
  */
-import { useCallback, useEffect, useState } from 'react';
-import { ApiError } from '../utils/ApiError';
-import { isAbortError } from '../utils/abort';
+import { apiErrorMessage } from '../utils/ApiError';
 import { getMetaBuilds, getMetaChoices } from '../utils/adminMetaApi';
 import type { StableScope } from '../utils/adminStableScope';
+import { useApiQuery } from './useApiQuery';
 import type { MetaBuilds, MetaChoices } from '@shared/types';
 
 export interface FilteredLoad<T> {
@@ -37,33 +36,19 @@ function useFilteredLoad<T>(
   load: (filter: StableScope, signal: AbortSignal) => Promise<T>,
   fallbackError: string,
 ): FilteredLoad<T> {
-  const [loaded, setLoaded] = useState<Loaded<T> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState(0);
+  const query = useApiQuery(
+    async (signal): Promise<Loaded<T>> => ({ filter, value: await load(filter, signal), fetchedAt: new Date().toISOString() }),
+    [filter, load],
+  );
+  const current = query.data && query.data.filter === filter ? query.data : null;
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
-    load(filter, controller.signal)
-      .then((value) => {
-        if (controller.signal.aborted) return;
-        setLoaded({ filter, value, fetchedAt: new Date().toISOString() });
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setError((err instanceof ApiError && err.message) || fallbackError);
-        setLoading(false);
-      });
-    return () => controller.abort();
-  }, [filter, token, load, fallbackError]);
-
-  const reload = useCallback(() => setToken((value) => value + 1), []);
-  const current = loaded && loaded.filter === filter ? loaded : null;
-
-  return { data: current?.value ?? null, loading, error, fetchedAt: current?.fetchedAt ?? null, reload };
+  return {
+    data: current?.value ?? null,
+    loading: query.loading,
+    error: apiErrorMessage(query.error, fallbackError),
+    fetchedAt: current?.fetchedAt ?? null,
+    reload: query.refetch,
+  };
 }
 
 export function useMetaOverview(filter: StableScope): MetaOverview {

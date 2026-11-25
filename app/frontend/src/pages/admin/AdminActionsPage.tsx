@@ -11,49 +11,33 @@
  *
  * Definitions: docs/guides/ADMIN_PANEL_GUIDE.md §Admin actions.
  */
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ADMIN_FOCUS_RING, AdminPageHeader, AdminPagination, PanelError, PanelSkeleton, ToggleChip } from '../../components/admin/shared';
 import { AdminActionsList } from '../../components/admin/actions/AdminActionsList';
-import { ApiError } from '../../utils/ApiError';
-import { isAbortError } from '../../utils/abort';
+import { apiErrorMessage } from '../../utils/ApiError';
+import { useApiQuery } from '../../hooks/useApiQuery';
 import { ADMIN_ACTION_AREAS, ADMIN_ACTION_AREA_LABELS, getAdminActions, type AdminActionsFilters } from '../../utils/adminActionsApi';
 import { formatActionDate, readActionsView, writeActionsView } from '../../utils/adminActionsFormat';
 import { formatCount as count } from '../../utils/adminFormat';
-import type { AdminActionsPage as ActionsPage } from '@shared/types';
 
 
 function AdminActionsPage(): React.ReactElement {
   const [params, setParams] = useSearchParams();
   const view = readActionsView(params);
-  const [data, setData] = useState<ActionsPage | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState(0);
-
   const { area, result, page } = view;
+  const query = useApiQuery(
+    (signal) => getAdminActions({ area, result, page }, { signal }),
+    [area, result, page],
+  );
+  // A page past the end (stale link, fewer actions after a filter) jumps to the last real page and refetches.
+  const lastPage = query.data && query.data.total > 0 && page > query.data.totalPages ? query.data.totalPages : null;
   useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
-    getAdminActions({ area, result, page }, { signal: controller.signal })
-      .then((next) => {
-        if (controller.signal.aborted) return;
-        // A page past the end (stale link, fewer actions after a filter) jumps to the last real page and refetches.
-        if (next.total > 0 && page > next.totalPages) {
-          setParams((current) => writeActionsView(current, { page: next.totalPages }), { replace: true });
-          return;
-        }
-        setData(next);
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setError((err instanceof ApiError && err.message) || 'Could not load the admin actions.');
-        setLoading(false);
-      });
-    return () => controller.abort();
-  }, [area, result, page, token, setParams]);
+    if (lastPage !== null) setParams((current) => writeActionsView(current, { page: lastPage }), { replace: true });
+  }, [lastPage, setParams]);
+  const data = lastPage === null ? query.data : null;
+  const loading = query.loading || lastPage !== null;
+  const error = apiErrorMessage(query.error, 'Could not load the admin actions.');
 
   const update = (patch: Partial<AdminActionsFilters>): void => {
     setParams((current) => writeActionsView(current, patch), { replace: true });
@@ -71,7 +55,7 @@ function AdminActionsPage(): React.ReactElement {
         actions={(
           <button
             type="button"
-            onClick={() => setToken((t) => t + 1)}
+            onClick={query.refetch}
             disabled={loading}
             className={`min-h-11 whitespace-nowrap rounded-md border border-white/10 bg-surface-elevated px-3 text-sm text-white hover:bg-white/10 disabled:opacity-60 ${ADMIN_FOCUS_RING}`}
           >
@@ -108,7 +92,7 @@ function AdminActionsPage(): React.ReactElement {
         </div>
       </div>
 
-      {error && <div className="rounded-lg border border-white/10 bg-surface"><PanelError message={error} onRetry={() => setToken((t) => t + 1)} /></div>}
+      {error && <div className="rounded-lg border border-white/10 bg-surface"><PanelError message={error} onRetry={query.refetch} /></div>}
 
       <section aria-label="Recorded admin actions" aria-busy={loading || undefined} className="rounded-lg border border-white/10 bg-surface">
         {!data && loading && <PanelSkeleton rows={8} />}

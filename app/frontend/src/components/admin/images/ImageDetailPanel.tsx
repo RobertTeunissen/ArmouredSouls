@@ -4,12 +4,12 @@
  * for an image that got past the NSFW filter. Removal needs a reason and a
  * second confirmation naming the robots; the player is not notified.
  */
-import { useEffect, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ADMIN_FOCUS_RING, AdminSlideOver, PanelError, PanelSkeleton } from '../shared';
-import { ApiError } from '../../../utils/ApiError';
-import { isAbortError } from '../../../utils/abort';
+import { ApiError, apiErrorMessage } from '../../../utils/ApiError';
+import { useApiQuery } from '../../../hooks/useApiQuery';
 import { getImageDetail, removeImage } from '../../../utils/adminImagesApi';
 import { bytesText, fullDateTime, ownerLabel } from '../../../utils/adminImagesFormat';
 import type { ImageDetail, ModerationScores } from '@shared/types';
@@ -129,22 +129,14 @@ function RemoveForm({ detail, onRemoved }: { detail: ImageDetail; onRemoved: (me
 }
 
 export function ImageDetailPanel({ imageId, onClose, onRemoved }: ImageDetailPanelProps): ReactNode {
-  const [detail, setDetail] = useState<ImageDetail | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (imageId === null) return undefined;
-    const controller = new AbortController();
-    setDetail(null);
-    setError(null);
-    getImageDetail(imageId, controller.signal)
-      .then((data) => { if (!controller.signal.aborted) setDetail(data); })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setError((err instanceof ApiError && err.message) || 'Could not load the image.');
-      });
-    return () => controller.abort();
-  }, [imageId]);
+  const query = useApiQuery(
+    (signal) => getImageDetail(imageId!, signal),
+    [imageId],
+    { enabled: imageId !== null },
+  );
+  // Never show the previous image while the next one loads.
+  const detail = query.data && query.data.id === imageId ? query.data : null;
+  const error = apiErrorMessage(query.error, 'Could not load the image.');
 
   const title = detail ? `Image from ${ownerLabel(detail.owner)}` : 'Image';
 

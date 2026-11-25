@@ -62,7 +62,7 @@ describe('useEventRegistry', () => {
     mockGet.mockResolvedValue({ events: [{ type: 'koth', label: 'KotH', eligible: true }] });
     const { result } = renderHook(() => useEventRegistry());
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(mockGet).toHaveBeenCalledWith('/api/subscriptions/registry');
+    expect(mockGet).toHaveBeenCalledWith('/api/subscriptions/registry', expect.objectContaining({ signal: expect.any(AbortSignal) }));
     expect(result.current.events).toEqual([{ type: 'koth', label: 'KotH', eligible: true }]);
     expect(result.current.error).toBeNull();
   });

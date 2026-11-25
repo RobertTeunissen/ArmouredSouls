@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   financePeriodKey,
   getRobotFinancialEvents,
@@ -7,73 +7,10 @@ import {
 import type {
   FinancePeriodSelection,
 } from '../utils/financeApi';
-import type { FinanceResource } from './useFinanceReport';
+import { useFinanceResource, type FinanceResource } from './useFinanceReport';
 import type { RobotDetailResponse, RobotSummaryResponse } from '@shared/types';
 
 const DEFAULT_PAGE_SIZE = 20;
-
-interface RobotResourceOptions<T> {
-  enabled: boolean;
-  key: string;
-  refreshToken: number;
-  load: (signal: AbortSignal, fresh: boolean) => Promise<T>;
-  fallbackMessage: string;
-}
-
-function useRobotResource<T>({
-  enabled,
-  key,
-  refreshToken,
-  load,
-  fallbackMessage,
-}: RobotResourceOptions<T>): FinanceResource<T> {
-  const [data, setData] = useState<T | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [retryToken, setRetryToken] = useState(0);
-  const [localRefreshToken, setLocalRefreshToken] = useState(0);
-  const consumedExternalRefreshToken = useRef(0);
-  const consumedLocalRefreshToken = useRef(0);
-  const generationRef = useRef(0);
-  const loadRef = useRef(load);
-  loadRef.current = load;
-
-  useEffect(() => {
-    if (!enabled) return undefined;
-
-    const generation = ++generationRef.current;
-    const controller = new AbortController();
-    const fresh = refreshToken > consumedExternalRefreshToken.current
-      || localRefreshToken > consumedLocalRefreshToken.current;
-    setData(null);
-    setIsLoading(true);
-    setError(null);
-
-    void loadRef.current(controller.signal, fresh)
-      .then((response) => {
-        if (controller.signal.aborted || generationRef.current !== generation) return;
-        setData(response);
-      })
-      .catch((caught: unknown) => {
-        if (controller.signal.aborted || generationRef.current !== generation) return;
-        setError(caught instanceof Error && caught.message ? caught.message : fallbackMessage);
-      })
-      .finally(() => {
-        if (controller.signal.aborted || generationRef.current !== generation) return;
-        if (fresh) {
-          consumedExternalRefreshToken.current = refreshToken;
-          consumedLocalRefreshToken.current = localRefreshToken;
-        }
-        setIsLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [enabled, fallbackMessage, key, localRefreshToken, refreshToken, retryToken]);
-
-  const retry = useCallback((): void => setRetryToken((token) => token + 1), []);
-  const refresh = useCallback((): void => setLocalRefreshToken((token) => token + 1), []);
-  return { data, isLoading, error, retry, refresh };
-}
 
 export interface UseRobotDeploymentResult {
   summaries: FinanceResource<RobotSummaryResponse>;
@@ -100,17 +37,17 @@ export function useRobotDeployment(
     setPageState(1);
   }, [periodKey]);
 
-  const summaries = useRobotResource<RobotSummaryResponse>({
+  const summaries = useFinanceResource<RobotSummaryResponse>({
     enabled,
     key: `robots:${periodKey}`,
     refreshToken,
     load: (signal, fresh) => fresh
       ? getRobotFinancialSummaries(period, signal, { fresh: true })
       : getRobotFinancialSummaries(period, signal),
-    fallbackMessage: 'Failed to load robot deployment results.',
+    errorMessage: 'Failed to load robot deployment results.',
   });
 
-  const detail = useRobotResource<RobotDetailResponse>({
+  const detail = useFinanceResource<RobotDetailResponse>({
     enabled: enabled && selectedRobotId !== null,
     key: `robot-detail:${periodKey}:${selectedRobotId ?? 'none'}:${page}:${DEFAULT_PAGE_SIZE}`,
     refreshToken,
@@ -127,7 +64,7 @@ export function useRobotDeployment(
         )
         : getRobotFinancialEvents(selectedRobotId, period, page, DEFAULT_PAGE_SIZE, signal);
     },
-    fallbackMessage: 'Failed to load robot financial events.',
+    errorMessage: 'Failed to load robot financial events.',
   });
 
   const selectRobot = useCallback((robotId: number): void => {

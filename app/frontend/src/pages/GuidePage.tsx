@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useApiQuery } from '../hooks/useApiQuery';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { fetchGuideSections, fetchGuideArticle } from '../utils/guideApi';
 import GuideNavigation from '../components/guide/GuideNavigation';
@@ -14,6 +15,18 @@ type ErrorState = {
   message: string;
 } | null;
 
+/**
+ * `api` rejects with an ApiError (statusCode 0 for a network failure), never
+ * an axios error, so a missing article must not read as "offline".
+ */
+function classifyArticleError(err: unknown): ErrorState {
+  if (!err) return null;
+  const status = err instanceof ApiError ? err.statusCode : undefined;
+  if (status === 404) return { type: 'not-found', message: 'Article not found' };
+  if (status && status >= 500) return { type: 'server-error', message: 'Something went wrong' };
+  return { type: 'network-error', message: 'Unable to load content. Check your connection.' };
+}
+
 function GuidePage(): React.ReactElement {
   const { sectionSlug, articleSlug } = useParams<{
     sectionSlug?: string;
@@ -21,98 +34,29 @@ function GuidePage(): React.ReactElement {
   }>();
   const navigate = useNavigate();
 
-  const [sections, setSections] = useState<GuideSection[]>([]);
-  const [cachedSections, setCachedSections] = useState<GuideSection[]>([]);
-  const [article, setArticle] = useState<GuideArticle | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<ErrorState>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isOffline, setIsOffline] = useState(false);
 
-  // Fetch sections on mount
-  useEffect(() => {
-    let cancelled = false;
-    const loadSections = async (): Promise<void> => {
-      try {
-        const data = await fetchGuideSections();
-        if (!cancelled) {
-          setSections(data);
-          setCachedSections(data);
-          setIsOffline(false);
-        }
-      } catch {
-        if (!cancelled) {
-          setIsOffline(true);
-          // Use cached sections if available
-          if (cachedSections.length === 0) {
-            setError({ type: 'network-error', message: 'Unable to load guide. Check your connection.' });
-          }
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    loadSections();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const sectionsQuery = useApiQuery(() => fetchGuideSections(), []);
+  const wantsArticle = Boolean(sectionSlug && articleSlug);
+  const articleKey = `${sectionSlug}/${articleSlug}`;
+  const articleQuery = useApiQuery(
+    async () => ({ key: articleKey, article: await fetchGuideArticle(sectionSlug!, articleSlug!) }),
+    [articleKey, sectionSlug, articleSlug],
+    { enabled: wantsArticle },
+  );
 
-  // Fetch article when slug params change
-  useEffect(() => {
-    if (!sectionSlug || !articleSlug) {
-      setArticle(null);
-      setError(null);
-      return;
-    }
-
-    let cancelled = false;
-    const loadArticle = async (): Promise<void> => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await fetchGuideArticle(sectionSlug, articleSlug);
-        if (!cancelled) {
-          setArticle(data);
-          setIsOffline(false);
-        }
-      } catch (err: unknown) {
-        if (!cancelled) {
-          // `api` rejects with an ApiError (statusCode 0 for a network failure),
-          // never an axios error, so a missing article used to read as "offline".
-          const status = err instanceof ApiError ? err.statusCode : undefined;
-          if (status === 404) {
-            setError({ type: 'not-found', message: 'Article not found' });
-          } else if (status && status >= 500) {
-            setError({ type: 'server-error', message: 'Something went wrong' });
-          } else {
-            setIsOffline(true);
-            setError({ type: 'network-error', message: 'Unable to load content. Check your connection.' });
-          }
-          setArticle(null);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    loadArticle();
-    return () => { cancelled = true; };
-  }, [sectionSlug, articleSlug]);
-
-  const handleRetry = useCallback((): void => {
-    if (sectionSlug && articleSlug) {
-      setError(null);
-      setLoading(true);
-      fetchGuideArticle(sectionSlug, articleSlug)
-        .then((data) => {
-          setArticle(data);
-          setIsOffline(false);
-        })
-        .catch(() => {
-          setError({ type: 'server-error', message: 'Something went wrong' });
-        })
-        .finally(() => setLoading(false));
-    }
-  }, [sectionSlug, articleSlug]);
+  const sections: GuideSection[] = sectionsQuery.data ?? [];
+  // Never show the previous article under a new address.
+  const article: GuideArticle | null =
+    wantsArticle && articleQuery.data?.key === articleKey ? articleQuery.data.article : null;
+  const articleError = wantsArticle ? classifyArticleError(articleQuery.error) : null;
+  const sectionsError: ErrorState = sectionsQuery.error && sections.length === 0
+    ? { type: 'network-error', message: 'Unable to load guide. Check your connection.' }
+    : null;
+  const error: ErrorState = articleError ?? sectionsError;
+  const loading = sectionsQuery.loading || (wantsArticle && articleQuery.loading);
+  const isOffline = Boolean(sectionsQuery.error) || articleError?.type === 'network-error';
+  const handleRetry = articleQuery.refetch;
 
   const handleSearchSelect = useCallback(
     (secSlug: string, artSlug: string): void => {
@@ -123,10 +67,7 @@ function GuidePage(): React.ReactElement {
   );
 
   // Find current section for section-only view
-  const currentSection = sections.find((s) => s.slug === sectionSlug) ||
-    cachedSections.find((s) => s.slug === sectionSlug);
-
-  const displaySections = sections.length > 0 ? sections : cachedSections;
+  const currentSection = sections.find((s) => s.slug === sectionSlug);
 
   const renderContent = (): React.ReactNode => {
     if (loading) {
@@ -169,7 +110,7 @@ function GuidePage(): React.ReactElement {
     }
 
     // Landing page
-    return <GuideLandingPage sections={displaySections} />;
+    return <GuideLandingPage sections={sections} />;
   };
 
   const renderError = (): React.ReactNode => {
@@ -220,7 +161,7 @@ function GuidePage(): React.ReactElement {
       <div className="flex min-h-[calc(100vh-4rem)]">
         {/* Sidebar navigation */}
         <GuideNavigation
-          sections={displaySections}
+          sections={sections}
           currentSectionSlug={sectionSlug}
           currentArticleSlug={articleSlug}
           isOpen={sidebarOpen}

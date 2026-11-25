@@ -11,14 +11,11 @@
  *   - `userId`  → outcome from the user's robot in each battle
  */
 
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CompactBattleCard from './CompactBattleCard';
 import { getMatchHistory, BattleHistory, getBattlePerspective, getBattleEconomicDisplay } from '../utils/matchmakingApi';
 import { expandBattleDisplayInstances, type BattleDisplayInstance } from '../utils/match-display-instances';
-import { createLogger } from '../utils/logger';
-
-const log = createLogger('RecentBattles');
+import { useApiQuery } from '../hooks/useApiQuery';
 
 interface RecentBattlesProps {
   /** Pre-fetched battles. If omitted, the component fetches its own. */
@@ -35,30 +32,15 @@ interface RecentBattlesProps {
 
 function RecentBattles({ battles: battlesProp, robotId, userId, limit = 20, title = 'Recent Battles' }: RecentBattlesProps) {
   const navigate = useNavigate();
-  const [fetchedBattles, setFetchedBattles] = useState<BattleHistory[] | null>(null);
-  const [loading, setLoading] = useState(!battlesProp);
-  const [error, setError] = useState<string | null>(null);
-
-  // Self-fetch when no battles prop is provided
-  useEffect(() => {
-    if (battlesProp) return;
-
-    let cancelled = false;
-    void (async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getMatchHistory(1, limit, undefined, robotId);
-        if (!cancelled) setFetchedBattles(data.data);
-      } catch (err) {
-        log.error('Failed to fetch recent battles', err);
-        if (!cancelled) setError('Failed to load recent battles');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [battlesProp, robotId, limit]);
+  // Self-fetch only when no battles prop is provided
+  const query = useApiQuery(
+    async () => (await getMatchHistory(1, limit, undefined, robotId)).data,
+    [robotId, limit],
+    { enabled: !battlesProp },
+  );
+  const fetchedBattles = query.data;
+  const loading = !battlesProp && query.loading;
+  const error = !battlesProp && query.error ? 'Failed to load recent battles' : null;
 
   const battles = battlesProp ?? fetchedBattles ?? [];
 
