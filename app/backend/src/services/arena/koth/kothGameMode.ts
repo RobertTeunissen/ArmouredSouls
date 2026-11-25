@@ -106,7 +106,6 @@ export function buildKothInitialState(
  * Requirements: 2.1–2.5, 3.1–3.7, 7.1–7.6
  */
 export function buildKothTickHook(
-  config: KothMatchConfig,
   scoreState: KothScoreState,
   zoneState: KothZoneState,
   gameModeState: GameModeState,

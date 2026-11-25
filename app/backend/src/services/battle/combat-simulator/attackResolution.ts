@@ -362,7 +362,7 @@ export function performAttack(
   // reach is measured between the real positions, never the caller-supplied context
   // (identical to spatialContext.distance on the production caller).
   const counterDistance = euclideanDistance(attackerState.position, defenderState.position);
-  const counterResult = resolveCounter(defenderState, attackerState, counterDistance);
+  const counterResult = resolveCounter(defenderState, counterDistance);
 
   if (!counterResult.canCounter) {
     // Counter blocked by range

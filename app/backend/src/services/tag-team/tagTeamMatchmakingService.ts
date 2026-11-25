@@ -56,7 +56,6 @@ export interface TagTeamMatchPair {
  * Requirements: 3.1, 3.2, 3.6, 6.2
  */
 export async function getEligibleTeams(
-  tagTeamLeague: string,
   tagTeamLeagueId: string
 ): Promise<TeamBattleWithMembers[]> {
   // Get team IDs in this instance from standings (source of truth for league placement)
@@ -446,7 +445,7 @@ export async function runTagTeamMatchmaking(scheduledFor?: Date): Promise<number
 
       for (const instanceId of instanceIds) {
         // Get eligible teams for this instance
-        const eligibleTeams = await getEligibleTeams(tier, instanceId);
+        const eligibleTeams = await getEligibleTeams(instanceId);
 
         if (eligibleTeams.length < 1) {
           logger.info(`[TagTeamMatchmaking] ${instanceId}: No eligible teams, skipping`);

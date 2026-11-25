@@ -279,7 +279,7 @@ describe('Matchmaker Subscription Integration', () => {
         // robot 4 is NOT subscribed
       ]);
 
-      await getEligibleTeams('bronze', 'bronze-1');
+      await getEligibleTeams('bronze-1');
 
       // Verify subscription batch query was called with tag_team event type
       expect(mockPrisma.subscription.findMany).toHaveBeenCalledWith(
@@ -326,7 +326,7 @@ describe('Matchmaker Subscription Integration', () => {
         // robot 13 NOT subscribed
       ]);
 
-      const result = await getEligibleTeams('bronze', 'bronze-1');
+      const result = await getEligibleTeams('bronze-1');
 
       // Only team 200 should be eligible (both robots subscribed)
       expect(result).toHaveLength(1);
@@ -371,7 +371,7 @@ describe('Matchmaker Subscription Integration', () => {
         { robotId: 23 },
       ]);
 
-      const result = await getEligibleTeams('bronze', 'bronze-1');
+      const result = await getEligibleTeams('bronze-1');
 
       // Both teams should be eligible
       expect(result).toHaveLength(2);

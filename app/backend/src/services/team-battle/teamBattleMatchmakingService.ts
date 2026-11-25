@@ -56,7 +56,6 @@ export interface TeamBattleMatchPair {
  * Requirements: R3.3, R3.4, R4.6
  */
 export async function getEligibleTeams(
-  teamBattleLeague: string,
   teamBattleLeagueId: string,
   teamSize: 2 | 3,
 ): Promise<TeamBattleWithMembers[]> {
@@ -574,7 +573,7 @@ export async function runTeamBattleMatchmaking(teamSize: 2 | 3, scheduledFor?: D
       for (const instanceId of instanceIds) {
         try {
           // Get eligible teams for this instance
-          const eligibleTeams = await getEligibleTeams(tier, instanceId, teamSize);
+          const eligibleTeams = await getEligibleTeams(instanceId, teamSize);
 
           if (eligibleTeams.length < 1) {
             logger.info(`[TeamBattleMatchmaking] ${instanceId}: No eligible teams, skipping`);

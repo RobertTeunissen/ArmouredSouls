@@ -7,7 +7,7 @@ import { resolveBelowMinimumField } from '../scheduling/thinInstanceByes';
 import type { KothPlacement } from '../../types';
 import { MIN_GROUP_SIZE } from './grandMeleeMatchmakingService';
 import { countKillsByRobot } from '../../shared/utils/battleStatistics';
-import { simulateBattleMulti, RobotWithWeapons, BattleConfig, CombatResult, RobotCombatState, CombatEvent } from '../battle/combatSimulator';
+import { simulateBattleMulti, RobotWithWeapons, BattleConfig, RobotCombatState, CombatEvent } from '../battle/combatSimulator';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import {
   checkAndAwardAchievements,
@@ -81,7 +81,6 @@ interface PlacementEntry {
  * 7. Count kills per robot from elimination events
  */
 function computePlacements(
-  result: CombatResult,
   states: RobotCombatState[],
   events: CombatEvent[],
 ): PlacementEntry[] {
@@ -271,7 +270,7 @@ async function processGrandMeleeBattle(
   // 6. Compute placements from elimination order + HP tiebreaker
   // (placements 1..ready.length; forfeiters follow at ready.length+1..N)
   const finalStates = simResult.finalStates ?? [];
-  const placements = computePlacements(simResult, finalStates, simResult.events);
+  const placements = computePlacements(finalStates, simResult.events);
   const forfeitedLogPlacements = forfeited.map(f => ({
     robotId: f.robot.id,
     robotName: f.robot.name,
@@ -311,7 +310,6 @@ async function processGrandMeleeBattle(
     const rewards = calculateGrandMeleeRewards(
       p.placement,
       robotTier,
-      totalParticipants,
       isWinner ? hpPercent : undefined,
     );
     return {

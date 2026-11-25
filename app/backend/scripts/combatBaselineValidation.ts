@@ -795,7 +795,7 @@ function runKoth(column: KothColumn, specs: BuildSpec[], plan: BuildPlan, matchI
   const customData = gameModeState.customData as Record<string, unknown>;
   const scoreState = customData.scoreState as KothEngine.KothScoreState;
   const zoneState = customData.zoneState as KothEngine.KothZoneState;
-  customData.tickHook = koth.buildKothTickHook(kothConfig, scoreState, zoneState, gameModeState);
+  customData.tickHook = koth.buildKothTickHook(scoreState, zoneState, gameModeState);
   const config: BattleConfig = {
     allowDraws: false,
     maxDuration: KOTH_MAX_DURATION,

@@ -212,8 +212,8 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
 
             // Create tag teams (at least 2 robots needed per team)
             if (robotsPerUser >= 2) {
-              await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2, user1.id);
-              await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2, user2.id);
+              await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2);
+              await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2);
             }
 
             // Run matchmaking for both 1v1 and tag team
@@ -317,8 +317,8 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
             }
 
             // Create tag teams
-            await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2, user1.id);
-            await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2, user2.id);
+            await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2);
+            await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2);
 
             // Schedule matches
             const scheduledFor = new Date(Date.now() + 1000);
@@ -438,8 +438,8 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
             }
 
             // Create tag teams using robots 0 and 1
-            await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2, user1.id);
-            await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2, user2.id);
+            await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2);
+            await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2);
 
             // Schedule matches
             const scheduledFor = new Date(Date.now() + 1000);
@@ -576,8 +576,8 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
             }
 
             // Create tag teams using robots 0 and 1
-            const team1 = await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2, user1.id);
-            const team2 = await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2, user2.id);
+            const team1 = await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2);
+            const team2 = await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2);
 
             // `registerTeam` enters a 2v2 team into the 2v2 league, not into tag team — tag
             // team is a separate mode on the same TeamBattle row with its own `standings`

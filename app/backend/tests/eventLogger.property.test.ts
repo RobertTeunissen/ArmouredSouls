@@ -52,9 +52,7 @@ describe('EventLogger Property-Based Tests', () => {
                 EventType.FACILITY_UPGRADE,
                 EventType.WEAPON_PURCHASE,
                 EventType.WEAPON_SALE,
-                EventType.TOURNAMENT_MATCH,
                 EventType.TOURNAMENT_COMPLETE,
-                EventType.TAG_TEAM_BATTLE,
                 EventType.CYCLE_START,
                 EventType.CYCLE_STEP_COMPLETE,
                 EventType.CYCLE_COMPLETE

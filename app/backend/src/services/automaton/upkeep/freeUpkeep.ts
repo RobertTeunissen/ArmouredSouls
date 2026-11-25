@@ -117,7 +117,7 @@ async function registerDueTeams(facts: StableFacts, ctx: FreeUpkeepContext, issu
       continue;
     }
     try {
-      await registerTeam(ctx.userId, [...due.robotIds], due.name, due.size, ctx.userId);
+      await registerTeam(ctx.userId, [...due.robotIds], due.name, due.size);
       registered++;
     } catch (error) {
       issues.push({ part: 'teams', code: errorCode(error), message: errorMessage(error), teamSize: due.size, teamIndex: due.index });

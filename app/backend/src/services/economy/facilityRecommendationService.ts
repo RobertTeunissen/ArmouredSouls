@@ -1,8 +1,7 @@
 import prisma from '../../lib/prisma';
 import { readCycleRepairSpend } from './repairPayloadKeys';
 import { getFacilityConfig, FACILITY_TYPES } from '../../config/facilities';
-import { unifiedFacilityROIService } from './unifiedFacilityROIService';
-import type { FacilityRecommendation, RecommendationSummary, UnifiedFacilityROI } from '../../shared/types';
+import type { FacilityRecommendation, RecommendationSummary } from '../../shared/types';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import type { User } from '../../../generated/prisma';
 import type { StableMetric } from '../../types/snapshotTypes';
@@ -50,10 +49,6 @@ export class FacilityRecommendationService {
     // Training Facility discount depends on it (Spec #46 R11, #526).
     const rosterCapacity = getRosterCapacity(facilityMap.get('roster_expansion') || 0);
 
-    // Calculate ROI for existing economic facilities using unified service
-    const allEconomicROIs = await unifiedFacilityROIService.calculateAllEconomicROIs(userId);
-    const existingROIs = allEconomicROIs.facilities;
-
     // Analyze user's activity using lifetime data
     const activityMetrics = await this.analyzeUserActivity(
       userId,
@@ -86,7 +81,6 @@ export class FacilityRecommendationService {
         currentLevel,
         nextLevel,
         activityMetrics,
-        existingROIs,
         user,
         rosterCapacity
       );
@@ -213,7 +207,6 @@ export class FacilityRecommendationService {
     currentLevel: number,
     nextLevel: number,
     activityMetrics: ActivityMetrics,
-    existingROIs: UnifiedFacilityROI[],
     user: User,
     rosterCapacity: number
   ): Promise<FacilityRecommendation | null> {

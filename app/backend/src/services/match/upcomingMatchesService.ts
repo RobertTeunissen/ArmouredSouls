@@ -58,12 +58,11 @@ type ActiveTournamentRound = {
 
 interface RobotAndTeamIds {
   robotIds: number[];
-  teamIds: number[];
   teamBattleIds: number[];
 }
 
 /**
- * Resolve robot IDs, tag-team IDs, and team-battle IDs for the upcoming-matches query.
+ * Resolve robot IDs and team-battle IDs for the upcoming-matches query.
  * If a specific robotId is provided, returns that robot (plus any teams it belongs to).
  * Otherwise returns all robots/teams owned by the given user.
  */
@@ -72,15 +71,12 @@ export async function resolveRobotAndTeamIds(
   queryRobotId?: number,
 ): Promise<RobotAndTeamIds> {
   if (queryRobotId !== undefined && !isNaN(queryRobotId)) {
-    const [teamBattlesWithRobot] = await Promise.all([
-      prisma.teamBattle.findMany({
-        where: { members: { some: { robotId: queryRobotId } } },
-        select: { id: true },
-      }),
-    ]);
+    const teamBattlesWithRobot = await prisma.teamBattle.findMany({
+      where: { members: { some: { robotId: queryRobotId } } },
+      select: { id: true },
+    });
     return {
       robotIds: [queryRobotId],
-      teamIds: [],
       teamBattleIds: teamBattlesWithRobot.map(t => t.id),
     };
   }
@@ -92,7 +88,6 @@ export async function resolveRobotAndTeamIds(
 
   return {
     robotIds: userRobots.map(r => r.id),
-    teamIds: [],
     teamBattleIds: userTeamBattles.map(t => t.id),
   };
 }
@@ -101,7 +96,7 @@ export async function resolveRobotAndTeamIds(
  * Fetch and format all upcoming matches (league, tournament, tag-team, KotH, team-battle)
  * for the given robot/team IDs.
  */
-export async function getUpcomingMatches(robotIds: number[], teamIds: number[], teamBattleIds: number[] = []) {
+export async function getUpcomingMatches(robotIds: number[], teamBattleIds: number[] = []) {
   // Fetch from unified scheduling table for league, tag_team, koth, team battles (Spec #40)
   const unifiedMatches = (robotIds.length > 0 || teamBattleIds.length > 0) ? await prisma.scheduledMatch.findMany({
     where: {

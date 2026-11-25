@@ -52,7 +52,7 @@ describe('Grand Melee Rewards — Property Tests', () => {
         fc.integer({ min: 1, max: 20 }),
         fc.constantFrom(...TIERS),
         (placement, tier) => {
-          const result = calculateGrandMeleeRewards(placement, tier, 20);
+          const result = calculateGrandMeleeRewards(placement, tier);
 
           if (placement <= 10) {
             expect(result.lpDelta).toBe(GRAND_MELEE_LP_SCALE[placement - 1]);
@@ -77,7 +77,7 @@ describe('Grand Melee Rewards — Property Tests', () => {
         fc.integer({ min: 1, max: 20 }),
         fc.constantFrom(...TIERS),
         (placement, tier) => {
-          const result = calculateGrandMeleeRewards(placement, tier, 20);
+          const result = calculateGrandMeleeRewards(placement, tier);
           const floor = TIER_CREDIT_FLOOR[tier];
 
           expect(result.credits).toBeGreaterThanOrEqual(floor);
@@ -99,7 +99,7 @@ describe('Grand Melee Rewards — Property Tests', () => {
         fc.integer({ min: 1, max: 20 }),
         fc.constantFrom(...TIERS),
         (placement, tier) => {
-          const result = calculateGrandMeleeRewards(placement, tier, 20);
+          const result = calculateGrandMeleeRewards(placement, tier);
           if (placement <= 10) {
             const expected = Math.floor(GRAND_MELEE_BASE_PRESTIGE[placement] * getTierFactor(tier));
             expect(result.prestige).toBe(expected);
@@ -129,7 +129,7 @@ describe('Grand Melee prestige curve (#576)', () => {
     ['diamond', [90, 45, 22, 18, 13, 13, 9, 9, 4, 4]],
     ['champion', [140, 70, 35, 28, 21, 21, 14, 14, 7, 7]],
   ] as const)('%s pays %j', (tier, expected) => {
-    expect(Array.from({ length: 10 }, (_, i) => calculateGrandMeleeRewards(i + 1, tier, 20).prestige)).toEqual(expected);
+    expect(Array.from({ length: 10 }, (_, i) => calculateGrandMeleeRewards(i + 1, tier).prestige)).toEqual(expected);
   });
 });
 
@@ -137,7 +137,7 @@ describe('Grand Melee prestige curve (#576)', () => {
 
 describe('Grand Melee Rewards — Unit Tests', () => {
   it('should return correct rewards for 1st place bronze', () => {
-    const result = calculateGrandMeleeRewards(1, 'bronze', 20);
+    const result = calculateGrandMeleeRewards(1, 'bronze');
 
     expect(result.credits).toBe(18750);
     expect(result.fame).toBe(12);
@@ -146,7 +146,7 @@ describe('Grand Melee Rewards — Unit Tests', () => {
   });
 
   it('should return correct rewards for 4th place silver', () => {
-    const result = calculateGrandMeleeRewards(4, 'silver', 20);
+    const result = calculateGrandMeleeRewards(4, 'silver');
 
     expect(result.credits).toBe(20625);
     expect(result.fame).toBe(6);
@@ -155,7 +155,7 @@ describe('Grand Melee Rewards — Unit Tests', () => {
   });
 
   it('should return correct rewards for 10th place gold', () => {
-    const result = calculateGrandMeleeRewards(10, 'gold', 20);
+    const result = calculateGrandMeleeRewards(10, 'gold');
 
     expect(result.credits).toBe(16500);
     expect(result.fame).toBe(2);
@@ -164,7 +164,7 @@ describe('Grand Melee Rewards — Unit Tests', () => {
   });
 
   it('should return correct rewards for 20th place champion', () => {
-    const result = calculateGrandMeleeRewards(20, 'champion', 20);
+    const result = calculateGrandMeleeRewards(20, 'champion');
 
     expect(result.credits).toBe(112500);
     expect(result.fame).toBe(0);
@@ -173,7 +173,7 @@ describe('Grand Melee Rewards — Unit Tests', () => {
   });
 
   it('should return participation floor rewards for 11th place bronze', () => {
-    const result = calculateGrandMeleeRewards(11, 'bronze', 20);
+    const result = calculateGrandMeleeRewards(11, 'bronze');
 
     expect(result.credits).toBe(3750);
     expect(result.fame).toBe(0);
@@ -183,14 +183,14 @@ describe('Grand Melee Rewards — Unit Tests', () => {
 
   it('should apply prestige HP bonus when winner HP > 50%', () => {
     // 1st place diamond, HP=80% → prestige = floor(20 × 4.5 × 1.5) = 135
-    const result = calculateGrandMeleeRewards(1, 'diamond', 20, 80);
+    const result = calculateGrandMeleeRewards(1, 'diamond', 80);
 
     expect(result.prestige).toBe(135);
   });
 
   it('should NOT apply prestige HP bonus when winner HP <= 50%', () => {
     // 1st place diamond, HP=40% → prestige = floor(20 × 4.5) = 90
-    const result = calculateGrandMeleeRewards(1, 'diamond', 20, 40);
+    const result = calculateGrandMeleeRewards(1, 'diamond', 40);
 
     expect(result.prestige).toBe(90);
   });

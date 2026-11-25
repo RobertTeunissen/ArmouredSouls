@@ -89,7 +89,7 @@ router.post(
     const { robotIds, teamName, teamSize } = body;
     const userId = req.user!.userId;
 
-    const team = await registerTeam(userId, robotIds, teamName, teamSize, userId);
+    const team = await registerTeam(userId, robotIds, teamName, teamSize);
 
     res.status(201).json({ team });
   }),

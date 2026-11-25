@@ -152,8 +152,8 @@ describe('simulator weapon invariant: a missing main weapon throws ROBOT_NOT_BAT
   });
 
   it('resolveCounter (defender without a main weapon)', () => {
-    const [a, d] = statesAt(robotFixture('Attacker'), robotFixture('Unarmed', UNARMED), 1);
-    expectBattleError(() => resolveCounter(d, a, 1), BattleErrorCode.ROBOT_NOT_BATTLE_READY);
+    const [, d] = statesAt(robotFixture('Attacker'), robotFixture('Unarmed', UNARMED), 1);
+    expectBattleError(() => resolveCounter(d, 1), BattleErrorCode.ROBOT_NOT_BATTLE_READY);
   });
 });
 

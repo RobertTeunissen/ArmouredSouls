@@ -199,7 +199,7 @@ describe('teamBattleMatchmakingService', () => {
         { robotId: 20 }, { robotId: 21 },
       ]);
 
-      const result = await getEligibleTeams('bronze', 'bronze_1', 2);
+      const result = await getEligibleTeams('bronze_1', 2);
 
       expect(result).toHaveLength(2);
       expect(result).toEqual(expect.arrayContaining([team1, team2]));
@@ -218,7 +218,7 @@ describe('teamBattleMatchmakingService', () => {
         { robotId: 20 }, // 21 is missing
       ]);
 
-      const result = await getEligibleTeams('bronze', 'bronze_1', 2);
+      const result = await getEligibleTeams('bronze_1', 2);
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(1);
@@ -242,7 +242,7 @@ describe('teamBattleMatchmakingService', () => {
         .mockReturnValueOnce({ isReady: false, reason: 'no weapon' }) // team2 robot 20
         .mockReturnValueOnce({ isReady: true }); // team2 robot 21
 
-      const result = await getEligibleTeams('bronze', 'bronze_1', 2);
+      const result = await getEligibleTeams('bronze_1', 2);
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(1);
@@ -268,7 +268,7 @@ describe('teamBattleMatchmakingService', () => {
         { robotId: 20 }, { robotId: 21 },
       ]);
 
-      const result = await getEligibleTeams('bronze', 'bronze_1', 2);
+      const result = await getEligibleTeams('bronze_1', 2);
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(2);
@@ -283,7 +283,7 @@ describe('teamBattleMatchmakingService', () => {
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       mockPrisma.subscription.findMany.mockResolvedValue([]);
 
-      const result = await getEligibleTeams('bronze', 'bronze_1', 2);
+      const result = await getEligibleTeams('bronze_1', 2);
 
       expect(result).toHaveLength(0);
     });
@@ -298,7 +298,7 @@ describe('teamBattleMatchmakingService', () => {
         { robotId: 10 }, { robotId: 11 }, { robotId: 12 },
       ]);
 
-      await getEligibleTeams('bronze', 'bronze_1', 3);
+      await getEligibleTeams('bronze_1', 3);
 
       // Subscription query should use league_3v3
       expect(mockPrisma.subscription.findMany).toHaveBeenCalledWith(
@@ -314,7 +314,7 @@ describe('teamBattleMatchmakingService', () => {
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       mockPrisma.subscription.findMany.mockResolvedValue([]);
 
-      const result = await getEligibleTeams('bronze', 'bronze_1', 2);
+      const result = await getEligibleTeams('bronze_1', 2);
 
       expect(result).toHaveLength(0);
     });

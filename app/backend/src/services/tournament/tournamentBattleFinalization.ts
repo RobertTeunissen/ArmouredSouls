@@ -79,12 +79,10 @@ export async function resumeTournamentBattleFinalization(
   };
   await Promise.all([
     logTournamentParticipantAudit(
-      robot1, robot1Participant, robot2.id, robot1IsWinner, robot2Participant,
-      auditBattle, streamingRevenue1?.totalRevenue ?? 0,
+      robot1, robot1Participant, robot2.id, robot1IsWinner, auditBattle, streamingRevenue1?.totalRevenue ?? 0,
     ),
     logTournamentParticipantAudit(
-      robot2, robot2Participant, robot1.id, robot2IsWinner, robot1Participant,
-      auditBattle, streamingRevenue2?.totalRevenue ?? 0,
+      robot2, robot2Participant, robot1.id, robot2IsWinner, auditBattle, streamingRevenue2?.totalRevenue ?? 0,
     ),
   ]);
 
@@ -118,9 +116,9 @@ export async function resumeTournamentBattleFinalization(
     combatMaxHP: combatMaxHP.get(robot2.id), battleLoadoutType: battleLoadout(robot2),
   };
   const duel = {
-    durationSeconds: battle.durationSeconds,
     battleType: 'tournament_1v1',
     battleId: battle.id,
+    durationSeconds: battle.durationSeconds,
     isDraw: false,
     tournamentRound: tournamentMatch.round,
     tournamentMaxRounds: bracket?.maxRounds,
@@ -156,7 +154,6 @@ async function logTournamentParticipantAudit(
   participant: { damageDealt: number; finalHP: number; yielded: boolean; destroyed: boolean; credits: number; prestigeAwarded: number; fameAwarded: number; eloBefore: number; eloAfter: number },
   opponentId: number,
   isWinner: boolean,
-  opponentParticipant: { damageDealt: number },
   battle: { id: number; battleType: string; leagueType: string; durationSeconds: number },
   streamingRevenue: number,
 ): Promise<void> {

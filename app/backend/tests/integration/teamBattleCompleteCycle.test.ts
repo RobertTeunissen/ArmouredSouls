@@ -215,7 +215,6 @@ describe('Team Battle Complete Cycle Integration Test', () => {
         robots.map(r => r.id),
         `TestTeam2v2_${i}_${Date.now()}`,
         2,
-        user.id,
       );
       teams.push(team);
       testTeamIds.push(team.id);
@@ -420,7 +419,6 @@ describe('Team Battle Complete Cycle Integration Test', () => {
         robots.map(r => r.id),
         `TestTeam3v3_${i}_${Date.now()}`,
         3,
-        user.id,
       );
       teams.push(team);
       testTeamIds.push(team.id);
@@ -598,7 +596,6 @@ describe('Team Battle Complete Cycle Integration Test', () => {
         [robots[0].id, robots[1].id],
         `Combined2v2_${i}_${Date.now()}`,
         2,
-        user.id,
       );
       teams2v2.push(team);
       testTeamIds.push(team.id);
@@ -614,7 +611,6 @@ describe('Team Battle Complete Cycle Integration Test', () => {
         robots.map(r => r.id),
         `Combined3v3_${i}_${Date.now()}`,
         3,
-        user.id,
       );
       teams3v3.push(team);
       testTeamIds.push(team.id);

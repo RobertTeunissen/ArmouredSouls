@@ -283,7 +283,7 @@ interface TeamFixture {
 async function createTeam(size: TeamSize, extraRobots = 0): Promise<TeamFixture & { spare: number[] }> {
   const userId = await createStable();
   const robots = await buyRobots(userId, size + extraRobots);
-  const team = await registerTeam(userId, robots.slice(0, size), `${RUN} T${next()}`, size, userId);
+  const team = await registerTeam(userId, robots.slice(0, size), `${RUN} T${next()}`, size);
   return { userId, teamId: team.id, robotIds: robots.slice(0, size), spare: robots.slice(size) };
 }
 
@@ -346,7 +346,7 @@ describe('case 7: registering a team', () => {
     await setSubscriptionsForRobot(a, ['league_2v2', 'tag_team'], userId);
     await setSubscriptionsForRobot(b, ['league_2v2', 'tag_team'], userId);
 
-    const team = await registerTeam(userId, [a, b], `${RUN} Reg${next()}`, 2, userId);
+    const team = await registerTeam(userId, [a, b], `${RUN} Reg${next()}`, 2);
 
     const rows = await rowsOf('team', team.id);
     expect(rows.map((r) => r.mode).sort()).toEqual(['league_2v2', 'tag_team']);
@@ -359,7 +359,7 @@ describe('case 7: registering a team', () => {
     await setSubscriptionsForRobot(a, ['league_2v2', 'tag_team'], userId);
     await setSubscriptionsForRobot(b, ['tag_team'], userId);
 
-    const team = await registerTeam(userId, [a, b], `${RUN} Part${next()}`, 2, userId);
+    const team = await registerTeam(userId, [a, b], `${RUN} Part${next()}`, 2);
 
     expect(await modesOf('team', team.id)).toEqual(['tag_team']);
   });
@@ -411,8 +411,8 @@ describe('case 9: disband and account reset', () => {
   it("an account reset deletes the user's robot and team rows", async () => {
     const userId = await createStable();
     const robots = await buyRobots(userId, 3);
-    const pair = await registerTeam(userId, robots.slice(0, 2), `${RUN} P${next()}`, 2, userId);
-    const trio = await registerTeam(userId, robots, `${RUN} Q${next()}`, 3, userId);
+    const pair = await registerTeam(userId, robots.slice(0, 2), `${RUN} P${next()}`, 2);
+    const trio = await registerTeam(userId, robots, `${RUN} Q${next()}`, 3);
     for (const robotId of robots) {
       await setSubscriptionsForRobot(robotId, ['league_1v1', 'league_2v2', 'league_3v3'], userId);
     }

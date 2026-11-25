@@ -462,9 +462,6 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
     team2: { activeRobotId: team2.activeRobotId, reserveRobotId: team2.reserveRobotId },
   };
 
-  // The bye draw-override that used to sit here is gone (Spec #49 R12.7). It
-  // existed only to correct a simulation that should not have run for a bye;
-  // byes now return before this point, so there is nothing to correct.
 
   // Map robot winner ID to team winner ID if needed
   if (result.winnerId) {
