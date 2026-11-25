@@ -19,7 +19,8 @@ import {
   TIERED_STANDINGS_MODES,
 } from '@shared/utils/automatonStandingsTier';
 import { Pill, ToggleChip } from './ui';
-import { EVENT_LABELS, formatNumber, ordinal } from './automatonText';
+import { EVENT_LABELS, formatNumber } from './automatonText';
+import { ordinal } from '../../../utils/formatters';
 import type { ComparisonRow, ModePerformance } from '@shared/types';
 
 export interface StrategyModePerformanceProps {

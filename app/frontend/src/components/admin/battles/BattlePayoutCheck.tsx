@@ -7,6 +7,7 @@ import { ADMIN_FOCUS_RING } from '../shared';
 import { StableTag } from './BattleBadges';
 import { StableLink } from './StableLink';
 import { formatCredits, formatNumber } from '../../../utils/adminBattlesFormat';
+import { ordinal } from '../../../utils/formatters';
 import type { PayoutCheck, PlacementPayoutComponent, StablePayoutCheck } from '@shared/types';
 
 const OVERALL: Record<PayoutCheck['status'], { text: string; tone: string }> = {
@@ -64,11 +65,6 @@ function PlacementFormula({ s, components }: { s: StablePayoutCheck; components:
   );
 }
 
-function ordinal(n: number): string {
-  const tens = n % 100;
-  if (tens >= 11 && tens <= 13) return `${n}th`;
-  return `${n}${({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th'}`;
-}
 
 function Formula({ s }: { s: StablePayoutCheck }): React.ReactElement | null {
   const i = s.inputs;

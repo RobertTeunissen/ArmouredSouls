@@ -2,7 +2,7 @@
  * Pure derivations for the public robot profile (#504).
  */
 import { LEAGUE_TIER_ORDER, tierRank, isPlacementMode } from '@shared/utils/automatonStandingsTier';
-import { ordinal } from './stableViewFormat';
+import { ordinal } from './formatters';
 import type { RecentResult } from '@shared/types';
 
 export interface HistoryEntry {
