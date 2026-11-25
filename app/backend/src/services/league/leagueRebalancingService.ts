@@ -1,4 +1,4 @@
-import { StandingsMode } from '../../../generated/prisma';
+import { StandingsMode, type Standing } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { achievementService } from '../achievement';
 
@@ -11,6 +11,7 @@ import {
   InstanceOptions,
 } from './leagueInstanceService';
 import {
+  FullRebalancingResult,
   LeagueAdapter,
   LeagueEngineConfig,
   InstanceInfo,
@@ -18,8 +19,6 @@ import {
 } from './leagueEngine';
 
 import { HEAD_TO_HEAD_LEAGUE_RULES, PLACEMENT_LEAGUE_RULES } from './league-rules';
-
-// Re-export for consumers that need the helper
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 
@@ -29,76 +28,25 @@ export const ROBOT_LEAGUE_CONFIG: LeagueEngineConfig = {
   entityLabel: 'robot',
 };
 
-// ─── Robot Adapter (uses unified factory) ────────────────────────────────────
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- createStandingsAdapter is shared by five modes and returns LeagueAdapter<any>
-export const robotAdapter: LeagueAdapter<any> = createStandingsAdapter('league_1v1', {
-  maxPerInstance: MAX_ROBOTS_PER_INSTANCE,
-  entityType: 'robot',
-});
-
-// ─── Public API (unchanged signatures) ──────────────────────────────────────
-
-export interface RebalancingSummary {
-  tier: LeagueTier;
-  robotsInTier: number;
-  promoted: number;
-  demoted: number;
-  eligibleRobots: number;
-}
-
-export interface FullRebalancingSummary {
-  totalRobots: number;
-  totalPromoted: number;
-  totalDemoted: number;
-  tierSummaries: RebalancingSummary[];
-  errors: string[];
-}
+// ─── Standings adapter ───────────────────────────────────────────────────────
 
 /**
- * Rebalance all league tiers
- */
-export async function rebalanceLeagues(): Promise<FullRebalancingSummary> {
-  const result = await rebalanceAllTiers(ROBOT_LEAGUE_CONFIG, robotAdapter);
-
-  // Map engine result to the existing public interface
-  return {
-    totalRobots: result.totalEntities,
-    totalPromoted: result.totalPromoted,
-    totalDemoted: result.totalDemoted,
-    tierSummaries: result.tierSummaries.map(s => ({
-      tier: s.tier as LeagueTier,
-      robotsInTier: s.entitiesInTier,
-      promoted: s.promoted,
-      demoted: s.demoted,
-      eligibleRobots: s.eligibleEntities,
-    })),
-    errors: result.errors,
-  };
-}
-
-// ─── KotH Rebalancing (Spec #40) ────────────────────────────────────────────
-
-/**
- * Create a standings-based adapter for any mode.
- * Unified factory — all modes (1v1, 2v2, 3v3, tag_team, koth) use this.
- *
- * Options:
- *  - overrideMinLP: KotH uses 0 (no LP threshold for promotion, uses position-based ranking)
+ * Options for a standings-based adapter.
  *  - maxPerInstance: 100 for every current head-to-head and placement-mode instance
  *  - entityType: 'robot' | 'tag_team' | 'team_battle' (for league history recording)
- *  - useLocking: true for team creation (advisory lock on instance assignment)
+ *  - useLocking: true for team modes (advisory lock on instance assignment)
  */
 export interface StandingsAdapterOptions {
-  overrideMinLP?: number;
   maxPerInstance?: number;
   entityType?: 'robot' | 'tag_team' | 'team_battle';
   useLocking?: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function createStandingsAdapter(mode: string, opts: StandingsAdapterOptions = {}): LeagueAdapter<any> {
-
+/**
+ * Create a standings-based league adapter for one mode. Every mode (1v1,
+ * 2v2, 3v3, tag team, KotH, Grand Melee) ranks from its `standings` rows.
+ */
+export function createStandingsAdapter(mode: StandingsMode, opts: StandingsAdapterOptions = {}): LeagueAdapter<Standing> {
   const maxPerInstance = opts.maxPerInstance ?? MAX_ROBOTS_PER_INSTANCE;
   const entityType: 'robot' | 'tag_team' | 'team_battle' = opts.entityType ?? 'robot';
   const useLocking = opts.useLocking ?? false;
@@ -114,7 +62,7 @@ export function createStandingsAdapter(mode: string, opts: StandingsAdapterOptio
     async getEntitiesInInstance(instanceId, excludeIds) {
       return prisma.standing.findMany({
         where: {
-          mode: mode as StandingsMode,
+          mode,
           leagueInstanceId: instanceId,
           NOT: { entityId: { in: Array.from(excludeIds) } },
         },
@@ -123,7 +71,7 @@ export function createStandingsAdapter(mode: string, opts: StandingsAdapterOptio
 
     async getInstancesForTier(tier): Promise<InstanceInfo[]> {
       const standings = await prisma.standing.findMany({
-        where: { mode: mode as StandingsMode, tier },
+        where: { mode, tier },
         distinct: ['leagueInstanceId'],
         select: { leagueInstanceId: true },
       });
@@ -131,11 +79,11 @@ export function createStandingsAdapter(mode: string, opts: StandingsAdapterOptio
     },
 
     async countEntitiesInTier(tier) {
-      return prisma.standing.count({ where: { mode: mode as StandingsMode, tier } });
+      return prisma.standing.count({ where: { mode, tier } });
     },
 
     async countEntitiesInDestinationTier(tier) {
-      return prisma.standing.count({ where: { mode: mode as StandingsMode, tier } });
+      return prisma.standing.count({ where: { mode, tier } });
     },
 
     async assignInstance(tier) {
@@ -147,7 +95,7 @@ export function createStandingsAdapter(mode: string, opts: StandingsAdapterOptio
 
     async updateEntityLeague(entityId, newTier, newLeagueId) {
       await prisma.standing.updateMany({
-        where: { entityType: standingsEntityType, entityId, mode: mode as StandingsMode },
+        where: { entityType: standingsEntityType, entityId, mode },
         data: { tier: newTier, leagueInstanceId: newLeagueId, cyclesInTier: 0 },
       });
     },
@@ -176,30 +124,36 @@ export function createStandingsAdapter(mode: string, opts: StandingsAdapterOptio
     },
 
     async countAllEntities() {
-      return prisma.standing.count({ where: { mode: mode as StandingsMode } });
+      return prisma.standing.count({ where: { mode } });
     },
   };
 }
 
-/**
- * Rebalance KotH leagues — uses the same engine as 1v1 but with mode='koth' and no LP threshold.
- * KotH uses position-based ranking instead of LP thresholds.
- * Min cycles set to 10 (vs 5 for other leagues) to balance promotion speed,
- * since KotH points accumulate faster than LP in head-to-head modes.
- */
-export async function rebalanceKothLeagues(): Promise<FullRebalancingSummary> {
-  const kothConfig: LeagueEngineConfig = {
-    ...ROBOT_LEAGUE_CONFIG,
-    ...PLACEMENT_LEAGUE_RULES,
-    logPrefix: 'KotH Rebalancing',
-  };
-  const kothAdapter = createStandingsAdapter('koth', {
-    overrideMinLP: 0,
-    maxPerInstance: MAX_ROBOTS_PER_INSTANCE,
-    entityType: 'robot',
-  });
-  const result = await rebalanceAllTiers(kothConfig, kothAdapter);
+export const robotAdapter: LeagueAdapter<Standing> = createStandingsAdapter(StandingsMode.league_1v1, {
+  maxPerInstance: MAX_ROBOTS_PER_INSTANCE,
+  entityType: 'robot',
+});
 
+// ─── Public API ──────────────────────────────────────────────────────────────
+
+export interface RebalancingSummary {
+  tier: LeagueTier;
+  robotsInTier: number;
+  promoted: number;
+  demoted: number;
+  eligibleRobots: number;
+}
+
+export interface FullRebalancingSummary {
+  totalRobots: number;
+  totalPromoted: number;
+  totalDemoted: number;
+  tierSummaries: RebalancingSummary[];
+  errors: string[];
+}
+
+/** Engine result in the robot-mode summary shape. */
+function toRobotSummary(result: FullRebalancingResult): FullRebalancingSummary {
   return {
     totalRobots: result.totalEntities,
     totalPromoted: result.totalPromoted,
@@ -215,38 +169,28 @@ export async function rebalanceKothLeagues(): Promise<FullRebalancingSummary> {
   };
 }
 
-// ─── Grand Melee Rebalancing (Spec #44) ─────────────────────────────────────
+/** Rebalance all 1v1 league tiers. */
+export async function rebalanceLeagues(): Promise<FullRebalancingSummary> {
+  return toRobotSummary(await rebalanceAllTiers(ROBOT_LEAGUE_CONFIG, robotAdapter));
+}
 
 /**
- * Rebalance Grand Melee leagues — uses the same engine as KotH with mode='grand_melee' and no LP threshold.
- * Grand Melee uses position-based ranking instead of LP thresholds.
- * Min cycles set to 10 (same as KotH) to balance promotion speed,
- * since Grand Melee points accumulate faster than LP in head-to-head modes.
+ * Placement modes use the same engine with position-based ranking instead of
+ * an LP threshold, and a longer minimum residency (PLACEMENT_LEAGUE_RULES),
+ * since placement points accumulate faster than LP in head-to-head modes.
  */
-export async function rebalanceGrandMeleeLeagues(): Promise<FullRebalancingSummary> {
-  const grandMeleeConfig: LeagueEngineConfig = {
-    ...ROBOT_LEAGUE_CONFIG,
-    ...PLACEMENT_LEAGUE_RULES,
-    logPrefix: 'Grand Melee Rebalancing',
-  };
-  const grandMeleeAdapter = createStandingsAdapter('grand_melee', {
-    overrideMinLP: 0,
-    maxPerInstance: MAX_ROBOTS_PER_INSTANCE,
-    entityType: 'robot',
-  });
-  const result = await rebalanceAllTiers(grandMeleeConfig, grandMeleeAdapter);
+async function rebalancePlacementLeagues(mode: StandingsMode, logPrefix: string): Promise<FullRebalancingSummary> {
+  const config: LeagueEngineConfig = { ...ROBOT_LEAGUE_CONFIG, ...PLACEMENT_LEAGUE_RULES, logPrefix };
+  const adapter = createStandingsAdapter(mode, { maxPerInstance: MAX_ROBOTS_PER_INSTANCE, entityType: 'robot' });
+  return toRobotSummary(await rebalanceAllTiers(config, adapter));
+}
 
-  return {
-    totalRobots: result.totalEntities,
-    totalPromoted: result.totalPromoted,
-    totalDemoted: result.totalDemoted,
-    tierSummaries: result.tierSummaries.map(s => ({
-      tier: s.tier as LeagueTier,
-      robotsInTier: s.entitiesInTier,
-      promoted: s.promoted,
-      demoted: s.demoted,
-      eligibleRobots: s.eligibleEntities,
-    })),
-    errors: result.errors,
-  };
+/** Rebalance KotH leagues (Spec #40). */
+export function rebalanceKothLeagues(): Promise<FullRebalancingSummary> {
+  return rebalancePlacementLeagues(StandingsMode.koth, 'KotH Rebalancing');
+}
+
+/** Rebalance Grand Melee leagues (Spec #44). */
+export function rebalanceGrandMeleeLeagues(): Promise<FullRebalancingSummary> {
+  return rebalancePlacementLeagues(StandingsMode.grand_melee, 'Grand Melee Rebalancing');
 }

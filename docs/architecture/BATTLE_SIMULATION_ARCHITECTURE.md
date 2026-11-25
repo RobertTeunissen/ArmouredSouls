@@ -630,7 +630,6 @@ All orchestrators emit the unified `battle_complete` event type via the shared `
 | Tag Team | `battle_complete` | 4 (one per robot) |
 | KotH | `battle_complete` | 5-6 (one per robot) |
 
-> **Note:** The `EventType` enum in `common/auditEventTypes.ts` still contains `TOURNAMENT_MATCH` and `TAG_TEAM_BATTLE` for backward compatibility with old audit log records in the database. New code should never emit these event types.
 
 ---
 
@@ -831,7 +830,7 @@ The acc/production environment uses individual cron triggers rather than a monol
 | `src/services/tournament/tournamentBattleOrchestrator.ts` | Tournament bracket battles, round-based rewards |
 | `src/services/tag-team/tagTeamBattleOrchestrator.ts` | 2v2 tag team battles, tag-out mechanics, 4-robot participation |
 | `src/services/koth/kothBattleOrchestrator.ts` | KotH battle orchestration, placement rewards, zone scoring |
-| `src/services/koth/kothMatchmakingService.ts` | KotH-specific matchmaking (snake-draft, one-per-stable) |
+| `src/services/koth/kothMatchmakingService.ts` | KotH matchmaking: LP-banded groups of 5-6 with same-stable and recent-opponent swaps (shared `matchmaking/placementMatchmaking` pipeline) |
 | `src/services/practice-arena/practiceArenaService.ts` | Practice Arena battle service — builds virtual robots, calls `simulateBattle`, returns results with zero DB writes |
 | `src/services/practice-arena/practiceArenaUsageService.ts` | Usage recording (`practice_arena_events`, one row per request) and the admin overview |
 | `src/services/common/eventLogger.ts` | Audit log writer (one event per robot pattern); the `EventType` catalogue is in `auditEventTypes.ts` |
@@ -865,7 +864,7 @@ KotH plugs into the existing battle simulation architecture via the `GameModeCon
 | File | Purpose |
 |---|---|
 | `src/services/arena/kothEngine.ts` | Pure functions + strategy classes: zone scoring, anti-passive mechanics, spawn positions, `buildKothGameModeConfig()` |
-| `src/services/koth/kothMatchmakingService.ts` | ELO-balanced snake-draft group matchmaking, one-per-stable filtering, zone variant by day of week |
+| `src/services/koth/kothMatchmakingService.ts` | KotH matchmaking: LP-banded groups of 5-6 with same-stable and recent-opponent swaps (shared `matchmaking/placementMatchmaking` pipeline) |
 
 ### Extended Files
 
@@ -893,7 +892,7 @@ UTC   Job
 | File | Purpose |
 |---|---|
 | `src/services/arena/kothEngine.ts` | KotH game mode config, zone scoring, anti-passive, AI strategies |
-| `src/services/koth/kothMatchmakingService.ts` | KotH-specific matchmaking (snake-draft, one-per-stable) |
+| `src/services/koth/kothMatchmakingService.ts` | KotH matchmaking: LP-banded groups of 5-6 with same-stable and recent-opponent swaps (shared `matchmaking/placementMatchmaking` pipeline) |
 
 ---
 

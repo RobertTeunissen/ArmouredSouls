@@ -22,6 +22,7 @@ function season(overrides: Partial<SeasonState> = {}): SeasonState {
     preparationDay: 0,
     remainingPreparationCycles: 0,
     isLegacy: false,
+    countdownCycles: 7,
     ...overrides,
   };
 }
@@ -62,6 +63,12 @@ describe('SeasonCountdownBanner', () => {
     expect(container).toHaveClass('container', 'mx-auto', 'px-4');
     // On the site background across the full width (pages paint their own below it).
     expect(container.parentElement).toHaveClass('bg-background');
+  });
+
+  it('uses the countdown window the backend sends', () => {
+    seed(season({ countdownCycles: 2, remainingCompetitiveCycles: 3 }));
+    renderBanner('/robots');
+    expect(screen.queryByTestId('season-countdown-banner')).not.toBeInTheDocument();
   });
 
   it('leaves the Dashboard to its own notification list', () => {

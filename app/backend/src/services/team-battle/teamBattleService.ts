@@ -8,7 +8,7 @@
  * @module services/team-battle/teamBattleService
  */
 
-import { TeamBattle } from '../../../generated/prisma';
+import type { Prisma, TeamBattle } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { safeName } from '../../utils/securityValidation';
@@ -45,21 +45,32 @@ function validateTeamName(name: string): void {
   }
 }
 
-/**
- * Checks if a team is locked for battle (has a scheduled match in the unified table).
- * Filters by appropriate match types based on team membership.
- */
-async function isTeamLockedForBattle(teamId: number, tx: typeof prisma): Promise<boolean> {
+/** Throws TEAM_NOT_FOUND for a missing team and a generic 403 for someone else's (R10.6). */
+function assertOwnedTeam<T extends { stableId: number }>(team: T | null, userId: number): asserts team is T {
+  if (!team) {
+    throw new TeamBattleError(TeamBattleErrorCode.TEAM_NOT_FOUND, 'Team not found', 404);
+  }
+  if (team.stableId !== userId) {
+    throw new TeamBattleError(TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION, 'Access denied', 403);
+  }
+}
+
+/** Throws TEAM_LOCKED_FOR_BATTLE (409) while the team has a scheduled match in the unified table. */
+async function assertTeamNotLockedForBattle(
+  tx: Prisma.TransactionClient,
+  teamId: number,
+  message: string,
+): Promise<void> {
   const count = await tx.scheduledMatchParticipant.count({
     where: {
       participantType: 'team',
       participantId: teamId,
-      scheduledMatch: {
-        status: 'scheduled',
-      },
+      scheduledMatch: { status: 'scheduled' },
     },
   });
-  return count > 0;
+  if (count > 0) {
+    throw new TeamBattleError(TeamBattleErrorCode.TEAM_LOCKED_FOR_BATTLE, message, 409);
+  }
 }
 
 // ── Public API ───────────────────────────────────────────────────────
@@ -87,7 +98,6 @@ export async function registerTeam(
   robotIds: number[],
   teamName: string,
   teamSize: 2 | 3,
-  _userId: number,
 ): Promise<TeamBattle> {
   // Validate team size
   if (!VALID_TEAM_SIZES.includes(teamSize)) {
@@ -221,31 +231,9 @@ export async function swapTeamMember(
       include: { members: true },
     });
 
-    if (!team) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_NOT_FOUND,
-        'Team not found',
-        404,
-      );
-    }
+    assertOwnedTeam(team, userId);
 
-    // Ownership check (R10.6)
-    if (team.stableId !== userId) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION,
-        'Access denied',
-        403,
-      );
-    }
-
-    // Check if team is locked for battle
-    if (await isTeamLockedForBattle(teamId, tx as unknown as typeof prisma)) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_LOCKED_FOR_BATTLE,
-        'Cannot modify team while a battle is scheduled',
-        409,
-      );
-    }
+    await assertTeamNotLockedForBattle(tx, teamId, 'Cannot modify team while a battle is scheduled');
 
     // Find the member to swap
     const memberToSwap = team.members.find((m) => m.robotId === oldRobotId);
@@ -343,21 +331,7 @@ export async function swapPositions(
       include: { members: { orderBy: { slotIndex: 'asc' } } },
     });
 
-    if (!team) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_NOT_FOUND,
-        'Team not found',
-        404,
-      );
-    }
-
-    if (team.stableId !== userId) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION,
-        'Access denied',
-        403,
-      );
-    }
+    assertOwnedTeam(team, userId);
 
     if (team.teamSize !== 2) {
       throw new TeamBattleError(
@@ -419,22 +393,7 @@ export async function renameTeam(
     select: { id: true, stableId: true },
   });
 
-  if (!team) {
-    throw new TeamBattleError(
-      TeamBattleErrorCode.TEAM_NOT_FOUND,
-      'Team not found',
-      404,
-    );
-  }
-
-  // Ownership check (R10.6)
-  if (team.stableId !== userId) {
-    throw new TeamBattleError(
-      TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION,
-      'Access denied',
-      403,
-    );
-  }
+  assertOwnedTeam(team, userId);
 
   await prisma.teamBattle.update({
     where: { id: teamId },
@@ -462,31 +421,9 @@ export async function disbandTeam(
       select: { id: true, stableId: true, teamName: true },
     });
 
-    if (!team) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_NOT_FOUND,
-        'Team not found',
-        404,
-      );
-    }
+    assertOwnedTeam(team, userId);
 
-    // Ownership check (R10.6)
-    if (team.stableId !== userId) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION,
-        'Access denied',
-        403,
-      );
-    }
-
-    // Check if team is locked for battle
-    if (await isTeamLockedForBattle(teamId, tx as unknown as typeof prisma)) {
-      throw new TeamBattleError(
-        TeamBattleErrorCode.TEAM_LOCKED_FOR_BATTLE,
-        'Cannot disband team while a battle is scheduled',
-        409,
-      );
-    }
+    await assertTeamNotLockedForBattle(tx, teamId, 'Cannot disband team while a battle is scheduled');
 
     // (5, teamId) serialises this delete with every team-standing check: a
     // member subscription either commits its team row before the delete reads,

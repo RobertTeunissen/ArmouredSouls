@@ -6,7 +6,7 @@
 
 import { StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
-import { getPrestigeRank } from '../../utils/prestigeUtils';
+import { getPrestigeRank } from '../../shared/utils/prestigeTiers';
 import { achievementService } from '../achievement';
 import { getAllModesBattleCounts } from '../robot/all-modes-battle-count';
 import { getRecentResults, getRobotStandings, getTopAccolades } from './stable-view-sections';

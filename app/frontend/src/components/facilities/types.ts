@@ -6,27 +6,12 @@
  * ROI and recommendation response types are wire contracts in `@shared/types`.
  */
 
+import type { FacilityOverviewEntry } from '@shared/types';
+
 export type TabType = 'facilities' | 'investment-overview';
 
-export interface Facility {
-  type: string;
-  name: string;
-  description: string;
-  maxLevel: number;
-  costs: number[];
-  benefits: string[];
-  currentLevel: number;
-  upgradeCost: number;
-  canUpgrade: boolean;
-  implemented: boolean;
-  currentBenefit?: string;
-  nextBenefit?: string;
-  nextLevelPrestigeRequired?: number;
-  hasPrestige?: boolean;
-  canAfford?: boolean;
-  currentOperatingCost?: number;
-  nextOperatingCost?: number;
-}
+/** One facility of `GET /api/facilities` (wire contract in `@shared/types`). */
+export type Facility = FacilityOverviewEntry;
 
 export interface CategoryInfo {
   id: string;

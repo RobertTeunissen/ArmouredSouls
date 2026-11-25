@@ -94,7 +94,7 @@ describe('Upgrade_Implication_Panel contents (R6.7, R6.8, R6.9)', () => {
     mockFacilities(bookingOffice());
     render(<BookingOfficeUpgradePanel onUpgraded={onUpgraded} />);
 
-    await waitFor(() => expect(api.get).toHaveBeenCalledWith('/api/facilities'));
+    await waitFor(() => expect(api.get).toHaveBeenCalledWith('/api/facilities', expect.objectContaining({ signal: expect.any(AbortSignal) })));
   });
 });
 

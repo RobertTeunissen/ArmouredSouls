@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CustomNameEditor } from '../CustomNameEditor';
 import type { WeaponInventoryItem } from '../../weapon-shop/types';
+import { ApiError } from '../../../utils/ApiError';
 
 const baseItem: WeaponInventoryItem = {
   id: 1,
@@ -106,9 +107,9 @@ describe('CustomNameEditor', () => {
   });
 
   it('renders server error from a 429 rate-limit response', async () => {
-    const onSave = vi.fn().mockRejectedValue({
-      response: { data: { error: 'Too many custom name edits. Try again later.' } },
-    });
+    const onSave = vi.fn().mockRejectedValue(
+      new ApiError('Too many custom name edits. Try again later.', 'RATE_LIMIT_EXCEEDED', 429),
+    );
     render(<CustomNameEditor inventoryItem={baseItem} onSave={onSave} />);
     await userEvent.click(screen.getByTestId('custom-name-editor-display'));
 

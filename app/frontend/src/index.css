@@ -33,6 +33,8 @@
   --color-warning: #d29922;
   --color-error: #f85149;
   --color-info: #a371f7;
+  /* Off-white body text on dark surfaces (the design guide's "primary text"). */
+  --color-foreground: #e6edf3;
 
   /* The one font family. Overriding Tailwind's `--font-sans` means every element
      inherits Inter without any element naming a family, so there is no `font-header`

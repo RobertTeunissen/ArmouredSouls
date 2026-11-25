@@ -13,7 +13,7 @@ function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardM
   const isTournament = match.matchType === 'tournament_1v1';
   const modeConfig = getModeConfig(match.matchType);
 
-  const tierColor = isTournament ? 'text-[#d29922]' : getLeagueTierColor(match.leagueType);
+  const tierColor = isTournament ? 'text-warning' : getLeagueTierColor(match.leagueType);
   const tierName = isTournament
     ? (match.tournamentRound && match.maxRounds
         ? `${match.tournamentName || 'Tournament'} • ${getRoundName(match.tournamentRound, match.maxRounds)}`
@@ -23,9 +23,9 @@ function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardM
   return (
     <div
       className={`
-        bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5
+        bg-surface-elevated border border-white/10 rounded-lg p-2 mb-1.5
         border-l-4 ${modeConfig.borderColor}
-        hover:bg-[#1a1f29] hover:border-[#58a6ff]/50
+        hover:bg-surface hover:border-primary/50
         transition-all duration-150 ease-out
         hover:-translate-y-0.5
       `}
@@ -43,25 +43,25 @@ function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardM
         <div className="flex-1 min-w-0">
           <div className={`text-xs ${tierColor} mb-0.5`}>{tierName}</div>
           <div className="font-medium text-xs truncate">
-            <span className="text-[#58a6ff]">{myRobot.name}</span>
-            <span className="text-[#57606a] mx-1.5">vs</span>
+            <span className="text-primary">{myRobot.name}</span>
+            <span className="text-tertiary mx-1.5">vs</span>
             <Link
               to={`/robots/${opponent.id}`}
-              className="text-[#e6edf3] hover:text-[#58a6ff] hover:underline transition-colors"
+              className="text-foreground hover:text-primary hover:underline transition-colors"
             >
               {opponent.name}
             </Link>
           </div>
         </div>
-        <div className="flex-shrink-0 w-28 text-xs text-[#8b949e]">
+        <div className="flex-shrink-0 w-28 text-xs text-secondary">
           {formatDateTime(match.scheduledFor)}
         </div>
         <div className="flex-shrink-0 w-20 text-center">
-          <div className="text-xs text-[#8b949e]">
+          <div className="text-xs text-secondary">
             {myRobot.elo} vs {opponent.elo}
           </div>
         </div>
-        <div className="flex-shrink-0 w-6 text-center text-[#58a6ff] text-sm">→</div>
+        <div className="flex-shrink-0 w-6 text-center text-primary text-sm">→</div>
       </div>
 
       {/* Mobile Layout */}
@@ -73,18 +73,18 @@ function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardM
               PENDING
             </div>
           </div>
-          <div className="text-xs text-[#8b949e]">
+          <div className="text-xs text-secondary">
             {formatDateTime(match.scheduledFor)}
           </div>
         </div>
         <div className={`text-xs ${tierColor} mb-1.5`}>{tierName}</div>
         <div className="mb-1.5">
           <div className="text-sm font-medium">
-            <span className="text-[#58a6ff]">{myRobot.name}</span>
-            <span className="text-[#57606a] mx-1.5">vs</span>
+            <span className="text-primary">{myRobot.name}</span>
+            <span className="text-tertiary mx-1.5">vs</span>
             <Link
               to={`/robots/${opponent.id}`}
-              className="text-[#e6edf3] hover:text-[#58a6ff] hover:underline transition-colors"
+              className="text-foreground hover:text-primary hover:underline transition-colors"
             >
               {opponent.name}
             </Link>
@@ -92,12 +92,12 @@ function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardM
         </div>
         <div className="flex justify-between text-xs">
           <div>
-            <span className="text-[#57606a]">ELO: </span>
-            <span className="text-[#e6edf3]">{myRobot.elo}</span>
+            <span className="text-tertiary">ELO: </span>
+            <span className="text-foreground">{myRobot.elo}</span>
           </div>
           <div>
-            <span className="text-[#57606a]">vs </span>
-            <span className="text-[#e6edf3]">{opponent.elo}</span>
+            <span className="text-tertiary">vs </span>
+            <span className="text-foreground">{opponent.elo}</span>
           </div>
         </div>
       </div>

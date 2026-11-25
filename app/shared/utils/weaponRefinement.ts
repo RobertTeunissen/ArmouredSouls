@@ -224,6 +224,15 @@ export function validateAttributeStackCap(
 }
 
 /**
+ * Catalog bonus of a weapon for one attribute (`weapon[<attr>Bonus]`), read
+ * defensively: 0 when the field is missing or not a number.
+ */
+export function getCatalogBonus(weapon: object, attribute: string): number {
+  const v = (weapon as Record<string, unknown>)[`${attribute}Bonus`];
+  return typeof v === 'number' ? v : 0;
+}
+
+/**
  * Hone requires `targetAttribute` to be present on the weapon — either via
  * the catalog bonus (non-zero) or via a prior Augment refinement on the same
  * weapon. Augment requires `targetAttribute` to NOT be on the weapon yet.

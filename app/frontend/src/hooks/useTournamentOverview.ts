@@ -2,10 +2,9 @@
  * Data hook of the admin Tournaments page. One request per load or Refresh;
  * a new request aborts the previous one and the last good data stays on screen.
  */
-import { useCallback, useEffect, useState } from 'react';
-import { ApiError } from '../utils/ApiError';
-import { isAbortError } from '../utils/abort';
+import { apiErrorMessage } from '../utils/ApiError';
 import { getTournamentOverview } from '../utils/adminTournamentsApi';
+import { useApiQuery } from './useApiQuery';
 import type { TournamentOverview } from '@shared/types';
 
 export interface TournamentOverviewState {
@@ -16,29 +15,11 @@ export interface TournamentOverviewState {
 }
 
 export function useTournamentOverview(): TournamentOverviewState {
-  const [data, setData] = useState<TournamentOverview | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState(0);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
-    getTournamentOverview(controller.signal)
-      .then((overview) => {
-        if (controller.signal.aborted) return;
-        setData(overview);
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setError((err instanceof ApiError && err.message) || 'Could not load tournaments.');
-        setLoading(false);
-      });
-    return () => controller.abort();
-  }, [token]);
-
-  const reload = useCallback(() => setToken((value) => value + 1), []);
-  return { data, loading, error, reload };
+  const query = useApiQuery((signal) => getTournamentOverview(signal), []);
+  return {
+    data: query.data,
+    loading: query.loading,
+    error: apiErrorMessage(query.error, 'Could not load tournaments.'),
+    reload: query.refetch,
+  };
 }

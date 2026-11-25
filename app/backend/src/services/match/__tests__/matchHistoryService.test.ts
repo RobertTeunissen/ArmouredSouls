@@ -335,7 +335,7 @@ describe('getUpcomingMatches — robot perspective', () => {
       ({ where }: { where: { id: number } }) => Promise.resolve({ username: `user-${where.id}` }),
     );
 
-    const result = await getUpcomingMatches([ownedRobot.id], [], []);
+    const result = await getUpcomingMatches([ownedRobot.id], []);
     const upcomingMatch = result.matches.find(match => match.id === 900) as {
       robot1: { id: number } | null;
       robot2: { id: number } | null;

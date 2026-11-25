@@ -128,28 +128,28 @@ describe('teamBattleService', () => {
 
   describe('registerTeam', () => {
     it('should throw TEAM_INVALID_SIZE for size other than 2 or 3', async () => {
-      await expect(registerTeam(100, [1, 2, 3, 4], 'Team', 4 as any, 100))
+      await expect(registerTeam(100, [1, 2, 3, 4], 'Team', 4 as any))
         .rejects.toMatchObject({
           code: TeamBattleErrorCode.TEAM_INVALID_SIZE,
         });
     });
 
     it('should throw TEAM_INVALID_COMPOSITION when fewer robots than team size', async () => {
-      await expect(registerTeam(100, [1], 'Team', 2, 100))
+      await expect(registerTeam(100, [1], 'Team', 2))
         .rejects.toMatchObject({
           code: TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
         });
     });
 
     it('should throw TEAM_INVALID_COMPOSITION when duplicate robot IDs', async () => {
-      await expect(registerTeam(100, [1, 1], 'Team', 2, 100))
+      await expect(registerTeam(100, [1, 1], 'Team', 2))
         .rejects.toMatchObject({
           code: TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
         });
     });
 
     it('should throw TEAM_NAME_INVALID for name shorter than 3 chars', async () => {
-      await expect(registerTeam(100, [1, 2], 'AB', 2, 100))
+      await expect(registerTeam(100, [1, 2], 'AB', 2))
         .rejects.toMatchObject({
           code: TeamBattleErrorCode.TEAM_NAME_INVALID,
         });
@@ -157,14 +157,14 @@ describe('teamBattleService', () => {
 
     it('should throw TEAM_NAME_INVALID for name longer than 32 chars', async () => {
       const longName = 'A'.repeat(33);
-      await expect(registerTeam(100, [1, 2], longName, 2, 100))
+      await expect(registerTeam(100, [1, 2], longName, 2))
         .rejects.toMatchObject({
           code: TeamBattleErrorCode.TEAM_NAME_INVALID,
         });
     });
 
     it('should throw TEAM_NAME_INVALID for name with disallowed characters', async () => {
-      await expect(registerTeam(100, [1, 2], 'Te@m<>', 2, 100))
+      await expect(registerTeam(100, [1, 2], 'Te@m<>', 2))
         .rejects.toMatchObject({
           code: TeamBattleErrorCode.TEAM_NAME_INVALID,
         });
@@ -174,7 +174,7 @@ describe('teamBattleService', () => {
       mockTx.robot.findMany.mockResolvedValue([{ id: 1, userId: 100 }]); // only 1 found
       mockTx.robot.count.mockResolvedValue(5);
 
-      await expect(registerTeam(100, [1, 2], 'ValidTeam', 2, 100))
+      await expect(registerTeam(100, [1, 2], 'ValidTeam', 2))
         .rejects.toMatchObject({
           code: TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
         });
@@ -186,7 +186,7 @@ describe('teamBattleService', () => {
         { id: 2, userId: 999 }, // different owner
       ]);
 
-      await expect(registerTeam(100, [1, 2], 'ValidTeam', 2, 100))
+      await expect(registerTeam(100, [1, 2], 'ValidTeam', 2))
         .rejects.toMatchObject({
           code: TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION,
         });
@@ -199,7 +199,7 @@ describe('teamBattleService', () => {
       ]);
       mockTx.robot.count.mockResolvedValue(1); // only 1 robot in stable
 
-      await expect(registerTeam(100, [1, 2], 'ValidTeam', 2, 100))
+      await expect(registerTeam(100, [1, 2], 'ValidTeam', 2))
         .rejects.toMatchObject({
           code: TeamBattleErrorCode.TEAM_INSUFFICIENT_ROBOTS,
         });
@@ -217,7 +217,7 @@ describe('teamBattleService', () => {
         { robotId: 1, team: { id: 5, teamName: 'OtherTeam' } },
       ]);
 
-      await expect(registerTeam(100, [1, 2], 'ValidTeam', 2, 100))
+      await expect(registerTeam(100, [1, 2], 'ValidTeam', 2))
         .rejects.toMatchObject({
           code: TeamBattleErrorCode.TEAM_MEMBER_CONFLICT,
         });
@@ -234,7 +234,7 @@ describe('teamBattleService', () => {
       mockTx.teamBattleMember.findMany.mockResolvedValue([]);
       mockTx.teamBattle.create.mockResolvedValue(createdTeam);
 
-      const result = await registerTeam(100, [10, 11], 'MyTeam', 2, 100);
+      const result = await registerTeam(100, [10, 11], 'MyTeam', 2);
 
       expect(result).toEqual(createdTeam);
       // Standings come from the placement rule, inside the same transaction.
@@ -264,7 +264,7 @@ describe('teamBattleService', () => {
       mockTx.teamBattleMember.findMany.mockResolvedValue([]);
       mockTx.teamBattle.create.mockResolvedValue(createdTeam);
 
-      const result = await registerTeam(100, [10, 11, 12], 'Trio', 3, 100);
+      const result = await registerTeam(100, [10, 11, 12], 'Trio', 3);
 
       expect(result).toEqual(createdTeam);
       expect(mockEnsureTeamStandings).toHaveBeenCalledWith(mockTx, 43);
@@ -290,7 +290,7 @@ describe('teamBattleService', () => {
       mockTx.teamBattleMember.findMany.mockResolvedValue([]);
       mockTx.teamBattle.create.mockResolvedValue(makeTeam());
 
-      await registerTeam(100, [5, 3], 'ValidTeam', 2, 100);
+      await registerTeam(100, [5, 3], 'ValidTeam', 2);
 
       // Advisory locks should be acquired in sorted order (3, then 5)
       const lockCalls = mockTx.$executeRaw.mock.calls;
@@ -619,13 +619,13 @@ describe('teamBattleService', () => {
     });
 
     it('should throw TeamBattleError instances', async () => {
-      await expect(registerTeam(100, [1], 'Team', 2, 100))
+      await expect(registerTeam(100, [1], 'Team', 2))
         .rejects.toBeInstanceOf(TeamBattleError);
     });
 
     it('should include correct HTTP status codes', async () => {
       // 400 for validation errors
-      await expect(registerTeam(100, [1], 'Team', 2, 100))
+      await expect(registerTeam(100, [1], 'Team', 2))
         .rejects.toMatchObject({ statusCode: 400 });
 
       // 409 for locked team

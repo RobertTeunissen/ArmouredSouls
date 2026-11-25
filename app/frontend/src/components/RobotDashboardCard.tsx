@@ -12,7 +12,7 @@ import HPBar from './HPBar';
 import BattleReadinessBadge from './BattleReadinessBadge';
 import RobotImage from './RobotImage';
 import PlacementModesRecordNote from './PlacementModesRecordNote';
-import { getFameTier } from '../utils/fameTiers';
+import { getFameTier } from '@shared/utils/prestigeTiers';
 import { UNRANKED_LABEL } from '../utils/tierHelpers';
 import { workshopPath } from '../utils/robotRoutes';
 

@@ -1,93 +1,23 @@
-import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
-import { createLogger } from '../utils/logger';
-
-const log = createLogger('LeaderboardsFamePage');
-import OwnerNameLink from '../components/OwnerNameLink';
-import type { StableType } from '../types/stable';
-
-interface FameLeaderboardEntry {
-  rank: number;
-  robotId: number;
-  robotName: string;
-  fame: number;
-  fameTier: string;
-  stableId: number;
-  stableName: string;
-  /** Spec #55: Stable_Type of the owning stable (drives the Automaton_Badge). */
-  stableType?: StableType;
-  elo: number;
-  totalBattles: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  winRate: number;
-  kills: number;
-  damageDealtLifetime: number;
-}
-
-interface LeaderboardResponse {
-  leaderboard: FameLeaderboardEntry[];
-  pagination: {
-    page: number;
-    limit: number;
-    totalRobots: number;
-    totalPages: number;
-    hasMore: boolean;
-  };
-  timestamp: string;
-}
+import { useApiQuery } from '../hooks/useApiQuery';
+import LeaderboardBody from '../components/leaderboards/LeaderboardBody';
+import { LEADERBOARD_TH, fameTierClass } from '../components/leaderboards/leaderboardFormat';
+import { MobileStat, RobotMobileCard, RobotTableRow } from '../components/leaderboards/RobotLeaderboardRow';
+import type { FameLeaderboardResponse } from '@shared/types';
 
 function LeaderboardsFamePage() {
   const { user } = useAuth();
-  const [leaderboard, setLeaderboard] = useState<FameLeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchLeaderboard = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const data = await api.get<LeaderboardResponse>(
-        '/api/leaderboards/fame',
-        { params: { page: 1, limit: 100 } }
-      );
-
-      setLeaderboard(data.leaderboard);
-    } catch (err) {
-      setError('Failed to load fame leaderboard');
-      log.error('Fame leaderboard error', { err });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLeaderboard();
-    // Runs once on mount. Spec #46 R5 removed the filter that used to be the sole
-    // dependency here; the fetch now takes no parameters, so there is nothing to
-    // re-run on. react-hooks/exhaustive-deps does not flag this — it reports
-    // nothing for a bare call to a component-scope function — so no suppression
-    // directive is needed, and adding one is itself a lint warning.
-  }, []);
-
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'Mythical': return 'text-purple-400';
-      case 'Legendary': return 'text-warning';
-      case 'Renowned': return 'text-orange-400';
-      case 'Famous': return 'text-primary';
-      case 'Known': return 'text-success';
-      default: return 'text-secondary';
-    }
-  };
+  // Ranks every robot (no filters); the ranking only changes on the daily cycle.
+  const query = useApiQuery(
+    (signal) => api.get<FameLeaderboardResponse>('/api/leaderboards/fame', { params: { page: 1, limit: 100 }, signal }),
+    [],
+  );
+  const leaderboard = query.data?.leaderboard ?? [];
 
   return (
     <div className="min-h-screen bg-background text-primary">
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8 max-w-7xl">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-2">
           🏆 Fame Leaderboard
@@ -97,113 +27,52 @@ function LeaderboardsFamePage() {
         </p>
       </div>
 
-      {/*
-        Spec #46 R5: the League Filter and Minimum Battles selects are gone.
-        Both suppressed entrants rather than narrowing a complete list — the
-        minimum-battles default hid robots whose fame came from KotH or Grand
-        Melee (neither increments robots.total_battles), and the league filter
-        excluded robots without a 1v1 standing. The Refresh button is gone too;
-        the ranking only changes on the daily cycle, so a reload covers it.
-      */}
-
-      {/* Loading State */}
-      {loading && (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="mt-4 text-secondary">Loading leaderboard...</p>
+      <LeaderboardBody
+        loading={query.loading && query.data === null}
+        error={query.error ? 'Failed to load fame leaderboard' : null}
+        count={leaderboard.length}
+        emptyText="No robots found."
+        countNoun="robots"
+      >
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-surface border-b border-white/10">
+              <tr>
+                <th className={LEADERBOARD_TH}>#</th>
+                <th className={LEADERBOARD_TH}>Robot</th>
+                <th className={LEADERBOARD_TH}>Fame</th>
+                <th className={LEADERBOARD_TH}>Tier</th>
+                <th className={LEADERBOARD_TH}>Stable</th>
+                <th className={LEADERBOARD_TH}>ELO</th>
+                <th className={LEADERBOARD_TH}>Record</th>
+                <th className={LEADERBOARD_TH}>Win %</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {leaderboard.map((entry) => (
+                <RobotTableRow key={entry.robotId} entry={entry} isOwn={entry.stableId === user?.id}>
+                  <td className="px-4 py-3 text-primary font-semibold">{entry.fame.toLocaleString()}</td>
+                  <td className="px-4 py-3"><span className={`font-medium ${fameTierClass(entry.fameTier)}`}>{entry.fameTier}</span></td>
+                </RobotTableRow>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
 
-      {/* Error State */}
-      {error && (
-        <div className="bg-error/10 border border-error/30 rounded-lg p-4 text-error">
-          {error}
+        {/* Mobile Cards */}
+        <div className="md:hidden divide-y divide-white/5">
+          {leaderboard.map((entry) => (
+            <RobotMobileCard
+              key={entry.robotId}
+              entry={entry}
+              isOwn={entry.stableId === user?.id}
+              score={<span className="text-primary font-semibold">{entry.fame.toLocaleString()}</span>}
+              stats={<MobileStat label="Tier"><span className={fameTierClass(entry.fameTier)}>{entry.fameTier}</span></MobileStat>}
+            />
+          ))}
         </div>
-      )}
-
-      {/* Leaderboard Table */}
-      {!loading && !error && (
-        <div className="bg-surface-elevated border border-white/10 rounded-lg overflow-hidden">
-          {/* Desktop Table */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-surface border-b border-white/10">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">#</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Robot</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Fame</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Tier</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Stable</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">ELO</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Record</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Win %</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {leaderboard.map((entry) => {
-                  const isOwnRobot = user && entry.stableId === user.id;
-                  return (
-                    <tr key={entry.robotId} className={`hover:bg-white/5 transition-colors ${isOwnRobot ? 'bg-primary/10' : ''}`}>
-                      <td className="px-4 py-3 text-primary font-medium">#{entry.rank}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-primary font-medium">{entry.robotName}</span>
-                          {isOwnRobot && <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded">YOURS</span>}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-primary font-semibold">{entry.fame.toLocaleString()}</td>
-                      <td className="px-4 py-3"><span className={`font-medium ${getTierColor(entry.fameTier)}`}>{entry.fameTier}</span></td>
-                      <td className="px-4 py-3"><OwnerNameLink userId={entry.stableId} displayName={entry.stableName} stableType={entry.stableType} /></td>
-                      <td className="px-4 py-3 text-primary">{entry.elo}</td>
-                      <td className="px-4 py-3 text-secondary text-sm">{entry.wins}W-{entry.losses}L-{entry.draws}D</td>
-                      <td className="px-4 py-3"><span className={`font-medium ${entry.winRate >= 60 ? 'text-success' : entry.winRate >= 50 ? 'text-warning' : 'text-orange-400'}`}>{entry.winRate}%</span></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="md:hidden divide-y divide-white/5">
-            {leaderboard.map((entry) => {
-              const isOwnRobot = user && entry.stableId === user.id;
-              return (
-                <div key={entry.robotId} className={`p-4 ${isOwnRobot ? 'bg-primary/10' : ''}`}>
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <span className="text-secondary text-sm">#{entry.rank}</span>
-                      <span className="text-primary font-medium ml-2">{entry.robotName}</span>
-                      {isOwnRobot && <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded ml-2">YOURS</span>}
-                    </div>
-                    <span className="text-primary font-semibold">{entry.fame.toLocaleString()}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                    <div className="flex justify-between"><span className="text-secondary">Tier</span><span className={getTierColor(entry.fameTier)}>{entry.fameTier}</span></div>
-                    <div className="flex justify-between"><span className="text-secondary">ELO</span><span className="text-primary">{entry.elo}</span></div>
-                    <div className="flex justify-between"><span className="text-secondary">Win %</span><span className={entry.winRate >= 60 ? 'text-success' : entry.winRate >= 50 ? 'text-warning' : 'text-orange-400'}>{entry.winRate}%</span></div>
-                    <div className="flex justify-between"><span className="text-secondary">Record</span><span className="text-secondary">{entry.wins}W-{entry.losses}L-{entry.draws}D</span></div>
-                    <div className="flex justify-between"><span className="text-secondary">Stable</span><OwnerNameLink userId={entry.stableId} displayName={entry.stableName} stableType={entry.stableType} className="truncate ml-2" /></div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {leaderboard.length === 0 && (
-            <div className="text-center py-12 text-secondary">
-              No robots found matching the current filters.
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Footer Info */}
-      {!loading && !error && leaderboard.length > 0 && (
-        <div className="mt-4 text-sm text-tertiary text-center">
-          Showing top {leaderboard.length} robots
-        </div>
-      )}
+      </LeaderboardBody>
     </div>
     </div>
   );

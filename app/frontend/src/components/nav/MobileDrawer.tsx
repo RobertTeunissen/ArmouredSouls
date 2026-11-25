@@ -1,7 +1,7 @@
 import CloseIcon from '../../assets/icons/close.svg?react';
 import { DrawerMenuItem } from './DrawerMenuItem';
-import { allPages, implementedPages, isNavPageImplemented, stableNavItems } from './types';
-import type { UserRobot } from './types';
+import { allPages, isNavPageImplemented, stableNavItems } from './types';
+import type { NavItem, UserRobot } from './types';
 import { workshopPath } from '../../utils/robotRoutes';
 import type { SavedAccount } from '../../utils/savedAccounts';
 
@@ -56,6 +56,23 @@ export function MobileDrawer({
 }: MobileDrawerProps): React.ReactElement | null {
   if (!isOpen) return null;
 
+  /** Menu links for a section; a `---` path renders a divider. */
+  const navLinks = (items: readonly NavItem[]): React.ReactNode[] =>
+    items.map(item =>
+      item.path === '---' ? (
+        <hr key="divider" className="my-2 mx-4 border-white/10" />
+      ) : (
+        <DrawerMenuItem
+          key={item.path}
+          label={item.label}
+          to={item.path}
+          onNavigate={onClose}
+          isActive={isActive(item.path)}
+          disabled={!isNavPageImplemented(item.path)}
+        />
+      ),
+    );
+
   return (
     <>
       <div 
@@ -89,15 +106,9 @@ export function MobileDrawer({
             scrollable into view instead of hiding behind the tab bar. Extra
             bottom padding covers the iOS home-indicator safe area. */}
         <div className="py-4 overflow-y-auto h-[calc(100vh-112px)] pb-[env(safe-area-inset-bottom)]">
-          {/* ROBOTS Section */}
+          {/* ROBOTS Section: the robot list sits under its first item. */}
           <DrawerSection emoji="🤖" title="Robots">
-            <DrawerMenuItem
-              label={allPages.robots.items[0].label}
-              to={allPages.robots.items[0].path}
-              onNavigate={onClose}
-              isActive={isActive(allPages.robots.items[0].path)}
-              disabled={!implementedPages.has(allPages.robots.items[0].path)}
-            />
+            {navLinks(allPages.robots.items.slice(0, 1))}
             {userRobots.map(robot => (
               <DrawerMenuItem
                 key={robot.id}
@@ -108,63 +119,19 @@ export function MobileDrawer({
                 indent={true}
               />
             ))}
-            {allPages.robots.items.slice(1).map(item => (
-              <DrawerMenuItem
-                key={item.path}
-                label={item.label}
-                to={item.path}
-                onNavigate={onClose}
-                isActive={isActive(item.path)}
-                disabled={!implementedPages.has(item.path)}
-              />
-            ))}
+            {navLinks(allPages.robots.items.slice(1))}
           </DrawerSection>
 
-          {/* BATTLE Section */}
           <DrawerSection emoji="⚔️" title="Battle & Competition">
-            {allPages.battle.items.map(item => {
-              if (item.path === '---') {
-                return <hr key="divider" className="my-2 mx-4 border-white/10" />;
-              }
-              return (
-                <DrawerMenuItem
-                  key={item.path}
-                  label={item.label}
-                  to={item.path}
-                  onNavigate={onClose}
-                  isActive={isActive(item.path)}
-                  disabled={!implementedPages.has(item.path)}
-                />
-              );
-            })}
+            {navLinks(allPages.battle.items)}
           </DrawerSection>
 
-          {/* STABLE Section */}
           <DrawerSection emoji="🏰" title="Stable Management">
-            {(userId !== undefined ? stableNavItems(userId) : allPages.stable.items).map(item => (
-              <DrawerMenuItem
-                key={item.path}
-                label={item.label}
-                to={item.path}
-                onNavigate={onClose}
-                isActive={isActive(item.path)}
-                disabled={!isNavPageImplemented(item.path)}
-              />
-            ))}
+            {navLinks(userId !== undefined ? stableNavItems(userId) : allPages.stable.items)}
           </DrawerSection>
 
-          {/* SOCIAL Section */}
           <DrawerSection emoji="👥" title="Social & Community">
-            {allPages.social.items.map(item => (
-              <DrawerMenuItem
-                key={item.path}
-                label={item.label}
-                to={item.path}
-                onNavigate={onClose}
-                isActive={isActive(item.path)}
-                disabled={!implementedPages.has(item.path)}
-              />
-            ))}
+            {navLinks(allPages.social.items)}
           </DrawerSection>
 
           {/* SETTINGS & ADMIN Section */}

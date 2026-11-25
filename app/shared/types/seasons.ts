@@ -19,6 +19,8 @@ export interface SeasonState {
   remainingPreparationCycles: number;
   /** True only for season 0, the legacy pre-season-system timeline. */
   isLegacy: boolean;
+  /** Final competitive cycles that show the season countdown (`COUNTDOWN_CYCLES`). */
+  countdownCycles: number;
 }
 
 export interface BestTier {

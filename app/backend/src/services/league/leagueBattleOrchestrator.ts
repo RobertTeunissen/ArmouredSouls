@@ -10,7 +10,7 @@ import {
   didRobotLosePreviousBattle,
   type UnlockedAchievement,
 } from '../battle/battlePostCombat';
-import { hasAllocatedTuning, hpPercentOf, lowestHpPercent } from '../battle/battleAchievementContext';
+import { duelAchievementData, type DuelAchievementSide } from '../battle/battleAchievementContext';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import { handleMatchFailure } from '../battle/matchFailurePolicy';
 import { applyAndLogLoadoutFallbacks, loadCombatRobot, prepareRobotsWithTuning } from '../battle/battlePreparation';
@@ -241,63 +241,26 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): P
     didRobotLosePreviousBattle(robot2.id, battle.id),
   ]);
 
-    const [unlocks1, unlocks2] = await Promise.all([
-      checkAndAwardAchievements(robot1.userId, robot1.id, {
-        won: robot1IsWinner,
-        destroyed: robot2Participant.destroyed,
-        finalHpPercent: robot1.maxHP > 0 ? (robot1Participant.finalHP / robot1.maxHP) * 100 : 0,
-        eloChange: robot1Participant.eloAfter - robot1Participant.eloBefore,
-        // Spec #46 R8 Cause B: the upset trigger needs both pre-battle ratings,
-        // not the subject's ELO change, which ELO_K_FACTOR bounds at 32.
-        subjectEloBefore: robot1Participant.eloBefore,
-        opponentEloBefore: robot2Participant.eloBefore,
-        opponentElo: robot2.elo,
-        yielded: robot1Participant.yielded,
-        opponentYielded: robot2Participant.yielded,
-        previousBattleLost: robot1PrevLost,
-        damageDealt: robot1Participant.damageDealt,
-        opponentDamageDealt: robot2Participant.damageDealt,
-        loadoutType: robot1.loadoutType || 'single',
-        stance: robot1.stance || 'balanced',
-        yieldThreshold: robot1.yieldThreshold,
-        hasTuning: hasAllocatedTuning(tuningMap.get(robot1.id)),
-        hasMainWeapon: robot1.mainWeaponId !== null,
-        battleType: 'league_1v1',
-        battleDurationSeconds: result.durationSeconds,
-        battleId: battle.id,
-        isDraw: result.isDraw,
-        opponentRobotId: robot2.id,
-        opponentFinalHpPercent: hpPercentOf(robot2Participant.finalHP, robot2.maxHP),
-        minHpPercent: lowestHpPercent(result.combatEvents, robot1.name, robot1.maxHP, robot1Participant.finalHP),
-      }),
-      checkAndAwardAchievements(robot2.userId, robot2.id, {
-        won: robot2IsWinner,
-        destroyed: robot1Participant.destroyed,
-        finalHpPercent: robot2.maxHP > 0 ? (robot2Participant.finalHP / robot2.maxHP) * 100 : 0,
-        eloChange: robot2Participant.eloAfter - robot2Participant.eloBefore,
-        subjectEloBefore: robot2Participant.eloBefore,
-        opponentEloBefore: robot1Participant.eloBefore,
-        opponentElo: robot1.elo,
-        yielded: robot2Participant.yielded,
-        opponentYielded: robot1Participant.yielded,
-        previousBattleLost: robot2PrevLost,
-        damageDealt: robot2Participant.damageDealt,
-        opponentDamageDealt: robot1Participant.damageDealt,
-        loadoutType: robot2.loadoutType || 'single',
-        stance: robot2.stance || 'balanced',
-        yieldThreshold: robot2.yieldThreshold,
-        hasTuning: hasAllocatedTuning(tuningMap.get(robot2.id)),
-        hasMainWeapon: robot2.mainWeaponId !== null,
-        battleType: 'league_1v1',
-        battleDurationSeconds: result.durationSeconds,
-        battleId: battle.id,
-        isDraw: result.isDraw,
-        opponentRobotId: robot1.id,
-        opponentFinalHpPercent: hpPercentOf(robot1Participant.finalHP, robot1.maxHP),
-        minHpPercent: lowestHpPercent(result.combatEvents, robot2.name, robot2.maxHP, robot2Participant.finalHP),
-      }),
-    ]);
-    const achievementUnlocks = [...unlocks1, ...unlocks2];
+  const side1: DuelAchievementSide = {
+    robot: robot1, participant: robot1Participant, won: robot1IsWinner,
+    previousBattleLost: robot1PrevLost, tuning: tuningMap.get(robot1.id),
+  };
+  const side2: DuelAchievementSide = {
+    robot: robot2, participant: robot2Participant, won: robot2IsWinner,
+    previousBattleLost: robot2PrevLost, tuning: tuningMap.get(robot2.id),
+  };
+  const duel = {
+    battleType: 'league_1v1',
+    battleId: battle.id,
+    durationSeconds: result.durationSeconds,
+    isDraw: result.isDraw,
+    events: result.combatEvents,
+  };
+  const [unlocks1, unlocks2] = await Promise.all([
+    checkAndAwardAchievements(robot1.userId, robot1.id, duelAchievementData(side1, side2, duel)),
+    checkAndAwardAchievements(robot2.userId, robot2.id, duelAchievementData(side2, side1, duel)),
+  ]);
+  const achievementUnlocks = [...unlocks1, ...unlocks2];
 
   // Update scheduled match status in unified table
   await prisma.scheduledMatch.update({

@@ -45,6 +45,7 @@ const preparation: SeasonState = {
   preparationDay: 1,
   remainingPreparationCycles: 1,
   isLegacy: false,
+  countdownCycles: 7,
 };
 
 async function renderModal(): Promise<HTMLElement> {

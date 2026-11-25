@@ -16,6 +16,9 @@ import {
   type CreateChangelogData,
   type UpdateChangelogData,
 } from '../../utils/changelogApi';
+import { formatMediumDate } from '../../utils/formatters';
+import ChangelogCategoryBadge from '../../components/changelog/ChangelogCategoryBadge';
+import ChangelogPager from '../../components/changelog/ChangelogPager';
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -23,12 +26,6 @@ import {
 
 const CATEGORIES = ['balance', 'feature', 'bugfix', 'economy'] as const;
 
-const BADGE_COLORS: Record<string, string> = {
-  balance: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  feature: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  bugfix: 'bg-red-500/20 text-red-400 border-red-500/30',
-  economy: 'bg-green-500/20 text-green-400 border-green-500/30',
-};
 
 interface FormState {
   title: string;
@@ -40,9 +37,6 @@ interface FormState {
 
 const emptyForm: FormState = { title: '', body: '', category: 'feature', status: 'draft', imageUrl: null };
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -212,80 +206,73 @@ function AdminChangelogPage() {
 
       {!loading && (
         <>
-          {/* Drafts */}
-          {drafts.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-3 text-secondary">Drafts</h3>
+          {([['Drafts', drafts], ['Published', published]] as const).map(([heading, list]) => list.length > 0 && (
+            <div key={heading}>
+              <h3 className="text-lg font-semibold mb-3 text-secondary">{heading}</h3>
               <div className="space-y-3">
-                {drafts.map((entry) => (
-                  <div key={entry.id} className="bg-surface border border-white/10 rounded-lg p-4 opacity-70" data-testid="changelog-draft-entry">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className="px-2 py-0.5 rounded text-xs font-semibold border bg-white/10 text-secondary border-white/20">DRAFT</span>
-                      <span className={`px-2 py-0.5 rounded text-xs font-semibold border capitalize ${BADGE_COLORS[entry.category] || ''}`}>{entry.category}</span>
-                      <span className="text-xs text-secondary">{formatDate(entry.createdAt)}</span>
-                    </div>
-                    <h4 className="font-bold text-white mb-1">{entry.title}</h4>
-                    <p className="text-sm text-secondary mb-2 line-clamp-2">{entry.body}</p>
-                    <div className="flex gap-2">
-                      <button onClick={() => handlePublish(entry.id)} className="px-3 py-1 bg-green-600 text-white rounded text-xs font-semibold hover:bg-green-700">Publish</button>
-                      <button onClick={() => handleEdit(entry)} className="px-3 py-1 border border-white/10 text-secondary rounded text-xs hover:text-white">Edit</button>
-                      {deleteConfirmId === entry.id ? (
-                        <span className="flex gap-1">
-                          <button onClick={() => handleDelete(entry.id)} className="px-3 py-1 bg-error text-white rounded text-xs font-semibold">Confirm</button>
-                          <button onClick={() => setDeleteConfirmId(null)} className="px-3 py-1 border border-white/10 text-secondary rounded text-xs">Cancel</button>
-                        </span>
-                      ) : (
-                        <button onClick={() => setDeleteConfirmId(entry.id)} className="px-3 py-1 border border-error/30 text-error rounded text-xs hover:bg-error/10">Delete</button>
-                      )}
-                    </div>
-                  </div>
+                {list.map((entry) => (
+                  <AdminEntryCard
+                    key={entry.id}
+                    entry={entry}
+                    confirmingDelete={deleteConfirmId === entry.id}
+                    onPublish={handlePublish}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onConfirmDelete={setDeleteConfirmId}
+                  />
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Published */}
-          {published.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-3 text-secondary">Published</h3>
-              <div className="space-y-3">
-                {published.map((entry) => (
-                  <div key={entry.id} className="bg-surface border border-white/10 rounded-lg p-4" data-testid="changelog-published-entry">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className={`px-2 py-0.5 rounded text-xs font-semibold border capitalize ${BADGE_COLORS[entry.category] || ''}`}>{entry.category}</span>
-                      {entry.publishDate && <span className="text-xs text-secondary">{formatDate(entry.publishDate)}</span>}
-                    </div>
-                    <h4 className="font-bold text-white mb-1">{entry.title}</h4>
-                    <p className="text-sm text-secondary mb-2 line-clamp-2">{entry.body}</p>
-                    <div className="flex gap-2">
-                      <button onClick={() => handleEdit(entry)} className="px-3 py-1 border border-white/10 text-secondary rounded text-xs hover:text-white">Edit</button>
-                      {deleteConfirmId === entry.id ? (
-                        <span className="flex gap-1">
-                          <button onClick={() => handleDelete(entry.id)} className="px-3 py-1 bg-error text-white rounded text-xs font-semibold">Confirm</button>
-                          <button onClick={() => setDeleteConfirmId(null)} className="px-3 py-1 border border-white/10 text-secondary rounded text-xs">Cancel</button>
-                        </span>
-                      ) : (
-                        <button onClick={() => setDeleteConfirmId(entry.id)} className="px-3 py-1 border border-error/30 text-error rounded text-xs hover:bg-error/10">Delete</button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          ))}
 
           {entries.length === 0 && <div className="text-center py-8 text-secondary">No changelog entries yet. Create one above.</div>}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-4">
-              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="px-3 py-2 rounded bg-surface border border-white/10 text-secondary disabled:opacity-40">Previous</button>
-              <span className="px-3 py-2 text-secondary">Page {page} of {totalPages}</span>
-              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-2 rounded bg-surface border border-white/10 text-secondary disabled:opacity-40">Next</button>
-            </div>
-          )}
+          <ChangelogPager page={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       )}
+    </div>
+  );
+}
+
+interface AdminEntryCardProps {
+  entry: ChangelogEntry;
+  confirmingDelete: boolean;
+  onPublish: (id: number) => void;
+  onEdit: (entry: ChangelogEntry) => void;
+  onDelete: (id: number) => void;
+  /** Opens (id) or closes (null) the delete confirmation. */
+  onConfirmDelete: (id: number | null) => void;
+}
+
+/** One draft or published entry with its actions; drafts are dimmed and can be published. */
+function AdminEntryCard({ entry, confirmingDelete, onPublish, onEdit, onDelete, onConfirmDelete }: AdminEntryCardProps) {
+  const isDraft = entry.status === 'draft';
+  return (
+    <div
+      className={`bg-surface border border-white/10 rounded-lg p-4 ${isDraft ? 'opacity-70' : ''}`}
+      data-testid={isDraft ? 'changelog-draft-entry' : 'changelog-published-entry'}
+    >
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        {isDraft && <span className="px-2 py-0.5 rounded text-xs font-semibold border bg-white/10 text-secondary border-white/20">DRAFT</span>}
+        <ChangelogCategoryBadge category={entry.category} />
+        {isDraft
+          ? <span className="text-xs text-secondary">{formatMediumDate(entry.createdAt)}</span>
+          : entry.publishDate && <span className="text-xs text-secondary">{formatMediumDate(entry.publishDate)}</span>}
+      </div>
+      <h4 className="font-bold text-white mb-1">{entry.title}</h4>
+      <p className="text-sm text-secondary mb-2 line-clamp-2">{entry.body}</p>
+      <div className="flex gap-2">
+        {isDraft && <button onClick={() => onPublish(entry.id)} className="px-3 py-1 bg-green-600 text-white rounded text-xs font-semibold hover:bg-green-700">Publish</button>}
+        <button onClick={() => onEdit(entry)} className="px-3 py-1 border border-white/10 text-secondary rounded text-xs hover:text-white">Edit</button>
+        {confirmingDelete ? (
+          <span className="flex gap-1">
+            <button onClick={() => onDelete(entry.id)} className="px-3 py-1 bg-error text-white rounded text-xs font-semibold">Confirm</button>
+            <button onClick={() => onConfirmDelete(null)} className="px-3 py-1 border border-white/10 text-secondary rounded text-xs">Cancel</button>
+          </span>
+        ) : (
+          <button onClick={() => onConfirmDelete(entry.id)} className="px-3 py-1 border border-error/30 text-error rounded text-xs hover:bg-error/10">Delete</button>
+        )}
+      </div>
     </div>
   );
 }

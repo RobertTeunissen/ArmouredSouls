@@ -94,8 +94,7 @@ router.get('/robot/:robotId/metric/:metricName', authenticateToken, ...validated
 
   const metricProgression = await robotPerformanceService.getRobotMetricProgression(robotId, metricName, [startCycle, endCycle]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const response: Record<string, any> = {
+  return res.json({
     robotId: metricProgression.robotId,
     metric: metricProgression.metric,
     cycleRange: metricProgression.cycleRange,
@@ -104,17 +103,13 @@ router.get('/robot/:robotId/metric/:metricName', authenticateToken, ...validated
     endValue: metricProgression.endValue,
     totalChange: metricProgression.totalChange,
     averageChange: metricProgression.averageChange,
-  };
-
-  if (includeMovingAverage && metricProgression.movingAverage) {
-    response.movingAverage = metricProgression.movingAverage;
-  }
-
-  if (includeTrendLine && metricProgression.dataPoints.length > 1) {
-    response.trendLine = calculateTrendLine(metricProgression.dataPoints);
-  }
-
-  return res.json(response);
+    ...(includeMovingAverage && metricProgression.movingAverage
+      ? { movingAverage: metricProgression.movingAverage }
+      : {}),
+    ...(includeTrendLine && metricProgression.dataPoints.length > 1
+      ? { trendLine: calculateTrendLine(metricProgression.dataPoints) }
+      : {}),
+  });
 }));
 
 

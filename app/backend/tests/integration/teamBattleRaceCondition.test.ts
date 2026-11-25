@@ -193,7 +193,7 @@ describe('Team Battle Race Condition Stress Test', () => {
       // The advisory lock serializes access — one wins, others get TEAM_MEMBER_CONFLICT
       // or transaction timeout (both are acceptable failure modes).
       const attempts = Array.from({ length: 3 }, (_, i) =>
-        registerTeam(userId, robotIds, `RaceTeam_${i}`, 2, userId)
+        registerTeam(userId, robotIds, `RaceTeam_${i}`, 2)
           .then(team => ({ success: true as const, team }))
           .catch(err => ({ success: false as const, error: err })),
       );
@@ -259,10 +259,10 @@ describe('Team Battle Race Condition Stress Test', () => {
       // Team A: [robot0, robot1], Team B: [robot1, robot2]
       // The advisory lock on robot[1] serializes these — at most one succeeds.
       const [resultA, resultB] = await Promise.all([
-        registerTeam(userId, [robotIds[0], robotIds[1]], 'TeamA', 2, userId)
+        registerTeam(userId, [robotIds[0], robotIds[1]], 'TeamA', 2)
           .then(team => ({ success: true as const, team }))
           .catch(err => ({ success: false as const, error: err })),
-        registerTeam(userId, [robotIds[1], robotIds[2]], 'TeamB', 2, userId)
+        registerTeam(userId, [robotIds[1], robotIds[2]], 'TeamB', 2)
           .then(team => ({ success: true as const, team }))
           .catch(err => ({ success: false as const, error: err })),
       ]);
@@ -296,7 +296,7 @@ describe('Team Battle Race Condition Stress Test', () => {
       await subscribeRobots(robotIds, 'league_2v2');
 
       // Register a team with first 2 robots
-      const team = await registerTeam(userId, [robotIds[0], robotIds[1]], 'LockedTeam', 2, userId);
+      const team = await registerTeam(userId, [robotIds[0], robotIds[1]], 'LockedTeam', 2);
       cleanupTeamIds.push(team.id);
 
       // Create a scheduled match to lock the team
@@ -366,7 +366,6 @@ describe('Team Battle Race Condition Stress Test', () => {
           stables[i].robotIds,
           `MatchTeam_${i}`,
           2,
-          stables[i].userId,
         );
         teams.push(team);
         cleanupTeamIds.push(team.id);
@@ -471,7 +470,6 @@ describe('Team Battle Race Condition Stress Test', () => {
           stables[i].robotIds,
           `SubTeam_${i}`,
           2,
-          stables[i].userId,
         );
         teams.push(team);
         cleanupTeamIds.push(team.id);
@@ -535,7 +533,7 @@ describe('Team Battle Race Condition Stress Test', () => {
       const { userId, robotIds } = await createTestStableWithRobots(2);
       await subscribeRobots(robotIds, 'league_2v2');
 
-      const team = await registerTeam(userId, robotIds, 'DisbandRaceTeam', 2, userId);
+      const team = await registerTeam(userId, robotIds, 'DisbandRaceTeam', 2);
       cleanupTeamIds.push(team.id);
 
       // Schedule a battle for this team
@@ -605,7 +603,7 @@ describe('Team Battle Race Condition Stress Test', () => {
         const batchStables = stables.slice(batch, batch + batchSize);
         const batchResults = await Promise.all(
           batchStables.map((stable, i) =>
-            registerTeam(stable.userId, stable.robotIds, `StressTeam_${batch + i}`, 2, stable.userId)
+            registerTeam(stable.userId, stable.robotIds, `StressTeam_${batch + i}`, 2)
               .then(team => ({ success: true as const, team }))
               .catch(err => ({ success: false as const, error: err })),
           ),
@@ -670,7 +668,7 @@ describe('Team Battle Race Condition Stress Test', () => {
       await subscribeRobots(robotIds, 'league_2v2');
 
       // Register a team first
-      const team = await registerTeam(userId, robotIds, 'OrphanTest', 2, userId);
+      const team = await registerTeam(userId, robotIds, 'OrphanTest', 2);
       cleanupTeamIds.push(team.id);
 
       // Verify subscription exists before concurrent operations
@@ -692,7 +690,7 @@ describe('Team Battle Race Condition Stress Test', () => {
           .catch(err => ({ success: false as const, error: err })),
         // Small delay to let disband acquire locks first, making the race more interesting
         new Promise(resolve => setTimeout(resolve, 10)).then(() =>
-          registerTeam(userId, robotIds, 'NewTeam', 2, userId)
+          registerTeam(userId, robotIds, 'NewTeam', 2)
             .then(newTeam => ({ success: true as const, team: newTeam }))
             .catch(err => ({ success: false as const, error: err })),
         ),

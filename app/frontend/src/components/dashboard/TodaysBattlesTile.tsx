@@ -16,7 +16,8 @@ import {
   DashboardTileNote,
 } from './DashboardTile';
 import type { OverviewRowData } from './types';
-import { earnsPlacementReward, ordinal } from './placementFormatting';
+import { earnsPlacementReward } from './placementFormatting';
+import { ordinal } from '../../utils/formatters';
 
 /** How many upcoming Battle_Slot times are shown before the `+N more` indicator. */
 const SLOTS_SHOWN = 2;

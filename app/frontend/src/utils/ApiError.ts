@@ -16,3 +16,9 @@ export class ApiError extends Error {
     this.details = details;
   }
 }
+
+/** Message to show for a failed request: the API's own message, else `fallback`; null when nothing failed. */
+export function apiErrorMessage(error: unknown, fallback: string): string | null {
+  if (!error) return null;
+  return (error instanceof ApiError && error.message) || fallback;
+}

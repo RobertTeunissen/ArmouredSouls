@@ -60,7 +60,7 @@ function getTeamReadiness(team: TeamBattle, eventType: TeamEventType): TeamReadi
 function TeamReadinessBadge({ readiness }: { readiness: TeamReadiness }) {
   return (
     <span className={`text-xs px-1.5 py-0.5 rounded ${
-      readiness.isReady ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+      readiness.isReady ? 'bg-success/20 text-success' : 'bg-error/20 text-error'
     }`}>
       {readiness.isReady ? '✓' : '✗'} {readiness.label}
     </span>
@@ -302,11 +302,11 @@ function RobotStandingCard({ robot, isSubscribed }: RobotStandingCardProps) {
   const totalMatches = wins + losses + draws;
 
   return (
-    <div className="bg-[#252b38] border border-white/10 rounded-lg p-2.5">
+    <div className="bg-surface-elevated border border-white/10 rounded-lg p-2.5">
       {/* Desktop */}
       <div className="hidden md:flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm text-[#e6edf3] truncate">{robot.name}</div>
+          <div className="font-medium text-sm text-foreground truncate">{robot.name}</div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
             <span className="text-xs text-secondary">•</span>
@@ -314,18 +314,18 @@ function RobotStandingCard({ robot, isSubscribed }: RobotStandingCardProps) {
           </div>
         </div>
         <div className="flex-shrink-0 text-xs text-secondary">
-          <span className="text-[#3fb950]">{wins}W</span>
+          <span className="text-success">{wins}W</span>
           <span className="mx-1">/</span>
-          <span className="text-[#f85149]">{losses}L</span>
+          <span className="text-error">{losses}L</span>
           <span className="mx-1">/</span>
-          <span className="text-[#d29922]">{draws}D</span>
+          <span className="text-warning">{draws}D</span>
           {totalMatches > 0 && (
             <span className="ml-2 text-secondary">({totalMatches})</span>
           )}
         </div>
         <div className="flex-shrink-0">
           <span className={`text-xs px-1.5 py-0.5 rounded ${
-            isSubscribed ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+            isSubscribed ? 'bg-success/20 text-success' : 'bg-error/20 text-error'
           }`}>
             {isSubscribed ? '✓ Ready' : '✗ Not subscribed'}
           </span>
@@ -335,9 +335,9 @@ function RobotStandingCard({ robot, isSubscribed }: RobotStandingCardProps) {
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-1">
-          <div className="font-medium text-sm text-[#e6edf3] truncate">{robot.name}</div>
+          <div className="font-medium text-sm text-foreground truncate">{robot.name}</div>
           <span className={`text-xs px-1.5 py-0.5 rounded ${
-            isSubscribed ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+            isSubscribed ? 'bg-success/20 text-success' : 'bg-error/20 text-error'
           }`}>
             {isSubscribed ? '✓' : '✗'}
           </span>
@@ -348,11 +348,11 @@ function RobotStandingCard({ robot, isSubscribed }: RobotStandingCardProps) {
             <span className="text-xs text-secondary">{lpLabel}</span>
           </div>
           <div className="text-xs text-secondary">
-            <span className="text-[#3fb950]">{wins}W</span>
+            <span className="text-success">{wins}W</span>
             <span className="mx-0.5">/</span>
-            <span className="text-[#f85149]">{losses}L</span>
+            <span className="text-error">{losses}L</span>
             <span className="mx-0.5">/</span>
-            <span className="text-[#d29922]">{draws}D</span>
+            <span className="text-warning">{draws}D</span>
           </div>
         </div>
       </div>
@@ -373,11 +373,11 @@ function TeamStandingCard({ team, readiness }: TeamStandingCardProps) {
   const totalMatches = team.totalLeagueWins + team.totalLeagueLosses + team.totalLeagueDraws;
 
   return (
-    <div className="bg-[#252b38] border border-white/10 rounded-lg p-2.5">
+    <div className="bg-surface-elevated border border-white/10 rounded-lg p-2.5">
       {/* Desktop */}
       <div className="hidden md:flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm text-[#e6edf3] truncate">{team.teamName}</div>
+          <div className="font-medium text-sm text-foreground truncate">{team.teamName}</div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
             <span className="text-xs text-secondary">•</span>
@@ -385,11 +385,11 @@ function TeamStandingCard({ team, readiness }: TeamStandingCardProps) {
           </div>
         </div>
         <div className="flex-shrink-0 text-xs text-secondary">
-          <span className="text-[#3fb950]">{team.totalLeagueWins}W</span>
+          <span className="text-success">{team.totalLeagueWins}W</span>
           <span className="mx-1">/</span>
-          <span className="text-[#f85149]">{team.totalLeagueLosses}L</span>
+          <span className="text-error">{team.totalLeagueLosses}L</span>
           <span className="mx-1">/</span>
-          <span className="text-[#d29922]">{team.totalLeagueDraws}D</span>
+          <span className="text-warning">{team.totalLeagueDraws}D</span>
           {totalMatches > 0 && (
             <span className="ml-2 text-secondary">({totalMatches})</span>
           )}
@@ -402,7 +402,7 @@ function TeamStandingCard({ team, readiness }: TeamStandingCardProps) {
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-1">
-          <div className="font-medium text-sm text-[#e6edf3] truncate">{team.teamName}</div>
+          <div className="font-medium text-sm text-foreground truncate">{team.teamName}</div>
           <TeamReadinessBadge readiness={readiness} />
         </div>
         <div className="flex items-center justify-between">
@@ -411,11 +411,11 @@ function TeamStandingCard({ team, readiness }: TeamStandingCardProps) {
             <span className="text-xs text-secondary">{lpLabel}</span>
           </div>
           <div className="text-xs text-secondary">
-            <span className="text-[#3fb950]">{team.totalLeagueWins}W</span>
+            <span className="text-success">{team.totalLeagueWins}W</span>
             <span className="mx-0.5">/</span>
-            <span className="text-[#f85149]">{team.totalLeagueLosses}L</span>
+            <span className="text-error">{team.totalLeagueLosses}L</span>
             <span className="mx-0.5">/</span>
-            <span className="text-[#d29922]">{team.totalLeagueDraws}D</span>
+            <span className="text-warning">{team.totalLeagueDraws}D</span>
           </div>
         </div>
       </div>
@@ -431,11 +431,11 @@ function TagTeamStandingCard({ team, readiness }: TeamStandingCardProps) {
   const totalMatches = (team.totalTagTeamWins || 0) + (team.totalTagTeamLosses || 0) + (team.totalTagTeamDraws || 0);
 
   return (
-    <div className="bg-[#252b38] border border-white/10 rounded-lg p-2.5">
+    <div className="bg-surface-elevated border border-white/10 rounded-lg p-2.5">
       {/* Desktop */}
       <div className="hidden md:flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm text-[#e6edf3] truncate">{team.teamName}</div>
+          <div className="font-medium text-sm text-foreground truncate">{team.teamName}</div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
             <span className="text-xs text-secondary">•</span>
@@ -443,11 +443,11 @@ function TagTeamStandingCard({ team, readiness }: TeamStandingCardProps) {
           </div>
         </div>
         <div className="flex-shrink-0 text-xs text-secondary">
-          <span className="text-[#3fb950]">{team.totalTagTeamWins || 0}W</span>
+          <span className="text-success">{team.totalTagTeamWins || 0}W</span>
           <span className="mx-1">/</span>
-          <span className="text-[#f85149]">{team.totalTagTeamLosses || 0}L</span>
+          <span className="text-error">{team.totalTagTeamLosses || 0}L</span>
           <span className="mx-1">/</span>
-          <span className="text-[#d29922]">{team.totalTagTeamDraws || 0}D</span>
+          <span className="text-warning">{team.totalTagTeamDraws || 0}D</span>
           {totalMatches > 0 && (
             <span className="ml-2 text-secondary">({totalMatches})</span>
           )}
@@ -460,7 +460,7 @@ function TagTeamStandingCard({ team, readiness }: TeamStandingCardProps) {
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-1">
-          <div className="font-medium text-sm text-[#e6edf3] truncate">{team.teamName}</div>
+          <div className="font-medium text-sm text-foreground truncate">{team.teamName}</div>
           <TeamReadinessBadge readiness={readiness} />
         </div>
         <div className="flex items-center justify-between">
@@ -469,11 +469,11 @@ function TagTeamStandingCard({ team, readiness }: TeamStandingCardProps) {
             <span className="text-xs text-secondary">{lpLabel}</span>
           </div>
           <div className="text-xs text-secondary">
-            <span className="text-[#3fb950]">{team.totalTagTeamWins || 0}W</span>
+            <span className="text-success">{team.totalTagTeamWins || 0}W</span>
             <span className="mx-0.5">/</span>
-            <span className="text-[#f85149]">{team.totalTagTeamLosses || 0}L</span>
+            <span className="text-error">{team.totalTagTeamLosses || 0}L</span>
             <span className="mx-0.5">/</span>
-            <span className="text-[#d29922]">{team.totalTagTeamDraws || 0}D</span>
+            <span className="text-warning">{team.totalTagTeamDraws || 0}D</span>
           </div>
         </div>
       </div>
@@ -492,11 +492,11 @@ function KothStandingCard({ robotName, standing, isSubscribed }: KothStandingCar
   const tierName = standing ? getLeagueTierName(standing.tier) : '—';
 
   return (
-    <div className="bg-[#252b38] border border-white/10 rounded-lg p-2.5">
+    <div className="bg-surface-elevated border border-white/10 rounded-lg p-2.5">
       {/* Desktop */}
       <div className="hidden md:flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm text-[#e6edf3] truncate">{robotName}</div>
+          <div className="font-medium text-sm text-foreground truncate">{robotName}</div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
             {standing && (
@@ -516,7 +516,7 @@ function KothStandingCard({ robotName, standing, isSubscribed }: KothStandingCar
         <div className="flex-shrink-0 text-xs text-secondary">
           {standing ? (
             <>
-              <span className="text-[#3fb950]">{standing.wins}W</span>
+              <span className="text-success">{standing.wins}W</span>
               <span className="mx-1">/</span>
               <span className="text-secondary">{standing.totalMatches} matches</span>
             </>
@@ -526,7 +526,7 @@ function KothStandingCard({ robotName, standing, isSubscribed }: KothStandingCar
         </div>
         <div className="flex-shrink-0">
           <span className={`text-xs px-1.5 py-0.5 rounded ${
-            isSubscribed ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+            isSubscribed ? 'bg-success/20 text-success' : 'bg-error/20 text-error'
           }`}>
             {isSubscribed ? '✓ Ready' : '✗ Not subscribed'}
           </span>
@@ -536,9 +536,9 @@ function KothStandingCard({ robotName, standing, isSubscribed }: KothStandingCar
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-1">
-          <div className="font-medium text-sm text-[#e6edf3] truncate">{robotName}</div>
+          <div className="font-medium text-sm text-foreground truncate">{robotName}</div>
           <span className={`text-xs px-1.5 py-0.5 rounded ${
-            isSubscribed ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+            isSubscribed ? 'bg-success/20 text-success' : 'bg-error/20 text-error'
           }`}>
             {isSubscribed ? '✓' : '✗'}
           </span>
@@ -558,7 +558,7 @@ function KothStandingCard({ robotName, standing, isSubscribed }: KothStandingCar
           <div className="text-xs text-secondary">
             {standing ? (
               <>
-                <span className="text-[#3fb950]">{standing.wins}W</span>
+                <span className="text-success">{standing.wins}W</span>
                 <span className="mx-0.5">/</span>
                 <span>{standing.totalMatches} matches</span>
               </>

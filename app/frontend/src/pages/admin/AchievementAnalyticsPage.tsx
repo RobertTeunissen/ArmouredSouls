@@ -11,12 +11,12 @@
  *
  * Definitions: docs/guides/ADMIN_PANEL_GUIDE.md §Achievements.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton, StableScopeToggle } from '../../components/admin/shared';
 import { AchievementSummary, AchievementTable, TierNotes, TierStripChart } from '../../components/admin/achievements';
-import { ApiError } from '../../utils/ApiError';
-import { isAbortError } from '../../utils/abort';
+import { apiErrorMessage } from '../../utils/ApiError';
+import { useApiQuery } from '../../hooks/useApiQuery';
 import {
   ACHIEVEMENT_STABLES,
   getAchievementAnalytics,
@@ -48,30 +48,14 @@ function populationWords(data: AchievementAnalytics): { who: string; scope: stri
 function AchievementAnalyticsPage(): React.ReactElement {
   const [params, setParams] = useSearchParams();
   const stables = readAchievementStables(params);
-  const [data, setData] = useState<AchievementAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState(0);
-  const [fetchedAt, setFetchedAt] = useState<string | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
-    getAchievementAnalytics(stables, controller.signal)
-      .then((result) => {
-        if (controller.signal.aborted) return;
-        setData(result);
-        setFetchedAt(new Date().toISOString());
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setError((err instanceof ApiError && err.message) || 'Could not load the achievement analytics.');
-        setLoading(false);
-      });
-    return () => controller.abort();
-  }, [stables, token]);
+  const query = useApiQuery(
+    async (signal) => ({ result: await getAchievementAnalytics(stables, signal), fetchedAt: new Date().toISOString() }),
+    [stables],
+  );
+  const data = query.data?.result ?? null;
+  const fetchedAt = query.data?.fetchedAt ?? null;
+  const loading = query.loading;
+  const error = apiErrorMessage(query.error, 'Could not load the achievement analytics.');
 
   // Never show another stable type's numbers while the new ones load.
   const current = data && data.stables === stables ? data : null;
@@ -95,7 +79,7 @@ function AchievementAnalyticsPage(): React.ReactElement {
             </span>
             <button
               type="button"
-              onClick={() => setToken((t) => t + 1)}
+              onClick={query.refetch}
               disabled={loading}
               className={`min-h-11 whitespace-nowrap rounded-md border border-white/10 bg-surface-elevated px-3 text-sm text-white hover:bg-white/10 disabled:opacity-60 ${ADMIN_FOCUS_RING}`}
             >
@@ -117,7 +101,7 @@ function AchievementAnalyticsPage(): React.ReactElement {
 
       {error && (
         <div className="rounded-lg border border-white/10 bg-surface">
-          <PanelError message={error} onRetry={() => setToken((t) => t + 1)} />
+          <PanelError message={error} onRetry={query.refetch} />
         </div>
       )}
 

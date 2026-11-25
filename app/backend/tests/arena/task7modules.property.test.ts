@@ -191,11 +191,8 @@ describe('counterAttack property tests', () => {
                 hydraulicSystems: 25,
               } as any,
             });
-            const attacker = makeState({
-              position: { x: distance, y: 0 },
-            });
 
-            const result = resolveCounter(defender, attacker, distance);
+            const result = resolveCounter(defender, distance);
             expect(result.canCounter).toBe(false);
             expect(result.reason).toBe('counter_out_of_range');
           },
@@ -224,11 +221,8 @@ describe('counterAttack property tests', () => {
                 hydraulicSystems: 25,
               } as any,
             });
-            const attacker = makeState({
-              position: { x: distance, y: 0 },
-            });
 
-            const result = resolveCounter(defender, attacker, distance);
+            const result = resolveCounter(defender, distance);
             expect(result.canCounter).toBe(true);
           },
         ),
@@ -259,9 +253,8 @@ describe('counterAttack property tests', () => {
           hydraulicSystems: 25,
         } as any,
       });
-      const attacker = makeState({ position: { x: 5, y: 0 } });
 
-      const result = resolveCounter(defender, attacker, 5);
+      const result = resolveCounter(defender, 5);
       expect(result.canCounter).toBe(true);
       expect(result.hand).toBe('offhand');
     });
@@ -300,8 +293,7 @@ describe('counterAttack property tests', () => {
           fc.double({ min: 13, max: 40, noNaN: true, noDefaultInfinity: true }),
           (lc, hydro, distance) => {
             const defender = makeDefender('long', lc, hydro);
-            const attacker = makeState({ position: { x: distance, y: 0 } });
-            const result = resolveCounter(defender, attacker, distance);
+            const result = resolveCounter(defender, distance);
             expect(result.canCounter).toBe(true);
             expect(result.logicCoresMultiplier).toBeCloseTo(1 + lc * 0.015, 10);
             expect(result.hydraulicMultiplier).toBe(1);
@@ -319,8 +311,7 @@ describe('counterAttack property tests', () => {
           fc.double({ min: 0, max: 2, noNaN: true, noDefaultInfinity: true }),
           (lc, hydro, distance) => {
             const defender = makeDefender('melee', lc, hydro);
-            const attacker = makeState({ position: { x: distance, y: 0 } });
-            const result = resolveCounter(defender, attacker, distance);
+            const result = resolveCounter(defender, distance);
             expect(result.canCounter).toBe(true);
             expect(result.hydraulicMultiplier).toBeCloseTo(1 + hydro * 0.015, 10);
             expect(result.logicCoresMultiplier).toBe(1);
@@ -338,8 +329,7 @@ describe('counterAttack property tests', () => {
           fc.double({ min: 3, max: 12, noNaN: true, noDefaultInfinity: true }),
           (lc, hydro, distance) => {
             const defender = makeDefender('mid', lc, hydro);
-            const attacker = makeState({ position: { x: distance, y: 0 } });
-            const result = resolveCounter(defender, attacker, distance);
+            const result = resolveCounter(defender, distance);
             expect(result.canCounter).toBe(true);
             expect(result.hydraulicMultiplier).toBe(1);
             expect(result.logicCoresMultiplier).toBe(1);
@@ -351,8 +341,7 @@ describe('counterAttack property tests', () => {
 
     it('should report 1 for both multipliers when the counter is blocked', () => {
       const defender = makeDefender('melee', 50, 50);
-      const attacker = makeState({ position: { x: 20, y: 0 } });
-      const result = resolveCounter(defender, attacker, 20);
+      const result = resolveCounter(defender, 20);
       expect(result.canCounter).toBe(false);
       expect(result.hydraulicMultiplier).toBe(1);
       expect(result.logicCoresMultiplier).toBe(1);

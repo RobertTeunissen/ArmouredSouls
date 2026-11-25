@@ -11,44 +11,24 @@
  * Signals are stored for 90 days and survive deploys. Admin page views and
  * routine purchases are not signals. Definitions: docs/guides/ADMIN_PANEL_GUIDE.md §Security.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ADMIN_FOCUS_RING, AdminPageHeader, AdminPanel, PanelError, PanelSkeleton } from '../../components/admin/shared';
 import { SignalCards, SignalSourcesTable, SignalStablesTable, SignalsChart } from '../../components/admin/security';
-import { ApiError } from '../../utils/ApiError';
-import { isAbortError } from '../../utils/abort';
+import { apiErrorMessage } from '../../utils/ApiError';
+import { useApiQuery } from '../../hooks/useApiQuery';
 import { getSecurityOverview, SECURITY_WINDOWS } from '../../utils/adminSecurityApi';
 import { WINDOW_LABELS, firedSummary, readSecurityWindow, writeSecurityWindow } from '../../utils/adminSecurityFormat';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
 import { dayMonth } from '../../utils/adminImagesFormat';
-import type { SecurityOverview } from '@shared/types';
 
 function SecurityPage(): React.ReactElement {
   const [params, setParams] = useSearchParams();
   const range = readSecurityWindow(params);
-  const [data, setData] = useState<SecurityOverview | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState(0);
+  const query = useApiQuery((signal) => getSecurityOverview(range, signal), [range]);
+  const { data, loading } = query;
+  const error = apiErrorMessage(query.error, 'Could not load the security signals.');
   const now = useMemo(() => (data ? new Date(data.generatedAt) : new Date()), [data]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
-    getSecurityOverview(range, controller.signal)
-      .then((overview) => {
-        if (controller.signal.aborted) return;
-        setData(overview);
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setError((err instanceof ApiError && err.message) || 'Could not load the security signals.');
-        setLoading(false);
-      });
-    return () => controller.abort();
-  }, [range, token]);
 
   const summary = data && data.window === range ? firedSummary(data.signals, range) : null;
   const refreshing = loading && data !== null;
@@ -65,7 +45,7 @@ function SecurityPage(): React.ReactElement {
             </span>
             <button
               type="button"
-              onClick={() => setToken((t) => t + 1)}
+              onClick={query.refetch}
               disabled={loading}
               className={`min-h-11 whitespace-nowrap rounded-md border border-white/10 bg-surface-elevated px-3 text-sm text-white hover:bg-white/10 disabled:opacity-60 ${ADMIN_FOCUS_RING}`}
             >
@@ -101,7 +81,7 @@ function SecurityPage(): React.ReactElement {
 
       {error && (
         <div className="rounded-lg border border-white/10 bg-surface">
-          <PanelError message={error} onRetry={() => setToken((t) => t + 1)} />
+          <PanelError message={error} onRetry={query.refetch} />
         </div>
       )}
 

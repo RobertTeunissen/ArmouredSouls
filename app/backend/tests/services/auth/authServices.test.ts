@@ -63,7 +63,7 @@ jest.mock('../../../src/services/auth/passwordService', () => ({
   hashPassword: jest.fn().mockResolvedValue('$2b$10$hashedNewPassword'),
 }));
 
-jest.mock('../../../src/utils/prestigeUtils', () => ({
+jest.mock('../../../src/shared/utils/prestigeTiers', () => ({
   getPrestigeRank: jest.fn().mockReturnValue({ name: 'Novice', threshold: 0 }),
 }));
 

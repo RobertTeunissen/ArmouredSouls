@@ -12,13 +12,13 @@
  *
  * Definitions: docs/guides/ADMIN_PANEL_GUIDE.md §Players.
  */
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useId, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton } from '../../components/admin/shared';
 import { PlayerDetailPanel, PlayerSegmentCards, PlayersTable, StableSearch } from '../../components/admin/players';
 import { AdminPagination } from '../../components/admin/shared';
-import { ApiError } from '../../utils/ApiError';
-import { isAbortError } from '../../utils/abort';
+import { apiErrorMessage } from '../../utils/ApiError';
+import { useApiQuery } from '../../hooks/useApiQuery';
 import { getPlayersOverview } from '../../utils/adminPlayersApi';
 import {
   PLAYERS_PAGE_SIZE,
@@ -29,7 +29,6 @@ import {
   type PlayersViewState,
 } from '../../utils/adminPlayersFormat';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
-import type { PlayersOverview } from '@shared/types';
 
 /** Low-balance threshold until the overview arrives (the same as the server's). */
 const FALLBACK_LOW_BALANCE = 10_000;
@@ -38,29 +37,10 @@ function PlayersPage(): React.ReactElement {
   const [params, setParams] = useSearchParams();
   const view = readPlayersView(params);
   const listSearchId = useId();
-  const [data, setData] = useState<PlayersOverview | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState(0);
+  const query = useApiQuery((signal) => getPlayersOverview(signal), []);
+  const { data, loading } = query;
+  const error = apiErrorMessage(query.error, 'Could not load the players.');
   const now = useMemo(() => (data ? new Date(data.timestamp) : new Date()), [data]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
-    getPlayersOverview(controller.signal)
-      .then((overview) => {
-        if (controller.signal.aborted) return;
-        setData(overview);
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setError((err instanceof ApiError && err.message) || 'Could not load the players.');
-        setLoading(false);
-      });
-    return () => controller.abort();
-  }, [token]);
 
   const update = useCallback((patch: Partial<PlayersViewState>): void => {
     setParams((current) => writePlayersView(current, patch), { replace: true });
@@ -85,7 +65,7 @@ function PlayersPage(): React.ReactElement {
             </span>
             <button
               type="button"
-              onClick={() => setToken((t) => t + 1)}
+              onClick={query.refetch}
               disabled={loading}
               className={`min-h-11 whitespace-nowrap rounded-md border border-white/10 bg-surface-elevated px-3 text-sm text-white hover:bg-white/10 disabled:opacity-60 ${ADMIN_FOCUS_RING}`}
             >
@@ -99,7 +79,7 @@ function PlayersPage(): React.ReactElement {
 
       {error && (
         <div className="rounded-lg border border-white/10 bg-surface">
-          <PanelError message={error} onRetry={() => setToken((t) => t + 1)} />
+          <PanelError message={error} onRetry={query.refetch} />
         </div>
       )}
 

@@ -28,7 +28,7 @@ import { useSeasonStore } from '../../../stores/seasonStore';
 
 beforeEach(() => {
   vi.clearAllMocks();
-  useSeasonStore.setState({ season: { seasonNumber: 1, phase: 'competitive', seasonCycle: 95, seasonLengthCycles: 100, remainingCompetitiveCycles: 5, preparationDay: 0, remainingPreparationCycles: 0, isLegacy: false } });
+  useSeasonStore.setState({ season: { seasonNumber: 1, phase: 'competitive', seasonCycle: 95, seasonLengthCycles: 100, remainingCompetitiveCycles: 5, preparationDay: 0, remainingPreparationCycles: 0, isLegacy: false, countdownCycles: 7 } });
   robotApi.fetchRobotLeagueHistory.mockResolvedValue({ data: [
     { cycleNumber: 20, destinationTier: 'silver', changeType: 'promotion', leaguePoints: 40, mode: 'league_1v1' },
     { cycleNumber: 40, destinationTier: 'gold', changeType: 'promotion', leaguePoints: 50, mode: null },

@@ -128,7 +128,7 @@ async function remainingSeasonCycles(db: FactsDb, seasonNumber: number): Promise
   if (!row) return { remaining: null, startedAt: null };
   if (row.seasonNumber === LEGACY_SEASON_NUMBER) return { remaining: null, startedAt: row.startedAt };
   const config = loadEnvConfig();
-  const state = deriveSeasonState(row, config.seasonLengthCycles, config.preparationLengthCycles);
+  const state = deriveSeasonState(row, config.seasonLengthCycles, config.preparationLengthCycles, config.countdownCycles);
   const remaining = state.phase === 'competitive'
     ? state.remainingCompetitiveCycles
     : state.phase === 'preparation' ? state.seasonLengthCycles : 0;

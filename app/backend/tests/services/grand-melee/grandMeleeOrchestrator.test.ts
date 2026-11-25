@@ -352,8 +352,9 @@ describe('executeScheduledGrandMeleeBattles', () => {
     expect(standingsService.awardGrandMeleePoints).toHaveBeenCalledWith(
       expect.objectContaining({ robotId: 1, placement: 1, totalParticipants: 9 }),
     );
-    expect(calculateGrandMeleeRewards).toHaveBeenCalledWith(1, 'bronze', 9, expect.any(Number));
-    expect(calculateGrandMeleeRewards).not.toHaveBeenCalledWith(9, expect.anything(), expect.anything(), expect.anything());
+    expect(calculateGrandMeleeRewards).toHaveBeenCalledWith(1, 'bronze', expect.any(Number));
+    const rewardedPlacements = (calculateGrandMeleeRewards as jest.Mock).mock.calls.map(([placement]) => placement);
+    expect(rewardedPlacements).not.toContain(9);
     const awardedUsers = (awardCreditsWithLedger as jest.Mock).mock.calls.map(([userId]) => userId);
     expect(awardedUsers).not.toContain(9);
     const components = (awardCreditsWithLedger as jest.Mock).mock.calls

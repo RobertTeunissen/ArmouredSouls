@@ -29,7 +29,7 @@ Competitive cycle 1 is a **scheduling cycle**. Every battle event executes previ
 | `ACCOLADE_DEPTH` | 10 | integer ≥ 1 |
 | `RETAINED_IMAGES_PER_STABLE` | 20 | integer ≥ 1 |
 
-All are Zod-validated at startup; an invalid value fails startup naming the key.
+All are Zod-validated at startup; an invalid value fails startup naming the key. `GET /api/seasons/current` carries `countdownCycles`, so the player countdown banner uses the configured window, not a frontend default.
 
 ## Reset scope
 

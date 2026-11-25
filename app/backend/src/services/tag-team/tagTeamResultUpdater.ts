@@ -94,9 +94,6 @@ export async function updateTagTeamBattleResults(
   const battleLoadout = (robot: Robot): string => (fallbackIds.has(robot.id) ? 'single' : robot.loadoutType);
   const team2 = mapTeam(match.team2, result.lineup?.team2);
 
-  // The bye branch that used to sit here is gone (Spec #49). It paid
-  // 2x (win + participation), full prestige and full fame, and split the credits
-  // with a floor-only division that could lose a credit.
 
   // Normal match (both teams are real)
   if (!team1 || !team2) {
@@ -148,7 +145,6 @@ export async function updateTagTeamBattleResults(
   const totalBattleTime = result.durationSeconds;
   const team1ActiveFame = calculateTagTeamFame(
     match.teamBattleLeague,
-    team1.activeRobot,
     result.team1ActiveDamageDealt,
     result.team1ActiveSurvivalTime,
     totalBattleTime,
@@ -157,7 +153,6 @@ export async function updateTagTeamBattleResults(
   );
   const team1ReserveFame = calculateTagTeamFame(
     match.teamBattleLeague,
-    team1.reserveRobot,
     result.team1ReserveDamageDealt,
     result.team1ReserveSurvivalTime,
     totalBattleTime,
@@ -166,7 +161,6 @@ export async function updateTagTeamBattleResults(
   );
   const team2ActiveFame = calculateTagTeamFame(
     match.teamBattleLeague,
-    team2.activeRobot,
     result.team2ActiveDamageDealt,
     result.team2ActiveSurvivalTime,
     totalBattleTime,
@@ -175,7 +169,6 @@ export async function updateTagTeamBattleResults(
   );
   const team2ReserveFame = calculateTagTeamFame(
     match.teamBattleLeague,
-    team2.reserveRobot,
     result.team2ReserveDamageDealt,
     result.team2ReserveSurvivalTime,
     totalBattleTime,

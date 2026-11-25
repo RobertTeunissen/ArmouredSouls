@@ -3,6 +3,7 @@ import { formatDuration } from '../../utils/matchmakingApi';
 import { getLeagueTierName, getLeagueTierIcon } from '../../utils/matchmakingApi';
 import { getTournamentRoundName } from '../../utils/matchmakingApi';
 import { isTeamBattleType } from '../../utils/matchmakingApi';
+import { ordinal } from '../../utils/formatters';
 import RobotImage from '../RobotImage';
 import AutomatonBadge from '../AutomatonBadge';
 import type { BattleResultBannerProps } from './types';
@@ -83,10 +84,6 @@ function getPlacementColor(placement: number): string {
   return 'text-secondary';
 }
 
-function formatPlacement(placement: number): string {
-  const suffixes: Record<number, string> = { 1: 'st', 2: 'nd', 3: 'rd' };
-  return `${placement}${suffixes[placement] || 'th'}`;
-}
 
 // ── Battle Context Line ──────────────────────────────────────────────
 
@@ -168,7 +165,7 @@ function ParticipantCard({ p, isLoser, showPlacement, isForfeited = false }: {
       )}
       {showPlacement && p.placement != null && (
         <span className={`text-xs font-bold ${getPlacementColor(p.placement)}`}>
-          {formatPlacement(p.placement)}
+          {ordinal(p.placement)}
         </span>
       )}
       {isForfeited && (

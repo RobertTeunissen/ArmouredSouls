@@ -174,6 +174,35 @@ describe('RegistrationForm', () => {
     expect(screen.getByText(/stable name can only contain/i)).toBeInTheDocument();
   });
 
+  it('shows a server validation error under the field it names', async () => {
+    const user = userEvent.setup();
+    renderForm();
+    mockedApiClient.post.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        status: 400,
+        data: {
+          error: 'Stable name contains inappropriate content',
+          code: 'VALIDATION_ERROR',
+          details: { fields: [{ field: 'stableName', message: 'Stable name contains inappropriate content' }] },
+        },
+      },
+    });
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(screen.getByLabelText(/stable name/i), 'Iron Warriors');
+    await user.type(screen.getByLabelText(/email/i), 'test@email');
+    await user.type(screen.getByLabelText(/^password$/i), 'password123');
+    await user.type(screen.getByLabelText(/confirm password/i), 'password123');
+    await user.click(screen.getByRole('button', { name: /create account/i }));
+    const stableInput = screen.getByLabelText(/stable name/i);
+    await waitFor(() => {
+      expect(screen.getByText('Stable name contains inappropriate content')).toBeInTheDocument();
+    });
+    const described = stableInput.getAttribute('aria-describedby') ?? '';
+    expect(described).not.toBe('');
+    expect(document.getElementById(described.split(' ')[0])?.textContent).toBe('Stable name contains inappropriate content');
+  });
+
   it('displays duplicate stable name error from server', async () => {
     const user = userEvent.setup();
     renderForm();

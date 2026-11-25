@@ -17,25 +17,35 @@ export interface FinanceResource<T> {
   refresh: () => void;
 }
 
-interface AsyncResourceOptions<T> {
+export interface FinanceResourceOptions<T> {
   enabled: boolean;
+  /** A change starts a new request and clears the shown data. */
   key: string;
+  /** Load; `fresh` asks the server to bypass its report cache (after Refresh). */
   load: (signal: AbortSignal, fresh: boolean) => Promise<T>;
   errorMessage: string;
+  /** Changed by the caller to refresh from outside (e.g. the page's Refresh button). */
+  refreshToken?: number;
 }
 
-function useAsyncFinanceResource<T>({
+/**
+ * One Finance Center read. Every request (key change, retry, refresh) clears
+ * the shown data first, so figures for another period never stay on screen;
+ * a refresh (local or via `refreshToken`) loads with `fresh = true`.
+ */
+export function useFinanceResource<T>({
   enabled,
   key,
   load,
   errorMessage,
-}: AsyncResourceOptions<T>): FinanceResource<T> {
+  refreshToken = 0,
+}: FinanceResourceOptions<T>): FinanceResource<T> {
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
-  const [refreshToken, setRefreshToken] = useState(0);
-  const consumedRefreshToken = useRef(0);
+  const [localRefreshToken, setLocalRefreshToken] = useState(0);
+  const consumedRefreshTokens = useRef({ external: 0, local: 0 });
   const requestGeneration = useRef(0);
   const loadRef = useRef(load);
   loadRef.current = load;
@@ -45,7 +55,8 @@ function useAsyncFinanceResource<T>({
 
     const generation = ++requestGeneration.current;
     const controller = new AbortController();
-    const fresh = refreshToken > consumedRefreshToken.current;
+    const consumed = consumedRefreshTokens.current;
+    const fresh = refreshToken > consumed.external || localRefreshToken > consumed.local;
     setData(null);
     setIsLoading(true);
     setError(null);
@@ -61,18 +72,18 @@ function useAsyncFinanceResource<T>({
       })
       .finally(() => {
         if (controller.signal.aborted || requestGeneration.current !== generation) return;
-        if (fresh) consumedRefreshToken.current = refreshToken;
+        if (fresh) consumedRefreshTokens.current = { external: refreshToken, local: localRefreshToken };
         setIsLoading(false);
       });
 
     return () => controller.abort();
-  }, [enabled, errorMessage, key, refreshToken, retryToken]);
+  }, [enabled, errorMessage, key, localRefreshToken, refreshToken, retryToken]);
 
   const retry = useCallback((): void => {
     setRetryToken((token) => token + 1);
   }, []);
   const refresh = useCallback((): void => {
-    setRefreshToken((token) => token + 1);
+    setLocalRefreshToken((token) => token + 1);
   }, []);
 
   return { data, isLoading, error, retry, refresh };
@@ -89,7 +100,7 @@ export function useFinanceReport(
 ): UseFinanceReportResult {
   const periodKey = financePeriodKey(period);
 
-  const overview = useAsyncFinanceResource<FinanceOverviewResponse>({
+  const overview = useFinanceResource<FinanceOverviewResponse>({
     enabled: true,
     key: `overview:${periodKey}`,
     load: (signal, fresh) => fresh
@@ -98,7 +109,7 @@ export function useFinanceReport(
     errorMessage: 'Failed to load the finance overview.',
   });
 
-  const history = useAsyncFinanceResource<FinanceHistoryResponse>({
+  const history = useFinanceResource<FinanceHistoryResponse>({
     enabled: historyEnabled,
     key: `history:${periodKey}`,
     load: (signal, fresh) => fresh

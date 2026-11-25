@@ -7,79 +7,19 @@
 
 import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
-import { getPrestigeRank, getFameTier } from '../../utils/prestigeUtils';
+import { getPrestigeRank, getFameTier } from '../../shared/utils/prestigeTiers';
 import type { StableTypeValue } from '../../utils/stableType';
+import type {
+  FameLeaderboardEntry,
+  LeaderboardKillMode,
+  LeaderboardPagination,
+  LossesLeaderboardEntry,
+  LossesSortKey,
+  PrestigeLeaderboardEntry,
+} from '../../shared/types';
 
+export type { FameLeaderboardEntry, LossesLeaderboardEntry, LossesSortKey, PrestigeLeaderboardEntry };
 
-// ── Types ────────────────────────────────────────────────────────────
-
-export interface LeaderboardPagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasMore: boolean;
-}
-
-export interface FameLeaderboardEntry {
-  rank: number;
-  robotId: number;
-  robotName: string;
-  fame: number;
-  fameTier: string;
-  stableId: number;
-  stableName: string;
-  /** Spec #55 R1.7: drives the Automaton_Badge. */
-  stableType: StableTypeValue;
-  elo: number;
-  totalBattles: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  winRate: number;
-  kills: number;
-  damageDealtLifetime: number;
-}
-
-export interface LossesLeaderboardEntry {
-  rank: number;
-  robotId: number;
-  robotName: string;
-  totalLosses: number;
-  /** Destructions split by battle type. Always carries every tracked mode. */
-  killsByMode: Record<string, number>;
-  stableId: number;
-  stableName: string;
-  /** Spec #55 R1.7: drives the Automaton_Badge. */
-  stableType: StableTypeValue;
-  elo: number;
-  totalBattles: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  winRate: number;
-  lossRatio: number;
-  damageDealtLifetime: number;
-}
-
-export interface PrestigeLeaderboardEntry {
-  rank: number;
-  userId: number;
-  username: string;
-  stableName: string;
-  /** Spec #55 R1.7: drives the Automaton_Badge. */
-  stableType: StableTypeValue;
-  prestige: number;
-  prestigeRank: string;
-  totalRobots: number;
-  totalBattles: number;
-  totalWins: number;
-  totalLosses: number;
-  totalDraws: number;
-  winRate: number;
-  highestELO: number;
-  championshipTitles: number;
-}
 
 // ── Fame Leaderboard ─────────────────────────────────────────────────
 
@@ -125,9 +65,6 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
     total_count: bigint;
   }
 
-  // The LEFT JOIN on `standings` is gone with the League column — nothing is
-  // projected from it, and its presence also excluded robots without a
-  // league_1v1 standing whenever a tier filter was applied (Spec #46 R5.4).
   const rows = await prisma.$queryRaw<FameRow[]>`
     SELECT
       r.id,
@@ -204,14 +141,10 @@ const KILL_MODES = [
   'tournament_1v1',
   'tournament_2v2',
   'tournament_3v3',
-] as const;
-
-export type KillMode = (typeof KILL_MODES)[number];
+] as const satisfies readonly LeaderboardKillMode[];
 
 /** Columns the destruction leaderboard can be ordered by. */
-export const LOSSES_SORT_KEYS = ['total', ...KILL_MODES] as const;
-
-export type LossesSortKey = (typeof LOSSES_SORT_KEYS)[number];
+export const LOSSES_SORT_KEYS = ['total', ...KILL_MODES] as const satisfies readonly LossesSortKey[];
 
 export interface LossesLeaderboardParams {
   page: number;
@@ -297,7 +230,7 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
     totalLosses: row.kills,
     killsByMode: Object.fromEntries(
       KILL_MODES.map((mode) => [mode, Number(row[mode] ?? 0)]),
-    ) as Record<KillMode, number>,
+    ) as Record<LeaderboardKillMode, number>,
     stableId: row.user_id,
     stableName: row.stable_name || row.username,
     stableType: row.stable_type,

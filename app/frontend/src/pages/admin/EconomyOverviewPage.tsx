@@ -22,11 +22,11 @@ import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton, StableSco
 import { EconomyBalances, EconomyByStableType, EconomyFlows, EconomyKpis, EconomyPerCycle, EconomyRepairs } from '../../components/admin/economy/EconomyBlocks';
 import { scopeNoun } from '../../utils/adminEconomyFormat';
 import { readStableScope, writeStableScope } from '../../utils/adminStableScope';
-import { ApiError } from '../../utils/ApiError';
-import { isAbortError } from '../../utils/abort';
+import { apiErrorMessage } from '../../utils/ApiError';
+import { useApiQuery } from '../../hooks/useApiQuery';
 import { getEconomyOverview } from '../../utils/adminEconomyApi';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
-import type { EconomyPreparing, EconomyResponse, EconomyStableScope, EconomyWindow } from '@shared/types';
+import type { EconomyPreparing, EconomyStableScope, EconomyWindow } from '@shared/types';
 
 /** While the backend sums ledger cycles, ask again this often. */
 export const PREPARING_RETRY_MS = 5_000;
@@ -60,28 +60,14 @@ function EconomyOverviewPage(): React.ReactElement {
   const [params, setParams] = useSearchParams();
   const stables = readStableScope(params, SCOPES, 'players');
   const cycleWindow = readWindow(params.get('window'));
-  const [data, setData] = useState<EconomyResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
-    getEconomyOverview(stables, cycleWindow, { fresh: refresh > 0, signal: controller.signal })
-      .then((overview) => {
-        if (controller.signal.aborted) return;
-        setData(overview);
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setError((err instanceof ApiError && err.message) || 'Could not load the economy.');
-        setLoading(false);
-      });
-    return () => controller.abort();
-  }, [stables, cycleWindow, refresh]);
+  // After any Refresh (or preparing retry) the server recomputes instead of using its cache.
+  const query = useApiQuery(
+    (signal) => getEconomyOverview(stables, cycleWindow, { fresh: refresh > 0, signal }),
+    [stables, cycleWindow, refresh],
+  );
+  const { data, loading } = query;
+  const error = apiErrorMessage(query.error, 'Could not load the economy.');
 
   // Preparing: ask again until the cycles are summed (the request itself is cheap then).
   const preparing = data?.status === 'preparing' ? data : null;

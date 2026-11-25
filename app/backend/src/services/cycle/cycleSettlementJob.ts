@@ -141,8 +141,6 @@ export async function executeSettlement(): Promise<JobContext> {
     logger.error(`[Settlement] Settlement achievement check failed: ${error}`);
   }
 
-  // (Step 6, the Practice Arena counter flush, is gone: usage is recorded per
-  // request in practice_arena_events.)
 
   // Step 7: Top up the generated stables to their target (normally nothing to
   // do: the first preparation day after a rollover built them).

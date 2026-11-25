@@ -262,7 +262,7 @@ async function processKothBattle(
   const zoneState = gameModeState.customData!.zoneState as KothZoneState;
 
   // Wire the tick hook — KotH-specific per-tick logic (zone scoring, penalties)
-  const tickHook = buildKothTickHook(kothConfig, scoreState, zoneState, gameModeState);
+  const tickHook = buildKothTickHook(scoreState, zoneState, gameModeState);
   (gameModeState.customData as Record<string, unknown>).tickHook = tickHook;
 
   // 4. Run unified simulation

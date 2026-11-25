@@ -77,14 +77,12 @@ export interface GrandMeleeRewardResult {
  *
  * @param placement - 1-based placement (1 = winner, N = first eliminated)
  * @param tier - League tier (bronze through champion)
- * @param totalParticipants - Total robots in the match (for context, not used in formula)
  * @param winnerHPPercent - Winner's final HP percentage (for prestige bonus, only relevant for placement 1)
  * @returns Credits, fame, prestige, and LP delta
  */
 export function calculateGrandMeleeRewards(
   placement: number,
   tier: string,
-  totalParticipants: number,
   winnerHPPercent?: number,
 ): GrandMeleeRewardResult {
   const tierFactor = getTierFactor(tier);

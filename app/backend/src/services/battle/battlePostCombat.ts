@@ -37,6 +37,7 @@ import type {
   PrestigeAwardBreakdown,
 } from '../../types';
 import type { UnlockedAchievement } from '../../shared/types';
+import type { BattleAchievementData } from './battleAchievementContext';
 
 // ─── Shared Types ────────────────────────────────────────────────────
 
@@ -633,70 +634,7 @@ export async function didRobotLosePreviousBattle(robotId: number, currentBattleI
 export async function checkAndAwardAchievements(
   userId: number,
   robotId: number,
-  battleData: {
-    won: boolean;
-    destroyed: boolean;
-    finalHpPercent: number;
-    /**
-     * The subject robot's own ELO change for this battle.
-     *
-     * Spec #46 R8 Cause B: this was named `eloDiff`, which the `'elo_upset'`
-     * trigger read as though it were the gap to the opponent. `ELO_K_FACTOR` is
-     * 32, so the value could never clear the 150 threshold and C11 was
-     * unreachable. Renamed so the two cannot be confused again; upset triggers
-     * read `subjectEloBefore` and `opponentEloBefore` instead.
-     */
-    eloChange: number;
-    /** Subject's rating before the battle — the upset comparison baseline. */
-    subjectEloBefore?: number;
-    /** Opponent's rating before the battle. Opponent_Elo_Gap is the difference. */
-    opponentEloBefore?: number;
-    /** Finishing position in placement-resolved modes (Grand Melee, KotH). */
-    placement?: number;
-    opponentElo: number;
-    yielded: boolean;
-    opponentYielded: boolean;
-    previousBattleLost: boolean;
-    damageDealt: number;
-    opponentDamageDealt: number;
-    loadoutType: string;
-    stance: string;
-    yieldThreshold: number;
-    hasTuning: boolean;
-    hasMainWeapon: boolean;
-    battleType: string;
-    battleDurationSeconds: number;
-    taggedIn?: boolean;
-    soloCarry?: boolean;
-    /** Lowest HP % the robot reached during the fight (C19). Falls back to finalHpPercent. */
-    minHpPercent?: number;
-    // ── Season 2 achievement context (optional: only modes where it is known) ──
-    /** The persisted battle, for triggers that compare with earlier battles. */
-    battleId?: number;
-    isDraw?: boolean;
-    /** 1v1 modes: the opponent robot. */
-    opponentRobotId?: number;
-    /** 1v1 modes: the opponent's HP left, as % of its max HP. */
-    opponentFinalHpPercent?: number;
-    /** Placement modes: robots this robot destroyed in this battle. */
-    killsThisBattle?: number;
-    /** Placement modes: number of robots that fought. */
-    fieldSize?: number;
-    /** KotH: won as the last robot standing. */
-    lastStanding?: boolean;
-    /** KotH: seconds this robot held the zone uncontested. */
-    uncontestedSeconds?: number;
-    /** Placement modes: this robot had the lowest pre-battle ELO in the field. */
-    isLowestEloInField?: boolean;
-    /** Team modes: robots per side, and whether all of this robot's team survived. */
-    teamSize?: number;
-    teamAllSurvived?: boolean;
-    /** Tag team reserve: the active partner was destroyed before the tag-in. */
-    partnerDestroyed?: boolean;
-    /** Tournaments: round of this match and the bracket's final round. */
-    tournamentRound?: number;
-    tournamentMaxRounds?: number;
-  },
+  battleData: BattleAchievementData,
 ): Promise<UnlockedAchievement[]> {
   try {
     const event: AchievementEvent = {

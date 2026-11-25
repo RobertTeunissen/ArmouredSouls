@@ -27,8 +27,8 @@ import type { MovementIntent } from '../../arena/types';
 import type { SpatialGrid } from './spatialGrid';
 import {
   BattleConfig,
-  SpatialRobotCombatState,
-  SpatialCombatEvent,
+  RobotCombatState,
+  CombatEvent,
   RangeBand,
   ArenaConfig,
   GameModeConfig,
@@ -54,20 +54,20 @@ export type PositionSnapshot = { positions: Record<string, Position>; facingDire
 /** Battle-wide state shared by the tick phases. */
 export interface SimulationContext {
   n: number;
-  states: SpatialRobotCombatState[];
+  states: RobotCombatState[];
   arena: ArenaConfig;
   config: BattleConfig;
   gameModeConfig: GameModeConfig | undefined;
   gameModeState: GameModeState | undefined;
   /** O(1) lookup by teamIndex. */
-  stateByTeamIndex: Map<number, SpatialRobotCombatState>;
+  stateByTeamIndex: Map<number, RobotCombatState>;
   /** Spatial grid for threat evaluation, or null (2-robot battles, or disabled). */
   spatialGrid: SpatialGrid | null;
   /** Variable tick rate: robots far from all opponents skip AI re-evaluation. */
   useVariableTick: boolean;
   lastAITick: number[];
   /** Array-like event sink: `push` injects HP/shield snapshots. */
-  events: SpatialCombatEvent[];
+  events: CombatEvent[];
   /** Movement event throttling per robot. */
   lastMoveEventTime: number[];
   lastMoveEventPos: Position[];
@@ -90,13 +90,13 @@ export interface BattleEnd {
  * skipped. Returns null when no opponent is in reach.
  */
 function findNearestOpponentInReach(
-  attacker: SpatialRobotCombatState,
+  attacker: RobotCombatState,
   weapon: WeaponLike,
-  states: SpatialRobotCombatState[],
+  states: RobotCombatState[],
   gameModeState: GameModeState | undefined,
-): { target: SpatialRobotCombatState; distance: number } | null {
+): { target: RobotCombatState; distance: number } | null {
   const teamOfMap = gameModeState?.customData?.teamOf as Record<number, number> | undefined;
-  let nearest: { target: SpatialRobotCombatState; distance: number } | null = null;
+  let nearest: { target: RobotCombatState; distance: number } | null = null;
   for (const s of states) {
     if (s === attacker || !s.isAlive) continue;
     // Skip teammates in team modes
@@ -113,16 +113,16 @@ function findNearestOpponentInReach(
 
 /** One robot's movement decisions for the current tick (simultaneous movement, #520). */
 interface MovementPlan {
-  state: SpatialRobotCombatState;
-  opponents: SpatialRobotCombatState[];
-  target: SpatialRobotCombatState | null;
+  state: RobotCombatState;
+  opponents: RobotCombatState[];
+  target: RobotCombatState | null;
   servoState?: ServoStrainState;
   intent?: MovementIntent;
   threatPosition?: Position;
 }
 
 /** PHASE 1: movement. Every robot decides from the same tick-start snapshot (#520). */
-export function runMovementPhase(ctx: SimulationContext, aliveStates: SpatialRobotCombatState[], currentTime: number): void {
+export function runMovementPhase(ctx: SimulationContext, aliveStates: RobotCombatState[], currentTime: number): void {
   const { states, arena, gameModeConfig, gameModeState, stateByTeamIndex, spatialGrid, useVariableTick, lastAITick } = ctx;
   // ── PHASE 1: MOVEMENT (simultaneous, #520 movement fix) ──
   // Every robot decides from the same tick-start snapshot: targets, speeds and
@@ -131,7 +131,7 @@ export function runMovementPhase(ctx: SimulationContext, aliveStates: SpatialRob
   // Robot order therefore never affects movement.
   const teamOfMap = gameModeState?.customData?.teamOf as Record<number, number> | undefined;
   const movers: MovementPlan[] = [];
-  const coasting: SpatialRobotCombatState[] = [];
+  const coasting: RobotCombatState[] = [];
 
   // Pass 1a: variable tick and target selection (reads tick-start targets)
   const targetDecisions: Array<{ plan: MovementPlan; currentTarget: number | null; targetLockTimer: number }> = [];
@@ -339,7 +339,7 @@ export function runMovementPhase(ctx: SimulationContext, aliveStates: SpatialRob
 }
 
 /** PHASE 2: facing toward each robot's current target. */
-export function runFacingPhase(ctx: SimulationContext, aliveStates: SpatialRobotCombatState[]): void {
+export function runFacingPhase(ctx: SimulationContext, aliveStates: RobotCombatState[]): void {
   const { stateByTeamIndex } = ctx;
   // ── PHASE 2: FACING ──
   for (const state of aliveStates) {
@@ -362,7 +362,7 @@ export function runFacingPhase(ctx: SimulationContext, aliveStates: SpatialRobot
 }
 
 /** Range transition events per robot → target pair. */
-export function emitRangeTransitions(ctx: SimulationContext, aliveStates: SpatialRobotCombatState[], currentTime: number): void {
+export function emitRangeTransitions(ctx: SimulationContext, aliveStates: RobotCombatState[], currentTime: number): void {
   const { states, stateByTeamIndex, events, lastMoveEventPos, lastRangeBandToTarget, getPositionSnapshot } = ctx;
   // ── Emit range transition events (per robot → target pair) ──
   for (const state of aliveStates) {
@@ -396,7 +396,7 @@ export function emitRangeTransitions(ctx: SimulationContext, aliveStates: Spatia
 }
 
 /** PHASE 3: range-gated attacks per robot, then patience timers. */
-export function runAttackPhase(ctx: SimulationContext, aliveStates: SpatialRobotCombatState[], currentTime: number): void {
+export function runAttackPhase(ctx: SimulationContext, aliveStates: RobotCombatState[], currentTime: number): void {
   const { n, states, arena, gameModeState, stateByTeamIndex, events, outOfRangeSuppressed, getPositionSnapshot } = ctx;
   // ── PHASE 3: ATTACKS (range-gated, per robot) ──
   const landedHitThisTick: Set<number> = new Set();
@@ -525,7 +525,7 @@ export function runAttackPhase(ctx: SimulationContext, aliveStates: SpatialRobot
 }
 
 /** PHASE 5: shield regeneration, with an event per quarter regained. */
-export function runShieldRegenPhase(ctx: SimulationContext, aliveStates: SpatialRobotCombatState[], currentTime: number): void {
+export function runShieldRegenPhase(ctx: SimulationContext, aliveStates: RobotCombatState[], currentTime: number): void {
   const { states, events, getPositionSnapshot } = ctx;
   // ── PHASE 5: SHIELD REGEN ──
   for (const state of aliveStates) {
@@ -620,7 +620,7 @@ export function evaluateBattleEnd(ctx: SimulationContext, currentTime: number): 
   // Runs BEFORE win condition check so scores are current when evaluated.
   if (gameModeState?.customData) {
     const tickHook = gameModeState.customData.tickHook as
-      ((st: SpatialRobotCombatState[], t: number, dt: number, ev: SpatialCombatEvent[], ar: ArenaConfig) => void) | undefined;
+      ((st: RobotCombatState[], t: number, dt: number, ev: CombatEvent[], ar: ArenaConfig) => void) | undefined;
     if (tickHook) {
       tickHook(states, currentTime, SIMULATION_TICK, events, arena);
     }
@@ -632,7 +632,7 @@ export function evaluateBattleEnd(ctx: SimulationContext, currentTime: number): 
     const result = gameModeConfig.winCondition.evaluate(teams, currentTime, gameModeState);
     if (result?.ended) {
       // Retrieve any events the win condition evaluator stored on gameState
-      const wcEvents = gameModeState?.customData?.pendingEvents as SpatialCombatEvent[] | undefined;
+      const wcEvents = gameModeState?.customData?.pendingEvents as CombatEvent[] | undefined;
       if (wcEvents?.length) {
         events.push(...wcEvents);
         (gameModeState!.customData as Record<string, unknown>).pendingEvents = [];
@@ -694,7 +694,7 @@ export function emitMovementEvents(ctx: SimulationContext, currentTime: number):
       if ((moveDist >= MOVEMENT_EVENT_THRESHOLD || moveTime >= MOVEMENT_EVENT_MIN_INTERVAL)
           && moveDist > 0.01) {
         // Find nearest opponent with single pass (avoids filter + sort + array allocation)
-        let nearestOpp: SpatialRobotCombatState | undefined;
+        let nearestOpp: RobotCombatState | undefined;
         let distToNearest = Infinity;
         for (const s of states) {
           if (s === state || !s.isAlive) continue;

@@ -1,16 +1,14 @@
 /**
  * Data hook of the League Health "This season" block: one request per mode,
  * stable type and reload. A change aborts the previous request; data is kept
- * with the mode and stable type it was loaded for, so a late response for an
- * older selection is never shown.
+ * with the mode and stable type it was loaded for, so data for an older
+ * selection is never shown.
  */
-import { useEffect, useState } from 'react';
-import { ApiError } from '../utils/ApiError';
+import { useEffect } from 'react';
+import { apiErrorMessage } from '../utils/ApiError';
 import type { StableScope } from '../utils/adminStableScope';
-import { isAbortError } from '../utils/abort';
-import {
-  getLeagueSeason,
-} from '../utils/adminLeagueHealthApi';
+import { getLeagueSeason } from '../utils/adminLeagueHealthApi';
+import { useApiQuery } from './useApiQuery';
 import type { LeagueSeasonOverview, TieredLeagueMode } from '@shared/types';
 
 export interface LeagueSeasonState {
@@ -19,35 +17,21 @@ export interface LeagueSeasonState {
   error: string | null;
 }
 
-interface Loaded {
-  key: string;
-  season: LeagueSeasonOverview;
-}
-
 /** `reloadToken` changes when the page's Refresh is used. */
 export function useLeagueSeason(mode: TieredLeagueMode, stable: StableScope, reloadToken: number): LeagueSeasonState {
   const key = `${mode}:${stable}`;
-  const [loaded, setLoaded] = useState<Loaded | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const query = useApiQuery(
+    async (signal) => ({ key, season: await getLeagueSeason(mode, stable, signal) }),
+    [mode, stable, key],
+  );
+  const { refetch } = query;
+  // The page's Refresh: reload with the current selection (0 is the first load).
   useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
-    getLeagueSeason(mode, stable, controller.signal)
-      .then((season) => {
-        if (controller.signal.aborted) return;
-        setLoaded({ key, season });
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setError((err instanceof ApiError && err.message) || 'Could not load this season.');
-        setLoading(false);
-      });
-    return () => controller.abort();
-  }, [mode, stable, key, reloadToken]);
-
-  return { data: loaded && loaded.key === key ? loaded.season : null, loading, error };
+    if (reloadToken > 0) refetch();
+  }, [reloadToken, refetch]);
+  return {
+    data: query.data && query.data.key === key ? query.data.season : null,
+    loading: query.loading,
+    error: apiErrorMessage(query.error, 'Could not load this season.'),
+  };
 }

@@ -7,7 +7,7 @@ import TeamBattleCard from './TeamBattleCard';
 import RegisterTeamModal from './RegisterTeamModal';
 import RenameTeamModal from './RenameTeamModal';
 import SwapMemberModal from './SwapMemberModal';
-import { ApiError } from '../../utils/ApiError';
+import { ApiError, apiErrorMessage } from '../../utils/ApiError';
 import {
   getMyTeamBattles,
   disbandTeamBattle,
@@ -48,9 +48,7 @@ function TeamBattleManagementContent({ teamSize }: TeamBattleManagementContentPr
   const setTeams = teamsQuery.setData;
   const fetchTeams = teamsQuery.refetch;
   const loading = teamsQuery.loading && teamsQuery.data === null;
-  const error = teamsQuery.error
-    ? (teamsQuery.error instanceof ApiError && teamsQuery.error.message) || `Failed to load ${modeLabel} teams`
-    : null;
+  const error = apiErrorMessage(teamsQuery.error, `Failed to load ${modeLabel} teams`);
 
   const handleDisband = async () => {
     if (!teamToDisband) return;

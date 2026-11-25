@@ -15,7 +15,6 @@ import { getSchedulerState } from './cycleScheduler';
 import { getCurrentProcessId } from './schedulerRunStore';
 import { findMissedRuns, parseDailyCron, type MissedRun } from './schedulerMissedRuns';
 import { getCurrentSeason } from '../season/seasonService';
-import { SchedulerError, SchedulerErrorCode } from '../../errors/schedulerErrors';
 import type {
   MissedRunView,
   SchedulerHistoryEntry,

@@ -14,14 +14,3 @@ export function earnsPlacementReward(position: number): boolean {
   return position <= REWARDED_PLACES;
 }
 
-/** `1st`, `2nd`, `3rd`, `4th`, `11th`, `21st`… */
-export function ordinal(position: number): string {
-  const mod100 = position % 100;
-  if (mod100 >= 11 && mod100 <= 13) return `${position}th`;
-  switch (position % 10) {
-    case 1: return `${position}st`;
-    case 2: return `${position}nd`;
-    case 3: return `${position}rd`;
-    default: return `${position}th`;
-  }
-}

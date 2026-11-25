@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.2  
-**Last Updated**: November 19, 2026 (protections listed as implemented; unused helpers removed)  
+**Version**: v2.3  
+**Last Updated**: November 24, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen
 
@@ -13,6 +13,7 @@ v1.0 (Jan 24, 2026): Initial security strategy (aspirational)
 v2.0 (Apr 10, 2026): Complete rewrite — documents actual implemented security controls, removes aspirational content (GDPR, mobile security, WAF, VPC), adds Security Playbook from Specs 11/12  
 v2.1 (Nov 8, 2026): "What needs a login" — closed the last anonymous player endpoints (league standings, leaderboards, Hall of Records, ELO chart, log summary)
 v2.2 (Nov 19, 2026): Ownership and input-validation sections describe the protections that run (`robotImagePath` + `assertSelectable`, enum sort keys, facility rows by `(userId, facilityType)`). Removed the never-used `safeImageUrl`, `orderByColumn`, `verifyFacilityOwnership`, `requestLogger.redactSensitive`, `verifyToken` and `verifyPassword` (#614).  
+v2.3 (Nov 24, 2026): a `401 INVALID_CREDENTIALS` from a form (Profile password change) no longer ends the session in the client; before, a mistyped current password signed the player out.  
 
 ---
 
@@ -79,7 +80,7 @@ Until November 2026 the league standings and instances (`/api/leagues/:tier/*`),
 - Automaton check (Spec #55) — Rejects any token whose user has `stableType = automaton` through the same 401 path
 
 ### 401 vs 403 (client session handling)
-A missing, invalid, expired or revoked token is always `401`. `403` means "signed in, but not allowed": not your resource (`Access denied`), a prestige gate, a Refinement Lab tier lock, or an admin-only route. The frontend client (`app/frontend/src/utils/apiClient.ts`) ends the session and redirects to `/login` only on a backend-shaped `401` from a non-auth route; a `403` is passed to the screen that made the request. Until November 2026 it also logged the player out on any backend `403`, so hitting a prestige gate or opening a robot sold in another tab signed them out.
+A missing, invalid, expired or revoked token is always `401`. `403` means "signed in, but not allowed": not your resource (`Access denied`), a prestige gate, a Refinement Lab tier lock, or an admin-only route. The frontend client (`app/frontend/src/utils/apiClient.ts`) ends the session and redirects to `/login` only on a backend-shaped `401` from a non-auth route; a `403` is passed to the screen that made the request. A `401` with code `INVALID_CREDENTIALS` is a wrong password in a form (Profile's "current password"), not a bad token, so it also stays with the screen.
 
 ### Automaton accounts (Spec #55)
 Automaton_Stables are `users` rows nobody can sign in to:

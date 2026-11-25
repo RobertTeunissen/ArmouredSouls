@@ -43,8 +43,8 @@ router.get('/upcoming', authenticateToken, ...validated({ query: upcomingQuerySc
     }
 
     const queryRobotId = query.robotId;
-    const { robotIds, teamIds, teamBattleIds } = await resolveRobotAndTeamIds(req.user.userId, queryRobotId);
-    const result = await getUpcomingMatches(robotIds, teamIds, teamBattleIds);
+    const { robotIds, teamBattleIds } = await resolveRobotAndTeamIds(req.user.userId, queryRobotId);
+    const result = await getUpcomingMatches(robotIds, teamBattleIds);
 
     res.json(result);
 }));

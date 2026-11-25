@@ -10,6 +10,13 @@
 
 // Profile validation utilities for user input
 
+import {
+  emailErrors,
+  newPasswordErrors,
+  registrationPasswordErrors,
+  stableNameErrors,
+  usernameErrors,
+} from '../shared/utils/accountRules';
 import prisma from '../lib/prisma';
 import { containsProfanity } from './profanityFilter';
 
@@ -50,28 +57,8 @@ export interface ValidationResult {
  * Requirements: 2.3, 2.4, 2.5, 2.6
  */
 export function validateUsername(username: string): ValidationResult {
-  const errors: string[] = [];
-
-  // Length bounds: 3–20 chars. Both checks run independently so the user
-  // sees all applicable errors in a single response.
-  if (username.length < 3) {
-    errors.push('Username must be at least 3 characters long');
-  }
-  if (username.length > 20) {
-    errors.push('Username must not exceed 20 characters');
-  }
-
-  // Restrict to safe characters only — prevents injection vectors and
-  // ensures usernames are URL-safe and display consistently across UIs.
-  const validCharPattern = /^[a-zA-Z0-9_-]+$/;
-  if (!validCharPattern.test(username)) {
-    errors.push('Username can only contain letters, numbers, underscores, and hyphens');
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
+  const errors = usernameErrors(username);
+  return { isValid: errors.length === 0, errors };
 }
 
 /**
@@ -100,26 +87,8 @@ export function validateUsername(username: string): ValidationResult {
  * Requirements: 2.7, 2.8, 2.9, 2.10
  */
 export function validateEmail(email: string): ValidationResult {
-  const errors: string[] = [];
-
-  if (email.length < 3) {
-    errors.push('Email must be at least 3 characters long');
-  } else if (email.length > 50) {
-    errors.push('Email must not exceed 50 characters');
-  } else {
-    // Only check format/characters when length is valid
-    const validCharPattern = /^[a-zA-Z0-9._@-]+$/;
-    if (!validCharPattern.test(email)) {
-      errors.push('Email contains invalid characters');
-    } else if (!/^[^@]+@[^@]+$/.test(email)) {
-      errors.push('Email must contain exactly one @ symbol with text on both sides');
-    }
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
+  const errors = emailErrors(email);
+  return { isValid: errors.length === 0, errors };
 }
 
 /**
@@ -127,28 +96,11 @@ export function validateEmail(email: string): ValidationResult {
  * Requirements: 1.4, 1.5, 1.7
  */
 export function validateStableName(name: string): { valid: boolean; error?: string } {
-  // Check length (3-30 characters)
-  if (name.length < 3) {
-    return { valid: false, error: 'Stable name must be at least 3 characters' };
-  }
-  if (name.length > 30) {
-    return { valid: false, error: 'Stable name must be 30 characters or less' };
-  }
-
-  // Check allowed characters (alphanumeric + spaces, hyphens, underscores)
-  const validCharPattern = /^[a-zA-Z0-9 _-]+$/;
-  if (!validCharPattern.test(name)) {
-    return {
-      valid: false,
-      error: 'Stable name can only contain letters, numbers, spaces, hyphens, and underscores',
-    };
-  }
-
-  // Check for profanity
+  const [formatError] = stableNameErrors(name);
+  if (formatError) return { valid: false, error: formatError };
   if (containsProfanity(name)) {
     return { valid: false, error: 'Stable name contains inappropriate content' };
   }
-
   return { valid: true };
 }
 
@@ -191,22 +143,8 @@ export async function isStableNameUnique(name: string, userId: number): Promise<
  * Requirements: 3.1, 3.2
  */
 export function validateRegistrationPassword(password: string): ValidationResult {
-  const errors: string[] = [];
-
-  // Check minimum length (8 characters)
-  if (password.length < 8) {
-    errors.push('Password must be at least 8 characters long');
-  }
-
-  // Check maximum length (128 characters)
-  if (password.length > 128) {
-    errors.push('Password must not exceed 128 characters');
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
+  const errors = registrationPasswordErrors(password);
+  return { isValid: errors.length === 0, errors };
 }
 
 /**
@@ -235,6 +173,8 @@ export type RegistrationField = 'required' | 'username' | 'email' | 'password' |
  */
 export interface RegistrationValidationResult extends ValidationResult {
   invalidFields: RegistrationField[];
+  /** Each failed rule with the field it belongs to (the response's `details.fields`). */
+  fields: Array<{ field: RegistrationField; message: string }>;
 }
 
 /**
@@ -269,6 +209,12 @@ export interface RegistrationValidationResult extends ValidationResult {
 export function validateRegistrationRequest(request: RegistrationRequest): RegistrationValidationResult {
   const errors: string[] = [];
   const invalidFields: RegistrationField[] = [];
+  const fields: RegistrationValidationResult['fields'] = [];
+  const fail = (field: RegistrationField, messages: string[]): void => {
+    errors.push(...messages);
+    invalidFields.push(field);
+    fields.push(...messages.map((message) => ({ field, message })));
+  };
 
   // Early return on missing fields: if any required field is absent, skip
   // individual validation to avoid confusing "too short" errors on empty strings.
@@ -278,39 +224,29 @@ export function validateRegistrationRequest(request: RegistrationRequest): Regis
       isValid: false,
       errors,
       invalidFields: ['required'],
+      fields: [{ field: 'required', message: errors[0] }],
     };
   }
 
   // Run all validators and aggregate errors so the user sees every
   // problem at once, rather than fixing them one at a time.
   const usernameResult = validateUsername(request.username);
-  if (!usernameResult.isValid) {
-    errors.push(...usernameResult.errors);
-    invalidFields.push('username');
-  }
+  if (!usernameResult.isValid) fail('username', usernameResult.errors);
 
   const emailResult = validateEmail(request.email);
-  if (!emailResult.isValid) {
-    errors.push(...emailResult.errors);
-    invalidFields.push('email');
-  }
+  if (!emailResult.isValid) fail('email', emailResult.errors);
 
   const passwordResult = validateRegistrationPassword(request.password);
-  if (!passwordResult.isValid) {
-    errors.push(...passwordResult.errors);
-    invalidFields.push('password');
-  }
+  if (!passwordResult.isValid) fail('password', passwordResult.errors);
 
   const stableNameResult = validateStableName(request.stableName);
-  if (!stableNameResult.valid) {
-    errors.push(stableNameResult.error!);
-    invalidFields.push('stableName');
-  }
+  if (!stableNameResult.valid) fail('stableName', [stableNameResult.error!]);
 
   return {
     isValid: errors.length === 0,
     errors,
     invalidFields,
+    fields,
   };
 }
 
@@ -319,25 +255,6 @@ export function validateRegistrationRequest(request: RegistrationRequest): Regis
  * Requirements: 3.3, 3.4, 3.5, 3.6
  */
 export function validatePassword(password: string): { valid: boolean; error?: string } {
-  // Check minimum length (8 characters)
-  if (password.length < 8) {
-    return { valid: false, error: 'Password must be at least 8 characters' };
-  }
-
-  // Check for at least one uppercase letter
-  if (!/[A-Z]/.test(password)) {
-    return { valid: false, error: 'Password must contain at least one uppercase letter' };
-  }
-
-  // Check for at least one lowercase letter
-  if (!/[a-z]/.test(password)) {
-    return { valid: false, error: 'Password must contain at least one lowercase letter' };
-  }
-
-  // Check for at least one number
-  if (!/[0-9]/.test(password)) {
-    return { valid: false, error: 'Password must contain at least one number' };
-  }
-
-  return { valid: true };
+  const [error] = newPasswordErrors(password);
+  return error ? { valid: false, error } : { valid: true };
 }

@@ -173,7 +173,6 @@ describe('Team Battle Property Tests', () => {
               robotIds,
               `ValidTeam${teamSize}_${Date.now()}`,
               teamSize,
-              testUserId,
             );
 
             expect(team).toBeDefined();
@@ -206,11 +205,11 @@ describe('Team Battle Property Tests', () => {
             const robotIds = Array(teamSize).fill(robotId);
 
             await expect(
-              registerTeam(testUserId, robotIds, `DupTeam${teamSize}_${Date.now()}`, teamSize, testUserId),
+              registerTeam(testUserId, robotIds, `DupTeam${teamSize}_${Date.now()}`, teamSize),
             ).rejects.toThrow(TeamBattleError);
 
             try {
-              await registerTeam(testUserId, robotIds, `DupTeam2_${teamSize}_${Date.now()}`, teamSize, testUserId);
+              await registerTeam(testUserId, robotIds, `DupTeam2_${teamSize}_${Date.now()}`, teamSize);
             } catch (error) {
               expect((error as TeamBattleError).code).toBe(TeamBattleErrorCode.TEAM_INVALID_COMPOSITION);
             }
@@ -250,7 +249,7 @@ describe('Team Battle Property Tests', () => {
             }
 
             try {
-              await registerTeam(testUserId, robotIds, `UnownedTeam${teamSize}_${Date.now()}`, teamSize, testUserId);
+              await registerTeam(testUserId, robotIds, `UnownedTeam${teamSize}_${Date.now()}`, teamSize);
               throw new Error('Expected TeamBattleError to be thrown');
             } catch (error) {
               expect(error).toBeInstanceOf(TeamBattleError);
@@ -299,7 +298,6 @@ describe('Team Battle Property Tests', () => {
               robotIds,
               `UnsubTeam${teamSize}_${Date.now()}`,
               teamSize,
-              testUserId,
             );
             expect(team.id).toBeGreaterThan(0);
             expect(team.teamSize).toBe(teamSize);
@@ -336,7 +334,6 @@ describe('Team Battle Property Tests', () => {
               existingRobotIds,
               `ExistTeam${teamSize}_${Date.now()}`,
               teamSize,
-              testUserId,
             );
 
             // Now try to register a new team that includes one robot from the existing team
@@ -353,7 +350,7 @@ describe('Team Battle Property Tests', () => {
             }
 
             try {
-              await registerTeam(testUserId, newRobotIds, `ConflictTeam${teamSize}_${Date.now()}`, teamSize, testUserId);
+              await registerTeam(testUserId, newRobotIds, `ConflictTeam${teamSize}_${Date.now()}`, teamSize);
               throw new Error('Expected TeamBattleError to be thrown');
             } catch (error) {
               expect(error).toBeInstanceOf(TeamBattleError);
@@ -410,7 +407,6 @@ describe('Team Battle Property Tests', () => {
                 existingIds,
                 `BidirExist${teamSize}_${Date.now()}`,
                 teamSize,
-                testUserId,
               );
 
               // New team reuses one robot from existing team
@@ -436,7 +432,6 @@ describe('Team Battle Property Tests', () => {
                 robotIds,
                 `BidirTeam${teamSize}_${Date.now()}`,
                 teamSize,
-                testUserId,
               );
               expect(team).toBeDefined();
             } else {
@@ -447,7 +442,6 @@ describe('Team Battle Property Tests', () => {
                   robotIds,
                   `BidirFail${teamSize}_${Date.now()}`,
                   teamSize,
-                  testUserId,
                 );
                 throw new Error('Expected TeamBattleError to be thrown');
               } catch (error) {
@@ -635,7 +629,6 @@ describe('Team Battle Property Tests', () => {
               robotIds,
               `SubTeam${teamSize}_${Date.now()}`,
               teamSize,
-              testUserId,
             );
             const rowsBefore = await prisma.standing.findMany({
               where: { entityType: 'team', entityId: team.id },
@@ -708,7 +701,7 @@ describe('Team Battle Property Tests', () => {
 
             if (actualUnsubIdx >= 0) {
               // At least one robot is not subscribed — registration still succeeds.
-              const team = await registerTeam(testUserId, robotIds, teamName, teamSize, testUserId);
+              const team = await registerTeam(testUserId, robotIds, teamName, teamSize);
               expect(team.teamSize).toBe(teamSize);
               // And the unsubscribed robot is still unsubscribed afterwards.
               const subs = await prisma.subscription.count({
@@ -722,7 +715,6 @@ describe('Team Battle Property Tests', () => {
                 robotIds,
                 teamName,
                 teamSize,
-                testUserId,
               );
               expect(team).toBeDefined();
             }
@@ -976,7 +968,7 @@ describe('Team Battle Property Tests', () => {
             );
 
             // Check if team would be selected for matchmaking
-            const eligibleTeams = await getEligibleTeams('bronze', 'bronze_1', teamSize);
+            const eligibleTeams = await getEligibleTeams('bronze_1', teamSize);
             const teamIncluded = eligibleTeams.some(
               (t: { id: number }) => t.id === teamId,
             );

@@ -12,8 +12,9 @@ import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import { calculateTrainingFacilityDiscount } from '../../shared/utils/discounts';
 // Season 2 #525: Repair Bay discount is 6% per level, independent of robot count.
 import { calculateRepairBayDiscountPercent } from '../../shared/utils/repairCost';
+import type { FacilitiesOverviewResponse } from '../../shared/types';
 
-export async function getFacilityOverview(userId: number) {
+export async function getFacilityOverview(userId: number): Promise<FacilitiesOverviewResponse> {
   // Get user's current facilities and prestige
   const user = await prisma.user.findUnique({
     where: { id: userId },

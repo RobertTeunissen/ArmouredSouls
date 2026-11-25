@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { api } from '../utils/api';
 import { ApiError } from '../utils/ApiError';
+import { emailErrors, registrationPasswordErrors, stableNameErrors, usernameErrors } from '@shared/utils/accountRules';
 
 /** Shared input field styling that follows the design system (matches LoginPage). */
 const INPUT_CLASS =
@@ -47,70 +48,42 @@ interface FieldErrors {
   passwordConfirmation?: string;
 }
 
-// --- Client-side validation (mirrors backend rules) ---
+// --- Client-side validation: the backend's rules and wording (shared/utils/accountRules) ---
 
-function validateUsername(username: string): string | undefined {
-  if (username.length < 3) return 'Username must be at least 3 characters long';
-  if (username.length > 20) return 'Username must not exceed 20 characters';
-  if (!/^[a-zA-Z0-9_-]+$/.test(username))
-    return 'Username can only contain letters, numbers, underscores, and hyphens';
-  return undefined;
-}
+const validateUsername = (username: string): string | undefined => usernameErrors(username)[0];
+const validateEmail = (email: string): string | undefined => emailErrors(email)[0];
+const validatePassword = (password: string): string | undefined => registrationPasswordErrors(password)[0];
+const validateStableName = (stableName: string): string | undefined => stableNameErrors(stableName)[0];
 
-function validateEmail(email: string): string | undefined {
-  if (email.length < 3) return 'Email must be at least 3 characters long';
-  if (email.length > 50) return 'Email must not exceed 50 characters';
-  if (!/^[a-zA-Z0-9._@-]+$/.test(email)) return 'Email contains invalid characters';
-  if (!/^[^@]+@[^@]+$/.test(email))
-    return 'Email must contain exactly one @ symbol with text on both sides';
-  return undefined;
-}
-
-function validatePassword(password: string): string | undefined {
-  if (password.length < 8) return 'Password must be at least 8 characters long';
-  if (password.length > 128) return 'Password must not exceed 128 characters';
-  return undefined;
-}
-
-function validateStableName(stableName: string): string | undefined {
-  if (stableName.length < 3) return 'Stable name must be at least 3 characters';
-  if (stableName.length > 30) return 'Stable name must be 30 characters or less';
-  if (!/^[a-zA-Z0-9 _-]+$/.test(stableName))
-    return 'Stable name can only contain letters, numbers, spaces, hyphens, and underscores';
-  return undefined;
-}
+const SERVER_FIELDS = ['username', 'email', 'password', 'stableName'] as const;
+type ServerField = (typeof SERVER_FIELDS)[number];
 
 /**
- * Maps a server error code to the field it belongs to, so we can show the
- * message inline next to the right input instead of in a generic banner.
+ * Field messages from a rejected registration: duplicates by code, validation
+ * failures from `details.fields` (one message per field, the first wins).
+ * Returns null when nothing maps to a field, so the banner shows the message.
  */
-function mapServerErrorToField(
-  code: string | undefined,
-  message: string,
-): { field: keyof FieldErrors | null; message: string } {
-  switch (code) {
+function serverFieldErrors(error: ApiError): Partial<Record<ServerField, string>> | null {
+  const message = error.message || 'Registration failed';
+  switch (error.code) {
     case 'DUPLICATE_USERNAME':
-      return { field: 'username', message };
+      return { username: message };
     case 'DUPLICATE_EMAIL':
-      return { field: 'email', message };
+      return { email: message };
     case 'DUPLICATE_STABLE_NAME':
-      return { field: 'stableName', message };
+      return { stableName: message };
     case 'VALIDATION_ERROR': {
-      // The backend joins multiple errors with ", ". Try to map to a field
-      // by keyword. If it spans multiple fields, fall back to general.
-      const lower = message.toLowerCase();
-      if (lower.includes('username') && !lower.includes('email') && !lower.includes('password') && !lower.includes('stable'))
-        return { field: 'username', message };
-      if (lower.includes('email') && !lower.includes('username') && !lower.includes('password') && !lower.includes('stable'))
-        return { field: 'email', message };
-      if (lower.includes('password') && !lower.includes('username') && !lower.includes('email') && !lower.includes('stable'))
-        return { field: 'password', message };
-      if (lower.includes('stable') && !lower.includes('username') && !lower.includes('email') && !lower.includes('password'))
-        return { field: 'stableName', message };
-      return { field: null, message };
+      const fields = (error.details as { fields?: Array<{ field: string; message: string }> } | undefined)?.fields ?? [];
+      const mapped: Partial<Record<ServerField, string>> = {};
+      for (const { field, message: fieldMessage } of fields) {
+        if ((SERVER_FIELDS as readonly string[]).includes(field) && !mapped[field as ServerField]) {
+          mapped[field as ServerField] = fieldMessage;
+        }
+      }
+      return Object.keys(mapped).length > 0 ? mapped : null;
     }
     default:
-      return { field: null, message };
+      return null;
   }
 }
 
@@ -224,14 +197,13 @@ function RegistrationForm({ onSuccess }: RegistrationFormProps) {
       onSuccess(token, user);
     } catch (error) {
       if (error instanceof ApiError && error.code !== 'NETWORK_ERROR') {
-        // Backend gave us a structured response — try to map the code to
-        // a specific field, falling back to the general error banner.
-        const mapped = mapServerErrorToField(error.code, error.message || 'Registration failed');
-
-        if (mapped.field) {
-          setFieldErrors({ [mapped.field]: mapped.message });
+        // Backend gave us a structured response: show it under its fields,
+        // falling back to the general error banner.
+        const mapped = serverFieldErrors(error);
+        if (mapped) {
+          setFieldErrors(mapped);
         } else {
-          setGeneralError(mapped.message);
+          setGeneralError(error.message || 'Registration failed');
         }
       } else {
         // Network error (no response) — connectivity message.

@@ -7,7 +7,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { api } from '../utils/api';
+import { facilityLevel, getFacilitiesOverview } from '../utils/facilitiesApi';
 import { repairAllRobots } from '../utils/robotApi';
 import { useRobotStore } from '../stores';
 import { useStableOverview } from './useSubscriptions';
@@ -16,7 +16,6 @@ import {
   applyManualRepairDiscount,
   calculateRepairBayDiscountPercent,
 } from '../../../shared/utils/repairCost';
-import type { Facility } from '../components/facilities/types';
 
 // ─── Utility functions ───────────────────────────────────────────────────────
 
@@ -180,16 +179,9 @@ export function useRobotsList() {
 
   const fetchFacilities = async (): Promise<void> => {
     try {
-      const data = await api.get<{ facilities?: Facility[] } | Facility[]>('/api/facilities');
-      const facilities = Array.isArray(data) ? data : (data.facilities ?? []);
-      const repairBay = facilities.find((f: Facility) => f.type === 'repair_bay');
-      if (repairBay) {
-        setRepairBayLevel(repairBay.currentLevel || 0);
-      }
-      const rosterExpansion = facilities.find((f: Facility) => f.type === 'roster_expansion');
-      if (rosterExpansion) {
-        setRosterLevel(rosterExpansion.currentLevel || 0);
-      }
+      const overview = await getFacilitiesOverview();
+      setRepairBayLevel(facilityLevel(overview, 'repair_bay'));
+      setRosterLevel(facilityLevel(overview, 'roster_expansion'));
     } catch {
       // Silently fail - facilities are optional
     }

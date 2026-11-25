@@ -73,7 +73,7 @@
 --background: #0a0e14;        /* Deep space black */
 --surface: #1a1f29;            /* Dark panel */
 --surface-elevated: #252b38;   /* Raised cards */
---text-primary: #e6edf3;       /* Off-white */
+--text-primary: #e6edf3;       /* Off-white (theme token `foreground`: `text-foreground`) */
 --text-secondary: #8b949e;     /* Gray */
 --text-tertiary: #57606a;      /* Muted gray */
 ```

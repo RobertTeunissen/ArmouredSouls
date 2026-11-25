@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { createLogger } from '../../utils/logger';
+import { useApiQuery } from '../../hooks/useApiQuery';
 import {
   fetchInstances,
   fetchMyStandings,
@@ -10,7 +9,6 @@ import {
 } from '../../utils/leagueStandingsApi';
 import type { MyStandingEntry } from '@shared/types';
 
-const log = createLogger('useLeagueStandings');
 
 export interface MyStandingsState {
   entries: MyStandingEntry[];
@@ -21,18 +19,8 @@ export interface MyStandingsState {
 
 /** The viewer's entries in every league (`GET /api/leagues/my-standings`). */
 export function useMyStandings(): MyStandingsState {
-  const [state, setState] = useState<MyStandingsState>({ entries: [], settled: false, failed: false });
-  useEffect(() => {
-    let active = true;
-    fetchMyStandings()
-      .then((entries) => { if (active) setState({ entries, settled: true, failed: false }); })
-      .catch((err: unknown) => {
-        log.error('My standings fetch error', { err });
-        if (active) setState({ entries: [], settled: true, failed: true });
-      });
-    return () => { active = false; };
-  }, []);
-  return state;
+  const query = useApiQuery(() => fetchMyStandings(), []);
+  return { entries: query.data ?? [], settled: !query.loading, failed: Boolean(query.error) };
 }
 
 export interface StandingsPageState {
@@ -66,53 +54,30 @@ const sameRequest = (a: StandingsPageRequest | null, b: StandingsPageRequest | n
  * one, whose late response is dropped.
  */
 export function useStandingsPage(request: StandingsPageRequest | null): StandingsPageState {
-  const [data, setData] = useState<StandingsPage | null>(null);
-  const [instances, setInstances] = useState<LeagueInstanceSummary[]>([]);
-  const [shown, setShown] = useState<StandingsPageRequest | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const [attempt, setAttempt] = useState(0);
-  const current = useRef(0);
-
   const { mode, tier, instance, page, perPage, stables } = request ?? {};
-  useEffect(() => {
-    // Advance first: with no request, a response still in flight is stale too.
-    const id = ++current.current;
-    if (!mode || !tier || !page || !perPage) {
-      setLoading(false);
-      return;
-    }
-    const req: StandingsPageRequest = { mode, tier, instance: instance ?? null, page, perPage, stables: stables ?? 'all' };
-    setLoading(true);
-    setFailed(false);
-    Promise.all([fetchStandingsPage(req), fetchInstances(mode, tier)])
-      .then(([pageData, instanceList]) => {
-        if (id !== current.current) return;
-        setData(pageData);
-        setInstances(instanceList);
-        setShown(req);
-      })
-      .catch((err: unknown) => {
-        log.error('Standings fetch error', { err });
-        if (id === current.current) setFailed(true);
-      })
-      .finally(() => {
-        if (id === current.current) setLoading(false);
-      });
-  }, [mode, tier, instance, page, perPage, stables, attempt]);
+  const enabled = Boolean(mode && tier && page && perPage);
+  const query = useApiQuery(
+    async () => {
+      const req: StandingsPageRequest = {
+        mode: mode!, tier: tier!, instance: instance ?? null, page: page!, perPage: perPage!, stables: stables ?? 'all',
+      };
+      const [pageData, instanceList] = await Promise.all([fetchStandingsPage(req), fetchInstances(mode!, tier!)]);
+      return { req, pageData, instanceList };
+    },
+    [mode, tier, instance, page, perPage, stables],
+    { enabled },
+  );
 
-  useEffect(() => () => { current.current += 1; }, []);
-
-  const reload = useCallback(() => setAttempt((n) => n + 1), []);
+  const shown = query.data?.req ?? null;
   const currentView = sameView(shown, request);
   const currentTier = shown !== null && request !== null && shown.mode === request.mode && shown.tier === request.tier;
   return {
-    data: currentView ? data : null,
-    instances: currentTier ? instances : [],
+    data: currentView ? query.data!.pageData : null,
+    instances: currentTier ? query.data!.instanceList : [],
     shown,
     stale: currentView && !sameRequest(shown, request),
-    loading,
-    failed,
-    reload,
+    loading: enabled && query.loading,
+    failed: Boolean(query.error),
+    reload: query.refetch,
   };
 }

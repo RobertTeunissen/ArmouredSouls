@@ -319,7 +319,7 @@ export async function createGeneratedStables(count: number): Promise<TieredGener
       // team is logged and skipped; the stable keeps its robots.
       if (created.robotIds.length === 3) {
         try {
-          await registerTeam(created.userId, created.robotIds, `${created.stableName} 3v3`, 3, created.userId);
+          await registerTeam(created.userId, created.robotIds, `${created.stableName} 3v3`, 3);
           totalLeague3v3TeamsCreated++;
         } catch (teamError) {
           const errorCode = (teamError as { code?: string }).code || 'UNKNOWN';
@@ -328,7 +328,7 @@ export async function createGeneratedStables(count: number): Promise<TieredGener
       }
       if (created.robotIds.length >= 2) {
         try {
-          await registerTeam(created.userId, created.robotIds.slice(0, 2), `${created.stableName} 2v2`, 2, created.userId);
+          await registerTeam(created.userId, created.robotIds.slice(0, 2), `${created.stableName} 2v2`, 2);
           totalLeague2v2TeamsCreated++;
         } catch (teamError) {
           const errorCode = (teamError as { code?: string }).code || 'UNKNOWN';

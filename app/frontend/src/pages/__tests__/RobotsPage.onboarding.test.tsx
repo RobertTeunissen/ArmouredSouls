@@ -213,7 +213,7 @@ function setupMocks(robots = mockRobots, facilities = mockFacilities) {
       return Promise.resolve({ data: robots });
     }
     if (url.includes('/api/facilities')) {
-      return Promise.resolve({ data: facilities });
+      return Promise.resolve({ data: { facilities } });
     }
     return Promise.reject(new Error('Unknown URL'));
   });

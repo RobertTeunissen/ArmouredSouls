@@ -18,7 +18,7 @@ function TeamBattleMatchCard({ match, myUserId, perspectiveTeamId }: TeamBattleM
   const modeConfig = getModeConfig(match.matchType);
   const sizeLabel = modeConfig.label;
   const tierColor = isTournament
-    ? 'text-[#d29922]'
+    ? 'text-warning'
     : isTagTeam
       ? 'text-[#f0a030]'
       : getLeagueTierColor(match.teamBattleLeague || 'bronze');
@@ -46,9 +46,9 @@ function TeamBattleMatchCard({ match, myUserId, perspectiveTeamId }: TeamBattleM
   return (
     <div
       className={`
-        bg-[#252b38] border border-white/10 rounded-lg p-3 mb-1.5 min-h-[44px]
+        bg-surface-elevated border border-white/10 rounded-lg p-3 mb-1.5 min-h-[44px]
         border-l-4 ${modeConfig.borderColor}
-        hover:bg-[#1a1f29] hover:border-[#58a6ff]/50
+        hover:bg-surface hover:border-primary/50
         transition-all duration-150 ease-out
         hover:-translate-y-0.5
       `}
@@ -68,18 +68,18 @@ function TeamBattleMatchCard({ match, myUserId, perspectiveTeamId }: TeamBattleM
             <div className={`text-xs ${tierColor} truncate`}>{tierName}</div>
           </div>
           <div className="font-medium text-xs truncate">
-            <span className="text-[#58a6ff]">{myTeam.teamName}</span>
-            <span className="text-[#57606a] mx-1.5">vs</span>
-            <span className="text-[#e6edf3]">{opponentTeam.teamName}</span>
+            <span className="text-primary">{myTeam.teamName}</span>
+            <span className="text-tertiary mx-1.5">vs</span>
+            <span className="text-foreground">{opponentTeam.teamName}</span>
           </div>
         </div>
-        <div className="flex-shrink-0 w-28 text-xs text-[#8b949e]">
+        <div className="flex-shrink-0 w-28 text-xs text-secondary">
           {formatDateTime(match.scheduledFor)}
         </div>
-        <div className="flex-shrink-0 w-20 text-center text-xs text-[#8b949e]">
+        <div className="flex-shrink-0 w-20 text-center text-xs text-secondary">
           {myTeam.combinedELO} vs {opponentTeam.combinedELO}
         </div>
-        <div className="flex-shrink-0 w-6 text-center text-[#58a6ff] text-sm">→</div>
+        <div className="flex-shrink-0 w-6 text-center text-primary text-sm">→</div>
       </div>
 
       <div className="lg:hidden">
@@ -93,24 +93,24 @@ function TeamBattleMatchCard({ match, myUserId, perspectiveTeamId }: TeamBattleM
               {sizeLabel}
             </span>
           </div>
-          <div className="text-xs text-[#8b949e] whitespace-nowrap">
+          <div className="text-xs text-secondary whitespace-nowrap">
             {formatDateTime(match.scheduledFor)}
           </div>
         </div>
         <div className={`text-xs ${tierColor} mb-1.5 break-words`}>{tierName}</div>
         <div className="mb-1.5 text-sm font-medium break-words">
-          <span className="text-[#58a6ff]">{myTeam.teamName}</span>
-          <span className="text-[#57606a] mx-1.5">vs</span>
-          <span className="text-[#e6edf3]">{opponentTeam.teamName}</span>
+          <span className="text-primary">{myTeam.teamName}</span>
+          <span className="text-tertiary mx-1.5">vs</span>
+          <span className="text-foreground">{opponentTeam.teamName}</span>
         </div>
         <div className="flex flex-wrap justify-between gap-2 text-xs">
           <div>
-            <span className="text-[#57606a]">ELO: </span>
-            <span className="text-[#e6edf3]">{myTeam.combinedELO}</span>
+            <span className="text-tertiary">ELO: </span>
+            <span className="text-foreground">{myTeam.combinedELO}</span>
           </div>
           <div>
-            <span className="text-[#57606a]">vs </span>
-            <span className="text-[#e6edf3]">{opponentTeam.combinedELO}</span>
+            <span className="text-tertiary">vs </span>
+            <span className="text-foreground">{opponentTeam.combinedELO}</span>
           </div>
         </div>
       </div>

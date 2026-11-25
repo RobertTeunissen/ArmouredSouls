@@ -17,67 +17,34 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ADMIN_FOCUS_RING, AdminPageHeader, PanelError, PanelSkeleton } from '../../components/admin/shared';
 import { ImageDetailPanel, ImageGrid, ImageStatCards, ModerationSummary, StoragePanel, UploadsPerWeek } from '../../components/admin/images';
-import { ApiError } from '../../utils/ApiError';
-import { isAbortError } from '../../utils/abort';
+import { apiErrorMessage } from '../../utils/ApiError';
+import { useApiQuery } from '../../hooks/useApiQuery';
 import { getImagesInUse, getImagesOverview } from '../../utils/adminImagesApi';
 import { readImagesView, writeImagesView, type ImagesViewState } from '../../utils/adminImagesFormat';
 import { formatUtcTime } from '../../utils/adminDashboardFormat';
-import type { ImagesOverview, ImagesPage } from '@shared/types';
 
 /** Search is debounced so typing does not fire a request per key. */
 const SEARCH_DEBOUNCE_MS = 300;
 
-function errorText(err: unknown, fallback: string): string {
-  return (err instanceof ApiError && err.message) || fallback;
-}
 
 function ImageUploadsPage(): React.ReactElement {
   const [params, setParams] = useSearchParams();
   const view = readImagesView(params);
-  const [overview, setOverview] = useState<ImagesOverview | null>(null);
-  const [overviewError, setOverviewError] = useState<string | null>(null);
-  const [images, setImages] = useState<ImagesPage | null>(null);
-  const [imagesError, setImagesError] = useState<string | null>(null);
-  const [imagesLoading, setImagesLoading] = useState(true);
   const [searchText, setSearchText] = useState(view.q);
-  const [token, setToken] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
 
   const update = useCallback((patch: Partial<ImagesViewState>): void => {
     setParams((current) => writeImagesView(current, patch), { replace: true });
   }, [setParams]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setOverviewError(null);
-    getImagesOverview(controller.signal)
-      .then((data) => { if (!controller.signal.aborted) setOverview(data); })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setOverviewError(errorText(err, 'Could not load the image overview.'));
-      });
-    return () => controller.abort();
-  }, [token]);
-
+  const overviewQuery = useApiQuery((signal) => getImagesOverview(signal), []);
+  const overview = overviewQuery.data;
+  const overviewError = apiErrorMessage(overviewQuery.error, 'Could not load the image overview.');
   const { filter, q, page } = view;
-  useEffect(() => {
-    const controller = new AbortController();
-    setImagesLoading(true);
-    setImagesError(null);
-    getImagesInUse(filter, q, page, controller.signal)
-      .then((data) => {
-        if (controller.signal.aborted) return;
-        setImages(data);
-        setImagesLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (controller.signal.aborted || isAbortError(err, controller.signal)) return;
-        setImagesError(errorText(err, 'Could not load the images.'));
-        setImagesLoading(false);
-      });
-    return () => controller.abort();
-  }, [filter, q, page, token]);
-
+  const imagesQuery = useApiQuery((signal) => getImagesInUse(filter, q, page, signal), [filter, q, page]);
+  const images = imagesQuery.data;
+  const imagesLoading = imagesQuery.loading;
+  const imagesError = apiErrorMessage(imagesQuery.error, 'Could not load the images.');
   // Debounce the search box into the URL.
   useEffect(() => {
     if (searchText === q) return undefined;
@@ -85,7 +52,10 @@ function ImageUploadsPage(): React.ReactElement {
     return () => clearTimeout(timer);
   }, [searchText, q, update]);
 
-  const refresh = (): void => setToken((t) => t + 1);
+  const refresh = (): void => {
+    overviewQuery.refetch();
+    imagesQuery.refetch();
+  };
 
   return (
     <div data-testid="image-uploads-page" className="space-y-6">

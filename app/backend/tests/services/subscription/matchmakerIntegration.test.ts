@@ -279,7 +279,7 @@ describe('Matchmaker Subscription Integration', () => {
         // robot 4 is NOT subscribed
       ]);
 
-      await getEligibleTeams('bronze', 'bronze-1');
+      await getEligibleTeams('bronze-1');
 
       // Verify subscription batch query was called with tag_team event type
       expect(mockPrisma.subscription.findMany).toHaveBeenCalledWith(
@@ -326,7 +326,7 @@ describe('Matchmaker Subscription Integration', () => {
         // robot 13 NOT subscribed
       ]);
 
-      const result = await getEligibleTeams('bronze', 'bronze-1');
+      const result = await getEligibleTeams('bronze-1');
 
       // Only team 200 should be eligible (both robots subscribed)
       expect(result).toHaveLength(1);
@@ -371,7 +371,7 @@ describe('Matchmaker Subscription Integration', () => {
         { robotId: 23 },
       ]);
 
-      const result = await getEligibleTeams('bronze', 'bronze-1');
+      const result = await getEligibleTeams('bronze-1');
 
       // Both teams should be eligible
       expect(result).toHaveLength(2);
@@ -402,7 +402,7 @@ describe('Matchmaker Subscription Integration', () => {
         { robotId: 2 },
       ]);
 
-      const result = await getEligibleRobots('bronze', 'bronze_1');
+      const result = await getEligibleRobots('bronze_1');
 
       // Verify subscription batch query was called with correct event type
       expect(mockPrisma.subscription.findMany).toHaveBeenCalledWith(
@@ -440,7 +440,7 @@ describe('Matchmaker Subscription Integration', () => {
       // Only robot 40 is subscribed
       mockPrisma.subscription.findMany.mockResolvedValue([{ robotId: 40 }]);
 
-      const result = await getEligibleRobots('bronze', 'bronze_1');
+      const result = await getEligibleRobots('bronze_1');
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(40);
@@ -469,7 +469,7 @@ describe('Matchmaker Subscription Integration', () => {
       // No robots subscribed
       mockPrisma.subscription.findMany.mockResolvedValue([]);
 
-      const result = await getEligibleRobots('bronze', 'bronze_1');
+      const result = await getEligibleRobots('bronze_1');
 
       expect(result).toHaveLength(0);
 

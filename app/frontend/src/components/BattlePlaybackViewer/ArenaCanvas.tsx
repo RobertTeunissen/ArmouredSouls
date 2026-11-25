@@ -268,7 +268,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     >
       <canvas
         ref={canvasRef}
-        className="bg-[#0a0e14] rounded-lg"
+        className="bg-background rounded-lg"
         style={{ width: displaySize, height: displaySize }}
         aria-label="Battle arena playback canvas"
         role="img"

@@ -28,7 +28,7 @@ export const BATTLE_MODE_CONFIG: Record<BattleModeType, BattleModeConfig> = {
     icon: '⚔️',
     label: '1v1',
     badgeColor: 'bg-blue-400/20 text-blue-400',
-    borderColor: 'border-l-[#58a6ff]',
+    borderColor: 'border-l-primary',
     tierPrefix: 'League',
   },
   league_2v2: {
@@ -55,22 +55,22 @@ export const BATTLE_MODE_CONFIG: Record<BattleModeType, BattleModeConfig> = {
   tournament_1v1: {
     icon: '🏆',
     label: '1v1 T',
-    badgeColor: 'bg-[#d29922]/20 text-[#d29922]',
-    borderColor: 'border-l-[#d29922]',
+    badgeColor: 'bg-warning/20 text-warning',
+    borderColor: 'border-l-warning',
     tierPrefix: 'Tournament',
   },
   tournament_2v2: {
     icon: '🏆',
     label: '2v2 T',
-    badgeColor: 'bg-[#d29922]/20 text-[#d29922]',
-    borderColor: 'border-l-[#d29922]',
+    badgeColor: 'bg-warning/20 text-warning',
+    borderColor: 'border-l-warning',
     tierPrefix: 'Tournament',
   },
   tournament_3v3: {
     icon: '🏆',
     label: '3v3 T',
-    badgeColor: 'bg-[#d29922]/20 text-[#d29922]',
-    borderColor: 'border-l-[#d29922]',
+    badgeColor: 'bg-warning/20 text-warning',
+    borderColor: 'border-l-warning',
     tierPrefix: 'Tournament',
   },
   koth: {
@@ -120,7 +120,7 @@ export function getModeConfig(battleType: string | null | undefined): BattleMode
  * Outcome badge styling — used by both CompactBattleCard and any history card.
  */
 export const OUTCOME_BADGE_CONFIG = {
-  win: { label: 'WIN', badgeColor: 'bg-[#3fb950]/20 text-[#3fb950]' },
-  loss: { label: 'LOSS', badgeColor: 'bg-[#f85149]/20 text-[#f85149]' },
-  draw: { label: 'DRAW', badgeColor: 'bg-[#57606a]/20 text-[#57606a]' },
+  win: { label: 'WIN', badgeColor: 'bg-success/20 text-success' },
+  loss: { label: 'LOSS', badgeColor: 'bg-error/20 text-error' },
+  draw: { label: 'DRAW', badgeColor: 'bg-tertiary/20 text-tertiary' },
 } as const;

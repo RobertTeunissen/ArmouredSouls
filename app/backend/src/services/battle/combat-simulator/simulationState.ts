@@ -15,9 +15,9 @@ import { calculateFocusFireBonus, FOCUS_FIRE_WINDOW_SECONDS } from '../../team-b
 import {
   RobotWithWeapons,
   BattleConfig,
-  SpatialRobotCombatState,
-  SpatialCombatEvent,
-  SpatialCombatResult,
+  RobotCombatState,
+  CombatEvent,
+  CombatResult,
   RangeBand,
   ArenaConfig,
   GameModeState,
@@ -38,7 +38,7 @@ export function initializeCombatState(
   teamIndex: number,
   attackCooldown: number,
   offhandCooldown: number,
-): SpatialRobotCombatState {
+): RobotCombatState {
   const servoMotors = Number(robot.servoMotors ?? 1);
   const baseSpeed = calculateBaseSpeed(servoMotors);
   const combatAlgorithms = Number(robot.combatAlgorithms ?? 1);
@@ -116,7 +116,7 @@ export function calcCooldown(robot: RobotWithWeapons, weaponCooldown: number, ha
   return cooldownWithPenalty / (1 + effectiveAttackSpeed / 50);
 }
 
-function positioned(state: SpatialRobotCombatState): PositionedRobot {
+function positioned(state: RobotCombatState): PositionedRobot {
   return {
     position: state.position,
     facingDirection: state.facingDirection,
@@ -127,11 +127,11 @@ function positioned(state: SpatialRobotCombatState): PositionedRobot {
 
 /** Living teammates of `attacker` targeting `defender` with it in their main weapon's reach. */
 function engagingTeammates(
-  attacker: SpatialRobotCombatState,
-  defender: SpatialRobotCombatState,
-  allStates: SpatialRobotCombatState[],
+  attacker: RobotCombatState,
+  defender: RobotCombatState,
+  allStates: RobotCombatState[],
   teamOf: Record<number, number>,
-): SpatialRobotCombatState[] {
+): RobotCombatState[] {
   return allStates.filter((s) => {
     if (s === attacker || !s.isAlive || teamOf[s.teamIndex] !== teamOf[attacker.teamIndex]) return false;
     if (s.currentTarget !== defender.teamIndex) return false;
@@ -147,9 +147,9 @@ function engagingTeammates(
  * average syncProtocols. No bonus without a recent teammate hit.
  */
 function focusFireFor(
-  attacker: SpatialRobotCombatState,
-  defender: SpatialRobotCombatState,
-  allStates: SpatialRobotCombatState[],
+  attacker: RobotCombatState,
+  defender: RobotCombatState,
+  allStates: RobotCombatState[],
   teamOf: Record<number, number>,
   currentTime: number,
   gameModeState: GameModeState | undefined,
@@ -168,12 +168,12 @@ function focusFireFor(
 
 // ─── Helper: build spatial context for an attack pair ────────────────
 export function buildSpatialContext(
-  attacker: SpatialRobotCombatState,
-  defender: SpatialRobotCombatState,
+  attacker: RobotCombatState,
+  defender: RobotCombatState,
   hand: 'main' | 'offhand',
   currentTime: number,
   arena: ArenaConfig,
-  allStates: SpatialRobotCombatState[],
+  allStates: RobotCombatState[],
   gameModeState?: GameModeState,
   cachedPosSnapshot?: { positions: Record<string, Position>; facingDirections: Record<string, number> },
 ): {
@@ -284,9 +284,9 @@ export function buildSpatialContext(
  * Handle time limit reached — emit appropriate event and determine winner via HP tiebreaker.
  */
 export function handleTimeLimitReached(
-  states: SpatialRobotCombatState[],
+  states: RobotCombatState[],
   config: BattleConfig,
-  events: { push: (...args: SpatialCombatEvent[]) => number },
+  events: { push: (...args: CombatEvent[]) => number },
   currentTime: number,
   getPositionSnapshot: () => { positions: Record<string, Position>; facingDirections: Record<string, number> },
 ): void {
@@ -324,8 +324,8 @@ export function handleTimeLimitReached(
  * Compile the final battle result from simulation state.
  */
 export function compileBattleResult(
-  states: SpatialRobotCombatState[],
-  rawEvents: SpatialCombatEvent[],
+  states: RobotCombatState[],
+  rawEvents: CombatEvent[],
   currentTime: number,
   winnerId: number | null,
   winReason: string | undefined,
@@ -333,14 +333,14 @@ export function compileBattleResult(
   startingPositions: Record<string, Position>,
   gameModeState: GameModeState | undefined,
   _config: BattleConfig,
-): SpatialCombatResult {
+): CombatResult {
   const endingPositions: Record<string, Position> = {};
   for (const s of states) {
     endingPositions[s.robot.name] = { x: s.position.x, y: s.position.y };
   }
 
   // Build kothMetadata if game mode state has zone scores
-  let kothMetadata: SpatialCombatResult['kothMetadata'];
+  let kothMetadata: CombatResult['kothMetadata'];
   if (gameModeState?.mode === 'zone_control' && gameModeState.zoneScores) {
     const scoreState = gameModeState.customData?.scoreState as {
       zoneOccupationTimes?: Record<number, number>;

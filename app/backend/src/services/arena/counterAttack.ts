@@ -63,7 +63,6 @@ function canReachAtRange(weaponRange: RangeBand, distance: number): boolean {
  */
 export function resolveCounter(
   defender: RobotCombatState,
-  attacker: RobotCombatState,
   distance: number,
 ): CounterResult {
   const mainWeapon = defender.robot.mainWeapon?.weapon as WeaponLike | undefined;

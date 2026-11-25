@@ -7,7 +7,7 @@
 import prisma from '../../lib/prisma';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import { StandingsMode } from '../../../generated/prisma';
-import { getPrestigeRank } from '../../utils/prestigeUtils';
+import { getPrestigeRank } from '../../shared/utils/prestigeTiers';
 import { EventType } from '../common/auditEventTypes';
 import type { StableMetric, RobotMetric } from '../../types/snapshotTypes';
 import { getStableBattleOverlap } from './stable-battle-overlap';

@@ -201,7 +201,7 @@ describe('CompactBattleCard economic indicators', () => {
   /**
    * Validates: Requirements 7.6
    */
-  it('should render prestige in info color (#a371f7)', () => {
+  it('should render prestige in info colour (text-info)', () => {
     const battle = makeLeagueBattle();
 
     renderWithRouter(
@@ -217,7 +217,7 @@ describe('CompactBattleCard economic indicators', () => {
     const prestigeElements = screen.getAllByText('⭐+10');
     // At least one element should have the info color class
     const hasInfoColor = prestigeElements.some(
-      (el) => el.className.includes('#a371f7') || el.closest('[class*="#a371f7"]') !== null
+      (el) => el.className.includes('text-info') || el.closest('[class*="text-info"]') !== null
     );
     expect(hasInfoColor).toBe(true);
   });
@@ -225,7 +225,7 @@ describe('CompactBattleCard economic indicators', () => {
   /**
    * Validates: Requirements 7.6
    */
-  it('should render fame in warning color (#d29922)', () => {
+  it('should render fame in warning colour (text-warning)', () => {
     const battle = makeLeagueBattle();
 
     renderWithRouter(
@@ -241,7 +241,7 @@ describe('CompactBattleCard economic indicators', () => {
     const fameElements = screen.getAllByText('🎖️+7');
     // At least one element should have the warning color class
     const hasWarningColor = fameElements.some(
-      (el) => el.className.includes('#d29922') || el.closest('[class*="#d29922"]') !== null
+      (el) => el.className.includes('text-warning') || el.closest('[class*="text-warning"]') !== null
     );
     expect(hasWarningColor).toBe(true);
   });
@@ -406,5 +406,44 @@ describe('CompactBattleCard forfeit labels', () => {
       />,
     );
     expect(screen.queryByText(/forfeit/i)).toBeNull();
+  });
+});
+
+describe('CompactBattleCard team names', () => {
+  const teamBattle = (battleType: string): BattleHistory => makeLeagueBattle({
+    battleType,
+    team1TeamName: 'Alpha Squad',
+    team2TeamName: 'Bravo Squad',
+    participants: [
+      { robotId: 10, team: 1 },
+      { robotId: 20, team: 2 },
+    ] as BattleHistory['participants'],
+  });
+
+  it.each(['league_2v2', 'tournament_3v3', 'tag_team'])('%s: lists the viewer\'s team first when it is team 2', (battleType) => {
+    renderWithRouter(
+      <CompactBattleCard
+        {...defaultProps}
+        battle={teamBattle(battleType)}
+        myRobotId={20}
+        myRobot={{ id: 20, name: 'SteelFang', userId: 2 }}
+        opponent={{ id: 10, name: 'IronClaw', userId: 1 }}
+      />,
+    );
+    const matchup = screen.getAllByText('Bravo Squad')[0].parentElement as HTMLElement;
+    expect(matchup.textContent).toMatch(/^Bravo Squad\s*vs\s*Alpha Squad/);
+  });
+
+  it('lists team 1 first for a team 1 viewer', () => {
+    renderWithRouter(
+      <CompactBattleCard
+        {...defaultProps}
+        battle={teamBattle('league_2v2')}
+        myRobot={{ id: 10, name: 'IronClaw', userId: 1 }}
+        opponent={{ id: 20, name: 'SteelFang', userId: 2 }}
+      />,
+    );
+    const matchup = screen.getAllByText('Alpha Squad')[0].parentElement as HTMLElement;
+    expect(matchup.textContent).toMatch(/^Alpha Squad\s*vs\s*Bravo Squad/);
   });
 });

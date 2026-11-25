@@ -8,7 +8,7 @@ import { canAttack } from '../../arena/rangeBands';
 import { euclideanDistance } from '../../arena/vector2d';
 import {
   CombatEvent,
-  SpatialRobotCombatState,
+  RobotCombatState,
   RangeBand,
   Position,
   WeaponLike,
@@ -30,7 +30,7 @@ import {
  * Build position snapshot for events
  */
 export function buildPositionSnapshot(
-  ...states: SpatialRobotCombatState[]
+  ...states: RobotCombatState[]
 ): { positions: Record<string, Position>; facingDirections: Record<string, number> } {
   const positions: Record<string, Position> = {};
   const facingDirections: Record<string, number> = {};
@@ -46,7 +46,7 @@ export function buildPositionSnapshot(
  * Returns robotHP and robotShield keyed by robot name.
  */
 export function buildHPShieldSnapshot(
-  states: SpatialRobotCombatState[],
+  states: RobotCombatState[],
 ): { robotHP: Record<string, number>; robotShield: Record<string, number> } {
   const robotHP: Record<string, number> = {};
   const robotShield: Record<string, number> = {};
@@ -67,8 +67,8 @@ export function buildHPShieldSnapshot(
  * the hand throws (see `requireHandWeapon`).
  */
 export function isWithinWeaponReach(
-  attackerState: SpatialRobotCombatState,
-  defenderState: SpatialRobotCombatState,
+  attackerState: RobotCombatState,
+  defenderState: RobotCombatState,
   hand: 'main' | 'offhand',
 ): boolean {
   const weapon = requireHandWeapon(attackerState.robot, hand);
@@ -99,8 +99,8 @@ export type AttackOutcome = 'blocked' | 'missed' | 'hit';
  * drives the ranged disengage burst (#520).
  */
 export function performAttack(
-  attackerState: SpatialRobotCombatState,
-  defenderState: SpatialRobotCombatState,
+  attackerState: RobotCombatState,
+  defenderState: RobotCombatState,
   attackerName: string,
   defenderName: string,
   currentTime: number,
@@ -362,7 +362,7 @@ export function performAttack(
   // reach is measured between the real positions, never the caller-supplied context
   // (identical to spatialContext.distance on the production caller).
   const counterDistance = euclideanDistance(attackerState.position, defenderState.position);
-  const counterResult = resolveCounter(defenderState, attackerState, counterDistance);
+  const counterResult = resolveCounter(defenderState, counterDistance);
 
   if (!counterResult.canCounter) {
     // Counter blocked by range

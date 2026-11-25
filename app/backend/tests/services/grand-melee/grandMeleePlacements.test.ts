@@ -65,7 +65,7 @@ import * as fc from 'fast-check';
 // We replicate the algorithm here to validate its correctness properties
 // without needing to run the full orchestrator with all its DB dependencies.
 
-interface SpatialRobotCombatState {
+interface RobotCombatState {
   robot: { id: number; name: string };
   isAlive: boolean;
   currentHP: number;
@@ -73,7 +73,7 @@ interface SpatialRobotCombatState {
   totalDamageDealt: number;
 }
 
-interface SpatialCombatEvent {
+interface CombatEvent {
   type: string;
   attacker?: string;
   defender?: string;
@@ -92,8 +92,8 @@ interface PlacementEntry {
 
 function computePlacements(
   _result: unknown,
-  states: SpatialRobotCombatState[],
-  events: SpatialCombatEvent[],
+  states: RobotCombatState[],
+  events: CombatEvent[],
 ): PlacementEntry[] {
   const eliminationTimeMap = new Map<string, number>();
   for (const event of events) {
@@ -117,8 +117,8 @@ function computePlacements(
     }
   }
 
-  const survivors: SpatialRobotCombatState[] = [];
-  const eliminated: SpatialRobotCombatState[] = [];
+  const survivors: RobotCombatState[] = [];
+  const eliminated: RobotCombatState[] = [];
 
   for (const state of states) {
     if (state.isAlive) {
@@ -157,7 +157,7 @@ function computePlacements(
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function makeState(id: number, isAlive: boolean, currentHP: number, maxHP: number, damageDealt: number): SpatialRobotCombatState {
+function makeState(id: number, isAlive: boolean, currentHP: number, maxHP: number, damageDealt: number): RobotCombatState {
   return {
     robot: { id, name: `Robot-${id}` },
     isAlive,
@@ -167,7 +167,7 @@ function makeState(id: number, isAlive: boolean, currentHP: number, maxHP: numbe
   };
 }
 
-function makeEliminationEvent(attacker: string, defender: string, timestamp: number): SpatialCombatEvent {
+function makeEliminationEvent(attacker: string, defender: string, timestamp: number): CombatEvent {
   return { type: 'destroyed', attacker, defender, timestamp };
 }
 
@@ -181,14 +181,14 @@ describe('computePlacements — Property Tests', () => {
         fc.integer({ min: 0, max: 19 }),
         (totalRobots, eliminatedCount) => {
           const actualEliminated = Math.min(eliminatedCount, totalRobots - 1); // at least 1 survivor
-          const states: SpatialRobotCombatState[] = [];
+          const states: RobotCombatState[] = [];
 
           for (let i = 0; i < totalRobots; i++) {
             const isAlive = i >= actualEliminated;
             states.push(makeState(i + 1, isAlive, isAlive ? 50 + i : 0, 100, 100 + i));
           }
 
-          const events: SpatialCombatEvent[] = [];
+          const events: CombatEvent[] = [];
           for (let i = 0; i < actualEliminated; i++) {
             events.push(makeEliminationEvent(`Robot-${totalRobots}`, `Robot-${i + 1}`, i * 10));
           }
@@ -213,14 +213,14 @@ describe('computePlacements — Property Tests', () => {
         fc.integer({ min: 1, max: 18 }),
         (totalRobots, eliminatedCount) => {
           const actualEliminated = Math.min(eliminatedCount, totalRobots - 1);
-          const states: SpatialRobotCombatState[] = [];
+          const states: RobotCombatState[] = [];
 
           for (let i = 0; i < totalRobots; i++) {
             const isAlive = i >= actualEliminated;
             states.push(makeState(i + 1, isAlive, isAlive ? 50 : 0, 100, 50));
           }
 
-          const events: SpatialCombatEvent[] = [];
+          const events: CombatEvent[] = [];
           for (let i = 0; i < actualEliminated; i++) {
             events.push(makeEliminationEvent(`Robot-${totalRobots}`, `Robot-${i + 1}`, i * 10));
           }
@@ -308,7 +308,7 @@ describe('computePlacements — Property Tests', () => {
           );
 
           // Distribute kills among survivors
-          const events: SpatialCombatEvent[] = [];
+          const events: CombatEvent[] = [];
           for (let i = 0; i < actualElim; i++) {
             const attackerId = actualElim + 1 + (i % (totalRobots - actualElim));
             events.push(makeEliminationEvent(`Robot-${attackerId}`, `Robot-${i + 1}`, i * 10));
@@ -329,7 +329,7 @@ describe('computePlacements — Property Tests', () => {
 });
 
 // Helper for P4
-function eliminationTimeMap(events: SpatialCombatEvent[], robotName: string): number {
+function eliminationTimeMap(events: CombatEvent[], robotName: string): number {
   const event = events.find(e => e.defender === robotName);
   return event?.timestamp ?? 0;
 }

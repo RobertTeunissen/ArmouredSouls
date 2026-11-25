@@ -172,11 +172,10 @@ export interface RobotCombatState {
   lastHitTakenFrom: Record<number, number>;
 }
 
-// ─── Extended CombatEvent (Backward Compatible — Req 14.2, 14.3) ───
+// ─── CombatEvent (Req 14.2, 14.3) ──────────────────────────────────
 
-/** Extended CombatEvent — all new fields are optional */
+/** One combat log event. The only definition; the simulator re-exports it. */
 export interface CombatEvent {
-  // === Existing fields (all preserved) ===
   timestamp: number;
   type:
     | 'attack' | 'miss' | 'critical' | 'counter'
@@ -191,6 +190,12 @@ export interface CombatEvent {
   attacker?: string;
   defender?: string;
   weapon?: string;
+  /**
+   * Spec #34: optional player-set custom name for the weapon used in this attack.
+   * Set when the inventory row used by the attacker has a non-null `customName`.
+   * Frontend battle reports render this italicised below the (rank-prefixed) `weapon` field.
+   */
+  customName?: string | null;
   hand?: 'main' | 'offhand';
   damage?: number;
   shieldDamage?: number;
@@ -218,6 +223,7 @@ export interface CombatEvent {
   /**
    * Per-robot HP map keyed by robot name. This is the canonical source of truth for HP values.
    * Always use this instead of robot1HP/robot2HP. Scales to N-robot modes (KotH, FFA, etc.).
+   * Injected by the combat simulator via a proxy on every event push.
    */
   robotHP?: Record<string, number>;
   /**
@@ -226,7 +232,7 @@ export interface CombatEvent {
    */
   robotShield?: Record<string, number>;
 
-  // === New optional position fields (Req 14.3, 15.4) ===
+  // === Position fields (Req 14.3, 15.4) ===
   positions?: Record<string, Position>;
   facingDirections?: Record<string, number>;
   distance?: number;
@@ -267,11 +273,10 @@ export interface CombatEvent {
   };
 }
 
-// ─── Extended CombatResult (Backward Compatible — Req 15.7) ────────
+// ─── CombatResult (Req 15.7) ───────────────────────────────────────
 
-/** Extended CombatResult — new arena metadata fields are optional */
+/** Result of one simulated battle. The only definition; the simulator re-exports it. */
 export interface CombatResult {
-  // === Existing fields (all preserved) ===
   winnerId: number | null;
   robot1FinalHP: number;
   robot2FinalHP: number;
@@ -285,7 +290,7 @@ export interface CombatResult {
   isDraw: boolean;
   events: CombatEvent[];
 
-  // === New optional arena metadata (Req 15.7) ===
+  // === Arena metadata (Req 15.7) ===
   arenaRadius?: number;
   startingPositions?: Record<string, Position>;
   endingPositions?: Record<string, Position>;

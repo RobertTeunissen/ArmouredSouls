@@ -34,11 +34,12 @@
 import prisma from '../../lib/prisma';
 import { lockUserForSpending } from '../../lib/creditGuard';
 import logger from '../../config/logger';
-import { AppError, EconomyError, EconomyErrorCode } from '../../errors';
+import { EconomyError, EconomyErrorCode } from '../../errors';
 import { verifyWeaponOwnership } from '../../middleware/ownership';
 import type { Prisma, Weapon, WeaponRefinement } from '../../../generated/prisma';
 import {
   calculateRefinementCost,
+  getCatalogBonus,
   getRefinementMagnitudeRange,
   validateRefinementSlotAvailable,
   validateAttributeStackCap,
@@ -49,9 +50,9 @@ import {
 } from '../../shared/utils/weaponRefinement';
 import { isRobotAttribute, type RobotAttribute } from '../../shared/utils/robotAttributes';
 import { eventLogger } from '../common/eventLogger';
-import { securityMonitor } from '../security/securityMonitor';
 import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
 import { runFinancialWriteTransaction } from '../cycle/financialWriteTransaction';
+import { lockOwnedWeaponInventory } from './lockedWeaponInventory';
 import {
   createEconomicRequestIdentity,
   findCompletedEconomicRequest,
@@ -104,15 +105,6 @@ export type WeaponRefinementResult =
     targetAttribute: string | null;
   };
 
-/**
- * Read a numeric `<attribute>Bonus` field from a weapon catalogue row.
- * The Prisma `Weapon` type has 23 explicit `<attr>Bonus` fields; indexed access
- * needs a structural cast.
- */
-function getCatalogBonus(weapon: Weapon, attribute: string): number {
-  const v = (weapon as unknown as Record<string, unknown>)[`${attribute}Bonus`];
-  return typeof v === 'number' ? v : 0;
-}
 
 function isRefinementTier(value: unknown): value is RefinementTier {
   return typeof value === 'string' && Object.prototype.hasOwnProperty.call(REQUIRED_REFINEMENT_LAB_LEVELS, value);
@@ -216,32 +208,9 @@ export async function refineWeapon(
       return { replayed: true as const, response: replayInTransaction.response };
     }
 
-    // 2. Lock the weapon_inventory row second.
-    const lockedInvRows = await tx.$queryRaw<{
-      id: number;
-      userId: number;
-      weaponId: number;
-      pricePaid: number;
-    }[]>`
-      SELECT id, user_id as "userId", weapon_id as "weaponId", price_paid as "pricePaid"
-      FROM weapon_inventory WHERE id = ${inventoryId} FOR UPDATE
-    `;
-    if (lockedInvRows.length === 0) {
-      throw new EconomyError(EconomyErrorCode.WEAPON_NOT_FOUND, 'Weapon not found', 404);
-    }
-    const weaponInv = lockedInvRows[0];
-
-    // 3. Re-verify ownership inside the transaction (TOCTOU)
-    if (weaponInv.userId !== userId) {
-      securityMonitor.logAuthorizationFailure(userId, 'weapon', inventoryId);
-      throw new AppError('FORBIDDEN', 'Access denied', 403);
-    }
-
-    // 4. Defensive bounds check on pricePaid.
-    if (weaponInv.pricePaid < 0) {
-      logger.error(`[Refine] Invariant violation: negative pricePaid (${weaponInv.pricePaid}) on inventory ${inventoryId}`);
-      throw new EconomyError(EconomyErrorCode.INVALID_TRANSACTION, 'Invalid weapon state', 500);
-    }
+    // 2. Lock the weapon_inventory row second; re-checks ownership (TOCTOU)
+    //    and the pricePaid invariant under the lock.
+    const weaponInv = await lockOwnedWeaponInventory(tx, userId, inventoryId, 'Refine');
 
     // 5. Fetch dependencies inside the transaction.
     const [weapon, refinements, refinementLab] = await Promise.all([

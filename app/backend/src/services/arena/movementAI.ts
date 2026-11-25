@@ -240,7 +240,6 @@ function applyAvoidanceBias(
  */
 function biasTowardFlank(
   targetPos: Position,
-  opponentPos: Position,
   opponentFacing: number,
 ): Position {
   // Move toward 90° offset from opponent's facing direction
@@ -468,7 +467,6 @@ export function calculateMovementIntent(
     if (robotSpeed > targetSpeed) {
       const flankPos = biasTowardFlank(
         targetPos,
-        target.position,
         target.facingDirection,
       );
       targetPos = lerp(targetPos, flankPos, flankWeight);

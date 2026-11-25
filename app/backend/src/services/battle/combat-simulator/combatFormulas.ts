@@ -10,7 +10,7 @@ import {
   FormulaBreakdown,
   ARMOR_EFFECTIVENESS,
   PENETRATION_BONUS,
-  SpatialRobotCombatState,
+  RobotCombatState,
 } from './combatTypes';
 
 /**
@@ -239,7 +239,7 @@ export function applyDamage(
   baseDamage: number,
   attacker: RobotWithWeapons,
   defender: RobotWithWeapons,
-  defenderState: SpatialRobotCombatState,
+  defenderState: RobotCombatState,
   isCritical: boolean,
   _attackerHand: 'main' | 'offhand' = 'main',
   formationDefenseBonus: number = 0
@@ -366,7 +366,7 @@ export function calculateCounterChance(defender: RobotWithWeapons): { counterCha
 /**
  * Regenerate shields based on power core
  */
-export function regenerateShields(state: SpatialRobotCombatState, deltaTime: number, supportBoost: number = 0): number {
+export function regenerateShields(state: RobotCombatState, deltaTime: number, supportBoost: number = 0): number {
   const regenPerSecond = state.numPowerCore * 0.15;
   const stanceBonus = state.robot.stance === 'defensive' ? 1.20 : 1.0;
   let effectiveRegen = regenPerSecond * stanceBonus * deltaTime;
@@ -385,7 +385,7 @@ export function regenerateShields(state: SpatialRobotCombatState, deltaTime: num
 /**
  * Check if robot should yield based on threshold
  */
-export function shouldYield(state: SpatialRobotCombatState): boolean {
+export function shouldYield(state: RobotCombatState): boolean {
   const hpPercent = (state.currentHP / state.maxHP) * 100;
   return hpPercent <= state.robot.yieldThreshold && hpPercent > 0;
 }

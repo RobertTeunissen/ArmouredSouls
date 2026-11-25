@@ -7,7 +7,8 @@ import { screen, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import * as fc from 'fast-check';
 import { OverviewRow } from '../OverviewRow';
-import { earnsPlacementReward, ordinal } from '../placementFormatting';
+import { earnsPlacementReward } from '../placementFormatting';
+import { ordinal } from '../../../utils/formatters';
 import type { OverviewRowData } from '../types';
 import type { CycleProgressSummary } from '@shared/types';
 

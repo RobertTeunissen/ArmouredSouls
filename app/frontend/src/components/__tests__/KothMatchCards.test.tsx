@@ -173,17 +173,17 @@ describe('KothMatchCards', () => {
       />
     );
 
-    // Prestige should use info color (#a371f7)
+    // Prestige should use info colour (text-info)
     const prestigeElements = screen.getAllByText('⭐+10');
     const hasPrestigeColor = prestigeElements.some(
-      (el) => el.className.includes('#a371f7') || el.closest('[class*="#a371f7"]') !== null
+      (el) => el.className.includes('text-info') || el.closest('[class*="text-info"]') !== null
     );
     expect(hasPrestigeColor).toBe(true);
 
-    // Fame should use warning color (#d29922)
+    // Fame should use warning colour (text-warning)
     const fameElements = screen.getAllByText('🎖️+6');
     const hasFameColor = fameElements.some(
-      (el) => el.className.includes('#d29922') || el.closest('[class*="#d29922"]') !== null
+      (el) => el.className.includes('text-warning') || el.closest('[class*="text-warning"]') !== null
     );
     expect(hasFameColor).toBe(true);
   });
