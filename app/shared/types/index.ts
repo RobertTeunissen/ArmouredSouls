@@ -478,3 +478,15 @@ export type {
   WinStreakEntry,
   WinStreakMode,
 } from './hall-of-records';
+export type {
+  FameLeaderboardEntry,
+  FameLeaderboardResponse,
+  LeaderboardKillMode,
+  LeaderboardPagination,
+  LossesLeaderboardEntry,
+  LossesLeaderboardResponse,
+  LossesSortKey,
+  PrestigeLeaderboardEntry,
+  PrestigeLeaderboardResponse,
+} from './leaderboards';
+export type { FacilitiesOverviewResponse, FacilityOverviewEntry } from './facilities';

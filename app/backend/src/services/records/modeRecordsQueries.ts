@@ -30,12 +30,8 @@ import {
   type BattleWithParticipants,
 } from './recordsQueryService';
 import type { WinStreakEntry, WinStreakMode } from '../../shared/types';
+import { KOTH_AVG_ZONE_SCORE_MIN_MATCHES } from '../../shared/utils/recordThresholds';
 
-/**
- * Highest Avg Zone Score only ranks robots with at least this many KotH matches,
- * so one lucky match cannot top the list (the frontend states the same floor).
- */
-const KOTH_AVG_ZONE_SCORE_MIN_MATCHES = 10;
 
 // ─── KotH Records ───────────────────────────────────────────────────
 
@@ -59,9 +55,8 @@ function roundToZonePrecision(value: number): number {
  * KotH robot standings with the highest average zone score per match, best
  * first, among robots with at least `KOTH_AVG_ZONE_SCORE_MIN_MATCHES` matches.
  *
- * Ranked in SQL on the average itself. It used to be ordered by the total zone
- * score, which made it the same list as Zone Dominator with a different number
- * printed beside each robot. Ties: more matches first, then the lower robot id.
+ * Ranked in SQL on the average itself (ranking on the total would repeat Zone
+ * Dominator). Ties: more matches first, then the lower robot id.
  */
 async function fetchTopKothAverageZoneScore(limit: number | undefined) {
   const ranked = await prisma.$queryRaw<Array<{ entity_id: number }>>`

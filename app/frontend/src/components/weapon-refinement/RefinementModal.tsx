@@ -32,6 +32,7 @@ import { ApiError } from '../../utils/ApiError';
 import {
   applyRefinementsToWeapon,
   calculateRefinementCost,
+  getCatalogBonus,
   validateAttributeOnWeapon,
   validateAttributeStackCap,
   validateRefinementSlotAvailable,
@@ -97,11 +98,6 @@ interface WeaponLikeForFold {
   [key: string]: unknown;
 }
 
-/** Read `weapon[<attr>Bonus]` defensively. Mirrors the backend's `getCatalogBonus`. */
-function getCatalogBonus(weapon: WeaponInventoryItem['weapon'], attribute: string): number {
-  const v = (weapon as unknown as Record<string, unknown>)[`${attribute}Bonus`];
-  return typeof v === 'number' ? v : 0;
-}
 
 /** Build a `RefinementRow[]` from the inventory item's stored refinements. */
 function toRefinementRows(item: WeaponInventoryItem): RefinementRow[] {

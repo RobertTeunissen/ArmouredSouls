@@ -97,3 +97,4 @@ export {
   type WeaponPricingInput,
 } from './weaponPricing';
 export { PRESTIGE_GATES, PRESTIGE_GATES_10, getUnlockedFacilityLevel, getNextPrestigeThreshold } from './prestigeGates';
+export { getPrestigeRank, getFameTier, PRESTIGE_RANKS, type PrestigeRank, type FameTier } from './prestigeTiers';

@@ -14,8 +14,7 @@ import {
 import { getAllModesBattleCounts, getTopRobotsByAllModesBattleCount } from '../robot/all-modes-battle-count';
 import type { RecordOwnerDisplay } from '../../shared/types';
 
-/** Highest Win Rate only ranks robots with at least this many win/loss-mode battles. */
-const WIN_RATE_MIN_BATTLES = 50;
+import { WIN_RATE_MIN_BATTLES } from '../../shared/utils/recordThresholds';
 
 
 // Helper to get display name (stableName or username fallback)

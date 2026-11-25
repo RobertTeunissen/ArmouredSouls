@@ -1,7 +1,7 @@
 import * as fc from 'fast-check';
-import { getPrestigeRank } from '../src/utils/prestigeUtils';
+import { getFameTier, getPrestigeRank } from '../src/shared/utils/prestigeTiers';
 
-describe('Prestige Utils - Property Tests', () => {
+describe('Prestige and fame tiers', () => {
   describe('Property 4: Prestige rank mapping correctness', () => {
     /**
      * **Validates: Requirements 4.5, 1.3**
@@ -79,6 +79,19 @@ describe('Prestige Utils - Property Tests', () => {
         ),
         { numRuns: 100 }
       );
+    });
+  });
+
+  describe('getFameTier', () => {
+    test.each([
+      [0, 'Unknown'], [99, 'Unknown'],
+      [100, 'Known'], [499, 'Known'],
+      [500, 'Famous'], [999, 'Famous'],
+      [1000, 'Renowned'], [2499, 'Renowned'],
+      [2500, 'Legendary'], [4999, 'Legendary'],
+      [5000, 'Mythical'], [100000, 'Mythical'],
+    ])('fame %i is %s', (fame, tier) => {
+      expect(getFameTier(fame)).toBe(tier);
     });
   });
 });

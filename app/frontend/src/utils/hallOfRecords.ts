@@ -27,12 +27,8 @@ import {
 import { PLACEMENT_MODES_RECORD_NOTE } from '../components/PlacementModesRecordNote';
 import { formatCurrency } from './formatters';
 import type { WinStreakMode } from '@shared/types';
+import { KOTH_AVG_ZONE_SCORE_MIN_MATCHES, WIN_RATE_MIN_BATTLES } from '@shared/utils/recordThresholds';
 
-/** Mirrors the backend `KOTH_AVG_ZONE_SCORE_MIN_MATCHES` (recordsQueryService). */
-const KOTH_AVG_ZONE_SCORE_MIN_MATCHES = 10;
-
-/** Mirrors the backend `WIN_RATE_MIN_BATTLES` (recordsQueryService). */
-const WIN_RATE_MIN_BATTLES = 50;
 
 export const RECORD_GROUP_LABELS: Record<RecordGroupKey, string> = {
   robots: 'Robots',
