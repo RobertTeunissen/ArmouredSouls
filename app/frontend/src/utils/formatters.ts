@@ -12,6 +12,11 @@ export function formatCurrency(amount: number): string {
 }
 
 
+/** "Nov 24, 2026" (local time zone), as changelog entries are dated. */
+export function formatMediumDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
 /** 1st, 2nd, 3rd, 4th, 11th, 12th, 13th, 21st, 102nd… */
 export function ordinal(n: number): string {
   const lastTwo = Math.abs(n) % 100;

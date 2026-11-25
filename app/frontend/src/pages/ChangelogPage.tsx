@@ -1,59 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useApiQuery } from '../hooks/useApiQuery';
 import {
   fetchPublishedEntries,
   type ChangelogEntry,
-  type PaginatedChangelogResult,
 } from '../utils/changelogApi';
+import { formatMediumDate } from '../utils/formatters';
+import ChangelogCategoryBadge from '../components/changelog/ChangelogCategoryBadge';
+import ChangelogPager from '../components/changelog/ChangelogPager';
 
 const CATEGORIES = ['all', 'balance', 'feature', 'bugfix', 'economy'] as const;
 type CategoryFilter = (typeof CATEGORIES)[number];
 
-const BADGE_COLORS: Record<string, string> = {
-  balance: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  feature: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  bugfix: 'bg-red-500/20 text-red-400 border-red-500/30',
-  economy: 'bg-green-500/20 text-green-400 border-green-500/30',
-};
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 function ChangelogPage() {
-  const [entries, setEntries] = useState<ChangelogEntry[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [perPage] = useState(20);
+  const perPage = 20;
   const [category, setCategory] = useState<CategoryFilter>('all');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [retryKey, setRetryKey] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const cat = category === 'all' ? undefined : category;
-        const result: PaginatedChangelogResult = await fetchPublishedEntries(page, perPage, cat);
-        if (!cancelled) {
-          setEntries(result.entries);
-          setTotal(result.total);
-        }
-      } catch {
-        if (!cancelled) setError('Failed to load changelog entries. Please try again.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, [page, perPage, category, retryKey]);
+  const query = useApiQuery(
+    () => fetchPublishedEntries(page, perPage, category === 'all' ? undefined : category),
+    [page, perPage, category],
+  );
+  const entries: ChangelogEntry[] = query.data?.entries ?? [];
+  const total = query.data?.total ?? 0;
+  const loading = query.loading;
+  const error = query.error ? 'Failed to load changelog entries. Please try again.' : null;
 
   const totalPages = Math.ceil(total / perPage);
 
@@ -95,7 +66,7 @@ function ChangelogPage() {
           <div className="text-center py-20">
             <p className="text-secondary mb-4">{error}</p>
             <button
-              onClick={() => setRetryKey(k => k + 1)}
+              onClick={query.refetch}
               className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
             >
               Try Again
@@ -119,13 +90,9 @@ function ChangelogPage() {
                   data-testid="changelog-entry"
                 >
                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span
-                      className={`px-2 py-0.5 rounded text-xs font-semibold border capitalize ${BADGE_COLORS[entry.category] || ''}`}
-                    >
-                      {entry.category}
-                    </span>
+                    <ChangelogCategoryBadge category={entry.category} />
                     {entry.publishDate && (
-                      <span className="text-xs text-secondary">{formatDate(entry.publishDate)}</span>
+                      <span className="text-xs text-secondary">{formatMediumDate(entry.publishDate)}</span>
                     )}
                   </div>
                   <h2 className="text-lg font-bold text-white mb-2">{entry.title}</h2>
@@ -141,28 +108,7 @@ function ChangelogPage() {
               ))}
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center gap-2 mt-6">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                  className="px-3 py-2 rounded bg-surface border border-white/10 text-secondary hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-                <span className="px-3 py-2 text-secondary">
-                  Page {page} of {totalPages}
-                </span>
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page >= totalPages}
-                  className="px-3 py-2 rounded bg-surface border border-white/10 text-secondary hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
-              </div>
-            )}
+            <ChangelogPager page={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
       </div>

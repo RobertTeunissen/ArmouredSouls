@@ -1,23 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchUnreadEntries, dismissChangelog, type ChangelogEntry } from '../utils/changelogApi';
+import { formatMediumDate } from '../utils/formatters';
+import ChangelogCategoryBadge from './changelog/ChangelogCategoryBadge';
 
 const MAX_ENTRIES = 10;
 
-const BADGE_COLORS: Record<string, string> = {
-  balance: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  feature: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  bugfix: 'bg-red-500/20 text-red-400 border-red-500/30',
-  economy: 'bg-green-500/20 text-green-400 border-green-500/30',
-};
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 function ChangelogModal() {
   const navigate = useNavigate();
@@ -87,15 +76,10 @@ function ChangelogModal() {
               data-testid="changelog-modal-entry"
             >
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span
-                  className={`px-2 py-0.5 rounded text-xs font-semibold border capitalize ${BADGE_COLORS[entry.category] || ''}`}
-                  data-testid="changelog-category-badge"
-                >
-                  {entry.category}
-                </span>
+                <ChangelogCategoryBadge category={entry.category} testId="changelog-category-badge" />
                 {entry.publishDate && (
                   <span className="text-xs text-secondary" data-testid="changelog-publish-date">
-                    {formatDate(entry.publishDate)}
+                    {formatMediumDate(entry.publishDate)}
                   </span>
                 )}
               </div>
