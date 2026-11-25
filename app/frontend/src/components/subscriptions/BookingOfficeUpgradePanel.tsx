@@ -14,32 +14,14 @@
  * the security boundary.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { api } from '../../utils/api';
 import { ApiError } from '../../utils/ApiError';
+import { useApiQuery } from '../../hooks/useApiQuery';
+import type { FacilitiesOverviewResponse } from '@shared/types';
 
 /** Base subscriptions every robot holds before any Booking Office level. */
 const BASE_SUBSCRIPTIONS = 3;
-
-interface FacilityEntry {
-  type: string;
-  name: string;
-  currentLevel: number;
-  maxLevel: number;
-  upgradeCost: number;
-  canUpgrade: boolean;
-  nextLevelPrestigeRequired: number;
-  hasPrestige: boolean;
-  canAfford: boolean;
-  currentOperatingCost: number;
-  nextOperatingCost: number;
-}
-
-interface FacilitiesResponse {
-  facilities: FacilityEntry[];
-  userPrestige: number;
-  userCurrency: number;
-}
 
 export interface BookingOfficeUpgradePanelProps {
   /** Called after a successful upgrade so the page can refresh level and matrix. */
@@ -47,31 +29,13 @@ export interface BookingOfficeUpgradePanelProps {
 }
 
 function BookingOfficeUpgradePanel({ onUpgraded }: BookingOfficeUpgradePanelProps) {
-  const [facility, setFacility] = useState<FacilityEntry | null>(null);
-  const [currency, setCurrency] = useState(0);
-  const [prestige, setPrestige] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const query = useApiQuery((signal) => api.get<FacilitiesOverviewResponse>('/api/facilities', { signal }), []);
+  const facility = query.data?.facilities?.find((f) => f.type === 'booking_office') ?? null;
+  const currency = query.data?.userCurrency ?? 0;
+  const prestige = query.data?.userPrestige ?? 0;
+  const loading = query.loading && query.data === null;
   const [upgrading, setUpgrading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchFacility = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await api.get<FacilitiesResponse>('/api/facilities');
-      const entry = data.facilities?.find((f) => f.type === 'booking_office') ?? null;
-      setFacility(entry);
-      setCurrency(data.userCurrency ?? 0);
-      setPrestige(data.userPrestige ?? 0);
-    } catch {
-      setFacility(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchFacility();
-  }, [fetchFacility]);
 
   const handleUpgrade = async () => {
     if (upgrading) return;
@@ -81,7 +45,7 @@ function BookingOfficeUpgradePanel({ onUpgraded }: BookingOfficeUpgradePanelProp
       await api.post('/api/facilities/upgrade', { facilityType: 'booking_office' });
       // Refresh our own figures and let the page refresh the level and matrix,
       // so the new subscription slots become usable without a reload (R6.15)
-      await fetchFacility();
+      query.refetch();
       onUpgraded();
     } catch (err: unknown) {
       // Surface the endpoint's own message so a prestige or credit rejection

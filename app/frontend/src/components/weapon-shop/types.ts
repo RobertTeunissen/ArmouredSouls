@@ -37,14 +37,6 @@ export interface Weapon {
   [key: string]: unknown;
 }
 
-export interface WeaponFacility {
-  id: number;
-  type: string;
-  facilityType: string;
-  level: number;
-  currentLevel: number;
-}
-
 export interface StorageStatus {
   currentWeapons: number;
   maxCapacity: number;

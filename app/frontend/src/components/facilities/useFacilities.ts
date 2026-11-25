@@ -11,10 +11,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useStableStore } from '../../stores';
 import { api } from '../../utils/api';
 import { ApiError } from '../../utils/ApiError';
+import { useApiQuery } from '../../hooks/useApiQuery';
 import { FACILITY_CATEGORIES } from './constants';
 import type { TabType, Facility } from './types';
 import type {
   AllEconomicROIsResult,
+  FacilitiesOverviewResponse,
   FacilityRecommendation,
   RecommendationSummary,
   UnifiedFacilityROI,
@@ -30,20 +32,42 @@ export function useFacilities() {
   const refreshCurrency = useStableStore(state => state.refreshCurrency);
   const fetchStableData = useStableStore(state => state.fetchStableData);
   const [activeTab, setActiveTab] = useState<TabType>('facilities');
-  const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [userPrestige, setUserPrestige] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const facilitiesQuery = useApiQuery(
+    (signal) => api.get<FacilitiesOverviewResponse>('/api/facilities', { signal }),
+    [],
+  );
+  const facilities: Facility[] = facilitiesQuery.data?.facilities ?? [];
+  const userPrestige = facilitiesQuery.data?.userPrestige ?? 0;
+  const loading = facilitiesQuery.loading && facilitiesQuery.data === null;
   const [upgrading, setUpgrading] = useState<string | null>(null);
-  const [error, setError] = useState('');
+  const [upgradeError, setUpgradeError] = useState('');
+  const error = upgradeError || (facilitiesQuery.error ? 'Failed to load facilities' : '');
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
     new Set(['advanced']) // Advanced Features collapsed by default
   );
   const facilityRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Investment overview state
-  const [facilityROIs, setFacilityROIs] = useState<UnifiedFacilityROI[]>([]);
-  const [recommendations, setRecommendations] = useState<FacilityRecommendation[]>([]);
-  const [advisorLoading, setAdvisorLoading] = useState(false);
+  // Investment overview: loaded when its tab opens. Each part fails on its own,
+  // so the tab stays usable with whatever loaded.
+  const userId = user?.id;
+  const advisorQuery = useApiQuery(
+    async (signal) => {
+      const [rois, recs] = await Promise.all([
+        api.get<AllEconomicROIsResult>(`/api/analytics/facility/${userId}/roi/all-economic`, { signal })
+          .then((data) => data.facilities)
+          .catch((err: unknown): UnifiedFacilityROI[] => { log.error('Error fetching ROI data', { err }); return []; }),
+        api.get<RecommendationSummary>(`/api/analytics/facility/${userId}/recommendations`, { signal })
+          .then((data) => data.recommendations)
+          .catch((err: unknown): FacilityRecommendation[] => { log.error('Error fetching recommendations', { err }); return []; }),
+      ]);
+      return { rois, recs };
+    },
+    [userId],
+    { enabled: activeTab === 'investment-overview' && userId !== undefined },
+  );
+  const facilityROIs = advisorQuery.data?.rois ?? [];
+  const recommendations = advisorQuery.data?.recs ?? [];
+  const advisorLoading = activeTab === 'investment-overview' && advisorQuery.loading;
 
   // Handle hash-based scrolling to specific facility
   useEffect(() => {
@@ -75,89 +99,29 @@ export function useFacilities() {
     }, 100);
   }, [loading, location.hash, collapsedCategories]);
 
+  // Ensure the stable store is populated for currency data
   useEffect(() => {
-    fetchFacilities();
-    // Ensure the stable store is populated for currency data
     fetchStableData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'investment-overview' && user) {
-      fetchAdvisorData();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, user]);
-
-  const fetchFacilities = async () => {
-    try {
-      const data = await api.get<{ facilities?: Facility[]; userPrestige?: number } | Facility[]>('/api/facilities');
-      // Endpoint may return either `{ facilities, userPrestige }` or the raw array.
-      // Defensive filter: only show implemented facilities even if API returns unimplemented rows
-      if (Array.isArray(data)) {
-        setFacilities(data.filter(f => f.implemented !== false));
-        setUserPrestige(0);
-      } else {
-        setFacilities((data.facilities ?? []).filter(f => f.implemented !== false));
-        setUserPrestige(data.userPrestige || 0);
-      }
-    } catch (err) {
-      setError('Failed to load facilities');
-      log.error('Failed to load facilities', { err });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAdvisorData = async () => {
-    if (!user) return;
-
-    try {
-      setAdvisorLoading(true);
-
-      // Fetch all economic facility ROIs in a single call
-      try {
-        const roiData = await api.get<AllEconomicROIsResult>(`/api/analytics/facility/${user.id}/roi/all-economic`);
-        setFacilityROIs(roiData.facilities);
-      } catch (err) {
-        log.error('Error fetching ROI data', { err });
-        setFacilityROIs([]);
-      }
-
-      // Fetch recommendations
-      try {
-        const recData = await api.get<RecommendationSummary>(
-          `/api/analytics/facility/${user.id}/recommendations`,
-        );
-        setRecommendations(recData.recommendations);
-      } catch (err) {
-        log.error('Error fetching recommendations', { err });
-        setRecommendations([]);
-      }
-    } catch (err) {
-      log.error('Error in fetchAdvisorData', { err });
-    } finally {
-      setAdvisorLoading(false);
-    }
-  };
+  }, [fetchStableData]);
 
   const handleUpgrade = async (facilityType: string) => {
     setUpgrading(facilityType);
-    setError('');
+    setUpgradeError('');
 
     try {
       await api.post('/api/facilities/upgrade', { facilityType });
 
       // Refresh facilities, user data, and store currency
-      await Promise.all([fetchFacilities(), refreshUser(), refreshCurrency()]);
+      facilitiesQuery.refetch();
+      await Promise.all([refreshUser(), refreshCurrency()]);
     } catch (err: unknown) {
       if (err instanceof ApiError && err.statusCode === 403) {
         const details = err.details as { current?: number; message?: string } | undefined;
         const current = details?.current;
         const message = details?.message ?? err.message;
-        setError(`${message}${current != null ? `. You have ${current.toLocaleString()} prestige.` : ''}`);
+        setUpgradeError(`${message}${current != null ? `. You have ${current.toLocaleString()} prestige.` : ''}`);
       } else {
-        setError((err instanceof ApiError && err.message) || 'Upgrade failed');
+        setUpgradeError((err instanceof ApiError && err.message) || 'Upgrade failed');
       }
     } finally {
       setUpgrading(null);
@@ -180,17 +144,9 @@ export function useFacilities() {
     return facilities.filter(f => categoryTypes.includes(f.type));
   };
 
-  const getFacilityDisplayName = (type: string): string => {
-    const names: Record<string, string> = {
-      merchandising_hub: 'Merchandising Hub',
-      streaming_studio: 'Streaming Studio',
-      repair_bay: 'Repair Bay',
-      training_facility: 'Training Facility',
-      weapons_workshop: 'Weapons Workshop',
-      refinement_lab: 'Refinement Lab',
-    };
-    return names[type] || type;
-  };
+  /** The facility's name from the overview, else its type. */
+  const getFacilityDisplayName = (type: string): string =>
+    facilities.find((f) => f.type === type)?.name ?? type;
 
   return {
     user,

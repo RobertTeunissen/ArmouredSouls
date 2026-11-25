@@ -20,7 +20,7 @@ import {
 import type { UpgradePlan } from '../utils/robotApi';
 import { ApiError } from '../utils/ApiError';
 import { useAuth } from '../contexts/AuthContext';
-import type { Facility } from '../components/facilities/types';
+import { facilityLevel, getAcademyLevels, getFacilitiesOverview } from '../utils/facilitiesApi';
 import { getRosterCapacity } from '../../../shared/utils/rosterCapacity';
 import type { RangeBand } from '@shared/types';
 import type { RobotWithAttributes } from '../types/robot';
@@ -272,7 +272,7 @@ export function useRobotDetail() {
       // The inventory and facilities do not depend on each other; either may fail alone.
       const [weaponsResult, facilitiesResult] = await Promise.allSettled([
         api.get<WeaponInventoryItem[]>('/api/weapon-inventory'),
-        api.get<{ facilities?: Facility[] } | Facility[]>('/api/facilities'),
+        getFacilitiesOverview(),
       ]);
 
       // Process weapon inventory
@@ -284,25 +284,11 @@ export function useRobotDetail() {
 
       // Process facilities
       if (facilitiesResult.status === 'fulfilled') {
-        const data = facilitiesResult.value;
-        const facilities = Array.isArray(data) ? data : (data.facilities ?? []);
-
-        const trainingFacility = facilities.find((f: Facility) => f.type === 'training_facility');
-        setTrainingLevel(trainingFacility?.currentLevel || 0);
-
-        const repairBay = facilities.find((f: Facility) => f.type === 'repair_bay');
-        setRepairBayLevel(repairBay?.currentLevel || 0);
-
-        const rosterExpansion = facilities.find((f: Facility) => f.type === 'roster_expansion');
-        setRosterCapacity(getRosterCapacity(rosterExpansion?.currentLevel || 0));
-
-        setAcademyLevels({
-          combat_training_academy: facilities.find((f: Facility) => f.type === 'combat_training_academy')?.currentLevel || 0,
-          defense_training_academy: facilities.find((f: Facility) => f.type === 'defense_training_academy')?.currentLevel || 0,
-          mobility_training_academy: facilities.find((f: Facility) => f.type === 'mobility_training_academy')?.currentLevel || 0,
-          ai_training_academy: facilities.find((f: Facility) => f.type === 'ai_training_academy')?.currentLevel || 0,
-        });
-
+        const overview = facilitiesResult.value;
+        setTrainingLevel(facilityLevel(overview, 'training_facility'));
+        setRepairBayLevel(facilityLevel(overview, 'repair_bay'));
+        setRosterCapacity(getRosterCapacity(facilityLevel(overview, 'roster_expansion')));
+        setAcademyLevels(getAcademyLevels(overview));
       } else {
         log.error('Failed to fetch facilities', { err: facilitiesResult.reason });
       }

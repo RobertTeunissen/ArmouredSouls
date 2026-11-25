@@ -21,11 +21,15 @@ export type SlotMode = 'owned' | 'sparring';
 // Interfaces
 // ---------------------------------------------------------------------------
 
+/** One of the player's robots; attribute values are read by name (`robot[attribute]`). */
 export interface OwnedRobot {
   id: number;
   name: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  stance: Stance;
+  yieldThreshold: number;
+  mainWeaponId: number | null;
+  imageUrl?: string | null;
+  [key: string]: unknown;
 }
 
 export interface SparringPartnerDef {

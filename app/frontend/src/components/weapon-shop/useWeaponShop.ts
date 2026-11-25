@@ -13,7 +13,8 @@ import type { WeaponFilters } from '../FilterPanel';
 import { ATTRIBUTE_LABELS } from '../../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../../shared/utils/discounts';
 import { calculateRankPrefix } from '../../../../shared/utils/weaponRefinement';
-import type { Weapon, WeaponFacility, StorageStatus, ViewMode, WeaponInventoryItem } from './types';
+import type { Weapon, StorageStatus, ViewMode, WeaponInventoryItem } from './types';
+import { facilityLevel, getFacilitiesOverview } from '../../utils/facilitiesApi';
 import type { OwnedRankBreakdown } from './WeaponCard';
 
 export function useWeaponShop() {
@@ -100,13 +101,9 @@ export function useWeaponShop() {
 
         // Fetch facilities: the Weapons Workshop drives discount and resale,
         // the Refinement Lab gates the refinement tiers.
-        const facData = await api.get<{ facilities?: WeaponFacility[] } | WeaponFacility[]>('/api/facilities');
-        const facilities = Array.isArray(facData) ? facData : (facData.facilities ?? []);
-        const weaponWorkshop = facilities.find((f: WeaponFacility) => f.type === 'weapons_workshop');
-        setWeaponWorkshopLevel(weaponWorkshop?.currentLevel || 0);
-        const refinementLab = facilities.find((f: WeaponFacility) => f.type === 'refinement_lab');
-        setRefinementLabLevel(refinementLab?.currentLevel || 0);
-
+        const overview = await getFacilitiesOverview();
+        setWeaponWorkshopLevel(facilityLevel(overview, 'weapons_workshop'));
+        setRefinementLabLevel(facilityLevel(overview, 'refinement_lab'));
         // Fetch storage status
         const storage = await api.get<StorageStatus>('/api/weapon-inventory/storage-status');
         setStorageStatus(storage);

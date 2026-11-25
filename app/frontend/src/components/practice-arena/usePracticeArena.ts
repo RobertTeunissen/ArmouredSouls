@@ -17,6 +17,8 @@ import type {
   PracticeBatchResult,
 } from './types';
 import { DEFAULT_SPARRING } from './constants';
+import { facilityLevel, getAcademyLevels, getFacilitiesOverview } from '../../utils/facilitiesApi';
+import type { FacilitiesOverviewResponse } from '@shared/types';
 
 function makeDefaultSlot(): SlotState {
   return {
@@ -113,23 +115,15 @@ export function usePracticeArena(userId: number): UsePracticeArenaReturn {
         const [robotsData, sparringData, facData] = await Promise.all([
           fetchMyRobots(),
           api.get<{ sparringPartners?: SparringPartnerDef[] } | SparringPartnerDef[]>('/api/practice-arena/sparring-partners'),
-          api.get<{ facilities?: Array<{ type: string; currentLevel: number }> } | Array<{ type: string; currentLevel: number }>>('/api/facilities').catch(() => [] as Array<{ type: string; currentLevel: number }>),
+          getFacilitiesOverview().catch((): FacilitiesOverviewResponse => ({ facilities: [], userPrestige: 0, userCurrency: 0, robotCount: 0, rosterCapacity: 1 })),
         ]);
         setRobots(robotsData as unknown as OwnedRobot[]);
         const defs = Array.isArray(sparringData) ? sparringData : (sparringData.sparringPartners ?? []);
         setSparringDefs(defs);
 
-        const facilities = Array.isArray(facData) ? facData : (facData.facilities ?? []);
-        const tf = facilities.find((f) => f.type === 'training_facility');
-        setTrainingLevel(tf?.currentLevel || 0);
-        const rosterExpansion = facilities.find((f) => f.type === 'roster_expansion');
-        setRosterCapacity(getRosterCapacity(rosterExpansion?.currentLevel || 0));
-        setAcademyLevels({
-          combat_training_academy: facilities.find((f) => f.type === 'combat_training_academy')?.currentLevel || 0,
-          defense_training_academy: facilities.find((f) => f.type === 'defense_training_academy')?.currentLevel || 0,
-          mobility_training_academy: facilities.find((f) => f.type === 'mobility_training_academy')?.currentLevel || 0,
-          ai_training_academy: facilities.find((f) => f.type === 'ai_training_academy')?.currentLevel || 0,
-        });
+        setTrainingLevel(facilityLevel(facData, 'training_facility'));
+        setRosterCapacity(getRosterCapacity(facilityLevel(facData, 'roster_expansion')));
+        setAcademyLevels(getAcademyLevels(facData));
       } catch {
         // Silently handle
       } finally {

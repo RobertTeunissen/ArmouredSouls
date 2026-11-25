@@ -26,7 +26,6 @@ import { useFacilities } from '../useFacilities';
 
 const REPAIR_BAY = { type: 'repair_bay', name: 'Repair Bay', implemented: true };
 const ROSTER = { type: 'roster_expansion', name: 'Roster Expansion', implemented: true };
-const UNBUILT = { type: 'coming_soon', name: 'Coming Soon', implemented: false };
 
 function wrapper(path = '/facilities') {
   return ({ children }: { children: ReactNode }) => <MemoryRouter initialEntries={[path]}>{children}</MemoryRouter>;
@@ -43,7 +42,7 @@ function serveFacilities(body: unknown): void {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  serveFacilities({ facilities: [REPAIR_BAY, ROSTER, UNBUILT], userPrestige: 1200 });
+  serveFacilities({ facilities: [REPAIR_BAY, ROSTER], userPrestige: 1200 });
 });
 
 afterEach(() => {
@@ -51,7 +50,7 @@ afterEach(() => {
 });
 
 describe('useFacilities', () => {
-  it('loads implemented facilities, the prestige and the stable data', async () => {
+  it('loads the facilities, the prestige and the stable data', async () => {
     const { result } = renderHook(() => useFacilities(), { wrapper: wrapper() });
     expect(result.current.loading).toBe(true);
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -61,14 +60,6 @@ describe('useFacilities', () => {
     expect(result.current.currency).toBe(250000);
     expect(mockFetchStableData).toHaveBeenCalledTimes(1);
     expect(result.current.getCategoryFacilities(['repair_bay'])).toEqual([REPAIR_BAY]);
-  });
-
-  it('accepts the bare-array response shape', async () => {
-    serveFacilities([REPAIR_BAY, UNBUILT]);
-    const { result } = renderHook(() => useFacilities(), { wrapper: wrapper() });
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.facilities).toEqual([REPAIR_BAY]);
-    expect(result.current.userPrestige).toBe(0);
   });
 
   it('reports a failed load', async () => {
@@ -81,7 +72,7 @@ describe('useFacilities', () => {
   it('loads the ROI and recommendations only on the investment tab', async () => {
     const { result } = renderHook(() => useFacilities(), { wrapper: wrapper() });
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(mockGet).not.toHaveBeenCalledWith('/api/analytics/facility/42/roi/all-economic');
+    expect(mockGet).not.toHaveBeenCalledWith('/api/analytics/facility/42/roi/all-economic', expect.anything());
 
     act(() => result.current.setActiveTab('investment-overview'));
     await waitFor(() => expect(result.current.recommendations).toHaveLength(1));
@@ -91,7 +82,7 @@ describe('useFacilities', () => {
 
   it('keeps the tab usable when the advisor endpoints fail', async () => {
     mockGet.mockImplementation((url: string) =>
-      url === '/api/facilities' ? Promise.resolve([REPAIR_BAY]) : Promise.reject(new Error('down')));
+      url === '/api/facilities' ? Promise.resolve({ facilities: [REPAIR_BAY], userPrestige: 0 }) : Promise.reject(new Error('down')));
     const { result } = renderHook(() => useFacilities(), { wrapper: wrapper() });
     await waitFor(() => expect(result.current.loading).toBe(false));
     act(() => result.current.setActiveTab('investment-overview'));
@@ -156,9 +147,10 @@ describe('useFacilities', () => {
     expect(element.classList.contains('ring-2')).toBe(true);
   });
 
-  it('names the economic facilities', () => {
+  it('names facilities from the overview', async () => {
     const { result } = renderHook(() => useFacilities(), { wrapper: wrapper() });
-    expect(result.current.getFacilityDisplayName('streaming_studio')).toBe('Streaming Studio');
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.getFacilityDisplayName('repair_bay')).toBe('Repair Bay');
     expect(result.current.getFacilityDisplayName('unknown_type')).toBe('unknown_type');
   });
 });
