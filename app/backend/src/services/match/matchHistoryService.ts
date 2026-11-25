@@ -7,6 +7,7 @@ import { Prisma } from '../../../generated/prisma';
 import type { KothPlacement } from '../../types';
 import { BATTLE_LOG_OMIT, BATTLE_LOG_SELECT, decodeBattleLog } from '../battle/battleLogCodec';
 import { getAwardedByeReward } from './byeDisplayService';
+import { calculateTeamBattleLPDelta } from '../team-battle/teamBattleRewardService';
 
 // ─── Prisma Payload Types ────────────────────────────────────────────
 
@@ -422,11 +423,11 @@ async function formatTeamBattleHistoryEntry(
     // Calculate LP delta for league battles (not tag team)
     if (!isTagTeam && battle.winnerId !== null && team1Id) {
       const team1Won = battle.winnerId === team1Id;
-      team1LpDelta = team1Won ? 3 : -1;
-      team2LpDelta = team1Won ? -1 : 3;
+      team1LpDelta = calculateTeamBattleLPDelta(team1Won, false);
+      team2LpDelta = calculateTeamBattleLPDelta(!team1Won, false);
     } else if (battle.winnerId === null) {
-      team1LpDelta = 1;
-      team2LpDelta = 1;
+      team1LpDelta = calculateTeamBattleLPDelta(false, true);
+      team2LpDelta = calculateTeamBattleLPDelta(false, true);
     }
   }
 
