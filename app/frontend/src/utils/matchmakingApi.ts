@@ -200,6 +200,9 @@ export interface BattleHistory {
   team2ReserveRobotName?: string | null;
   team1TagOutTime?: number | null;
   team2TagOutTime?: number | null;
+  // Team modes (tag team, 2v2/3v3 league and tournament): team names per side
+  team1TeamName?: string | null;
+  team2TeamName?: string | null;
   // Bye match indicator
   isByeMatch?: boolean;
   byeRewardCredits?: number | null;

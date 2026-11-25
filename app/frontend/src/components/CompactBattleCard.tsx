@@ -2,6 +2,7 @@ import type { FC, KeyboardEvent, ReactNode } from 'react';
 import { BattleHistory, getTournamentRoundName, getLeagueTierName } from '../utils/matchmakingApi';
 import { formatDateTime } from '../utils/matchmakingApi';
 import { getModeConfig, OUTCOME_BADGE_CONFIG } from '../utils/battleModeConfig';
+import { ordinal } from '../utils/formatters';
 
 interface BattleRobot {
   name: string;
@@ -23,6 +24,51 @@ interface CompactBattleCardProps {
   onClick: () => void;
 }
 
+const TEAM_TOURNAMENT_TYPES = new Set(['tournament_2v2', 'tournament_3v3']);
+const TEAM_LEAGUE_TYPES = new Set(['league_2v2', 'league_3v3']);
+
+/** Header line: mode name, tournament and round, or the league tier at battle time. */
+function battleTypeText(battle: BattleHistory): string {
+  const type = battle.battleType;
+  if (type === 'koth') return 'King of the Hill';
+  if (type === 'grand_melee') return 'Grand Melee';
+  const isTournament = type === 'tournament_1v1' || TEAM_TOURNAMENT_TYPES.has(type ?? '');
+  if (isTournament) {
+    const roundName = battle.tournamentRound && battle.tournamentMaxRounds
+      ? getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)
+      : '';
+    const round = roundName ? ` • ${roundName}` : '';
+    if (battle.tournamentName) return `${battle.tournamentName}${round}`;
+    if (type === 'tournament_1v1') return `Tournament${round}`;
+    return `${type === 'tournament_2v2' ? '2v2' : '3v3'} Tournament${round}`;
+  }
+  // Tag team has no league at battle time on old rows: Bronze, like the other leagues.
+  if (type === 'tag_team') return `${getLeagueTierName(battle.leagueType || 'bronze')} League`;
+  if (battle.leagueType) return `${getLeagueTierName(battle.leagueType)} League`;
+  return 'League Match';
+}
+
+/** Left border: the mode colour, except 1v1 leagues which show the outcome. */
+function borderColor(battle: BattleHistory, outcome: string, modeBorder: string): string {
+  const type = battle.battleType ?? '';
+  const isOneVsOneLeague = !['koth', 'grand_melee', 'tournament_1v1', 'tag_team'].includes(type)
+    && !TEAM_TOURNAMENT_TYPES.has(type) && !TEAM_LEAGUE_TYPES.has(type);
+  if (!isOneVsOneLeague) return modeBorder;
+  switch (outcome) {
+    case 'win': return 'border-l-success';
+    case 'loss': return 'border-l-error';
+    case 'draw': return 'border-l-tertiary';
+    default: return 'border-l-gray-700';
+  }
+}
+
+function placementBadgeClass(placement: number | null | undefined): string {
+  if (placement === 1) return 'bg-warning/20 text-warning';
+  if (placement === 2) return 'bg-gray-400/20 text-gray-300';
+  if (placement === 3) return 'bg-orange-600/20 text-orange-500';
+  return 'bg-surface-elevated text-secondary';
+}
+
 const CompactBattleCard: FC<CompactBattleCardProps> = ({
   battle,
   myRobot,
@@ -38,130 +84,82 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
 }) => {
   const totalCredits = reward + (streamingRevenue ?? 0);
   const isBye = battle.isByeMatch === true;
-  const opponentName = opponent?.name ?? 'No opponent';
-  const opponentDisplay = isBye ? 'No opponent — walkover' : opponentName;
+  const opponentDisplay = isBye ? 'No opponent — walkover' : (opponent?.name ?? 'No opponent');
   const matchupSeparator = isBye ? '•' : 'vs';
   // Forfeits (keyed on forfeitedRobotIds, so a forfeiter placed last in a
   // fought KotH / Grand Melee battle is labelled too).
   const myRobotForfeited = battle.forfeitedRobotIds?.includes(myRobotId) === true;
   const wonByForfeit = !myRobotForfeited && battle.isForfeit === true && outcome === 'win';
   const forfeitSuffix = wonByForfeit ? ' — won by forfeit' : '';
-  const forfeitTag = myRobotForfeited ? (
+  const forfeitTag: ReactNode = myRobotForfeited ? (
     <span className="text-error ml-1.5">Forfeit — no main weapon</span>
   ) : null;
-  const isTournament = battle.battleType === 'tournament_1v1';
-  const isTeamTournament = battle.battleType === 'tournament_2v2' || battle.battleType === 'tournament_3v3';
-  const isTagTeam = battle.battleType === 'tag_team';
+
   const isKoth = battle.battleType === 'koth';
-  const isGrandMelee = battle.battleType === 'grand_melee';
-  const isFFA = isKoth || isGrandMelee;
-  const ffaPlacement = battle.participants?.find(
-    participant => participant.robotId === myRobotId,
-  )?.placement ?? battle.kothPlacement;
-  const isTeamBattle = battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3';
-  
+  const isFFA = isKoth || battle.battleType === 'grand_melee';
+  const isTeamMode = battle.battleType === 'tag_team'
+    || TEAM_LEAGUE_TYPES.has(battle.battleType ?? '')
+    || TEAM_TOURNAMENT_TYPES.has(battle.battleType ?? '');
+  const myParticipant = battle.participants?.find(participant => participant.robotId === myRobotId);
+  const ffaPlacement = myParticipant?.placement ?? battle.kothPlacement;
+
   // Use shared mode config for consistent icon/badge/color across all views
   const modeConfig = getModeConfig(battle.battleType);
-  
-  const getBattleTypeIcon = (): string => {
-    return modeConfig.icon;
-  };
-  
-  const getBattleTypeText = (): ReactNode => {
-    if (isKoth) {
-      return 'King of the Hill';
-    }
-    if (isGrandMelee) {
-      return 'Grand Melee';
-    }
-    if ((isTournament || isTeamTournament) && battle.tournamentName) {
-      const roundName = battle.tournamentRound && battle.tournamentMaxRounds 
-        ? getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)
-        : '';
-      return `${battle.tournamentName}${roundName ? ` • ${roundName}` : ''}`;
-    }
-    if (isTournament) {
-      const roundName = battle.tournamentRound && battle.tournamentMaxRounds 
-        ? getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)
-        : '';
-      return `Tournament${roundName ? ` • ${roundName}` : ''}`;
-    }
-    if (isTeamTournament) {
-      const roundName = battle.tournamentRound && battle.tournamentMaxRounds 
-        ? getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)
-        : '';
-      const sizeLabel = battle.battleType === 'tournament_2v2' ? '2v2' : '3v3';
-      return `${sizeLabel} Tournament${roundName ? ` • ${roundName}` : ''}`;
-    }
-    if (isTagTeam) {
-      // Show league tier with "League" suffix — same as other league modes
-      const leagueAtBattleTime = battle.leagueType || 'bronze';
-      const tierName = getLeagueTierName(leagueAtBattleTime);
-      return `${tierName} League`;
-    }
-    // For league matches, show league tier from battle record
-    if (battle.leagueType) {
-      return `${getLeagueTierName(battle.leagueType)} League`;
-    }
-    return 'League Match';
-  };
-  
-  const getBorderColor = (): string => {
-    // KotH/Grand Melee battles get colored border (from config)
-    if (isFFA) return modeConfig.borderColor;
-    // Tournament battles get golden border (from config)
-    if (isTournament || isTeamTournament) return modeConfig.borderColor;
-    // Tag team battles get amber border (from config)
-    if (isTagTeam) return modeConfig.borderColor;
-    // Team league battles get their mode color
-    if (isTeamBattle) return modeConfig.borderColor;
-    // 1v1 League battles use outcome color
-    switch (outcome) {
-      case 'win': return 'border-l-[#3fb950]';
-      case 'loss': return 'border-l-[#f85149]';
-      case 'draw': return 'border-l-[#57606a]';
-      default: return 'border-l-gray-700';
-    }
-  };
+  const modeBadgeLabel = isFFA ? 'FFA' : modeConfig.label;
+  const typeText = battleTypeText(battle);
 
-  const getKothPlacementSuffix = (placement: number): string => {
-    if (placement === 1) return 'st';
-    if (placement === 2) return 'nd';
-    if (placement === 3) return 'rd';
-    return 'th';
-  };
-
-  const getKothPlacementBadgeClass = (): string => {
-    const placement = ffaPlacement;
-    if (placement === 1) return 'bg-warning/20 text-warning';
-    if (placement === 2) return 'bg-gray-400/20 text-gray-300';
-    if (placement === 3) return 'bg-orange-600/20 text-orange-500';
-    return 'bg-surface-elevated text-secondary';
-  };
-  
-  const getOutcomeBadgeClass = () => {
-    const config = OUTCOME_BADGE_CONFIG[outcome as keyof typeof OUTCOME_BADGE_CONFIG];
-    return config?.badgeColor || 'bg-surface-elevated text-secondary';
-  };
-
-  // For tag team battles, use team names (consistent with 2v2/3v3 league display)
-  let myTeamRobots = myRobot.name;
-  let opponentTeamRobots = opponentDisplay;
-  
-  if (isTagTeam) {
-    // Use team names from API (same as 2v2/3v3 league)
-    // In tag-team battles, both robots on a team belong to the same stable (userId).
-    // robot1 is always team 1's active robot, so check userId match to determine team.
-    const battleAny = battle as unknown as { team1TeamName?: string; team2TeamName?: string };
-    const isTeam1 = battle.robot1.userId === myRobot.userId;
-    myTeamRobots = isTeam1
-      ? (battleAny.team1TeamName || myRobot.name)
-      : (battleAny.team2TeamName || myRobot.name);
-    opponentTeamRobots = isTeam1
-      ? (battleAny.team2TeamName || opponentDisplay)
-      : (battleAny.team1TeamName || opponentDisplay);
+  // Team modes show team names from the viewer's side. Robot 1 is always on
+  // team 1, so without participant data the owner decides the side.
+  let myName = myRobot.name;
+  let opponentSideName = opponentDisplay;
+  if (isTeamMode) {
+    const myTeam = myParticipant?.team ?? (battle.robot1.userId === myRobot.userId ? 1 : 2);
+    const [mine, theirs] = myTeam === 1
+      ? [battle.team1TeamName, battle.team2TeamName]
+      : [battle.team2TeamName, battle.team1TeamName];
+    myName = mine || myRobot.name;
+    opponentSideName = theirs || opponentDisplay;
   }
-  
+
+  const matchup = (textClass: string): ReactNode => (isFFA ? (
+    <div className={textClass}>
+      <span className="text-primary">{myRobot.name}</span>
+      <span className="text-secondary mx-1.5">• {battle.kothParticipantCount ?? '?'} robots</span>
+      {forfeitTag}
+    </div>
+  ) : (
+    <div className={textClass}>
+      <span className="text-primary">{myName}</span>
+      <span className="text-tertiary mx-1.5">{matchupSeparator}</span>
+      <span className="text-foreground">{opponentSideName}{forfeitSuffix}</span>
+      {forfeitTag}
+    </div>
+  ));
+
+  const outcomeBadge = (layoutClass: string): ReactNode => {
+    if (isBye) {
+      return <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${layoutClass} bg-yellow-500/20 text-warning`}>BYE</div>;
+    }
+    if (isFFA && ffaPlacement != null && battle.kothParticipantCount != null) {
+      return (
+        <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${layoutClass} ${placementBadgeClass(ffaPlacement)}`}>
+          {ordinal(ffaPlacement)} of {battle.kothParticipantCount}
+        </div>
+      );
+    }
+    const badge = OUTCOME_BADGE_CONFIG[outcome as keyof typeof OUTCOME_BADGE_CONFIG]?.badgeColor
+      || 'bg-surface-elevated text-secondary';
+    return (
+      <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${layoutClass} ${badge}`}>
+        {outcome === 'win' ? 'WIN' : outcome === 'loss' ? 'LOSS' : 'DRAW'}
+      </div>
+    );
+  };
+
+  const eloClass = eloChange >= 0 ? 'text-success' : 'text-error';
+  const eloText = `${eloChange > 0 ? '+' : ''}${eloChange}`;
+  const showZoneScore = isKoth && battle.kothZoneScore != null;
+
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -177,298 +175,115 @@ const CompactBattleCard: FC<CompactBattleCardProps> = ({
       onClick={onClick}
       onKeyDown={handleKeyDown}
       className={`
-        bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5 min-h-[44px]
-        border-l-4 ${getBorderColor()}
-        hover:bg-[#1a1f29] hover:border-[#58a6ff]/50 cursor-pointer 
+        bg-surface-elevated border border-white/10 rounded-lg p-2 mb-1.5 min-h-[44px]
+        border-l-4 ${borderColor(battle, outcome, modeConfig.borderColor)}
+        hover:bg-surface hover:border-primary/50 cursor-pointer 
         transition-all duration-150 ease-out
         hover:-translate-y-0.5
       `}
     >
       {/* Desktop Layout */}
       <div className="hidden lg:flex items-center gap-3">
-        {/* Battle Type Icon */}
         <div className="flex-shrink-0 w-6 text-center text-base">
-          {getBattleTypeIcon()}
+          {modeConfig.icon}
         </div>
-        
-        {/* Outcome Badge */}
+
         <div className="flex-shrink-0 w-20">
-          {isBye ? (
-            <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-yellow-500/20 text-warning">
-              BYE
-            </div>
-          ) : isFFA && ffaPlacement != null && battle.kothParticipantCount != null ? (
-            <div className={`text-xs font-bold px-1.5 py-0.5 rounded text-center whitespace-nowrap ${getKothPlacementBadgeClass()}`}>
-              {ffaPlacement}{getKothPlacementSuffix(ffaPlacement)} of {battle.kothParticipantCount}
-            </div>
-          ) : (
-            <div className={`text-xs font-bold px-1.5 py-0.5 rounded text-center ${getOutcomeBadgeClass()}`}>
-              {outcome === 'win' ? 'WIN' : outcome === 'loss' ? 'LOSS' : 'DRAW'}
-            </div>
-          )}
+          {outcomeBadge('text-center whitespace-nowrap')}
         </div>
-        
-        {isFFA ? (
-          /* FFA Layout — free-for-all, no 1v1 matchup */
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
-                FFA
-              </span>
-              <div className="text-xs text-[#8b949e]">
-                {getBattleTypeText()}
-              </div>
-            </div>
-            <div className="font-medium text-xs truncate">
-              <span className="text-[#58a6ff]">{myRobot.name}</span>
-              <span className="text-[#8b949e] mx-1.5">• {battle.kothParticipantCount ?? '?'} robots</span>
-              {forfeitTag}
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
+              {modeBadgeLabel}
+            </span>
+            <div className="text-xs text-secondary">
+              {typeText}
             </div>
           </div>
-        ) : isTagTeam ? (
-          /* Tag Team Layout */
-          <>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
-                  {modeConfig.label}
-                </span>
-                <div className="text-xs text-[#8b949e]">
-                  {getBattleTypeText()}
-                </div>
-              </div>
-              <div className="font-medium text-xs truncate">
-                <span className="text-[#58a6ff]">{myTeamRobots}</span>
-                <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-                <span className="text-[#e6edf3]">{opponentTeamRobots}{forfeitSuffix}</span>
-                {forfeitTag}
-              </div>
-            </div>
-          </>
-        ) : isTeamBattle ? (
-          /* Team Battle Layout (2v2/3v3) */
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
-                {modeConfig.label}
-              </span>
-              <div className="text-xs text-[#8b949e]">
-                {getBattleTypeText()}
-              </div>
-            </div>
-            <div className="font-medium text-xs truncate">
-              <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
-              <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}{forfeitSuffix}</span>
-              {forfeitTag}
-            </div>
-          </div>
-        ) : isTeamTournament ? (
-          /* Team Tournament Layout (2v2/3v3 🏆) */
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
-                {modeConfig.label}
-              </span>
-              <div className="text-xs text-[#8b949e]">
-                {getBattleTypeText()}
-              </div>
-            </div>
-            <div className="font-medium text-xs truncate">
-              <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
-              <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}{forfeitSuffix}</span>
-              {forfeitTag}
-            </div>
-          </div>
-        ) : (
-          /* Standard 1v1 Layout */
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
-                {modeConfig.label}
-              </span>
-              <div className="text-xs text-[#8b949e]">
-                {getBattleTypeText()}
-              </div>
-            </div>
-            <div className="font-medium text-xs truncate">
-              <span className="text-[#58a6ff]">{myRobot.name}</span>
-              <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-              <span className="text-[#e6edf3]">{opponentDisplay}{forfeitSuffix}</span>
-              {forfeitTag}
-            </div>
-          </div>
-        )}
-        
-        {/* Date */}
-        <div className="flex-shrink-0 w-28 text-xs text-[#8b949e]">
+          {matchup('font-medium text-xs truncate')}
+        </div>
+
+        <div className="flex-shrink-0 w-28 text-xs text-secondary">
           {formatDateTime(battle.createdAt)}
         </div>
-        
+
         {/* Prestige & Fame Indicators */}
         {(prestige != null && prestige > 0) || (fame != null && fame > 0) ? (
           <div className="flex-shrink-0 flex items-center gap-2">
             {prestige != null && prestige > 0 && (
-              <span className="text-xs font-medium text-[#a371f7]">⭐+{prestige}</span>
+              <span className="text-xs font-medium text-info">⭐+{prestige}</span>
             )}
             {fame != null && fame > 0 && (
-              <span className="text-xs font-medium text-[#d29922]">🎖️+{fame}</span>
+              <span className="text-xs font-medium text-warning">🎖️+{fame}</span>
             )}
           </div>
         ) : null}
-        
+
         {/* ELO Change / Zone Score */}
         <div className="flex-shrink-0 w-20 text-center">
-          {isKoth && battle.kothZoneScore != null ? (
-            <div className="text-xs font-bold text-orange-500">
-              ⏱ {battle.kothZoneScore}s
-            </div>
-          ) : isFFA ? (
-            <div className={`text-xs font-bold ${eloChange >= 0 ? 'text-[#3fb950]' : 'text-[#f85149]'}`}>
-              {eloChange > 0 ? '+' : ''}{eloChange}
-            </div>
+          {showZoneScore ? (
+            <div className="text-xs font-bold text-orange-500">⏱ {battle.kothZoneScore}s</div>
           ) : (
-            <div className={`text-xs font-bold ${eloChange >= 0 ? 'text-[#3fb950]' : 'text-[#f85149]'}`}>
-              {eloChange > 0 ? '+' : ''}{eloChange}
-            </div>
+            <div className={`text-xs font-bold ${eloClass}`}>{eloText}</div>
           )}
         </div>
-        
-        {/* Reward */}
+
         <div className="flex-shrink-0 w-16 text-right">
-          <div className="text-xs font-medium text-[#e6edf3]">₡{totalCredits.toLocaleString()}</div>
+          <div className="text-xs font-medium text-foreground">₡{totalCredits.toLocaleString()}</div>
         </div>
-        
-        {/* Arrow Icon */}
-        <div className="flex-shrink-0 w-6 text-center text-[#58a6ff] text-sm">
+
+        <div className="flex-shrink-0 w-6 text-center text-primary text-sm">
           →
         </div>
       </div>
-      
+
       {/* Mobile Layout */}
       <div className="lg:hidden">
-        {/* Header Row */}
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
-            <span className="text-base">{getBattleTypeIcon()}</span>
-            {isBye ? (
-              <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-warning">
-                BYE
-              </div>
-            ) : isFFA && ffaPlacement != null && battle.kothParticipantCount != null ? (
-              <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${getKothPlacementBadgeClass()}`}>
-                {ffaPlacement}{getKothPlacementSuffix(ffaPlacement)} of {battle.kothParticipantCount}
-              </div>
-            ) : (
-              <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${getOutcomeBadgeClass()}`}>
-                {outcome === 'win' ? 'WIN' : outcome === 'loss' ? 'LOSS' : 'DRAW'}
-              </div>
-            )}
-            {isFFA && (
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
-                FFA
-              </span>
-            )}
-            {isTagTeam && (
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
-                {modeConfig.label}
-              </span>
-            )}
-            {isTeamBattle && (
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
-                {modeConfig.label}
-              </span>
-            )}
-            {isTeamTournament && (
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
-                {modeConfig.label}
-              </span>
-            )}
-            {!isFFA && !isTagTeam && !isTeamBattle && !isTeamTournament && (
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
-                {modeConfig.label}
-              </span>
-            )}
+            <span className="text-base">{modeConfig.icon}</span>
+            {outcomeBadge('')}
+            <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
+              {modeBadgeLabel}
+            </span>
           </div>
-          <div className="text-xs text-[#8b949e]">
+          <div className="text-xs text-secondary">
             {formatDateTime(battle.createdAt)}
           </div>
         </div>
-        
-        {/* Battle Type */}
-        <div className="text-xs text-[#8b949e] mb-1.5">
-          {getBattleTypeText()}
+
+        <div className="text-xs text-secondary mb-1.5">
+          {typeText}
         </div>
-        
-        {/* Matchup Row */}
+
         <div className="mb-1.5">
-          {isFFA ? (
-            <div className="text-sm font-medium">
-              <span className="text-[#58a6ff]">{myRobot.name}</span>
-              <span className="text-[#8b949e] mx-1.5">• {battle.kothParticipantCount ?? '?'} robots</span>
-              {forfeitTag}
-            </div>
-          ) : isTagTeam ? (
-            <>
-              <div className="text-sm font-medium mb-1">
-                <span className="text-[#58a6ff]">{myTeamRobots}</span>
-                <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-                <span className="text-[#e6edf3]">{opponentTeamRobots}{forfeitSuffix}</span>
-                {forfeitTag}
-              </div>
-            </>
-          ) : isTeamBattle ? (
-            <div className="text-sm font-medium">
-              <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
-              <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}{forfeitSuffix}</span>
-              {forfeitTag}
-            </div>
-          ) : isTeamTournament ? (
-            <div className="text-sm font-medium">
-              <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
-              <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}{forfeitSuffix}</span>
-              {forfeitTag}
-            </div>
-          ) : (
-            <div className="text-sm font-medium">
-              <span className="text-[#58a6ff]">{myRobot.name}</span>
-              <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
-              <span className="text-[#e6edf3]">{opponentDisplay}{forfeitSuffix}</span>
-              {forfeitTag}
-            </div>
-          )}
+          {matchup('text-sm font-medium')}
         </div>
-        
+
         {/* Stats Row */}
         <div className="flex flex-wrap justify-between text-xs gap-y-1">
           <div>
-            <span className="text-[#57606a]">{isKoth ? 'Zone: ' : 'ELO: '}</span>
-            {isKoth && battle.kothZoneScore != null ? (
-              <span className="font-bold text-orange-500">
-                ⏱ {battle.kothZoneScore}s
-              </span>
+            <span className="text-tertiary">{isKoth ? 'Zone: ' : 'ELO: '}</span>
+            {showZoneScore ? (
+              <span className="font-bold text-orange-500">⏱ {battle.kothZoneScore}s</span>
             ) : (
-              <span className={`font-bold ${eloChange >= 0 ? 'text-[#3fb950]' : 'text-[#f85149]'}`}>
-                {eloChange > 0 ? '+' : ''}{eloChange}
-              </span>
+              <span className={`font-bold ${eloClass}`}>{eloText}</span>
             )}
           </div>
           {prestige != null && prestige > 0 && (
             <div>
-              <span className="text-xs font-medium text-[#a371f7]">⭐+{prestige}</span>
+              <span className="text-xs font-medium text-info">⭐+{prestige}</span>
             </div>
           )}
           {fame != null && fame > 0 && (
             <div>
-              <span className="text-xs font-medium text-[#d29922]">🎖️+{fame}</span>
+              <span className="text-xs font-medium text-warning">🎖️+{fame}</span>
             </div>
           )}
           <div>
-            <span className="text-[#57606a]">₡</span>
-            <span className="font-medium text-[#e6edf3]">{totalCredits.toLocaleString()}</span>
+            <span className="text-tertiary">₡</span>
+            <span className="font-medium text-foreground">{totalCredits.toLocaleString()}</span>
           </div>
         </div>
       </div>
