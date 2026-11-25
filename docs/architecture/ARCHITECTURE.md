@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls
 **Document Type**: Technical architecture reference
-**Version**: v2.4
-**Last Updated**: November 9, 2026
+**Version**: v2.6
+**Last Updated**: November 24, 2026
 **Status**: ✅ Current
 **Owner**: Robert Teunissen
 
@@ -16,6 +16,7 @@
 - v2.3 (Sep 21, 2026): Updated package versions, service inventory, unified scheduling/schema terminology, current player routes, Finance Center, and operational alerting
 - v2.4 (Nov 9, 2026): Added the Shared Code section (`app/shared/utils` formulas and `app/shared/types` API contract types)
 - v2.5 (Nov 12, 2026): Shared contracts for facilities ROI, Finance Center, battle log, subscriptions, seasons and the admin portal (#592)
+- v2.6 (Nov 24, 2026): Leaderboard and facility overview contracts (`leaderboards.ts`, `facilities.ts`); account field rules (`accountRules`), shared by the backend validators and the registration/profile forms; prestige rank and fame tier names, refinement catalog bonus and Hall of Records minimums moved into `app/shared/utils`
 
 ---
 
@@ -227,7 +228,7 @@ Code used by both the backend and the frontend lives in `app/shared` and is depl
 
 | Folder | Contents | Backend path | Frontend path |
 |--------|----------|--------------|---------------|
-| `utils/` | Game formulas (repair cost, discounts, prestige gates, attributes) | `src/shared/utils` (symlink) | `@shared/utils/*` |
+| `utils/` | Game formulas and rule constants (repair cost, discounts, prestige gates and rank/fame tier names, attributes, refinement rules, Hall of Records minimums, account field rules: username, email, passwords, stable name, safe names) | `src/shared/utils` (symlink) | `@shared/utils/*` |
 | `types/` | API contract types: the JSON shape of a response | `src/shared/types` (symlink) | `@shared/types` |
 
 Contract types describe the wire format, so dates are ISO 8601 strings. They are imported with `import type` and contain no runtime code. The backend service returns the shared type and the frontend API call uses it, so a field change on either side fails `tsc` on the other. Response shapes that only one app uses stay local. Where a contract lists values the backend keeps in a runtime tuple (transaction types, subscribable events), the tuple is declared `as const satisfies readonly <SharedUnion>[]`, so the backend cannot send a value the contract lacks.
@@ -257,6 +258,8 @@ Current contracts (#592 moved the facilities, finance, battle log, subscription,
 | `practice-arena.ts` | Practice Arena What-If overrides, academy levels, battle and batch results (`PracticeCombatResult` carries the raw simulator events as `BattleLogEvent`) |
 | `tournaments.ts` | `/api/tournaments/:id/seedings`, resolved bracket participants |
 | `hall-of-records.ts` | `/api/records` record owner and win streak lists |
+| `leaderboards.ts` | `/api/leaderboards/fame`, `/losses`, `/prestige` |
+| `facilities.ts` | `/api/facilities` (facility overview) |
 | `stable.ts` | `StableType`, used by the contracts above |
 | `admin-*.ts` | Admin portal pages: `admin-dashboard`, `admin-players`, `admin-economy`, `admin-battles`, `admin-league-health`, `admin-tournaments`, `admin-scheduler` (Cycle Controls; also the stored `scheduler_job_runs.summary`), `admin-analysis` (Attributes, Weapons, Meta), `admin-achievements`, `admin-practice-arena`, `admin-images`, `admin-security`, `admin-system`, `admin-actions`, `admin-automatons` (request bodies included) |
 
