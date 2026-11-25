@@ -20,6 +20,7 @@ function seed(overrides: Partial<SeasonState>): void {
     preparationDay: 0,
     remainingPreparationCycles: 0,
     isLegacy: false,
+    countdownCycles: 7,
     ...overrides,
   };
   useSeasonStore.setState({ season, failed: false, loading: false, dismissedBanner: null });

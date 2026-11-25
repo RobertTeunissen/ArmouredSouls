@@ -68,7 +68,7 @@ describe('SeasonHistoryBlock', () => {
     useSeasonStore.setState({
       season: {
         seasonNumber: 1, phase: 'competitive', seasonCycle: 95, seasonLengthCycles: 100,
-        remainingCompetitiveCycles: 5, preparationDay: 0, remainingPreparationCycles: 0, isLegacy: false,
+        remainingCompetitiveCycles: 5, preparationDay: 0, remainingPreparationCycles: 0, isLegacy: false, countdownCycles: 7,
       },
     });
     vi.mocked(seasonApi.getStableSeasonHistory).mockResolvedValue([summary]);

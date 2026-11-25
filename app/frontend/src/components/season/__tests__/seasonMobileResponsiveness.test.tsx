@@ -38,6 +38,7 @@ function competitiveSeason(overrides: Partial<SeasonState> = {}): SeasonState {
     preparationDay: 0,
     remainingPreparationCycles: 0,
     isLegacy: false,
+    countdownCycles: 7,
     ...overrides,
   };
 }

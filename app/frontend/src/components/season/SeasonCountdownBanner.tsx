@@ -15,22 +15,18 @@
  */
 
 import { Link, useLocation } from 'react-router-dom';
-import { useSeasonStore, selectSeason, selectShouldShowCountdown, SEASON_COUNTDOWN_CYCLES } from '../../stores/seasonStore';
+import { useSeasonStore, selectSeason, selectShouldShowCountdown } from '../../stores/seasonStore';
 import DashboardNotification from '../DashboardNotification';
 
 interface SeasonCountdownProps {
   /** Owner's user id, so the notice can link to their own season history. */
   userId?: number;
-  countdownCycles?: number;
 }
 
 /** The countdown notice itself, or nothing outside the countdown window or once dismissed this cycle. */
-export function SeasonCountdownNotice({
-  userId,
-  countdownCycles = SEASON_COUNTDOWN_CYCLES,
-}: SeasonCountdownProps) {
+export function SeasonCountdownNotice({ userId }: SeasonCountdownProps) {
   const season = useSeasonStore(selectSeason);
-  const show = useSeasonStore(selectShouldShowCountdown(countdownCycles));
+  const show = useSeasonStore(selectShouldShowCountdown);
   const dismissBanner = useSeasonStore((s) => s.dismissBanner);
 
   if (!show || !season) return null;
@@ -66,7 +62,7 @@ export function SeasonCountdownNotice({
 /** Site-wide placement below the navigation; the Dashboard shows the notice in its own list. */
 function SeasonCountdownBanner(props: SeasonCountdownProps) {
   const location = useLocation();
-  const show = useSeasonStore(selectShouldShowCountdown(props.countdownCycles ?? SEASON_COUNTDOWN_CYCLES));
+  const show = useSeasonStore(selectShouldShowCountdown);
 
   if (!show || location.pathname === '/dashboard') return null;
 

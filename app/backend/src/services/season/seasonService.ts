@@ -80,6 +80,7 @@ export function deriveSeasonState(
   row: SeasonRow,
   seasonLengthCycles: number,
   preparationLengthCycles: number,
+  countdownCycles: number,
 ): SeasonState {
   const phase = row.phase as SeasonPhase;
   const isCompetitive = phase === 'competitive';
@@ -107,6 +108,7 @@ export function deriveSeasonState(
       ? Math.max(0, preparationLengthCycles - row.preparationCyclesCompleted)
       : 0,
     isLegacy,
+    countdownCycles,
   };
 }
 
@@ -177,7 +179,7 @@ export async function getCurrentSeason(): Promise<SeasonState> {
 
   const config = loadEnvConfig();
   const row = await getOrCreateActiveSeason();
-  const state = deriveSeasonState(row, config.seasonLengthCycles, config.preparationLengthCycles);
+  const state = deriveSeasonState(row, config.seasonLengthCycles, config.preparationLengthCycles, config.countdownCycles);
 
   cachedState = { state, expiresAt: Date.now() + CACHE_TTL_MS };
   return state;

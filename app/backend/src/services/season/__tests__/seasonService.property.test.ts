@@ -26,6 +26,7 @@ describe('deriveSeasonState — Property 2: Season_Cycle is a total function of 
             },
             length,
             2,
+            7,
           );
           expect(state.seasonCycle).toBe(completed + 1);
           expect(state.preparationDay).toBe(0);
@@ -52,6 +53,7 @@ describe('deriveSeasonState — Property 2: Season_Cycle is a total function of 
             },
             100,
             prepLength,
+            7,
           );
           expect(state.seasonCycle).toBe(0);
           expect(state.preparationDay).toBe(prepCompleted + 1);
@@ -77,6 +79,7 @@ describe('deriveSeasonState — Property 2: Season_Cycle is a total function of 
             },
             length,
             2,
+            7,
           );
           expect(state.remainingCompetitiveCycles).toBeGreaterThanOrEqual(0);
         },
@@ -97,6 +100,7 @@ describe('deriveSeasonState — Property 2: Season_Cycle is a total function of 
           },
           100,
           2,
+          7,
         );
         expect(state.isLegacy).toBe(n === LEGACY_SEASON_NUMBER);
         if (state.isLegacy) {
@@ -129,6 +133,7 @@ describe('deriveSeasonState — Property 2: Season_Cycle is a total function of 
             },
             configuredLength,
             2,
+            7,
           );
 
           const extended = deriveSeasonState(
@@ -141,6 +146,7 @@ describe('deriveSeasonState — Property 2: Season_Cycle is a total function of 
             },
             configuredLength,
             2,
+            7,
           );
 
           // The cycle the player reads is unchanged by an extension.
@@ -167,6 +173,7 @@ describe('deriveSeasonState — Property 2: Season_Cycle is a total function of 
       },
       100,
       2,
+      7,
     );
     // Season 0 has no fixed length, so it advertises no countdown regardless.
     expect(state.remainingCompetitiveCycles).toBe(0);
@@ -183,6 +190,7 @@ describe('deriveSeasonState — Property 2: Season_Cycle is a total function of 
       },
       100,
       2,
+      7,
     );
     expect(state.seasonCycle).toBe(119);
     expect(state.isLegacy).toBe(true);

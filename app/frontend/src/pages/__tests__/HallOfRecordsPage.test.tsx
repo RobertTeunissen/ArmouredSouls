@@ -64,7 +64,7 @@ describe('HallOfRecordsPage — Stables filter (#595)', () => {
     await user.click(within(filter).getByRole('button', { name: 'Players' }));
 
     expect(screen.getByTestId('location')).toHaveTextContent('stables=players');
-    expect(mockGet).toHaveBeenLastCalledWith('/api/records?stables=players');
+    expect(mockGet).toHaveBeenLastCalledWith('/api/records?stables=players', expect.anything());
     expect(localStorage.setItem).toHaveBeenCalledWith('stableFilter', 'players');
     const tile = await screen.findByTestId('record-tile-highestElo');
     expect(within(tile).getByTestId('record-tile-place')).toHaveTextContent('Place #2');
@@ -79,7 +79,7 @@ describe('HallOfRecordsPage — Stables filter (#595)', () => {
 
     expect(await screen.findByTestId('records-players-note')).toBeInTheDocument();
     expect(screen.getByTestId('location')).toHaveTextContent('stables=players');
-    expect(mockGet).toHaveBeenCalledWith('/api/records?stables=players');
+    expect(mockGet).toHaveBeenCalledWith('/api/records?stables=players', expect.anything());
   });
 
   it('lists the players\' top 10 with their real places in the full list', async () => {
@@ -113,7 +113,7 @@ describe('HallOfRecordsPage — board', () => {
     useSeasonStore.setState({
       season: {
         seasonNumber: 1, phase: 'competitive', seasonCycle: 97, seasonLengthCycles: 100, remainingCompetitiveCycles: 3,
-        preparationDay: 0, remainingPreparationCycles: 0, isLegacy: false,
+        preparationDay: 0, remainingPreparationCycles: 0, isLegacy: false, countdownCycles: 7,
       },
     });
     renderPage();
@@ -124,7 +124,7 @@ describe('HallOfRecordsPage — board', () => {
     }
     expect(screen.getByText(/Season 1 records · cycle 97 of 100/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Past seasons: Season Archive/ })).toHaveAttribute('href', '/seasons');
-    expect(mockGet).toHaveBeenCalledWith('/api/records');
+    expect(mockGet).toHaveBeenCalledWith('/api/records', expect.anything());
   });
 
   it('summarises the viewer\'s places', async () => {

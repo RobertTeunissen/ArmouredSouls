@@ -77,24 +77,20 @@ export const useSeasonStore = create<SeasonStoreState>((set, get) => ({
 export const selectSeason = (s: SeasonStoreState): SeasonStateDto | null => s.season;
 export const selectSeasonFailed = (s: SeasonStoreState): boolean => s.failed;
 
-/** Final competitive cycles that show the season countdown. Mirrors the backend `COUNTDOWN_CYCLES` default. */
-export const SEASON_COUNTDOWN_CYCLES = 7;
-
-/** Whether the countdown banner should show right now. */
-export function selectShouldShowCountdown(countdownCycles: number = SEASON_COUNTDOWN_CYCLES) {
-  return (s: SeasonStoreState): boolean => {
-    const season = s.season;
-    if (!season || season.phase !== 'competitive' || season.isLegacy) return false;
-    if (season.remainingCompetitiveCycles > countdownCycles) return false;
-    // Dismissal lasts for the remainder of the cycle only.
-    const dismissed = s.dismissedBanner;
-    if (
-      dismissed &&
-      dismissed.seasonNumber === season.seasonNumber &&
-      dismissed.seasonCycle === season.seasonCycle
-    ) {
-      return false;
-    }
-    return true;
-  };
+/**
+ * Whether the countdown banner should show right now: during the season's
+ * final `countdownCycles` competitive cycles (sent by the backend), unless
+ * dismissed this cycle.
+ */
+export function selectShouldShowCountdown(s: SeasonStoreState): boolean {
+  const season = s.season;
+  if (!season || season.phase !== 'competitive' || season.isLegacy) return false;
+  if (season.remainingCompetitiveCycles > season.countdownCycles) return false;
+  // Dismissal lasts for the remainder of the cycle only.
+  const dismissed = s.dismissedBanner;
+  return !(
+    dismissed &&
+    dismissed.seasonNumber === season.seasonNumber &&
+    dismissed.seasonCycle === season.seasonCycle
+  );
 }

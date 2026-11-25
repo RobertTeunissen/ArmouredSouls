@@ -36,6 +36,7 @@ const competitive: AdminSeasonState = {
   preparationDay: 0,
   remainingPreparationCycles: 0,
   isLegacy: false,
+  countdownCycles: 7,
   rolloverInProgress: false,
   balanceChangesAppropriate: false,
   config: { seasonLengthCycles: 100, preparationLengthCycles: 2, countdownCycles: 7, accoladeDepth: 3, retainedImagesPerStable: 20 },
