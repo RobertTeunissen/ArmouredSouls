@@ -6,8 +6,6 @@ import {
   TagTeamWithRobots,
   TagTeamBattleResult,
   TagTeamRawEvent,
-  TagOutEvent,
-  TagInEvent,
   BATTLE_TIME_LIMIT,
 } from './tagTeamTypes';
 
@@ -37,86 +35,147 @@ function activateReserveRobot(robot: RobotWithWeapons): RobotWithWeapons {
   return robot;
 }
 
+type TeamNumber = 1 | 2;
+type TagTeamPhase = TagTeamBattleResult['phases'][number];
+
+/** One team's running state across the phases of a tag team battle. */
+interface TeamSide {
+  team: TagTeamWithRobots;
+  teamNumber: TeamNumber;
+  /** The robot fighting now: the Active robot until the tag-out, then the Reserve. */
+  current: RobotWithWeapons;
+  reserveUsed: boolean;
+  tagOutTime?: number;
+  activeDamageDealt: number;
+  reserveDamageDealt: number;
+  activeSurvivalTime: number;
+  reserveSurvivalTime: number;
+}
+
+function createSide(team: TagTeamWithRobots, teamNumber: TeamNumber): TeamSide {
+  return {
+    team, teamNumber, current: team.activeRobot, reserveUsed: false,
+    activeDamageDealt: 0, reserveDamageDealt: 0, activeSurvivalTime: 0, reserveSurvivalTime: 0,
+  };
+}
+
 /**
  * Simulate a tag team battle with tag-out mechanics
  * Requirements 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8
  * Requirement 7.1, 7.2, 7.3: Record all combat events with timestamps, tag-out/tag-in events
  * Requirement 10.7: Track damage dealt and survival time for fame calculation
+ *
+ * Phase 1 is Active vs Active. A side whose robot yields or is destroyed tags
+ * in its Reserve (both sides at once when both fall in phase 1), and the
+ * battle continues until each side has used its Reserve or time runs out.
  */
 export async function simulateTagTeamBattle(
   team1: TagTeamWithRobots,
   team2: TagTeamWithRobots
 ): Promise<TagTeamBattleResult> {
   const battleEvents: TagTeamRawEvent[] = [];
-  const tagOutEvents: TagOutEvent[] = [];
-  const tagInEvents: TagInEvent[] = [];
-
-  let team1CurrentRobot = team1.activeRobot;
-  let team2CurrentRobot = team2.activeRobot;
-  let team1ReserveUsed = false;
-  let team2ReserveUsed = false;
-  let team1TagOutTime: number | undefined;
-  let team2TagOutTime: number | undefined;
-  let currentTime: number;
+  const side1 = createSide(team1, 1);
+  const side2 = createSide(team2, 2);
   const maxTime = BATTLE_TIME_LIMIT;
+  let currentTime = 0;
+  let lastPhaseWasDraw = false; // Whether the final phase ended in a time-expired draw
 
-  // Track damage dealt and survival time for each robot
-  let team1ActiveDamageDealt = 0;
-  let team1ReserveDamageDealt = 0;
-  let team2ActiveDamageDealt = 0;
-  let team2ReserveDamageDealt = 0;
-  let team1ActiveSurvivalTime = 0;
-  let team1ReserveSurvivalTime = 0;
-  let team2ActiveSurvivalTime = 0;
-  let team2ReserveSurvivalTime = 0;
-  let lastPhaseWasDraw: boolean; // Track if the final phase ended in a time-expired draw
+  const matchup = (): TagTeamPhase => ({
+    robot1Name: side1.current.name,
+    robot2Name: side2.current.name,
+    robot1Stance: side1.current.stance,
+    robot2Stance: side2.current.stance,
+    robot1MaxHP: side1.current.maxHP,
+    robot2MaxHP: side2.current.maxHP,
+  });
+  const phases: TagTeamPhase[] = [matchup()];
+
+  /** Fight the current robots, carry HP/shields forward and credit damage and time. */
+  const runPhase = (): ReturnType<typeof simulateBattle> => {
+    const phaseStartTime = currentTime;
+    const result = simulateBattle(side1.current, side2.current);
+    const duration = result.durationSeconds;
+    currentTime += duration;
+    // Shields carry over too, so a surviving robot keeps depleted shields (Requirement 2.4)
+    side1.current.currentHP = result.robot1FinalHP;
+    side2.current.currentHP = result.robot2FinalHP;
+    side1.current.currentShield = result.robot1FinalShield;
+    side2.current.currentShield = result.robot2FinalShield;
+    for (const [side, damage] of [[side1, result.robot1DamageDealt], [side2, result.robot2DamageDealt]] as const) {
+      if (side.reserveUsed) {
+        side.reserveDamageDealt += damage;
+        side.reserveSurvivalTime += duration;
+      } else {
+        side.activeDamageDealt += damage;
+        side.activeSurvivalTime += duration;
+      }
+    }
+    lastPhaseWasDraw = result.isDraw;
+    // Combat events with the phase's start as timestamp offset (Requirement 7.1)
+    if (result.events && Array.isArray(result.events)) {
+      battleEvents.push(...result.events.map(event => ({ ...event, timestamp: event.timestamp + phaseStartTime })));
+    }
+    return result;
+  };
+
+  /** Requirements 3.4, 7.2: the current robot leaves combat. */
+  const tagOut = (side: TeamSide): void => {
+    side.tagOutTime = currentTime;
+    const robot = side.current;
+    const reason = robot.currentHP <= 0 ? 'destruction' : 'yield';
+    battleEvents.push({
+      timestamp: currentTime,
+      type: 'tag_out',
+      teamNumber: side.teamNumber,
+      robotId: robot.id,
+      reason,
+      [side.teamNumber === 1 ? 'robot1HP' : 'robot2HP']: robot.currentHP,
+      message: CombatMessageGenerator.generateTagOut({
+        robotName: robot.name,
+        teamName: side.team.teamName,
+        reason,
+        finalHP: robot.currentHP,
+      }),
+    });
+  };
+
+  /** Requirements 3.5, 7.3: the Reserve enters at full HP and shields. */
+  const tagIn = (side: TeamSide): void => {
+    side.current = activateReserveRobot(side.team.reserveRobot);
+    side.reserveUsed = true;
+    battleEvents.push({
+      timestamp: currentTime,
+      type: 'tag_in',
+      teamNumber: side.teamNumber,
+      robotId: side.current.id,
+      message: CombatMessageGenerator.generateTagIn({
+        robotName: side.current.name,
+        teamName: side.team.teamName,
+        hp: side.current.currentHP,
+      }),
+    });
+  };
 
   // Phase 1: Active robots fight
-  const phase1Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
-  const phase1Duration = phase1Result.durationSeconds;
-  currentTime = phase1Duration;
-  team1CurrentRobot.currentHP = phase1Result.robot1FinalHP;
-  team2CurrentRobot.currentHP = phase1Result.robot2FinalHP;
-  // FIX: Capture shield state after phase 1 (Requirement 2.4)
-  // This ensures surviving robot keeps depleted shields into phase 2
-  team1CurrentRobot.currentShield = phase1Result.robot1FinalShield;
-  team2CurrentRobot.currentShield = phase1Result.robot2FinalShield;
-  
-  // Track phase 1 damage and survival time
-  team1ActiveDamageDealt += phase1Result.robot1DamageDealt;
-  team2ActiveDamageDealt += phase1Result.robot2DamageDealt;
-  team1ActiveSurvivalTime += phase1Duration;
-  team2ActiveSurvivalTime += phase1Duration;
-  
-  // Track if phase 1 had a decisive winner (destruction or yield)
-  // Used below for tag-out fallback check
-  
-  // Collect combat events from phase 1 (Requirement 7.1)
-  if (phase1Result.events && Array.isArray(phase1Result.events)) {
-    battleEvents.push(...phase1Result.events.map(e => ({ ...e })));
-  }
-
-  // Capture arena metadata from phase 1 (same radius for all phases)
+  const phase1Result = runPhase();
+  // Arena metadata from phase 1 (same radius for all phases)
   const arenaRadius = phase1Result.arenaRadius;
   const startingPositions = phase1Result.startingPositions;
   let endingPositions = phase1Result.endingPositions;
-  lastPhaseWasDraw = phase1Result.isDraw;
 
-  // Check for tag-outs (Requirement 3.3: HP ≤ yield threshold OR HP ≤ 0)
-  // Also check phase1 winnerId as a fallback: if the simulator ended the battle
-  // (via yield or destruction), the losing robot must tag out even if shouldTagOut
-  // would miss it due to floating-point edge cases.
+  // Tag-out check (Requirement 3.3: HP ≤ yield threshold OR HP ≤ 0). The phase 1
+  // winner is a fallback: if the simulator ended the battle by yield or
+  // destruction, the loser tags out even if shouldTagOut misses it on a
+  // floating-point edge.
   const phase1Winner = phase1Result.winnerId;
-  const team1NeedsTagOut = shouldTagOut(team1CurrentRobot) ||
-    (phase1Winner !== null && phase1Winner === team2CurrentRobot.id && !team1ReserveUsed);
-  const team2NeedsTagOut = shouldTagOut(team2CurrentRobot) ||
-    (phase1Winner !== null && phase1Winner === team1CurrentRobot.id && !team2ReserveUsed);
+  const team1NeedsTagOut = shouldTagOut(side1.current) ||
+    (phase1Winner !== null && phase1Winner === side2.current.id);
+  const team2NeedsTagOut = shouldTagOut(side2.current) ||
+    (phase1Winner !== null && phase1Winner === side1.current.id);
 
-  // If a tag-out is happening, strip the yield/destroyed/battle_end events from phase 1
-  // since the battle continues with the reserve robot
   if (team1NeedsTagOut || team2NeedsTagOut) {
+    // The battle continues with a Reserve, so phase 1's ending events are dropped
     const terminalTypes = ['yield', 'destroyed', 'battle_end'];
-    // Remove terminal events that were added from phase 1
     for (let i = battleEvents.length - 1; i >= 0; i--) {
       if (terminalTypes.includes(battleEvents[i].type)) {
         battleEvents.splice(i, 1);
@@ -124,479 +183,36 @@ export async function simulateTagTeamBattle(
     }
   }
 
-  // Handle simultaneous tag-outs
   if (team1NeedsTagOut && team2NeedsTagOut) {
-    // Both teams tag out at the same time
-    team1TagOutTime = currentTime;
-    team2TagOutTime = currentTime;
-
-    // Record tag-out events (Requirement 3.4: remove from combat)
-    const team1TagOutEvent: TagOutEvent = {
-      timestamp: currentTime,
-      teamNumber: 1,
-      robotId: team1CurrentRobot.id,
-      robotName: team1CurrentRobot.name,
-      reason: team1CurrentRobot.currentHP <= 0 ? 'destruction' : 'yield',
-      finalHP: team1CurrentRobot.currentHP,
-    };
-    tagOutEvents.push(team1TagOutEvent);
-
-    const team2TagOutEvent: TagOutEvent = {
-      timestamp: currentTime,
-      teamNumber: 2,
-      robotId: team2CurrentRobot.id,
-      robotName: team2CurrentRobot.name,
-      reason: team2CurrentRobot.currentHP <= 0 ? 'destruction' : 'yield',
-      finalHP: team2CurrentRobot.currentHP,
-    };
-    tagOutEvents.push(team2TagOutEvent);
-
-    // Generate tag-out messages (Requirement 7.2)
-    battleEvents.push({
-      timestamp: currentTime,
-      type: 'tag_out',
-      teamNumber: 1,
-      robotId: team1CurrentRobot.id,
-      reason: team1TagOutEvent.reason,
-      robot1HP: team1TagOutEvent.finalHP,
-      message: CombatMessageGenerator.generateTagOut({
-        robotName: team1CurrentRobot.name,
-        teamName: team1.teamName,
-        reason: team1TagOutEvent.reason,
-        finalHP: team1TagOutEvent.finalHP,
-      }),
-    });
-
-    battleEvents.push({
-      timestamp: currentTime,
-      type: 'tag_out',
-      teamNumber: 2,
-      robotId: team2CurrentRobot.id,
-      reason: team2TagOutEvent.reason,
-      robot2HP: team2TagOutEvent.finalHP,
-      message: CombatMessageGenerator.generateTagOut({
-        robotName: team2CurrentRobot.name,
-        teamName: team2.teamName,
-        reason: team2TagOutEvent.reason,
-        finalHP: team2TagOutEvent.finalHP,
-      }),
-    });
-
-    // Activate reserve robots (Requirement 3.5: full HP, fresh cooldowns)
-    team1CurrentRobot = activateReserveRobot(team1.reserveRobot);
-    team2CurrentRobot = activateReserveRobot(team2.reserveRobot);
-    team1ReserveUsed = true;
-    team2ReserveUsed = true;
-
-    // Record tag-in events
-    const team1TagInEvent: TagInEvent = {
-      timestamp: currentTime,
-      teamNumber: 1,
-      robotId: team1CurrentRobot.id,
-      robotName: team1CurrentRobot.name,
-      initialHP: team1CurrentRobot.currentHP,
-    };
-    tagInEvents.push(team1TagInEvent);
-
-    const team2TagInEvent: TagInEvent = {
-      timestamp: currentTime,
-      teamNumber: 2,
-      robotId: team2CurrentRobot.id,
-      robotName: team2CurrentRobot.name,
-      initialHP: team2CurrentRobot.currentHP,
-    };
-    tagInEvents.push(team2TagInEvent);
-
-    // Generate tag-in messages (Requirement 7.3)
-    battleEvents.push({
-      timestamp: currentTime,
-      type: 'tag_in',
-      teamNumber: 1,
-      robotId: team1CurrentRobot.id,
-      message: CombatMessageGenerator.generateTagIn({
-        robotName: team1CurrentRobot.name,
-        teamName: team1.teamName,
-        hp: team1CurrentRobot.currentHP,
-      }),
-    });
-
-    battleEvents.push({
-      timestamp: currentTime,
-      type: 'tag_in',
-      teamNumber: 2,
-      robotId: team2CurrentRobot.id,
-      message: CombatMessageGenerator.generateTagIn({
-        robotName: team2CurrentRobot.name,
-        teamName: team2.teamName,
-        hp: team2CurrentRobot.currentHP,
-      }),
-    });
-
-    // Continue battle with reserve robots
+    // Both sides tag out at the same moment: Reserve vs Reserve
+    tagOut(side1);
+    tagOut(side2);
+    tagIn(side1);
+    tagIn(side2);
+    phases.push(matchup());
+    if (currentTime < maxTime) runPhase();
+  } else if (team1NeedsTagOut || team2NeedsTagOut) {
+    const first = team1NeedsTagOut ? side1 : side2;
+    const other = team1NeedsTagOut ? side2 : side1;
+    tagOut(first);
+    tagIn(first);
+    phases.push(matchup());
     if (currentTime < maxTime) {
-      const phase2StartTime = currentTime;
-      const phase2Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
-      const phase2Duration = phase2Result.durationSeconds;
-      currentTime += phase2Duration;
-      team1CurrentRobot.currentHP = phase2Result.robot1FinalHP;
-      team2CurrentRobot.currentHP = phase2Result.robot2FinalHP;
-      // FIX: Capture shield state after phase 2 (Requirement 2.4)
-      team1CurrentRobot.currentShield = phase2Result.robot1FinalShield;
-      team2CurrentRobot.currentShield = phase2Result.robot2FinalShield;
-      
-      // Track phase 2 damage and survival time
-      team1ReserveDamageDealt += phase2Result.robot1DamageDealt;
-      team2ReserveDamageDealt += phase2Result.robot2DamageDealt;
-      team1ReserveSurvivalTime += phase2Duration;
-      team2ReserveSurvivalTime += phase2Duration;
-      lastPhaseWasDraw = phase2Result.isDraw;
-      
-      // Collect combat events from phase 2 with timestamp offset (Requirement 7.1)
-      if (phase2Result.events && Array.isArray(phase2Result.events)) {
-        const offsetEvents = phase2Result.events.map(event => ({
-          ...event,
-          timestamp: event.timestamp + phase2StartTime,
-        }));
-        battleEvents.push(...offsetEvents);
-      }
-    }
-  } else if (team1NeedsTagOut) {
-    // Only team 1 tags out
-    team1TagOutTime = currentTime;
-
-    const team1TagOutEvent: TagOutEvent = {
-      timestamp: currentTime,
-      teamNumber: 1,
-      robotId: team1CurrentRobot.id,
-      robotName: team1CurrentRobot.name,
-      reason: team1CurrentRobot.currentHP <= 0 ? 'destruction' : 'yield',
-      finalHP: team1CurrentRobot.currentHP,
-    };
-    tagOutEvents.push(team1TagOutEvent);
-
-    // Generate tag-out message (Requirement 7.2)
-    battleEvents.push({
-      timestamp: currentTime,
-      type: 'tag_out',
-      teamNumber: 1,
-      robotId: team1CurrentRobot.id,
-      reason: team1TagOutEvent.reason,
-      robot1HP: team1TagOutEvent.finalHP,
-      message: CombatMessageGenerator.generateTagOut({
-        robotName: team1CurrentRobot.name,
-        teamName: team1.teamName,
-        reason: team1TagOutEvent.reason,
-        finalHP: team1TagOutEvent.finalHP,
-      }),
-    });
-
-    team1CurrentRobot = activateReserveRobot(team1.reserveRobot);
-    team1ReserveUsed = true;
-
-    const team1TagInEvent: TagInEvent = {
-      timestamp: currentTime,
-      teamNumber: 1,
-      robotId: team1CurrentRobot.id,
-      robotName: team1CurrentRobot.name,
-      initialHP: team1CurrentRobot.currentHP,
-    };
-    tagInEvents.push(team1TagInEvent);
-
-    // Generate tag-in message (Requirement 7.3)
-    battleEvents.push({
-      timestamp: currentTime,
-      type: 'tag_in',
-      teamNumber: 1,
-      robotId: team1CurrentRobot.id,
-      message: CombatMessageGenerator.generateTagIn({
-        robotName: team1CurrentRobot.name,
-        teamName: team1.teamName,
-        hp: team1CurrentRobot.currentHP,
-      }),
-    });
-
-    // Continue battle
-    if (currentTime < maxTime) {
-      const phase2StartTime = currentTime;
-      const phase2Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
-      const phase2Duration = phase2Result.durationSeconds;
-      currentTime += phase2Duration;
-      team1CurrentRobot.currentHP = phase2Result.robot1FinalHP;
-      team2CurrentRobot.currentHP = phase2Result.robot2FinalHP;
-      // FIX: Capture shield state after phase 2 (Requirement 2.4)
-      team1CurrentRobot.currentShield = phase2Result.robot1FinalShield;
-      team2CurrentRobot.currentShield = phase2Result.robot2FinalShield;
-      
-      // Track phase 2 damage and survival time
-      team1ReserveDamageDealt += phase2Result.robot1DamageDealt;
-      team2ActiveDamageDealt += phase2Result.robot2DamageDealt;
-      team1ReserveSurvivalTime += phase2Duration;
-      team2ActiveSurvivalTime += phase2Duration;
-      lastPhaseWasDraw = phase2Result.isDraw;
-      
-      // Collect combat events from phase 2 with timestamp offset (Requirement 7.1)
-      if (phase2Result.events && Array.isArray(phase2Result.events)) {
-        const offsetEvents = phase2Result.events.map(event => ({
-          ...event,
-          timestamp: event.timestamp + phase2StartTime,
-        }));
-        battleEvents.push(...offsetEvents);
-      }
-
-      // Check if team 2 needs to tag out now
-      if (shouldTagOut(team2CurrentRobot) && !team2ReserveUsed) {
-        team2TagOutTime = currentTime;
-
-        const team2TagOutEvent: TagOutEvent = {
-          timestamp: currentTime,
-          teamNumber: 2,
-          robotId: team2CurrentRobot.id,
-          robotName: team2CurrentRobot.name,
-          reason: team2CurrentRobot.currentHP <= 0 ? 'destruction' : 'yield',
-          finalHP: team2CurrentRobot.currentHP,
-        };
-        tagOutEvents.push(team2TagOutEvent);
-
-        // Generate tag-out message (Requirement 7.2)
-        battleEvents.push({
-          timestamp: currentTime,
-          type: 'tag_out',
-          teamNumber: 2,
-          robotId: team2CurrentRobot.id,
-          reason: team2TagOutEvent.reason,
-          robot2HP: team2TagOutEvent.finalHP,
-          message: CombatMessageGenerator.generateTagOut({
-            robotName: team2CurrentRobot.name,
-            teamName: team2.teamName,
-            reason: team2TagOutEvent.reason,
-            finalHP: team2TagOutEvent.finalHP,
-          }),
-        });
-
-        team2CurrentRobot = activateReserveRobot(team2.reserveRobot);
-        team2ReserveUsed = true;
-
-        const team2TagInEvent: TagInEvent = {
-          timestamp: currentTime,
-          teamNumber: 2,
-          robotId: team2CurrentRobot.id,
-          robotName: team2CurrentRobot.name,
-          initialHP: team2CurrentRobot.currentHP,
-        };
-        tagInEvents.push(team2TagInEvent);
-
-        // Generate tag-in message (Requirement 7.3)
-        battleEvents.push({
-          timestamp: currentTime,
-          type: 'tag_in',
-          teamNumber: 2,
-          robotId: team2CurrentRobot.id,
-          message: CombatMessageGenerator.generateTagIn({
-            robotName: team2CurrentRobot.name,
-            teamName: team2.teamName,
-            hp: team2CurrentRobot.currentHP,
-          }),
-        });
-
-        // Final phase
-        if (currentTime < maxTime) {
-          const phase3StartTime = currentTime;
-          const phase3Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
-          const phase3Duration = phase3Result.durationSeconds;
-          currentTime += phase3Duration;
-          team1CurrentRobot.currentHP = phase3Result.robot1FinalHP;
-          team2CurrentRobot.currentHP = phase3Result.robot2FinalHP;
-          // FIX: Capture shield state after phase 3 (Requirement 2.4)
-          team1CurrentRobot.currentShield = phase3Result.robot1FinalShield;
-          team2CurrentRobot.currentShield = phase3Result.robot2FinalShield;
-          
-          // Track phase 3 damage and survival time
-          team1ReserveDamageDealt += phase3Result.robot1DamageDealt;
-          team2ReserveDamageDealt += phase3Result.robot2DamageDealt;
-          team1ReserveSurvivalTime += phase3Duration;
-          team2ReserveSurvivalTime += phase3Duration;
-          lastPhaseWasDraw = phase3Result.isDraw;
-          
-          // Collect combat events from phase 3 with timestamp offset (Requirement 7.1)
-          if (phase3Result.events && Array.isArray(phase3Result.events)) {
-            const offsetEvents = phase3Result.events.map(event => ({
-              ...event,
-              timestamp: event.timestamp + phase3StartTime,
-            }));
-            battleEvents.push(...offsetEvents);
-          }
-        }
-      }
-    }
-  } else if (team2NeedsTagOut) {
-    // Only team 2 tags out
-    team2TagOutTime = currentTime;
-
-    const team2TagOutEvent: TagOutEvent = {
-      timestamp: currentTime,
-      teamNumber: 2,
-      robotId: team2CurrentRobot.id,
-      robotName: team2CurrentRobot.name,
-      reason: team2CurrentRobot.currentHP <= 0 ? 'destruction' : 'yield',
-      finalHP: team2CurrentRobot.currentHP,
-    };
-    tagOutEvents.push(team2TagOutEvent);
-
-    // Generate tag-out message (Requirement 7.2)
-    battleEvents.push({
-      timestamp: currentTime,
-      type: 'tag_out',
-      teamNumber: 2,
-      robotId: team2CurrentRobot.id,
-      reason: team2TagOutEvent.reason,
-      robot2HP: team2TagOutEvent.finalHP,
-      message: CombatMessageGenerator.generateTagOut({
-        robotName: team2CurrentRobot.name,
-        teamName: team2.teamName,
-        reason: team2TagOutEvent.reason,
-        finalHP: team2TagOutEvent.finalHP,
-      }),
-    });
-
-    team2CurrentRobot = activateReserveRobot(team2.reserveRobot);
-    team2ReserveUsed = true;
-
-    const team2TagInEvent: TagInEvent = {
-      timestamp: currentTime,
-      teamNumber: 2,
-      robotId: team2CurrentRobot.id,
-      robotName: team2CurrentRobot.name,
-      initialHP: team2CurrentRobot.currentHP,
-    };
-    tagInEvents.push(team2TagInEvent);
-
-    // Generate tag-in message (Requirement 7.3)
-    battleEvents.push({
-      timestamp: currentTime,
-      type: 'tag_in',
-      teamNumber: 2,
-      robotId: team2CurrentRobot.id,
-      message: CombatMessageGenerator.generateTagIn({
-        robotName: team2CurrentRobot.name,
-        teamName: team2.teamName,
-        hp: team2CurrentRobot.currentHP,
-      }),
-    });
-
-    // Continue battle
-    if (currentTime < maxTime) {
-      const phase2StartTime = currentTime;
-      const phase2Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
-      const phase2Duration = phase2Result.durationSeconds;
-      currentTime += phase2Duration;
-      team1CurrentRobot.currentHP = phase2Result.robot1FinalHP;
-      team2CurrentRobot.currentHP = phase2Result.robot2FinalHP;
-      // FIX: Capture shield state after phase 2 (Requirement 2.4)
-      team1CurrentRobot.currentShield = phase2Result.robot1FinalShield;
-      team2CurrentRobot.currentShield = phase2Result.robot2FinalShield;
-      
-      // Track phase 2 damage and survival time
-      team1ActiveDamageDealt += phase2Result.robot1DamageDealt;
-      team2ReserveDamageDealt += phase2Result.robot2DamageDealt;
-      team1ActiveSurvivalTime += phase2Duration;
-      team2ReserveSurvivalTime += phase2Duration;
-      lastPhaseWasDraw = phase2Result.isDraw;
-      
-      // Collect combat events from phase 2 with timestamp offset (Requirement 7.1)
-      if (phase2Result.events && Array.isArray(phase2Result.events)) {
-        const offsetEvents = phase2Result.events.map(event => ({
-          ...event,
-          timestamp: event.timestamp + phase2StartTime,
-        }));
-        battleEvents.push(...offsetEvents);
-      }
-
-      // Check if team 1 needs to tag out now
-      if (shouldTagOut(team1CurrentRobot) && !team1ReserveUsed) {
-        team1TagOutTime = currentTime;
-
-        const team1TagOutEvent: TagOutEvent = {
-          timestamp: currentTime,
-          teamNumber: 1,
-          robotId: team1CurrentRobot.id,
-          robotName: team1CurrentRobot.name,
-          reason: team1CurrentRobot.currentHP <= 0 ? 'destruction' : 'yield',
-          finalHP: team1CurrentRobot.currentHP,
-        };
-        tagOutEvents.push(team1TagOutEvent);
-
-        // Generate tag-out message (Requirement 7.2)
-        battleEvents.push({
-          timestamp: currentTime,
-          type: 'tag_out',
-          teamNumber: 1,
-          robotId: team1CurrentRobot.id,
-          reason: team1TagOutEvent.reason,
-          robot1HP: team1TagOutEvent.finalHP,
-          message: CombatMessageGenerator.generateTagOut({
-            robotName: team1CurrentRobot.name,
-            teamName: team1.teamName,
-            reason: team1TagOutEvent.reason,
-            finalHP: team1TagOutEvent.finalHP,
-          }),
-        });
-
-        team1CurrentRobot = activateReserveRobot(team1.reserveRobot);
-        team1ReserveUsed = true;
-
-        const team1TagInEvent: TagInEvent = {
-          timestamp: currentTime,
-          teamNumber: 1,
-          robotId: team1CurrentRobot.id,
-          robotName: team1CurrentRobot.name,
-          initialHP: team1CurrentRobot.currentHP,
-        };
-        tagInEvents.push(team1TagInEvent);
-
-        // Generate tag-in message (Requirement 7.3)
-        battleEvents.push({
-          timestamp: currentTime,
-          type: 'tag_in',
-          teamNumber: 1,
-          robotId: team1CurrentRobot.id,
-          message: CombatMessageGenerator.generateTagIn({
-            robotName: team1CurrentRobot.name,
-            teamName: team1.teamName,
-            hp: team1CurrentRobot.currentHP,
-          }),
-        });
-
-        // Final phase
-        if (currentTime < maxTime) {
-          const phase3StartTime = currentTime;
-          const phase3Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);
-          const phase3Duration = phase3Result.durationSeconds;
-          currentTime += phase3Duration;
-          team1CurrentRobot.currentHP = phase3Result.robot1FinalHP;
-          team2CurrentRobot.currentHP = phase3Result.robot2FinalHP;
-          // FIX: Capture shield state after phase 3 (Requirement 2.4)
-          team1CurrentRobot.currentShield = phase3Result.robot1FinalShield;
-          team2CurrentRobot.currentShield = phase3Result.robot2FinalShield;
-          
-          // Track phase 3 damage and survival time
-          team1ReserveDamageDealt += phase3Result.robot1DamageDealt;
-          team2ReserveDamageDealt += phase3Result.robot2DamageDealt;
-          team1ReserveSurvivalTime += phase3Duration;
-          team2ReserveSurvivalTime += phase3Duration;
-          lastPhaseWasDraw = phase3Result.isDraw;
-          
-          // Collect combat events from phase 3 with timestamp offset (Requirement 7.1)
-          if (phase3Result.events && Array.isArray(phase3Result.events)) {
-            const offsetEvents = phase3Result.events.map(event => ({
-              ...event,
-              timestamp: event.timestamp + phase3StartTime,
-            }));
-            battleEvents.push(...offsetEvents);
-          }
-        }
+      runPhase();
+      // The other side's Active may fall to the Reserve: final phase, Reserve vs Reserve
+      if (shouldTagOut(other.current) && !other.reserveUsed) {
+        tagOut(other);
+        tagIn(other);
+        phases.push(matchup());
+        if (currentTime < maxTime) runPhase();
       }
     }
   }
+
+  const team1CurrentRobot = side1.current;
+  const team2CurrentRobot = side2.current;
+  const team1ReserveUsed = side1.reserveUsed;
+  const team2ReserveUsed = side2.reserveUsed;
 
   // Determine winner (Requirements 3.6, 3.7, 3.8)
   // Winner is determined by the final state after all phases complete
@@ -671,96 +287,28 @@ export async function simulateTagTeamBattle(
     winnerId,
     isDraw,
     durationSeconds: Math.min(currentTime, maxTime),
-    team1TagOutTime,
-    team2TagOutTime,
+    team1TagOutTime: side1.tagOutTime,
+    team2TagOutTime: side2.tagOutTime,
     team1ActiveFinalHP,
     team1ReserveFinalHP,
     team2ActiveFinalHP,
     team2ReserveFinalHP,
     team1ReserveUsed,
     team2ReserveUsed,
-    team1ActiveDamageDealt,
-    team1ReserveDamageDealt,
-    team2ActiveDamageDealt,
-    team2ReserveDamageDealt,
-    team1ActiveSurvivalTime,
-    team1ReserveSurvivalTime,
-    team2ActiveSurvivalTime,
-    team2ReserveSurvivalTime,
+    team1ActiveDamageDealt: side1.activeDamageDealt,
+    team1ReserveDamageDealt: side1.reserveDamageDealt,
+    team2ActiveDamageDealt: side2.activeDamageDealt,
+    team2ReserveDamageDealt: side2.reserveDamageDealt,
+    team1ActiveSurvivalTime: side1.activeSurvivalTime,
+    team1ReserveSurvivalTime: side1.reserveSurvivalTime,
+    team2ActiveSurvivalTime: side2.activeSurvivalTime,
+    team2ReserveSurvivalTime: side2.reserveSurvivalTime,
     battleLog: battleEvents, // Raw events - will be converted to narrative in createTagTeamBattleRecord
     arenaRadius,
     startingPositions,
     endingPositions,
     // Phase tracking for narrative conversion
-    phases: (() => {
-      const phases: Array<{
-        robot1Name: string;
-        robot2Name: string;
-        robot1Stance: string;
-        robot2Stance: string;
-        robot1MaxHP: number;
-        robot2MaxHP: number;
-      }> = [];
-      // Phase 1 is always active vs active
-      phases.push({
-        robot1Name: team1.activeRobot.name,
-        robot2Name: team2.activeRobot.name,
-        robot1Stance: team1.activeRobot.stance,
-        robot2Stance: team2.activeRobot.stance,
-        robot1MaxHP: team1.activeRobot.maxHP,
-        robot2MaxHP: team2.activeRobot.maxHP,
-      });
-      // Phase 2+ depends on who tagged out
-      if (team1NeedsTagOut && team2NeedsTagOut) {
-        phases.push({
-          robot1Name: team1.reserveRobot.name,
-          robot2Name: team2.reserveRobot.name,
-          robot1Stance: team1.reserveRobot.stance,
-          robot2Stance: team2.reserveRobot.stance,
-          robot1MaxHP: team1.reserveRobot.maxHP,
-          robot2MaxHP: team2.reserveRobot.maxHP,
-        });
-      } else if (team1NeedsTagOut) {
-        phases.push({
-          robot1Name: team1.reserveRobot.name,
-          robot2Name: team2.activeRobot.name,
-          robot1Stance: team1.reserveRobot.stance,
-          robot2Stance: team2.activeRobot.stance,
-          robot1MaxHP: team1.reserveRobot.maxHP,
-          robot2MaxHP: team2.activeRobot.maxHP,
-        });
-        if (team2ReserveUsed) {
-          phases.push({
-            robot1Name: team1.reserveRobot.name,
-            robot2Name: team2.reserveRobot.name,
-            robot1Stance: team1.reserveRobot.stance,
-            robot2Stance: team2.reserveRobot.stance,
-            robot1MaxHP: team1.reserveRobot.maxHP,
-            robot2MaxHP: team2.reserveRobot.maxHP,
-          });
-        }
-      } else if (team2NeedsTagOut) {
-        phases.push({
-          robot1Name: team1.activeRobot.name,
-          robot2Name: team2.reserveRobot.name,
-          robot1Stance: team1.activeRobot.stance,
-          robot2Stance: team2.reserveRobot.stance,
-          robot1MaxHP: team1.activeRobot.maxHP,
-          robot2MaxHP: team2.reserveRobot.maxHP,
-        });
-        if (team1ReserveUsed) {
-          phases.push({
-            robot1Name: team1.reserveRobot.name,
-            robot2Name: team2.reserveRobot.name,
-            robot1Stance: team1.reserveRobot.stance,
-            robot2Stance: team2.reserveRobot.stance,
-            robot1MaxHP: team1.reserveRobot.maxHP,
-            robot2MaxHP: team2.reserveRobot.maxHP,
-          });
-        }
-      }
-      return phases;
-    })(),
+    phases,
     team1Name: team1.teamName,
     team2Name: team2.teamName,
     team1ReserveName: team1.reserveRobot.name,

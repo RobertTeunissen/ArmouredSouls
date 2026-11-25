@@ -84,20 +84,3 @@ export interface TagTeamRawEvent {
   type: string;
   [key: string]: unknown;
 }
-
-export interface TagOutEvent {
-  timestamp: number;
-  teamNumber: 1 | 2;
-  robotId: number;
-  robotName: string;
-  reason: 'yield' | 'destruction';
-  finalHP: number;
-}
-
-export interface TagInEvent {
-  timestamp: number;
-  teamNumber: 1 | 2;
-  robotId: number;
-  robotName: string;
-  initialHP: number;
-}
