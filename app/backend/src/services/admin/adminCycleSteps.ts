@@ -1,10 +1,10 @@
 /**
  * Admin bulk cycle event blocks.
  *
- * One function per slot-map event, each a self-contained block (repair →
- * execute → rebalance → matchmaking) mirroring the production cron handlers.
- * `executeBulkCycles` in `adminCycleService` runs them in slot-map order and
- * owns settlement and the financial cutover.
+ * One function per slot-map event. Each runs the slot's step sequence from
+ * `cycle/eventSlotSteps` (the same steps the cron jobs run) and shapes the
+ * result for the bulk response. `executeBulkCycles` in `adminCycleService`
+ * runs them in slot-map order and owns settlement and the financial cutover.
  *
  * Every step is numbered in run order and recorded with
  * `logCycleStepComplete`; the step names are part of the cycle event log.
@@ -12,32 +12,25 @@
  * @module services/admin/adminCycleSteps
  */
 
-import { executeScheduledBattles } from '../league/leagueBattleOrchestrator';
-import { executeScheduledKothBattles } from '../koth/kothBattleOrchestrator';
-import { runMatchmaking } from '../analytics/matchmakingService';
-import { runKothMatchmaking } from '../koth/kothMatchmakingService';
-import { rebalanceLeagues } from '../league/leagueRebalancingService';
-import { rebalanceTagTeamLeagues } from '../tag-team/tagTeamLeagueRebalancingService';
-import { runTagTeamMatchmaking } from '../tag-team/tagTeamMatchmakingService';
-import { executeScheduledTagTeamBattles } from '../tag-team/tagTeamBattleOrchestrator';
-import { executeScheduledTeamBattles, type TeamBattleExecutionResult } from '../team-battle/teamBattleOrchestrator';
-import { rebalanceTeamBattleLeagues } from '../team-battle/teamBattleAdapter';
-import { runTeamBattleMatchmaking } from '../team-battle/teamBattleMatchmakingService';
+import type { TeamBattleExecutionResult } from '../team-battle/teamBattleOrchestrator';
 import { topUpGeneratedStables, type GeneratedStableTopUpResult } from '../../utils/userGeneration';
-import { repairRobotsForEvent } from '../economy/repairService';
 import {
-  getActiveTournaments,
-  getCurrentRoundMatches,
-  autoCreateNextTournament,
-  advanceWinnersToNextRound,
-} from '../tournament/tournamentService';
-import { executeSoloTournamentRound } from '../tournament/tournamentBattleOrchestrator';
-import { executeTeamTournamentRound } from '../tournament/teamTournamentBattleOrchestrator';
-import { autoCreateNextTeamTournament } from '../tournament/teamTournamentService';
+  executeSoloTournaments,
+  runGrandMeleeSlot,
+  runKothSlot,
+  runLeague1v1Slot,
+  runSoloTournamentSlot,
+  runTagTeamSlot,
+  runTeamLeagueSlot,
+  runTeamTournamentSlot,
+  type SlotStepRunner,
+  type TournamentStepSummary,
+} from '../cycle/eventSlotSteps';
 import type { EventLogger } from '../common/eventLogger';
-import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import type { TurnStepInput, TurnStepOutcome } from '../automaton/automatonTurnService';
+
+export type { TournamentStepSummary };
 
 // ─── Result shapes ───────────────────────────────────────────────────
 
@@ -72,25 +65,10 @@ export type GrandMeleeBlockSummary = {
   matchesCreated: number;
 };
 
-/** Result shape for tournament execution step. */
-export interface TournamentStepSummary {
-  tournamentsExecuted?: number;
-  roundsExecuted?: number;
-  matchesExecuted?: number;
-  /** Bracket Bye_Events resolved and paid this run (Spec #49). */
-  byeMatchesResolved?: number;
-  /** Matches resolved as battle-time forfeits (single or double; nothing simulated). */
-  forfeits?: number;
-  tournamentsCompleted?: number;
-  tournamentsCreated?: number;
-  errors?: string[];
-  error?: string;
-}
-
 // ─── Step runner ─────────────────────────────────────────────────────
 
 /** Numbers the steps of one cycle and records each completed step. */
-export class CycleStepRunner {
+export class CycleStepRunner implements SlotStepRunner {
   private stepNumber = 0;
 
   constructor(
@@ -160,111 +138,32 @@ export async function runAutomatonTurnStep(input: TurnStepInput): Promise<TurnSt
 
 /**
  * Execute tournament rounds, advance winners, and auto-create next tournament.
- * Shared by both the cycles=0 tournament-only path and the full cycle pipeline.
+ * Used by the cycles=0 tournament-only path; the full pipeline runs it inside
+ * the 1v1 tournament slot.
  */
 export async function executeTournamentStep(): Promise<TournamentStepSummary> {
-  const summary: TournamentStepSummary = {
-    tournamentsExecuted: 0,
-    roundsExecuted: 0,
-    matchesExecuted: 0,
-    byeMatchesResolved: 0,
-    forfeits: 0,
-    tournamentsCompleted: 0,
-    tournamentsCreated: 0,
-    errors: [],
-  };
-
-  try {
-    const activeTournaments = await getActiveTournaments();
-
-    for (const tournament of activeTournaments) {
-      try {
-        const currentRoundMatches = await getCurrentRoundMatches(tournament.id);
-
-        if (currentRoundMatches.length > 0) {
-          // Shared executor (rule 7): byes, fought matches and the failure
-          // policy, identical to the cron path.
-          const roundResult = await executeSoloTournamentRound(tournament.id);
-          summary.matchesExecuted! += roundResult.matchesExecuted + roundResult.byesResolved + roundResult.matchesResumed;
-          summary.byeMatchesResolved = (summary.byeMatchesResolved ?? 0) + roundResult.byesResolved;
-          summary.forfeits = (summary.forfeits ?? 0) + roundResult.forfeits;
-          for (const err of roundResult.errors) {
-            summary.errors!.push(`Tournament ${tournament.id} ${err}`);
-          }
-
-          await advanceWinnersToNextRound(tournament.id);
-          summary.roundsExecuted!++;
-        }
-
-        summary.tournamentsExecuted!++;
-
-        const updatedTournament = await prisma.tournament.findUnique({
-          where: { id: tournament.id },
-        });
-
-        if (updatedTournament?.status === 'completed') {
-          summary.tournamentsCompleted!++;
-        }
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        summary.errors!.push(`Tournament ${tournament.id}: ${errorMsg}`);
-      }
-    }
-
-    try {
-      const nextTournament = await autoCreateNextTournament();
-      if (nextTournament) {
-        summary.tournamentsCreated!++;
-        logger.info(`[Admin] Auto-created tournament: ${nextTournament.name}`);
-      }
-    } catch (error) {
-      logger.error('[Admin] Failed to auto-create tournament:', error);
-    }
-  } catch (error) {
-    logger.error('[Admin] Tournament execution error:', error);
-    return { error: error instanceof Error ? error.message : String(error) };
-  }
-
-  return summary;
+  return (await executeSoloTournaments()).summary;
 }
 
 // ─── Event blocks (slot map order) ───────────────────────────────────
+// Each block runs the slot's shared step sequence (cycle/eventSlotSteps), the
+// same steps the cron jobs run, and shapes the result for the bulk response.
 
 /** SLOT 1: 1v1 League (repair → execute → rebalance → matchmaking). */
 export async function runLeague1v1Block(steps: CycleStepRunner): Promise<{
-  battles: Awaited<ReturnType<typeof executeScheduledBattles>>;
+  battles: Awaited<ReturnType<typeof runLeague1v1Slot>>['battles'];
   repair: unknown;
   rebalancing: unknown;
   matchmaking: { matchesCreated: number };
 }> {
   logger.info(`[Admin] Slot 1: 1v1 League`);
-  const repair = await steps.run(
-    'Repair Scheduled Robots (pre-league)', 'repair_pre_league',
-    () => repairRobotsForEvent('league_1v1'),
-    (r) => ({ robotsRepaired: r.robotsRepaired, totalCost: r.totalFinalCost }),
-  );
-  const battles = await steps.run(
-    'Execute League Battles (1v1)', 'execute_league_battles',
-    () => executeScheduledBattles(new Date()),
-    (r) => ({ battlesExecuted: r.totalBattles }),
-  );
-  const rebalancing = await steps.run(
-    'Rebalance Leagues', 'rebalance_leagues',
-    () => rebalanceLeagues(),
-    (r) => ({ promotions: r.totalPromoted, demotions: r.totalDemoted }),
-  );
-  // Matchmaking (24h lead time)
-  const matchesCreated = await steps.run(
-    'Matchmaking for Leagues (1v1)', 'matchmaking_leagues',
-    () => runMatchmaking(),
-    (r) => ({ matchesCreated: r }),
-  );
+  const { repair, battles, rebalancing, matchesCreated } = await runLeague1v1Slot(steps);
   return { battles, repair, rebalancing, matchmaking: { matchesCreated } };
 }
 
 /**
- * SLOTS 2 and 6: Team 2v2 / 3v3 League (repair → execute → rebalance →
- * matchmaking). A failure is recorded and the cycle continues (R14.7).
+ * SLOTS 2 and 6: Team 2v2 / 3v3 League. A failure is recorded and the cycle
+ * continues (R14.7).
  *
  * @returns The block result, and the battle summary for the cycle log even
  *   when a later step failed
@@ -275,35 +174,14 @@ export async function runTeamLeagueBlock(
 ): Promise<{ block: TeamLeagueBlockResult; battles: TeamBattleExecutionResult | null }> {
   const mode = `${teamSize}v${teamSize}`;
   logger.info(`[Admin] Slot ${teamSize === 2 ? 2 : 6}: Team ${mode} League`);
-  let battles: TeamBattleExecutionResult | null = null;
+  const progress: { battles?: TeamBattleExecutionResult } = {};
   try {
-    // Repair (Spec #41 — was missing, must match cron behavior)
-    await steps.run(
-      `Repair Scheduled Robots (pre-team-${mode}-league)`, `repair_pre_team_${mode}_league`,
-      () => repairRobotsForEvent(teamSize === 2 ? 'league_2v2' : 'league_3v3'),
-      () => ({}),
-    );
-    battles = await steps.run(
-      `Execute Team ${mode} League Battles`, `execute_team_${mode}_battles`,
-      () => executeScheduledTeamBattles(teamSize),
-      (r) => ({ matchesCompleted: r.matchesCompleted, matchesCancelled: r.matchesCancelled }),
-    );
-    const rebalancing = await steps.run(
-      `Rebalance Team ${mode} Leagues`, `rebalance_team_${mode}_leagues`,
-      () => rebalanceTeamBattleLeagues(teamSize),
-      (r) => ({ promotions: r.totalPromoted, demotions: r.totalDemoted }),
-    );
-    // Matchmaking (24h lead time)
-    const matchesCreated = await steps.run(
-      `Matchmaking for Team ${mode} League`, `matchmaking_team_${mode}`,
-      () => runTeamBattleMatchmaking(teamSize),
-      (r) => ({ matchesCreated: r }),
-    );
+    const { battles, rebalancing, matchesCreated } = await runTeamLeagueSlot(steps, teamSize, progress);
     return { block: { battles, rebalancing, matchmaking: { matchesCreated } }, battles };
   } catch (err) {
     // R14.7: Record failure, continue remaining steps and iterations
     logger.error(`[Admin] Team ${mode} League block failed:`, err);
-    return { block: { error: err instanceof Error ? err.message : String(err) }, battles };
+    return { block: { error: err instanceof Error ? err.message : String(err) }, battles: progress.battles ?? null };
   }
 }
 
@@ -313,57 +191,19 @@ export async function runTournamentBlock(
   includeTournaments: boolean,
 ): Promise<{ repair: unknown; tournaments: TournamentStepSummary | null }> {
   logger.info(`[Admin] Slot 3: 1v1 Tournament`);
-  const repair = await steps.run(
-    'Repair Scheduled Robots (pre-tournament)', 'repair_pre_tournament',
-    () => repairRobotsForEvent('tournament_1v1'),
-    (r) => ({ robotsRepaired: r.robotsRepaired, totalCost: r.totalFinalCost }),
-  );
-  const tournaments = await steps.run(
-    'Tournament Execution / Scheduling', 'tournament_execution',
-    async () => {
-      if (!includeTournaments) return null;
-      const summary = await executeTournamentStep();
-      logger.info(`[Admin] Tournaments: ${summary.tournamentsExecuted || 0} executed, ${summary.roundsExecuted || 0} rounds, ${summary.matchesExecuted || 0} matches, ${summary.forfeits || 0} forfeits`);
-      return summary;
-    },
-    (r) => ({
-      tournamentsExecuted: r?.tournamentsExecuted || 0,
-      matchesExecuted: r?.matchesExecuted || 0,
-      forfeits: r?.forfeits || 0,
-    }),
-  );
-  return { repair, tournaments };
+  const { repair, tournaments } = await runSoloTournamentSlot(steps, includeTournaments);
+  return { repair, tournaments: tournaments?.summary ?? null };
 }
 
 /** SLOT 4: Tag Team (repair → execute → rebalance → matchmaking). */
 export async function runTagTeamBlock(steps: CycleStepRunner): Promise<{
   repair: unknown;
-  battles: Awaited<ReturnType<typeof executeScheduledTagTeamBattles>>;
+  battles: Awaited<ReturnType<typeof runTagTeamSlot>>['battles'];
   rebalancing: unknown;
   matchmaking: { matchesCreated: number };
 }> {
   logger.info(`[Admin] Slot 4: Tag Team`);
-  const repair = await steps.run(
-    'Repair Scheduled Robots (pre-tag-team)', 'repair_pre_tag_team',
-    () => repairRobotsForEvent('tag_team'),
-    (r) => ({ robotsRepaired: r.robotsRepaired, totalCost: r.totalFinalCost }),
-  );
-  const battles = await steps.run(
-    'Execute Tag Team Battles', 'execute_tag_team_battles',
-    () => executeScheduledTagTeamBattles(new Date()),
-    (r) => ({ battlesExecuted: r?.totalBattles || 0 }),
-  );
-  const rebalancing = await steps.run(
-    'Rebalance Tag Team Leagues', 'rebalance_tag_team_leagues',
-    () => rebalanceTagTeamLeagues(),
-    (r) => ({ promotions: r.totalPromoted, demotions: r.totalDemoted }),
-  );
-  // Matchmaking (24h lead time)
-  const matchesCreated = await steps.run(
-    'Matchmaking for Tag Teams', 'matchmaking_tag_teams',
-    () => runTagTeamMatchmaking(),
-    (r) => ({ matchesCreated: r }),
-  );
+  const { repair, battles, rebalancing, matchesCreated } = await runTagTeamSlot(steps);
   return { repair, battles, rebalancing, matchmaking: { matchesCreated } };
 }
 
@@ -373,7 +213,7 @@ export async function runKothBlock(
   includeKoth: boolean,
 ): Promise<{
   repair: unknown;
-  battles: Awaited<ReturnType<typeof executeScheduledKothBattles>>;
+  battles: Awaited<ReturnType<typeof runKothSlot>>['battles'];
   matchmaking: { matchesCreated: number };
 } | undefined> {
   logger.info(`[Admin] Slot 5: KotH`);
@@ -382,41 +222,13 @@ export async function runKothBlock(
     await steps.complete(step, 'koth_skipped', 0, { skipped: true });
     return undefined;
   }
-  const repair = await steps.run(
-    'Repair Scheduled Robots (pre-koth)', 'repair_pre_koth',
-    () => repairRobotsForEvent('koth'),
-    (r) => ({ robotsRepaired: r.robotsRepaired, totalCost: r.totalFinalCost }),
-  );
-  const battles = await steps.run(
-    'Execute Scheduled KotH Battles', 'execute_koth_battles',
-    () => executeScheduledKothBattles(new Date()),
-    (r) => ({
-      battlesExecuted: r.totalMatches,
-      belowMinimumMatches: r.belowMinimumMatches,
-      forfeitedRobots: r.forfeitedRobots,
-    }),
-  );
-  // Rebalance KotH leagues (Spec #41 — was missing, must match cron behavior)
-  await steps.run(
-    'Rebalance KotH Leagues', 'rebalance_koth_leagues',
-    async () => {
-      const { rebalanceKothLeagues } = await import('../league/leagueRebalancingService');
-      return rebalanceKothLeagues();
-    },
-    (r) => ({ promotions: r.totalPromoted, demotions: r.totalDemoted }),
-  );
-  // Matchmaking (24h lead time)
-  const matchesCreated = await steps.run(
-    'KotH Matchmaking', 'matchmaking_koth',
-    () => runKothMatchmaking(),
-    (r) => ({ matchesCreated: r }),
-  );
+  const { repair, battles, matchesCreated } = await runKothSlot(steps);
   return { repair, battles, matchmaking: { matchesCreated } };
 }
 
 /**
- * SLOTS 7 and 9: Team 2v2 / 3v3 Tournament (repair → execute/advance, or
- * auto-create when none is active). A failure is recorded as a skip reason.
+ * SLOTS 7 and 9: Team 2v2 / 3v3 Tournament (repair → execute/advance →
+ * auto-create). A failure is recorded as a skip reason.
  */
 export async function runTeamTournamentBlock(
   steps: CycleStepRunner,
@@ -424,84 +236,48 @@ export async function runTeamTournamentBlock(
 ): Promise<TeamTournamentBlockResult> {
   const mode = `${teamSize}v${teamSize}`;
   logger.info(`[Admin] Slot ${teamSize === 2 ? 7 : 9}: Team ${mode} Tournament`);
-  const repair = await steps.run(
-    `Repair Scheduled Robots (pre-team-${mode}-tournament)`, `repair_pre_team_${mode}_tournament`,
-    () => repairRobotsForEvent(teamSize === 2 ? 'tournament_2v2' : 'tournament_3v3'),
-    (r) => ({ robotsRepaired: r.robotsRepaired, totalCost: r.totalFinalCost }),
-  );
-
-  const step = steps.next(`Execute Team ${mode} Tournament`);
-  const start = Date.now();
-  let result: TeamTournamentBlockResult;
   try {
-    const active = await prisma.tournament.findFirst({
-      where: { participantType: teamSize === 2 ? 'team_2v2' : 'team_3v3', status: 'active' },
-    });
-
-    if (active) {
-      logger.info(`[Admin] Executing round ${active.currentRound} of "${active.name}"`);
-      const roundResult = await executeTeamTournamentRound(active.id, teamSize);
-      await advanceWinnersToNextRound(active.id);
-      result = {
+    const { repair, processed, created } = await runTeamTournamentSlot(steps, teamSize);
+    if (processed) {
+      return {
         repair,
-        matchesExecuted: roundResult.matchesExecuted,
-        matchesFailed: roundResult.matchesFailed,
-        tournamentName: active.name,
-        tournamentRound: active.currentRound,
-        tournamentMaxRounds: active.maxRounds,
+        matchesExecuted: processed.matchesExecuted,
+        matchesFailed: processed.matchesFailed,
+        tournamentName: processed.name,
+        tournamentRound: processed.currentRound,
+        tournamentMaxRounds: processed.maxRounds,
+        ...(created ? { tournamentCreated: true } : {}),
       };
-    } else {
-      // No active tournament — try to create one
-      const newTournament = await autoCreateNextTeamTournament(teamSize);
-      if (newTournament) {
-        logger.info(`[Admin] Auto-created team ${mode} tournament: "${newTournament.name}"`);
-        result = { repair, matchesExecuted: 0, matchesFailed: 0, tournamentName: newTournament.name, tournamentCreated: true };
-      } else {
-        logger.info(`[Admin] Team ${mode} Tournament: Skipped — insufficient eligible teams`);
-        result = { repair, matchesExecuted: 0, matchesFailed: 0, skippedReason: 'insufficient eligible teams' };
-      }
     }
+    if (created) {
+      return { repair, matchesExecuted: 0, matchesFailed: 0, tournamentName: created.name, tournamentCreated: true };
+    }
+    return { repair, matchesExecuted: 0, matchesFailed: 0, skippedReason: 'insufficient eligible teams' };
   } catch (err) {
     logger.error(`[Admin] Team ${mode} Tournament block failed:`, err);
-    result = {
-      repair,
+    return {
+      repair: null,
       matchesExecuted: 0,
       matchesFailed: 0,
       skippedReason: err instanceof Error ? err.message : String(err),
     };
   }
-
-  await steps.complete(step, `team_${mode}_tournament_execution`, Date.now() - start, {
-    matchesExecuted: 'matchesExecuted' in result ? result.matchesExecuted : 0,
-  });
-  return result;
 }
 
 /** SLOT 8: Grand Melee (Spec #44: R7.5) — repair → execute → rebalance → matchmake. */
 export async function runGrandMeleeBlock(steps: CycleStepRunner): Promise<GrandMeleeBlockSummary | { error: string }> {
-  const step = steps.next('Grand Melee — executing cycle (repair → execute → rebalance → matchmake)');
-  let result: GrandMeleeBlockSummary | { error: string };
+  logger.info(`[Admin] Slot 8: Grand Melee`);
   try {
-    const { executeScheduledGrandMeleeBattles } = await import('../grand-melee/grandMeleeBattleOrchestrator');
-    const { runGrandMeleeMatchmaking } = await import('../grand-melee/grandMeleeMatchmakingService');
-    const { rebalanceGrandMeleeLeagues } = await import('../league/leagueRebalancingService');
-
-    await repairRobotsForEvent('grand_melee');
-    const execSummary = await executeScheduledGrandMeleeBattles();
-    await rebalanceGrandMeleeLeagues();
-    const matchesCreated = await runGrandMeleeMatchmaking();
-
-    result = {
-      matchesExecuted: execSummary.successfulMatches,
-      matchesFailed: execSummary.failedMatches,
-      belowMinimumMatches: execSummary.belowMinimumMatches,
-      forfeitedRobots: execSummary.forfeitedRobots,
+    const { battles, matchesCreated } = await runGrandMeleeSlot(steps);
+    return {
+      matchesExecuted: battles.successfulMatches,
+      matchesFailed: battles.failedMatches,
+      belowMinimumMatches: battles.belowMinimumMatches,
+      forfeitedRobots: battles.forfeitedRobots,
       matchesCreated,
     };
   } catch (err) {
-    result = { error: err instanceof Error ? err.message : String(err) };
     logger.error('[Admin] Grand Melee cycle failed:', err);
+    return { error: err instanceof Error ? err.message : String(err) };
   }
-  await steps.complete(step, 'grand_melee', 0, result);
-  return result;
 }
